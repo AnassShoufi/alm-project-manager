@@ -382,7 +382,302 @@ tr:hover td{
     padding:60px 20px;
     color:#718096;
 }
+/* =========================
+   PROJECT DETAILS WINDOW
+========================= */
 
+.project-details-modal{
+
+    width:1100px;
+    max-width:95%;
+    height:85vh;
+
+    background:white;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.25);
+
+    display:flex;
+    flex-direction:column;
+}
+
+
+.project-details-header{
+
+    min-height:80px;
+
+    padding:20px 25px;
+
+    border-bottom:1px solid #e5e9ee;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+}
+
+
+.project-details-header h2{
+
+    font-size:24px;
+
+    color:#17243a;
+
+}
+
+
+.project-details-code{
+
+    color:#708096;
+
+    font-size:13px;
+
+    margin-top:5px;
+
+}
+
+
+.project-details-layout{
+
+    display:grid;
+
+    grid-template-columns:230px 1fr;
+
+    flex:1;
+
+    min-height:0;
+
+}
+
+
+.project-details-menu{
+
+    background:#f7f9fb;
+
+    border-right:1px solid #e1e5ea;
+
+    padding:15px;
+
+    overflow-y:auto;
+
+}
+
+
+.project-menu-btn{
+
+    width:100%;
+
+    border:0;
+
+    background:transparent;
+
+    color:#46566c;
+
+    padding:12px 14px;
+
+    margin-bottom:5px;
+
+    border-radius:7px;
+
+    text-align:left;
+
+    cursor:pointer;
+
+    font-size:14px;
+
+}
+
+
+.project-menu-btn:hover{
+
+    background:#e8edf3;
+
+}
+
+
+.project-menu-btn.active{
+
+    background:#1976b8;
+
+    color:white;
+
+    font-weight:bold;
+
+}
+
+
+.project-details-content{
+
+    padding:28px;
+
+    overflow-y:auto;
+
+}
+
+
+.project-section-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:20px;
+
+    margin-bottom:25px;
+
+}
+
+
+.project-section-header h3{
+
+    font-size:22px;
+
+    color:#17243a;
+
+}
+
+
+.project-section-header p{
+
+    color:#708096;
+
+    margin-top:5px;
+
+    font-size:14px;
+
+}
+
+
+.project-info-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:15px;
+
+}
+
+
+.project-info-card{
+
+    border:1px solid #e1e5ea;
+
+    border-radius:8px;
+
+    padding:17px;
+
+    background:#fafbfc;
+
+}
+
+
+.project-info-card span{
+
+    display:block;
+
+    color:#708096;
+
+    font-size:12px;
+
+    margin-bottom:7px;
+
+}
+
+
+.project-info-card strong{
+
+    font-size:15px;
+
+    color:#17243a;
+
+}
+
+
+.project-description{
+
+    margin-top:22px;
+
+    padding:20px;
+
+    border:1px solid #e1e5ea;
+
+    border-radius:8px;
+
+}
+
+
+.project-description h3{
+
+    margin-bottom:10px;
+
+}
+
+
+.project-description p{
+
+    color:#68788e;
+
+    line-height:1.6;
+
+}
+
+
+.project-empty-section{
+
+    min-height:350px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    border:2px dashed #dfe5ec;
+
+    border-radius:10px;
+
+    color:#708096;
+
+}
+
+
+.project-empty-icon{
+
+    font-size:45px;
+
+    margin-bottom:15px;
+
+}
+
+
+.project-empty-section h3{
+
+    color:#17243a;
+
+    margin-bottom:8px;
+
+}
+
+
+.project-empty-section p{
+
+    max-width:450px;
+
+    line-height:1.6;
+
+}
 /* RESPONSIVE */
 @media(max-width:1000px){
     .stats{
@@ -842,7 +1137,502 @@ function projectTable(list = projects){
     `;
 }
 
+/* =========================
+   PROJECT DETAILS
+========================= */
 
+function openProject(id){
+
+    const project = projects.find(p => p.id === id);
+
+    if(!project) return;
+
+    const oldModal = document.getElementById("projectDetailsModal");
+
+    if(oldModal){
+        oldModal.remove();
+    }
+
+    const modal = document.createElement("div");
+
+    modal.id = "projectDetailsModal";
+
+    modal.className = "modal-overlay";
+
+    modal.style.display = "flex";
+
+    modal.innerHTML = `
+
+        <div class="project-details-modal">
+
+            <div class="project-details-header">
+
+                <div>
+                    <h2>${escapeHTML(project.name)}</h2>
+
+                    <div class="project-details-code">
+                        ${escapeHTML(project.code || "")}
+                    </div>
+                </div>
+
+                <button
+                    class="close"
+                    onclick="closeProjectDetails()">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="project-details-layout">
+
+
+                <!-- PROJECT MENU -->
+
+                <div class="project-details-menu">
+
+                    <button
+                        class="project-menu-btn active"
+                        onclick="showProjectSection('overview', ${project.id}, this)">
+                        📋 Overview
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('documents', ${project.id}, this)">
+                        📄 Documents
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('boq', ${project.id}, this)">
+                        💰 BOQ
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('drawings', ${project.id}, this)">
+                        📐 Drawings
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('reports', ${project.id}, this)">
+                        📝 Reports
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('procurement', ${project.id}, this)">
+                        📦 Procurement
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('payments', ${project.id}, this)">
+                        💵 Payments
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('variations', ${project.id}, this)">
+                        🔄 Variations
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('manpower', ${project.id}, this)">
+                        👷 Manpower
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('equipment', ${project.id}, this)">
+                        🚜 Equipment
+                    </button>
+
+                    <button
+                        class="project-menu-btn"
+                        onclick="showProjectSection('tasks', ${project.id}, this)">
+                        ✅ Tasks
+                    </button>
+
+                </div>
+
+
+                <!-- PROJECT CONTENT -->
+
+                <div
+                    class="project-details-content"
+                    id="projectSectionContent">
+
+                    ${projectOverviewHTML(project)}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+    document.body.appendChild(modal);
+
+
+    modal.addEventListener("click", function(e){
+
+        if(e.target === modal){
+            closeProjectDetails();
+        }
+
+    });
+
+}
+
+
+/* =========================
+   PROJECT OVERVIEW
+========================= */
+
+function projectOverviewHTML(project){
+
+    return `
+
+        <div class="project-section">
+
+            <div class="project-section-header">
+
+                <div>
+                    <h3>Project Overview</h3>
+                    <p>General information about this project</p>
+                </div>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="editProject(${project.id})">
+                    Edit Project
+                </button>
+
+            </div>
+
+
+            <div class="project-info-grid">
+
+                <div class="project-info-card">
+
+                    <span>Project Name</span>
+
+                    <strong>
+                        ${escapeHTML(project.name)}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Project Code</span>
+
+                    <strong>
+                        ${escapeHTML(project.code || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Client</span>
+
+                    <strong>
+                        ${escapeHTML(project.client || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Project Manager</span>
+
+                    <strong>
+                        ${escapeHTML(project.manager || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Location</span>
+
+                    <strong>
+                        ${escapeHTML(project.location || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Contract Value</span>
+
+                    <strong>
+                        ${escapeHTML(project.contractValue || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Start Date</span>
+
+                    <strong>
+                        ${escapeHTML(project.startDate || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Planned Completion</span>
+
+                    <strong>
+                        ${escapeHTML(project.completionDate || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Status</span>
+
+                    <strong>
+                        ${statusBadge(project.status)}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>Progress</span>
+
+                    <strong>
+                        ${project.progress}%
+                    </strong>
+
+                    <div class="progress-bar">
+
+                        <div
+                            class="progress-fill"
+                            style="width:${project.progress}%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="project-description">
+
+                <h3>Description</h3>
+
+                <p>
+                    ${escapeHTML(project.description || "No description available.")}
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+}
+
+
+/* =========================
+   PROJECT SECTIONS
+========================= */
+
+function showProjectSection(section, id, button){
+
+    const project = projects.find(p => p.id === id);
+
+    if(!project) return;
+
+
+    document
+        .querySelectorAll(".project-menu-btn")
+        .forEach(btn => btn.classList.remove("active"));
+
+
+    if(button){
+        button.classList.add("active");
+    }
+
+
+    const content =
+        document.getElementById("projectSectionContent");
+
+
+    if(section === "overview"){
+
+        content.innerHTML =
+            projectOverviewHTML(project);
+
+        return;
+
+    }
+
+
+    const titles = {
+
+        documents: "Documents",
+
+        boq: "Bill of Quantities (BOQ)",
+
+        drawings: "Drawings",
+
+        reports: "Reports",
+
+        procurement: "Procurement",
+
+        payments: "Payments",
+
+        variations: "Variations",
+
+        manpower: "Manpower",
+
+        equipment: "Equipment",
+
+        tasks: "Tasks"
+
+    };
+
+
+    content.innerHTML = `
+
+        <div class="project-section">
+
+            <div class="project-section-header">
+
+                <div>
+
+                    <h3>${titles[section]}</h3>
+
+                    <p>
+                        ${escapeHTML(project.name)}
+                    </p>
+
+                </div>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="addProjectItem('${section}', ${project.id})">
+
+                    + Add ${titles[section]}
+
+                </button>
+
+            </div>
+
+
+            <div class="project-empty-section">
+
+                <div class="project-empty-icon">
+                    ${getSectionIcon(section)}
+                </div>
+
+                <h3>
+                    No ${titles[section]} yet
+                </h3>
+
+                <p>
+                    This section is ready for
+                    ${titles[section].toLowerCase()} related to
+                    ${escapeHTML(project.name)}.
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================
+   SECTION ICONS
+========================= */
+
+function getSectionIcon(section){
+
+    const icons = {
+
+        documents: "📄",
+
+        boq: "💰",
+
+        drawings: "📐",
+
+        reports: "📝",
+
+        procurement: "📦",
+
+        payments: "💵",
+
+        variations: "🔄",
+
+        manpower: "👷",
+
+        equipment: "🚜",
+
+        tasks: "✅"
+
+    };
+
+    return icons[section] || "📁";
+
+}
+
+
+/* =========================
+   ADD PROJECT ITEM
+========================= */
+
+function addProjectItem(section, id){
+
+    const project = projects.find(p => p.id === id);
+
+    if(!project) return;
+
+    alert(
+        `${section.toUpperCase()} section for "${project.name}" is ready to be connected.`
+    );
+
+}
+
+
+/* =========================
+   CLOSE PROJECT DETAILS
+========================= */
+
+function closeProjectDetails(){
+
+    const modal =
+        document.getElementById("projectDetailsModal");
+
+    if(modal){
+        modal.remove();
+    }
+
+}
 /* =========================
    STATUS
 ========================= */
