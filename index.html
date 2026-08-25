@@ -1,609 +1,1104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ALM Project Manager</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALM Project Manager</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+
+body{
+    background:#f4f6f8;
+    color:#172033;
+}
+
+.app{
+    display:flex;
+    min-height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:255px;
+    background:#17243a;
+    color:white;
+    padding:25px 16px;
+    position:fixed;
+    top:0;
+    bottom:0;
+    left:0;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:20px;
+    font-weight:bold;
+    margin-bottom:35px;
+}
+
+.logo-box{
+    background:#f5a400;
+    color:white;
+    width:40px;
+    height:40px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.menu button{
+    border:0;
+    background:transparent;
+    color:#e7edf7;
+    padding:13px 12px;
+    text-align:left;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:15px;
+}
+
+.menu button:hover,
+.menu button.active{
+    background:#2b405f;
+}
+
+/* MAIN */
+.main{
+    margin-left:255px;
+    width:calc(100% - 255px);
+}
+
+.topbar{
+    height:70px;
+    background:white;
+    border-bottom:1px solid #e1e5ea;
+    display:flex;
+    align-items:center;
+    padding:0 32px;
+}
+
+.search{
+    width:430px;
+    padding:13px 16px;
+    border:1px solid #d5dbe3;
+    border-radius:8px;
+    outline:none;
+    font-size:14px;
+}
+
+.content{
+    padding:30px 34px;
+}
+
+.page-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.page-title h1{
+    font-size:30px;
+    margin-bottom:5px;
+}
+
+.page-title p{
+    color:#708096;
+}
+
+/* BUTTONS */
+.btn{
+    border:0;
+    padding:12px 18px;
+    border-radius:7px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:14px;
+}
+
+.btn-primary{
+    background:#1976b8;
+    color:white;
+}
+
+.btn-primary:hover{
+    background:#125e94;
+}
+
+.btn-secondary{
+    background:#e8edf3;
+    color:#25344a;
+}
+
+.btn-danger{
+    background:#dc3545;
+    color:white;
+}
+
+/* CARDS */
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+    margin-bottom:30px;
+}
+
+.stat-card{
+    background:white;
+    border:1px solid #e1e5ea;
+    border-radius:10px;
+    padding:22px;
+}
+
+.stat-card .label{
+    color:#708096;
+    margin-bottom:12px;
+}
+
+.stat-card .number{
+    font-size:32px;
+    font-weight:bold;
+}
+
+/* TABLE */
+.panel{
+    background:white;
+    border:1px solid #e1e5ea;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.panel-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 22px;
+    border-bottom:1px solid #e5e9ee;
+}
+
+.panel-header h2{
+    font-size:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:16px 18px;
+    text-align:left;
+    border-bottom:1px solid #edf0f3;
+    font-size:14px;
+}
+
+th{
+    color:#68788e;
+    background:#fafbfc;
+}
+
+tr:hover td{
+    background:#fafcff;
+}
+
+.project-name{
+    font-weight:bold;
+    color:#17243a;
+}
+
+.progress-wrap{
+    width:120px;
+}
+
+.progress-bar{
+    height:7px;
+    background:#e5e9ee;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:6px;
+}
+
+.progress-fill{
+    height:100%;
+    background:#1976b8;
+}
+
+.badge{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.badge-active{
+    background:#d9f7e5;
+    color:#148344;
+}
+
+.badge-delayed{
+    background:#fff0c7;
+    color:#a56a00;
+}
+
+.badge-completed{
+    background:#dce8ff;
+    color:#2459a6;
+}
+
+.badge-onhold{
+    background:#eceff3;
+    color:#657284;
+}
+
+.actions{
+    display:flex;
+    gap:7px;
+}
+
+.action-btn{
+    border:1px solid #d8dee6;
+    background:white;
+    padding:7px 10px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.action-btn:hover{
+    background:#f0f4f8;
+}
+
+/* MODAL */
+.modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+}
+
+.modal{
+    width:700px;
+    max-width:94%;
+    max-height:90vh;
+    overflow:auto;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+
+.modal-header{
+    padding:22px 25px;
+    border-bottom:1px solid #e5e9ee;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.modal-header h2{
+    font-size:21px;
+}
+
+.close{
+    border:0;
+    background:transparent;
+    font-size:25px;
+    cursor:pointer;
+    color:#68788e;
+}
+
+.modal-body{
+    padding:25px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.form-group.full{
+    grid-column:1/-1;
+}
+
+.form-group label{
+    font-size:13px;
+    font-weight:bold;
+    color:#4d5d73;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid #d4dae2;
+    border-radius:6px;
+    outline:none;
+    font-size:14px;
+}
+
+.form-group textarea{
+    min-height:90px;
+    resize:vertical;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
+    border-color:#1976b8;
+}
+
+.modal-footer{
+    padding:18px 25px;
+    border-top:1px solid #e5e9ee;
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+/* EMPTY */
+.empty{
+    text-align:center;
+    padding:60px 20px;
+    color:#718096;
+}
+
+/* RESPONSIVE */
+@media(max-width:1000px){
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:700px){
+    .sidebar{
+        width:200px;
     }
 
-    body {
-      background: #f4f6f8;
-      color: #1f2937;
+    .main{
+        margin-left:200px;
+        width:calc(100% - 200px);
     }
 
-    .app {
-      display: flex;
-      min-height: 100vh;
+    .stats{
+        grid-template-columns:1fr;
     }
 
-    /* Sidebar */
-    .sidebar {
-      width: 230px;
-      background: #172235;
-      color: white;
-      min-height: 100vh;
-      padding: 20px 14px;
+    .form-grid{
+        grid-template-columns:1fr;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px 25px;
-      font-size: 18px;
-      font-weight: bold;
+    table{
+        min-width:900px;
     }
 
-    .logo-box {
-      width: 34px;
-      height: 34px;
-      background: #f59e0b;
-      border-radius: 7px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
+    .panel{
+        overflow-x:auto;
     }
-
-    .menu {
-      list-style: none;
-    }
-
-    .menu li {
-      padding: 12px 14px;
-      margin: 4px 0;
-      border-radius: 7px;
-      cursor: pointer;
-      color: #d7dee8;
-    }
-
-    .menu li:hover,
-    .menu li.active {
-      background: #26364d;
-      color: white;
-    }
-
-    /* Main */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .topbar {
-      height: 65px;
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex;
-      align-items: center;
-      padding: 0 28px;
-    }
-
-    .search {
-      width: 380px;
-      padding: 11px 15px;
-      border: 1px solid #d1d5db;
-      border-radius: 7px;
-      outline: none;
-      font-size: 14px;
-    }
-
-    .content {
-      padding: 30px;
-    }
-
-    .page-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
-
-    .page-title h1 {
-      font-size: 26px;
-    }
-
-    .page-title p {
-      margin-top: 5px;
-      color: #6b7280;
-    }
-
-    .btn {
-      border: none;
-      padding: 11px 18px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .btn-primary {
-      background: #1769aa;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #12588e;
-    }
-
-    /* Dashboard cards */
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      margin-bottom: 28px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 20px;
-    }
-
-    .card-title {
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 12px;
-    }
-
-    .card-number {
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    /* Project section */
-    .section {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 25px;
-    }
-
-    .section-header {
-      padding: 18px 20px;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .section-header h2 {
-      font-size: 18px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      padding: 14px 20px;
-      text-align: left;
-      border-bottom: 1px solid #eef0f2;
-      font-size: 14px;
-    }
-
-    th {
-      background: #f9fafb;
-      color: #6b7280;
-      font-weight: 600;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .status-active {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .status-delay {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .status-suspended {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    /* Modal */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal {
-      width: 500px;
-      max-width: 90%;
-      background: white;
-      border-radius: 10px;
-      padding: 25px;
-    }
-
-    .modal h2 {
-      margin-bottom: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .btn-secondary {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    @media (max-width: 900px) {
-      .sidebar {
-        width: 190px;
-      }
-
-      .cards {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-  </style>
+}
+</style>
 </head>
 
 <body>
 
 <div class="app">
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-    <div class="logo">
-      <div class="logo-box">ALM</div>
-      <div>
-        ALM<br>
-        <small>Project Manager</small>
-      </div>
-    </div>
-
-    <ul class="menu">
-      <li class="active" onclick="showPage('dashboard')">▦ Dashboard</li>
-      <li onclick="showPage('projects')">▣ Projects</li>
-      <li onclick="showPage('tasks')">☑ Tasks</li>
-      <li onclick="showPage('documents')">▤ Documents</li>
-      <li onclick="showPage('procurement')">🛒 Procurement</li>
-      <li onclick="showPage('payments')">💳 Payments</li>
-      <li onclick="showPage('variations')">⚒ Variations</li>
-      <li onclick="showPage('manpower')">♙ Manpower</li>
-      <li onclick="showPage('equipment')">▣ Equipment</li>
-      <li onclick="showPage('reports')">▤ Reports</li>
-      <li onclick="showPage('settings')">⚙ Settings</li>
-    </ul>
-
-  </aside>
-
-  <!-- Main -->
-  <main class="main">
-
-    <header class="topbar">
-      <input
-        class="search"
-        type="text"
-        placeholder="Search projects, tasks, documents..."
-      >
-    </header>
-
-    <div class="content">
-
-      <!-- Dashboard -->
-      <div id="dashboard">
-
-        <div class="page-title">
-          <div>
-            <h1>Dashboard</h1>
-            <p>Al-Mansour Engineering & Contracting</p>
-          </div>
-
-          <button class="btn btn-primary" onclick="openProjectModal()">
-            + New Project
-          </button>
+        <div class="logo">
+            <div class="logo-box">ALM</div>
+            <div>ALM<br>Project Manager</div>
         </div>
 
-        <div class="cards">
+        <nav class="menu">
+            <button class="active" onclick="showDashboard()">▦ Dashboard</button>
+            <button onclick="showProjects()">▣ Projects</button>
+            <button>☑ Tasks</button>
+            <button>▤ Documents</button>
+            <button>🛒 Procurement</button>
+            <button>▣ Payments</button>
+            <button>⚒ Variations</button>
+            <button>♟ Manpower</button>
+            <button>▣ Equipment</button>
+            <button>▤ Reports</button>
+            <button>⚙ Settings</button>
+        </nav>
 
-          <div class="card">
-            <div class="card-title">Active Projects</div>
-            <div class="card-number">3</div>
-          </div>
+    </aside>
 
-          <div class="card">
-            <div class="card-title">Open Tasks</div>
-            <div class="card-number">18</div>
-          </div>
+    <!-- MAIN -->
+    <main class="main">
 
-          <div class="card">
-            <div class="card-title">Pending Documents</div>
-            <div class="card-number">7</div>
-          </div>
+        <header class="topbar">
+            <input
+                id="globalSearch"
+                class="search"
+                type="text"
+                placeholder="Search projects, tasks, documents..."
+                oninput="searchProjects()"
+            >
+        </header>
 
-          <div class="card">
-            <div class="card-title">Delayed Items</div>
-            <div class="card-number">4</div>
-          </div>
+        <section class="content" id="pageContent"></section>
 
-        </div>
-
-        <div class="section">
-
-          <div class="section-header">
-            <h2>Projects</h2>
-
-            <button class="btn btn-primary" onclick="openProjectModal()">
-              + Add Project
-            </button>
-          </div>
-
-          <table>
-
-            <thead>
-              <tr>
-                <th>Project</th>
-                <th>Client</th>
-                <th>Manager</th>
-                <th>Progress</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody id="projectTable">
-
-              <tr>
-                <td>Manhattan</td>
-                <td>Client A</td>
-                <td>Project Manager</td>
-                <td>65%</td>
-                <td>
-                  <span class="status status-active">Active</span>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Beverly</td>
-                <td>Client B</td>
-                <td>Project Manager</td>
-                <td>42%</td>
-                <td>
-                  <span class="status status-delay">Delayed</span>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Zilco Project</td>
-                <td>Client C</td>
-                <td>Project Manager</td>
-                <td>78%</td>
-                <td>
-                  <span class="status status-active">Active</span>
-                </td>
-              </tr>
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      </div>
-
-      <!-- Other pages -->
-      <div id="pageContent" style="display:none;"></div>
-
-    </div>
-
-  </main>
+    </main>
 
 </div>
 
 
-<!-- New Project Modal -->
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="projectModal">
 
-<div id="projectModal" class="modal-overlay">
+    <div class="modal">
 
-  <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitle">New Project</h2>
+            <button class="close" onclick="closeModal()">×</button>
+        </div>
 
-    <h2>Create New Project</h2>
+        <form id="projectForm" onsubmit="saveProject(event)">
 
-    <div class="form-group">
-      <label>Project Name</label>
-      <input id="projectName" type="text" placeholder="Enter project name">
+            <div class="modal-body">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Project Name *</label>
+                        <input id="projectName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Project Code</label>
+                        <input id="projectCode">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Client</label>
+                        <input id="client">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Project Manager</label>
+                        <input id="manager">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input id="location">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contract Value</label>
+                        <input id="contractValue" type="number" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input id="startDate" type="date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Planned Completion</label>
+                        <input id="completionDate" type="date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="status">
+                            <option value="Active">Active</option>
+                            <option value="Delayed">Delayed</option>
+                            <option value="On Hold">On Hold</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Progress %</label>
+                        <input id="progress" type="number" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Description</label>
+                        <textarea id="description"></textarea>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                    Cancel
+                </button>
+
+                <button type="submit" class="btn btn-primary">
+                    Save Project
+                </button>
+            </div>
+
+        </form>
+
     </div>
-
-    <div class="form-group">
-      <label>Client</label>
-      <input id="projectClient" type="text" placeholder="Enter client name">
-    </div>
-
-    <div class="form-group">
-      <label>Project Manager</label>
-      <input id="projectManager" type="text" placeholder="Enter project manager">
-    </div>
-
-    <div class="form-group">
-      <label>Status</label>
-
-      <select id="projectStatus">
-        <option>Active</option>
-        <option>Delayed</option>
-        <option>Suspended</option>
-        <option>Completed</option>
-      </select>
-
-    </div>
-
-    <div class="modal-actions">
-
-      <button
-        class="btn btn-secondary"
-        onclick="closeProjectModal()">
-        Cancel
-      </button>
-
-      <button
-        class="btn btn-primary"
-        onclick="createProject()">
-        Create Project
-      </button>
-
-    </div>
-
-  </div>
 
 </div>
 
 
 <script>
 
-  function openProjectModal() {
-    document.getElementById("projectModal").style.display = "flex";
-  }
+/* =========================
+   PROJECT DATA
+========================= */
 
-  function closeProjectModal() {
-    document.getElementById("projectModal").style.display = "none";
-  }
-
-  function createProject() {
-
-    const name = document.getElementById("projectName").value;
-    const client = document.getElementById("projectClient").value;
-    const manager = document.getElementById("projectManager").value;
-    const status = document.getElementById("projectStatus").value;
-
-    if (!name) {
-      alert("Please enter the project name.");
-      return;
+const defaultProjects = [
+    {
+        id: 1,
+        name: "Manhattan",
+        code: "MAN-001",
+        client: "Client A",
+        manager: "Project Manager",
+        location: "",
+        contractValue: "",
+        startDate: "",
+        completionDate: "",
+        status: "Active",
+        progress: 65,
+        description: ""
+    },
+    {
+        id: 2,
+        name: "Beverly",
+        code: "BEV-001",
+        client: "Client B",
+        manager: "Project Manager",
+        location: "",
+        contractValue: "",
+        startDate: "",
+        completionDate: "",
+        status: "Delayed",
+        progress: 42,
+        description: ""
+    },
+    {
+        id: 3,
+        name: "Zilco Project",
+        code: "ZIL-001",
+        client: "Client C",
+        manager: "Project Manager",
+        location: "",
+        contractValue: "",
+        startDate: "",
+        completionDate: "",
+        status: "Active",
+        progress: 78,
+        description: ""
     }
+];
 
-    const table = document.getElementById("projectTable");
+let projects = JSON.parse(localStorage.getItem("alm_projects"));
 
-    const row = document.createElement("tr");
+if (!projects) {
+    projects = defaultProjects;
+    localStorage.setItem("alm_projects", JSON.stringify(projects));
+}
 
-    let statusClass = "status-active";
-
-    if (status === "Delayed") {
-      statusClass = "status-delay";
-    }
-
-    if (status === "Suspended") {
-      statusClass = "status-suspended";
-    }
-
-    row.innerHTML = `
-      <td>${name}</td>
-      <td>${client}</td>
-      <td>${manager}</td>
-      <td>0%</td>
-      <td>
-        <span class="status ${statusClass}">
-          ${status}
-        </span>
-      </td>
-    `;
-
-    table.appendChild(row);
-
-    document.getElementById("projectName").value = "";
-    document.getElementById("projectClient").value = "";
-    document.getElementById("projectManager").value = "";
-
-    closeProjectModal();
-
-    alert("Project created successfully.");
-  }
+let editingId = null;
 
 
-  function showPage(page) {
+/* =========================
+   SAVE DATA
+========================= */
 
-    if (page === "dashboard") {
+function persist(){
+    localStorage.setItem("alm_projects", JSON.stringify(projects));
+}
 
-      document.getElementById("dashboard").style.display = "block";
-      document.getElementById("pageContent").style.display = "none";
 
-      return;
-    }
+/* =========================
+   DASHBOARD
+========================= */
 
-    document.getElementById("dashboard").style.display = "none";
-    document.getElementById("pageContent").style.display = "block";
+function showDashboard(){
 
-    const titles = {
-      projects: "Projects",
-      tasks: "Tasks",
-      documents: "Documents",
-      procurement: "Procurement",
-      payments: "Payments",
-      variations: "Variations",
-      manpower: "Manpower",
-      equipment: "Equipment",
-      reports: "Reports",
-      settings: "Settings"
-    };
+    const active = projects.filter(p => p.status === "Active").length;
+
+    const delayed = projects.filter(p => p.status === "Delayed").length;
 
     document.getElementById("pageContent").innerHTML = `
-      <div class="page-title">
-        <div>
-          <h1>${titles[page]}</h1>
-          <p>ALM Project Management System</p>
-        </div>
-      </div>
 
-      <div class="section">
-        <div class="section-header">
-          <h2>${titles[page]}</h2>
+        <div class="page-title">
+            <div>
+                <h1>Dashboard</h1>
+                <p>ALM Engineering & Contracting</p>
+            </div>
+
+            <button class="btn btn-primary" onclick="openNewProject()">
+                + New Project
+            </button>
         </div>
 
-        <div style="padding:30px;color:#6b7280;">
-          This module will be developed next.
+        <div class="stats">
+
+            <div class="stat-card">
+                <div class="label">Active Projects</div>
+                <div class="number">${active}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="label">Open Tasks</div>
+                <div class="number">18</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="label">Pending Documents</div>
+                <div class="number">7</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="label">Delayed Items</div>
+                <div class="number">${delayed}</div>
+            </div>
+
         </div>
-      </div>
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <h2>Projects</h2>
+
+                <button class="btn btn-primary" onclick="openNewProject()">
+                    + Add Project
+                </button>
+
+            </div>
+
+            ${projectTable()}
+
+        </div>
     `;
-  }
+}
+
+
+/* =========================
+   PROJECTS PAGE
+========================= */
+
+function showProjects(){
+
+    document.getElementById("pageContent").innerHTML = `
+
+        <div class="page-title">
+
+            <div>
+                <h1>Projects</h1>
+                <p>Manage all ALM projects</p>
+            </div>
+
+            <button class="btn btn-primary" onclick="openNewProject()">
+                + New Project
+            </button>
+
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h2>All Projects</h2>
+            </div>
+
+            ${projectTable()}
+
+        </div>
+    `;
+}
+
+
+/* =========================
+   PROJECT TABLE
+========================= */
+
+function projectTable(list = projects){
+
+    if(list.length === 0){
+        return `
+            <div class="empty">
+                No projects found.
+            </div>
+        `;
+    }
+
+    return `
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Manager</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                ${list.map(project => `
+
+                    <tr>
+
+                        <td>
+                            <div class="project-name">
+                                ${escapeHTML(project.name)}
+                            </div>
+
+                            <small>
+                                ${escapeHTML(project.code || "")}
+                            </small>
+                        </td>
+
+                        <td>
+                            ${escapeHTML(project.client || "-")}
+                        </td>
+
+                        <td>
+                            ${escapeHTML(project.manager || "-")}
+                        </td>
+
+                        <td>
+
+                            <div class="progress-wrap">
+
+                                <strong>${project.progress}%</strong>
+
+                                <div class="progress-bar">
+
+                                    <div
+                                        class="progress-fill"
+                                        style="width:${project.progress}%"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>
+                            ${statusBadge(project.status)}
+                        </td>
+
+                        <td>
+
+                            <div class="actions">
+
+                                <button
+                                    class="action-btn"
+                                    onclick="editProject(${project.id})">
+                                    Edit
+                                </button>
+
+                                <button
+                                    class="action-btn"
+                                    onclick="deleteProject(${project.id})">
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                `).join("")}
+
+            </tbody>
+
+        </table>
+    `;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function statusBadge(status){
+
+    let cls = "badge-active";
+
+    if(status === "Delayed") cls = "badge-delayed";
+    if(status === "Completed") cls = "badge-completed";
+    if(status === "On Hold") cls = "badge-onhold";
+
+    return `<span class="badge ${cls}">${status}</span>`;
+}
+
+
+/* =========================
+   NEW PROJECT
+========================= */
+
+function openNewProject(){
+
+    editingId = null;
+
+    document.getElementById("modalTitle").textContent = "New Project";
+
+    document.getElementById("projectForm").reset();
+
+    document.getElementById("progress").value = 0;
+
+    document.getElementById("status").value = "Active";
+
+    document.getElementById("projectModal").style.display = "flex";
+}
+
+
+/* =========================
+   EDIT PROJECT
+========================= */
+
+function editProject(id){
+
+    const project = projects.find(p => p.id === id);
+
+    if(!project) return;
+
+    editingId = id;
+
+    document.getElementById("modalTitle").textContent = "Edit Project";
+
+    document.getElementById("projectName").value = project.name || "";
+    document.getElementById("projectCode").value = project.code || "";
+    document.getElementById("client").value = project.client || "";
+    document.getElementById("manager").value = project.manager || "";
+    document.getElementById("location").value = project.location || "";
+    document.getElementById("contractValue").value = project.contractValue || "";
+    document.getElementById("startDate").value = project.startDate || "";
+    document.getElementById("completionDate").value = project.completionDate || "";
+    document.getElementById("status").value = project.status || "Active";
+    document.getElementById("progress").value = project.progress || 0;
+    document.getElementById("description").value = project.description || "";
+
+    document.getElementById("projectModal").style.display = "flex";
+}
+
+
+/* =========================
+   SAVE PROJECT
+========================= */
+
+function saveProject(event){
+
+    event.preventDefault();
+
+    const projectData = {
+
+        name: document.getElementById("projectName").value.trim(),
+
+        code: document.getElementById("projectCode").value.trim(),
+
+        client: document.getElementById("client").value.trim(),
+
+        manager: document.getElementById("manager").value.trim(),
+
+        location: document.getElementById("location").value.trim(),
+
+        contractValue: document.getElementById("contractValue").value,
+
+        startDate: document.getElementById("startDate").value,
+
+        completionDate: document.getElementById("completionDate").value,
+
+        status: document.getElementById("status").value,
+
+        progress: Number(document.getElementById("progress").value) || 0,
+
+        description: document.getElementById("description").value.trim()
+    };
+
+
+    if(editingId){
+
+        const index = projects.findIndex(p => p.id === editingId);
+
+        if(index !== -1){
+
+            projects[index] = {
+                ...projects[index],
+                ...projectData
+            };
+
+        }
+
+    }else{
+
+        projects.push({
+
+            id: Date.now(),
+
+            ...projectData
+
+        });
+
+    }
+
+
+    persist();
+
+    closeModal();
+
+    showDashboard();
+}
+
+
+/* =========================
+   DELETE PROJECT
+========================= */
+
+function deleteProject(id){
+
+    const project = projects.find(p => p.id === id);
+
+    if(!project) return;
+
+    const confirmed = confirm(
+        `Are you sure you want to delete "${project.name}"?`
+    );
+
+    if(!confirmed) return;
+
+    projects = projects.filter(p => p.id !== id);
+
+    persist();
+
+    showDashboard();
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+function searchProjects(){
+
+    const search = document
+        .getElementById("globalSearch")
+        .value
+        .toLowerCase()
+        .trim();
+
+    if(!search){
+
+        showDashboard();
+
+        return;
+    }
+
+    const results = projects.filter(p =>
+
+        (p.name || "").toLowerCase().includes(search) ||
+        (p.code || "").toLowerCase().includes(search) ||
+        (p.client || "").toLowerCase().includes(search) ||
+        (p.manager || "").toLowerCase().includes(search) ||
+        (p.location || "").toLowerCase().includes(search)
+
+    );
+
+    document.getElementById("pageContent").innerHTML = `
+
+        <div class="page-title">
+
+            <div>
+                <h1>Search Results</h1>
+                <p>${results.length} project(s) found</p>
+            </div>
+
+            <button
+                class="btn btn-primary"
+                onclick="openNewProject()">
+                + New Project
+            </button>
+
+        </div>
+
+        <div class="panel">
+
+            ${projectTable(results)}
+
+        </div>
+
+    `;
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+function closeModal(){
+
+    document.getElementById("projectModal").style.display = "none";
+
+    editingId = null;
+}
+
+
+/* =========================
+   SECURITY
+========================= */
+
+function escapeHTML(value){
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+
+/* =========================
+   CLOSE MODAL OUTSIDE
+========================= */
+
+document.getElementById("projectModal").addEventListener("click", function(e){
+
+    if(e.target === this){
+        closeModal();
+    }
+
+});
+
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
+showDashboard();
 
 </script>
 
