@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALM Project Manager</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 230px;
+      background: #172235;
+      color: white;
+      min-height: 100vh;
+      padding: 20px 14px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px 25px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .logo-box {
+      width: 34px;
+      height: 34px;
+      background: #f59e0b;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .menu {
+      list-style: none;
+    }
+
+    .menu li {
+      padding: 12px 14px;
+      margin: 4px 0;
+      border-radius: 7px;
+      cursor: pointer;
+      color: #d7dee8;
+    }
+
+    .menu li:hover,
+    .menu li.active {
+      background: #26364d;
+      color: white;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 65px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+    }
+
+    .search {
+      width: 380px;
+      padding: 11px 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .page-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .page-title h1 {
+      font-size: 26px;
+    }
+
+    .page-title p {
+      margin-top: 5px;
+      color: #6b7280;
+    }
+
+    .btn {
+      border: none;
+      padding: 11px 18px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-primary {
+      background: #1769aa;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #12588e;
+    }
+
+    /* Dashboard cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .card-title {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .card-number {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    /* Project section */
+    .section {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 25px;
+    }
+
+    .section-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-header h2 {
+      font-size: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid #eef0f2;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f9fafb;
+      color: #6b7280;
+      font-weight: 600;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-active {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-delay {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-suspended {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      width: 500px;
+      max-width: 90%;
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+    }
+
+    .modal h2 {
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 190px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div class="logo">
+      <div class="logo-box">ALM</div>
+      <div>
+        ALM<br>
+        <small>Project Manager</small>
+      </div>
+    </div>
+
+    <ul class="menu">
+      <li class="active" onclick="showPage('dashboard')">▦ Dashboard</li>
+      <li onclick="showPage('projects')">▣ Projects</li>
+      <li onclick="showPage('tasks')">☑ Tasks</li>
+      <li onclick="showPage('documents')">▤ Documents</li>
+      <li onclick="showPage('procurement')">🛒 Procurement</li>
+      <li onclick="showPage('payments')">💳 Payments</li>
+      <li onclick="showPage('variations')">⚒ Variations</li>
+      <li onclick="showPage('manpower')">♙ Manpower</li>
+      <li onclick="showPage('equipment')">▣ Equipment</li>
+      <li onclick="showPage('reports')">▤ Reports</li>
+      <li onclick="showPage('settings')">⚙ Settings</li>
+    </ul>
+
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <header class="topbar">
+      <input
+        class="search"
+        type="text"
+        placeholder="Search projects, tasks, documents..."
+      >
+    </header>
+
+    <div class="content">
+
+      <!-- Dashboard -->
+      <div id="dashboard">
+
+        <div class="page-title">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Al-Mansour Engineering & Contracting</p>
+          </div>
+
+          <button class="btn btn-primary" onclick="openProjectModal()">
+            + New Project
+          </button>
+        </div>
+
+        <div class="cards">
+
+          <div class="card">
+            <div class="card-title">Active Projects</div>
+            <div class="card-number">3</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Open Tasks</div>
+            <div class="card-number">18</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Pending Documents</div>
+            <div class="card-number">7</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Delayed Items</div>
+            <div class="card-number">4</div>
+          </div>
+
+        </div>
+
+        <div class="section">
+
+          <div class="section-header">
+            <h2>Projects</h2>
+
+            <button class="btn btn-primary" onclick="openProjectModal()">
+              + Add Project
+            </button>
+          </div>
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Client</th>
+                <th>Manager</th>
+                <th>Progress</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody id="projectTable">
+
+              <tr>
+                <td>Manhattan</td>
+                <td>Client A</td>
+                <td>Project Manager</td>
+                <td>65%</td>
+                <td>
+                  <span class="status status-active">Active</span>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Beverly</td>
+                <td>Client B</td>
+                <td>Project Manager</td>
+                <td>42%</td>
+                <td>
+                  <span class="status status-delay">Delayed</span>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Zilco Project</td>
+                <td>Client C</td>
+                <td>Project Manager</td>
+                <td>78%</td>
+                <td>
+                  <span class="status status-active">Active</span>
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+      <!-- Other pages -->
+      <div id="pageContent" style="display:none;"></div>
+
+    </div>
+
+  </main>
+
+</div>
+
+
+<!-- New Project Modal -->
+
+<div id="projectModal" class="modal-overlay">
+
+  <div class="modal">
+
+    <h2>Create New Project</h2>
+
+    <div class="form-group">
+      <label>Project Name</label>
+      <input id="projectName" type="text" placeholder="Enter project name">
+    </div>
+
+    <div class="form-group">
+      <label>Client</label>
+      <input id="projectClient" type="text" placeholder="Enter client name">
+    </div>
+
+    <div class="form-group">
+      <label>Project Manager</label>
+      <input id="projectManager" type="text" placeholder="Enter project manager">
+    </div>
+
+    <div class="form-group">
+      <label>Status</label>
+
+      <select id="projectStatus">
+        <option>Active</option>
+        <option>Delayed</option>
+        <option>Suspended</option>
+        <option>Completed</option>
+      </select>
+
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-secondary"
+        onclick="closeProjectModal()">
+        Cancel
+      </button>
+
+      <button
+        class="btn btn-primary"
+        onclick="createProject()">
+        Create Project
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  function openProjectModal() {
+    document.getElementById("projectModal").style.display = "flex";
+  }
+
+  function closeProjectModal() {
+    document.getElementById("projectModal").style.display = "none";
+  }
+
+  function createProject() {
+
+    const name = document.getElementById("projectName").value;
+    const client = document.getElementById("projectClient").value;
+    const manager = document.getElementById("projectManager").value;
+    const status = document.getElementById("projectStatus").value;
+
+    if (!name) {
+      alert("Please enter the project name.");
+      return;
+    }
+
+    const table = document.getElementById("projectTable");
+
+    const row = document.createElement("tr");
+
+    let statusClass = "status-active";
+
+    if (status === "Delayed") {
+      statusClass = "status-delay";
+    }
+
+    if (status === "Suspended") {
+      statusClass = "status-suspended";
+    }
+
+    row.innerHTML = `
+      <td>${name}</td>
+      <td>${client}</td>
+      <td>${manager}</td>
+      <td>0%</td>
+      <td>
+        <span class="status ${statusClass}">
+          ${status}
+        </span>
+      </td>
+    `;
+
+    table.appendChild(row);
+
+    document.getElementById("projectName").value = "";
+    document.getElementById("projectClient").value = "";
+    document.getElementById("projectManager").value = "";
+
+    closeProjectModal();
+
+    alert("Project created successfully.");
+  }
+
+
+  function showPage(page) {
+
+    if (page === "dashboard") {
+
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("pageContent").style.display = "none";
+
+      return;
+    }
+
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("pageContent").style.display = "block";
+
+    const titles = {
+      projects: "Projects",
+      tasks: "Tasks",
+      documents: "Documents",
+      procurement: "Procurement",
+      payments: "Payments",
+      variations: "Variations",
+      manpower: "Manpower",
+      equipment: "Equipment",
+      reports: "Reports",
+      settings: "Settings"
+    };
+
+    document.getElementById("pageContent").innerHTML = `
+      <div class="page-title">
+        <div>
+          <h1>${titles[page]}</h1>
+          <p>ALM Project Management System</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>${titles[page]}</h2>
+        </div>
+
+        <div style="padding:30px;color:#6b7280;">
+          This module will be developed next.
+        </div>
+      </div>
+    `;
+  }
+
+</script>
+
+</body>
+</html>
