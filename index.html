@@ -1585,7 +1585,7 @@ function openProject(id){
 
                     <button
                         class="project-menu-btn"
-                        onclick="openDrawings(${project.id})"
+                        onclick="showProjectSection('reports', ${project.id}, this)"
                         📝 Reports
                     </button>
 
@@ -1856,7 +1856,128 @@ function showProjectSection(section, id, button){
         return;
 
     }
+if(section === "drawings"){
 
+    const drawings = project.drawings || [];
+
+    content.innerHTML = `
+
+        <div class="section-header">
+
+            <div>
+                <h2>Drawings</h2>
+                <p>Project drawings and revisions</p>
+            </div>
+
+            <button
+                class="btn btn-primary"
+                onclick="uploadDrawing(${project.id})">
+                + Upload Drawing
+            </button>
+
+        </div>
+
+        ${
+            drawings.length === 0
+
+            ? `
+
+                <div class="empty">
+                    <h3>No drawings uploaded</h3>
+                    <p>Upload the first project drawing.</p>
+                </div>
+
+              `
+
+            : `
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Drawing No.</th>
+                            <th>Title</th>
+                            <th>Revision</th>
+                            <th>Discipline</th>
+                            <th>Uploaded By</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        ${drawings.map((drawing,index) => `
+
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        ${escapeHTML(drawing.number || "-")}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    ${escapeHTML(drawing.title || "-")}
+                                </td>
+
+                                <td>
+                                    ${escapeHTML(drawing.revision || "-")}
+                                </td>
+
+                                <td>
+                                    ${escapeHTML(drawing.discipline || "-")}
+                                </td>
+
+                                <td>
+                                    ${escapeHTML(drawing.uploadedBy || "-")}
+                                </td>
+
+                                <td>
+                                    ${escapeHTML(drawing.date || "-")}
+                                </td>
+
+                                <td>
+
+                                    <div class="actions">
+
+                                        <button
+                                            class="action-btn"
+                                            onclick="viewDrawing(${project.id},${index})">
+                                            View
+                                        </button>
+
+                                        <button
+                                            class="action-btn"
+                                            onclick="editDrawing(${project.id},${index})">
+                                            Edit
+                                        </button>
+
+                                        <button
+                                            class="action-btn"
+                                            onclick="deleteDrawing(${project.id},${index})">
+                                            Delete
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        `).join("")}
+
+                    </tbody>
+
+                </table>
+
+              `
+        }
+
+    `;
+
+    return;
+}
 
     const titles = {
 
@@ -3388,7 +3509,192 @@ document.getElementById(
 ========================= */
 
 showDashboard();
+/* =========================
+   DRAWINGS
+========================= */
 
+function uploadDrawing(projectId){
+
+    const project = projects.find(p => p.id === projectId);
+
+    if(!project) return;
+
+    const drawingNumber = prompt("Drawing Number:");
+
+    if(!drawingNumber) return;
+
+    const drawingTitle = prompt("Drawing Title:");
+
+    if(!drawingTitle) return;
+
+    const revision = prompt("Revision:", "A");
+
+    const discipline = prompt(
+        "Discipline:",
+        "Architectural / Structural / MEP"
+    );
+
+    const uploadedBy = prompt(
+        "Uploaded By:",
+        "Project Manager"
+    );
+
+    const date = new Date().toISOString().split("T")[0];
+
+    if(!project.drawings){
+        project.drawings = [];
+    }
+
+    project.drawings.push({
+
+        id: Date.now(),
+
+        number: drawingNumber,
+
+        title: drawingTitle,
+
+        revision: revision || "",
+
+        discipline: discipline || "",
+
+        uploadedBy: uploadedBy || "Project Manager",
+
+        date: date
+
+    });
+
+    persist();
+
+    showProjectSection("drawings", projectId);
+
+}
+
+
+/* =========================
+   VIEW DRAWING
+========================= */
+
+function viewDrawing(projectId, index){
+
+    const project = projects.find(p => p.id === projectId);
+
+    if(!project || !project.drawings) return;
+
+    const drawing = project.drawings[index];
+
+    if(!drawing) return;
+
+    alert(
+
+        "DRAWING DETAILS\n\n" +
+
+        "Drawing No.: " + drawing.number + "\n" +
+
+        "Title: " + drawing.title + "\n" +
+
+        "Revision: " + drawing.revision + "\n" +
+
+        "Discipline: " + drawing.discipline + "\n" +
+
+        "Uploaded By: " + drawing.uploadedBy + "\n" +
+
+        "Date: " + drawing.date
+
+    );
+
+}
+
+
+/* =========================
+   EDIT DRAWING
+========================= */
+
+function editDrawing(projectId, index){
+
+    const project = projects.find(p => p.id === projectId);
+
+    if(!project || !project.drawings) return;
+
+    const drawing = project.drawings[index];
+
+    if(!drawing) return;
+
+
+    const number = prompt(
+        "Drawing Number:",
+        drawing.number
+    );
+
+    if(!number) return;
+
+
+    const title = prompt(
+        "Drawing Title:",
+        drawing.title
+    );
+
+    if(!title) return;
+
+
+    const revision = prompt(
+        "Revision:",
+        drawing.revision
+    );
+
+
+    const discipline = prompt(
+        "Discipline:",
+        drawing.discipline
+    );
+
+
+    drawing.number = number;
+
+    drawing.title = title;
+
+    drawing.revision = revision || "";
+
+    drawing.discipline = discipline || "";
+
+
+    persist();
+
+    showProjectSection("drawings", projectId);
+
+}
+
+
+/* =========================
+   DELETE DRAWING
+========================= */
+
+function deleteDrawing(projectId, index){
+
+    const project = projects.find(p => p.id === projectId);
+
+    if(!project || !project.drawings) return;
+
+    const drawing = project.drawings[index];
+
+    if(!drawing) return;
+
+
+    const confirmed = confirm(
+
+        `Are you sure you want to delete drawing "${drawing.number}"?`
+
+    );
+
+    if(!confirmed) return;
+
+
+    project.drawings.splice(index, 1);
+
+    persist();
+
+    showProjectSection("drawings", projectId);
+
+}
 </script>
 
 </body>
