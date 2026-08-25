@@ -2290,9 +2290,11 @@ function openProject(id){
                             📋 Overview
                         </button>
 
-                        <button class="btn btn-secondary">
-                            📄 Documents
-                        </button>
+                       <button
+    class="btn btn-secondary"
+    onclick="showProjectSection('documents', ${project.id}, this)">
+    📄 Documents
+</button>
 
                         <button class="btn btn-secondary">
                             💰 BOQ
