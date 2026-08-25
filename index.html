@@ -711,6 +711,157 @@ tr:hover td{
         overflow-x:auto;
     }
 }
+    /* =========================
+   DRAWINGS MODULE
+========================= */
+
+.project-link{
+    cursor:pointer;
+    color:#17243a;
+}
+
+.project-link:hover{
+    color:#1976b8;
+    text-decoration:underline;
+}
+
+.module-page{
+    padding:0;
+}
+
+.module-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.module-toolbar-left h1{
+    font-size:28px;
+    margin-bottom:5px;
+}
+
+.module-toolbar-left p{
+    color:#708096;
+}
+
+.back-btn{
+    border:0;
+    background:#e8edf3;
+    color:#25344a;
+    padding:11px 16px;
+    border-radius:7px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.back-btn:hover{
+    background:#dce3eb;
+}
+
+.drawing-table-wrap{
+    overflow-x:auto;
+}
+
+.drawing-number{
+    font-weight:bold;
+    color:#17243a;
+}
+
+.drawing-title{
+    font-weight:bold;
+}
+
+.drawing-file{
+    color:#1976b8;
+    cursor:pointer;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.drawing-file:hover{
+    text-decoration:underline;
+}
+
+.revision-badge{
+    display:inline-block;
+    background:#eef3f8;
+    color:#34495e;
+    padding:5px 9px;
+    border-radius:5px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.drawing-status{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.drawing-status-review{
+    background:#fff0c7;
+    color:#a56a00;
+}
+
+.drawing-status-approved{
+    background:#d9f7e5;
+    color:#148344;
+}
+
+.drawing-status-rejected{
+    background:#ffe0e3;
+    color:#b42332;
+}
+
+.drawing-status-superseded{
+    background:#eceff3;
+    color:#657284;
+}
+
+.drawing-actions{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+}
+
+.drawing-modal{
+    width:760px;
+}
+
+.file-name{
+    margin-top:6px;
+    font-size:12px;
+    color:#708096;
+}
+
+.info-box{
+    background:#f7f9fb;
+    border:1px solid #e1e5ea;
+    border-radius:8px;
+    padding:14px;
+    margin-bottom:20px;
+}
+
+.info-box strong{
+    color:#17243a;
+}
+
+.no-drawings{
+    text-align:center;
+    padding:60px 20px;
+    color:#718096;
+}
+
+@media(max-width:700px){
+    .module-toolbar{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:15px;
+    }
+}
 </style>
 </head>
 
@@ -761,7 +912,224 @@ tr:hover td{
 
 </div>
 
+<!-- DRAWING MODAL -->
+<div class="modal-overlay" id="drawingModal">
 
+    <div class="modal drawing-modal">
+
+        <div class="modal-header">
+
+            <h2 id="drawingModalTitle">
+                Upload Drawing
+            </h2>
+
+            <button
+                class="close"
+                onclick="closeDrawingModal()">
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            id="drawingForm"
+            onsubmit="saveDrawing(event)">
+
+            <div class="modal-body">
+
+                <div class="info-box">
+                    Project:
+                    <strong id="drawingProjectName">
+                        -
+                    </strong>
+                </div>
+
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label>
+                            Drawing Number *
+                        </label>
+
+                        <input
+                            id="drawingNumber"
+                            required
+                            placeholder="e.g. STR-001">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Drawing Title *
+                        </label>
+
+                        <input
+                            id="drawingTitle"
+                            required
+                            placeholder="e.g. Foundation Layout">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Discipline
+                        </label>
+
+                        <select id="drawingDiscipline">
+
+                            <option value="Architectural">
+                                Architectural
+                            </option>
+
+                            <option value="Structural">
+                                Structural
+                            </option>
+
+                            <option value="Civil">
+                                Civil
+                            </option>
+
+                            <option value="MEP">
+                                MEP
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Revision
+                        </label>
+
+                        <input
+                            id="drawingRevision"
+                            placeholder="Rev.00">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Drawing Date
+                        </label>
+
+                        <input
+                            id="drawingDate"
+                            type="date">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select id="drawingStatus">
+
+                            <option value="For Review">
+                                For Review
+                            </option>
+
+                            <option value="Approved">
+                                Approved
+                            </option>
+
+                            <option value="Rejected">
+                                Rejected
+                            </option>
+
+                            <option value="Superseded">
+                                Superseded
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group full">
+
+                        <label>
+                            Drawing File *
+                        </label>
+
+                        <input
+                            id="drawingFile"
+                            type="file"
+                            accept=".pdf,.dwg,.dxf,.jpg,.jpeg,.png"
+                            required>
+
+                        <div
+                            class="file-name"
+                            id="selectedDrawingFile">
+                            No file selected
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group full">
+
+                        <label>
+                            Remarks
+                        </label>
+
+                        <textarea
+                            id="drawingRemarks"
+                            placeholder="Additional remarks...">
+                        </textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="closeDrawingModal()">
+
+                    Cancel
+
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    Save Drawing
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
 <!-- PROJECT MODAL -->
 <div class="modal-overlay" id="projectModal">
 
@@ -1217,7 +1585,7 @@ function openProject(id){
 
                     <button
                         class="project-menu-btn"
-                        onclick="showProjectSection('reports', ${project.id}, this)">
+                        onclick="openDrawings(${project.id})"
                         📝 Reports
                     </button>
 
@@ -2042,7 +2410,979 @@ document.getElementById("projectModal").addEventListener("click", function(e){
 
 });
 
+/* =========================
+   DRAWINGS MODULE
+========================= */
 
+let currentDrawingsProjectId = null;
+let editingDrawingId = null;
+
+
+/* =========================
+   DRAWING DATA
+========================= */
+
+function getDrawings(){
+
+    return JSON.parse(
+        localStorage.getItem("alm_drawings") || "[]"
+    );
+
+}
+
+
+function persistDrawings(drawings){
+
+    localStorage.setItem(
+        "alm_drawings",
+        JSON.stringify(drawings)
+    );
+
+}
+
+
+/* =========================
+   CURRENT USER
+========================= */
+
+/*
+   Temporary user system.
+
+   Later this will come from
+   the real Login / Users system.
+*/
+
+const currentUser = {
+
+    name: "Admin",
+
+    role: "Admin"
+
+};
+
+
+/* =========================
+   OPEN DRAWINGS
+========================= */
+
+function openDrawings(projectId){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project) return;
+
+    currentDrawingsProjectId = projectId;
+
+    renderDrawingsPage(project);
+
+}
+
+
+/* =========================
+   RENDER DRAWINGS PAGE
+========================= */
+
+function renderDrawingsPage(project){
+
+    const drawings = getDrawings().filter(
+        d => d.projectId === project.id
+    );
+
+
+    document.getElementById("pageContent").innerHTML = `
+
+        <div class="module-page">
+
+            <div class="module-toolbar">
+
+                <div class="module-toolbar-left">
+
+                    <h1>
+                        ${escapeHTML(project.name)}
+                        — Drawings
+                    </h1>
+
+                    <p>
+                        Project Code:
+                        ${escapeHTML(project.code || "-")}
+                    </p>
+
+                </div>
+
+
+                <div style="display:flex;gap:10px;">
+
+                    <button
+                        class="back-btn"
+                        onclick="openProject(${project.id})">
+
+                        ← Back to Project
+
+                    </button>
+
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="openDrawingUpload(${project.id})">
+
+                        + Upload Drawing
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Project Drawings
+                        </h2>
+
+                    </div>
+
+                    <div>
+                        ${drawings.length} drawing(s)
+                    </div>
+
+                </div>
+
+
+                ${
+                    drawings.length === 0
+
+                    ?
+
+                    `
+                    <div class="no-drawings">
+
+                        <h3>
+                            No drawings uploaded yet
+                        </h3>
+
+                        <p style="margin-top:8px;">
+                            Upload the first drawing for this project.
+                        </p>
+
+                    </div>
+                    `
+
+                    :
+
+                    `
+
+                    <div class="drawing-table-wrap">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Drawing No.
+                                    </th>
+
+                                    <th>
+                                        Title
+                                    </th>
+
+                                    <th>
+                                        Discipline
+                                    </th>
+
+                                    <th>
+                                        Revision
+                                    </th>
+
+                                    <th>
+                                        Date
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Uploaded By
+                                    </th>
+
+                                    <th>
+                                        Actions
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                ${drawings.map(drawing => `
+
+                                    <tr>
+
+                                        <td>
+
+                                            <div class="drawing-number">
+
+                                                ${escapeHTML(
+                                                    drawing.number || "-"
+                                                )}
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="drawing-title">
+
+                                                ${escapeHTML(
+                                                    drawing.title || "-"
+                                                )}
+
+                                            </div>
+
+
+                                            ${
+                                                drawing.fileName
+
+                                                ?
+
+                                                `
+                                                <div style="margin-top:5px;">
+
+                                                    <a
+                                                        href="${drawing.fileData || "#"}"
+                                                        target="_blank"
+                                                        class="drawing-file">
+
+                                                        📄
+                                                        ${escapeHTML(
+                                                            drawing.fileName
+                                                        )}
+
+                                                    </a>
+
+                                                </div>
+                                                `
+
+                                                :
+
+                                                ""
+                                            }
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                drawing.discipline || "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span class="revision-badge">
+
+                                                ${escapeHTML(
+                                                    drawing.revision || "-"
+                                                )}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                drawing.drawingDate || "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${drawingStatusBadge(
+                                                drawing.status
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                drawing.uploadedBy || "-"
+                                            )}
+
+                                            <br>
+
+                                            <small style="color:#708096;">
+
+                                                ${escapeHTML(
+                                                    drawing.uploadDate || ""
+                                                )}
+
+                                            </small>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="drawing-actions">
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="viewDrawing(${drawing.id})">
+
+                                                    View
+
+                                                </button>
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="editDrawing(${drawing.id})">
+
+                                                    Edit
+
+                                                </button>
+
+
+                                                ${
+                                                    currentUser.role === "Admin"
+
+                                                    ?
+
+                                                    `
+                                                    <button
+                                                        class="action-btn"
+                                                        onclick="deleteDrawing(${drawing.id})">
+
+                                                        Delete
+
+                                                    </button>
+                                                    `
+
+                                                    :
+
+                                                    ""
+                                                }
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                `).join("")}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    `
+
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================
+   DRAWING STATUS
+========================= */
+
+function drawingStatusBadge(status){
+
+    let cls = "drawing-status-review";
+
+
+    if(status === "Approved"){
+        cls = "drawing-status-approved";
+    }
+
+    if(status === "Rejected"){
+        cls = "drawing-status-rejected";
+    }
+
+    if(status === "Superseded"){
+        cls = "drawing-status-superseded";
+    }
+
+
+    return `
+
+        <span class="drawing-status ${cls}">
+
+            ${escapeHTML(status || "For Review")}
+
+        </span>
+
+    `;
+
+}
+
+
+/* =========================
+   OPEN UPLOAD DRAWING
+========================= */
+
+function openDrawingUpload(projectId){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project) return;
+
+
+    currentDrawingsProjectId = projectId;
+
+    editingDrawingId = null;
+
+
+    document.getElementById(
+        "drawingModalTitle"
+    ).textContent = "Upload Drawing";
+
+
+    document.getElementById(
+        "drawingProjectName"
+    ).textContent = project.name;
+
+
+    document.getElementById(
+        "drawingForm"
+    ).reset();
+
+
+    document.getElementById(
+        "selectedDrawingFile"
+    ).textContent = "No file selected";
+
+
+    document.getElementById(
+        "drawingModal"
+    ).style.display = "flex";
+
+}
+
+
+/* =========================
+   FILE NAME PREVIEW
+========================= */
+
+document.addEventListener("change", function(e){
+
+    if(e.target.id !== "drawingFile") return;
+
+
+    const file = e.target.files[0];
+
+
+    document.getElementById(
+        "selectedDrawingFile"
+    ).textContent = file
+        ? file.name
+        : "No file selected";
+
+});
+
+
+/* =========================
+   SAVE DRAWING
+========================= */
+
+function saveDrawing(event){
+
+    event.preventDefault();
+
+
+    const fileInput =
+        document.getElementById("drawingFile");
+
+
+    const file = fileInput.files[0];
+
+
+    if(!file && !editingDrawingId){
+
+        alert("Please select a drawing file.");
+
+        return;
+
+    }
+
+
+    const drawings = getDrawings();
+
+
+    const saveData = (fileData = null) => {
+
+        const drawingData = {
+
+            projectId: currentDrawingsProjectId,
+
+            number:
+                document.getElementById(
+                    "drawingNumber"
+                ).value.trim(),
+
+            title:
+                document.getElementById(
+                    "drawingTitle"
+                ).value.trim(),
+
+            discipline:
+                document.getElementById(
+                    "drawingDiscipline"
+                ).value,
+
+            revision:
+                document.getElementById(
+                    "drawingRevision"
+                ).value.trim(),
+
+            drawingDate:
+                document.getElementById(
+                    "drawingDate"
+                ).value,
+
+            status:
+                document.getElementById(
+                    "drawingStatus"
+                ).value,
+
+            remarks:
+                document.getElementById(
+                    "drawingRemarks"
+                ).value.trim(),
+
+            uploadedBy:
+                currentUser.name,
+
+            uploadDate:
+                new Date().toLocaleDateString(),
+
+            fileName:
+                file
+                    ? file.name
+                    : null,
+
+            fileType:
+                file
+                    ? file.type
+                    : null,
+
+            fileData:
+                fileData
+
+        };
+
+
+        if(editingDrawingId){
+
+            const index =
+                drawings.findIndex(
+                    d => d.id === editingDrawingId
+                );
+
+
+            if(index !== -1){
+
+                drawings[index] = {
+
+                    ...drawings[index],
+
+                    ...drawingData,
+
+                    /*
+                       Keep old file if no new
+                       file was selected.
+                    */
+
+                    fileName:
+                        file
+                            ? file.name
+                            : drawings[index].fileName,
+
+                    fileType:
+                        file
+                            ? file.type
+                            : drawings[index].fileType,
+
+                    fileData:
+                        fileData
+                            ? fileData
+                            : drawings[index].fileData
+
+                };
+
+            }
+
+        }else{
+
+            drawings.push({
+
+                id: Date.now(),
+
+                ...drawingData
+
+            });
+
+        }
+
+
+        persistDrawings(drawings);
+
+        closeDrawingModal();
+
+
+        const project =
+            projects.find(
+                p => p.id === currentDrawingsProjectId
+            );
+
+
+        if(project){
+
+            renderDrawingsPage(project);
+
+        }
+
+    };
+
+
+    /*
+       Read uploaded file as Data URL.
+       This is suitable for our first prototype.
+    */
+
+    if(file){
+
+        const reader = new FileReader();
+
+
+        reader.onload = function(){
+
+            saveData(reader.result);
+
+        };
+
+
+        reader.readAsDataURL(file);
+
+    }else{
+
+        saveData();
+
+    }
+
+}
+
+
+/* =========================
+   VIEW DRAWING
+========================= */
+
+function viewDrawing(id){
+
+    const drawing =
+        getDrawings().find(
+            d => d.id === id
+        );
+
+
+    if(!drawing) return;
+
+
+    if(!drawing.fileData){
+
+        alert("No file is attached to this drawing.");
+
+        return;
+
+    }
+
+
+    const newWindow =
+        window.open();
+
+
+    if(newWindow){
+
+        newWindow.document.write(`
+
+            <html>
+
+                <head>
+
+                    <title>
+                        ${escapeHTML(drawing.fileName || "Drawing")}
+                    </title>
+
+                </head>
+
+                <body style="
+                    margin:0;
+                    background:#222;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    min-height:100vh;
+                ">
+
+                    <iframe
+                        src="${drawing.fileData}"
+                        style="
+                            width:100%;
+                            height:100vh;
+                            border:0;
+                            background:white;
+                        ">
+                    </iframe>
+
+                </body>
+
+            </html>
+
+        `);
+
+        newWindow.document.close();
+
+    }
+
+}
+
+
+/* =========================
+   EDIT DRAWING
+========================= */
+
+function editDrawing(id){
+
+    const drawing =
+        getDrawings().find(
+            d => d.id === id
+        );
+
+
+    if(!drawing) return;
+
+
+    const project =
+        projects.find(
+            p => p.id === drawing.projectId
+        );
+
+
+    if(!project) return;
+
+
+    currentDrawingsProjectId =
+        drawing.projectId;
+
+
+    editingDrawingId = id;
+
+
+    document.getElementById(
+        "drawingModalTitle"
+    ).textContent = "Edit Drawing";
+
+
+    document.getElementById(
+        "drawingProjectName"
+    ).textContent = project.name;
+
+
+    document.getElementById(
+        "drawingNumber"
+    ).value = drawing.number || "";
+
+
+    document.getElementById(
+        "drawingTitle"
+    ).value = drawing.title || "";
+
+
+    document.getElementById(
+        "drawingDiscipline"
+    ).value =
+        drawing.discipline || "Structural";
+
+
+    document.getElementById(
+        "drawingRevision"
+    ).value = drawing.revision || "";
+
+
+    document.getElementById(
+        "drawingDate"
+    ).value = drawing.drawingDate || "";
+
+
+    document.getElementById(
+        "drawingStatus"
+    ).value =
+        drawing.status || "For Review";
+
+
+    document.getElementById(
+        "drawingRemarks"
+    ).value = drawing.remarks || "";
+
+
+    document.getElementById(
+        "drawingFile"
+    ).required = false;
+
+
+    document.getElementById(
+        "selectedDrawingFile"
+    ).textContent =
+        drawing.fileName
+        ? `Current file: ${drawing.fileName}`
+        : "No file selected";
+
+
+    document.getElementById(
+        "drawingModal"
+    ).style.display = "flex";
+
+}
+
+
+/* =========================
+   DELETE DRAWING
+========================= */
+
+function deleteDrawing(id){
+
+    if(currentUser.role !== "Admin"){
+
+        alert(
+            "Only Admin can delete drawings."
+        );
+
+        return;
+
+    }
+
+
+    const drawings = getDrawings();
+
+
+    const drawing =
+        drawings.find(
+            d => d.id === id
+        );
+
+
+    if(!drawing) return;
+
+
+    const confirmed =
+        confirm(
+            `Are you sure you want to delete "${drawing.number} - ${drawing.title}"?`
+        );
+
+
+    if(!confirmed) return;
+
+
+    const updated =
+        drawings.filter(
+            d => d.id !== id
+        );
+
+
+    persistDrawings(updated);
+
+
+    const project =
+        projects.find(
+            p => p.id === currentDrawingsProjectId
+        );
+
+
+    if(project){
+
+        renderDrawingsPage(project);
+
+    }
+
+}
+
+
+/* =========================
+   CLOSE DRAWING MODAL
+========================= */
+
+function closeDrawingModal(){
+
+    document.getElementById(
+        "drawingModal"
+    ).style.display = "none";
+
+
+    editingDrawingId = null;
+
+
+    /*
+       Reset required state for
+       new uploads.
+    */
+
+    document.getElementById(
+        "drawingFile"
+    ).required = true;
+
+}
+
+
+/* =========================
+   CLOSE DRAWING MODAL OUTSIDE
+========================= */
+
+document.getElementById(
+    "drawingModal"
+).addEventListener(
+    "click",
+    function(e){
+
+        if(e.target === this){
+
+            closeDrawingModal();
+
+        }
+
+    }
+);
 /* =========================
    INITIAL LOAD
 ========================= */
