@@ -769,14 +769,17 @@ function projectTable(list = projects){
                     <tr>
 
                         <td>
-                            <div class="project-name">
-                                ${escapeHTML(project.name)}
-                            </div>
+    <div
+        class="project-name project-link"
+        onclick="openProject(${project.id})"
+    >
+        ${escapeHTML(project.name)}
+    </div>
 
-                            <small>
-                                ${escapeHTML(project.code || "")}
-                            </small>
-                        </td>
+    <small>
+        ${escapeHTML(project.code || "")}
+    </small>
+</td>
 
                         <td>
                             ${escapeHTML(project.client || "-")}
@@ -904,7 +907,163 @@ function editProject(id){
 
     document.getElementById("projectModal").style.display = "flex";
 }
+/* =========================
+   PROJECT WORKSPACE
+========================= */
 
+let currentProjectId = null;
+
+function openProject(id){
+
+    const project = projects.find(p => p.id === id);
+
+    if(!project) return;
+
+    currentProjectId = id;
+
+    document.getElementById("pageContent").innerHTML = `
+
+        <div class="page-title">
+
+            <div>
+                <h1>${escapeHTML(project.name)}</h1>
+                <p>${escapeHTML(project.code || "")}</p>
+            </div>
+
+            <button
+                class="btn btn-secondary"
+                onclick="showProjects()">
+                ← Back to Projects
+            </button>
+
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h2>Project Overview</h2>
+            </div>
+
+            <div style="padding:25px">
+
+                <div class="stats">
+
+                    <div class="stat-card">
+                        <div class="label">Client</div>
+                        <div class="number" style="font-size:20px">
+                            ${escapeHTML(project.client || "-")}
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="label">Project Manager</div>
+                        <div class="number" style="font-size:20px">
+                            ${escapeHTML(project.manager || "-")}
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="label">Status</div>
+                        <div style="margin-top:10px">
+                            ${statusBadge(project.status)}
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="label">Progress</div>
+                        <div class="number">
+                            ${project.progress}%
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="panel">
+
+                    <div class="panel-header">
+                        <h2>Project Modules</h2>
+                    </div>
+
+                    <div style="
+                        display:grid;
+                        grid-template-columns:repeat(4,1fr);
+                        gap:12px;
+                        padding:20px;
+                    ">
+
+                        <button class="btn btn-secondary">
+                            📋 Overview
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            📄 Documents
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            💰 BOQ
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            📐 Drawings
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            📊 Reports
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            ☑ Tasks
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            🛒 Procurement
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            💳 Payments
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            ⚒ Variations
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            👷 Manpower
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            🚜 Equipment
+                        </button>
+
+                        <button class="btn btn-secondary">
+                            📝 Meetings
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div style="margin-top:20px">
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+                            <h2>Project Description</h2>
+                        </div>
+
+                        <div style="padding:20px">
+                            ${escapeHTML(project.description || "No description available.")}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    `;
+}
 
 /* =========================
    SAVE PROJECT
