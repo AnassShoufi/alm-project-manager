@@ -2326,9 +2326,11 @@ function openProject(id){
                             🛒 Procurement
                         </button>
 
-                        <button class="btn btn-secondary">
-                            💳 Payments
-                        </button>
+                        <button
+    class="btn btn-secondary"
+    onclick="showProjectSection('payments', ${project.id}, this)">
+    💳 Payments
+</button>
 
                         <button class="btn btn-secondary">
                             ⚒ Variations
