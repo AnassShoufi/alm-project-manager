@@ -1844,8 +1844,16 @@ function showProjectSection(section, id, button){
     }
 
 
-    const content =
-        document.getElementById("projectSectionContent");
+    let content = document.getElementById("projectSectionContent");
+
+if (!content) {
+    content = document.querySelector(".project-details-content");
+}
+
+if (!content) {
+    console.error("projectSectionContent not found in the page.");
+    return;
+}
 
 
     if(section === "overview"){
