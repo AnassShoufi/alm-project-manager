@@ -1844,14 +1844,21 @@ function showProjectSection(section, id, button){
     }
 
 
-    let content = document.getElementById("projectSectionContent");
+    let content = null;
 
-if (!content) {
-    content = document.querySelector(".project-details-content");
+if (button) {
+    const modal = button.closest(".project-details-modal");
+    if (modal) {
+        content = modal.querySelector("#projectSectionContent");
+    }
 }
 
 if (!content) {
-    console.error("projectSectionContent not found in the page.");
+    content = document.getElementById("projectSectionContent");
+}
+
+if (!content) {
+    console.error("projectSectionContent not found.");
     return;
 }
 
