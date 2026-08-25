@@ -2017,9 +2017,10 @@ if(section === "drawings"){
 
         tasks: "Tasks"
 
-        meetings: "Meetings"
+       meetings: "Meetings"
+};
 
-    };
+const sectionTitle = titles[section] || section || "Section";
 
 
     content.innerHTML = `
@@ -2061,7 +2062,7 @@ if(section === "drawings"){
 
                 <p>
                     This section is ready for
-                    ${titles[section].toLowerCase()} related to
+                    ${sectionTitle.toLowerCase()} related to
                     ${escapeHTML(project.name)}.
                 </p>
 
