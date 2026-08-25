@@ -2332,9 +2332,11 @@ function openProject(id){
     💳 Payments
 </button>
 
-                        <button class="btn btn-secondary">
-                            ⚒ Variations
-                        </button>
+                        <button
+    class="btn btn-secondary"
+    onclick="showProjectSection('variations', ${project.id}, this)">
+    ⚒ Variations
+</button>
 
                         <button class="btn btn-secondary">
                             👷 Manpower
