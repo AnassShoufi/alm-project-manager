@@ -2344,10 +2344,11 @@ function openProject(id){
     👷 Manpower
 </button>
 
-                        <button class="btn btn-secondary">
-                            🚜 Equipment
-                        </button>
-
+                        <button
+    class="btn btn-secondary"
+    onclick="showProjectSection('equipment', ${project.id}, this)">
+    🚚 Equipment
+</button>
                         <button class="btn btn-secondary">
                             📝 Meetings
                         </button>
