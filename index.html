@@ -2338,9 +2338,11 @@ function openProject(id){
     ⚒ Variations
 </button>
 
-                        <button class="btn btn-secondary">
-                            👷 Manpower
-                        </button>
+                        <button
+    class="btn btn-secondary"
+    onclick="showProjectSection('manpower', ${project.id}, this)">
+    👷 Manpower
+</button>
 
                         <button class="btn btn-secondary">
                             🚜 Equipment
