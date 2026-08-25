@@ -2316,9 +2316,11 @@ function openProject(id){
     📊 Reports
 </button>
 
-                        <button class="btn btn-secondary">
-                            ☑ Tasks
-                        </button>
+                        <button
+    class="btn btn-secondary"
+    onclick="showProjectSection('tasks', ${project.id}, this)">
+    ☑ Tasks
+</button>
 
                         <button class="btn btn-secondary">
                             🛒 Procurement
