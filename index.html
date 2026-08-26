@@ -2390,13 +2390,15 @@ const sectionTitle = titles[section] || section || "Section";
 
                 </div>
 
-                <button
-                    class="btn btn-primary"
-                    onclick="addProjectItem('${section}', ${project.id})">
-
-                    + Add ${titles[section]}
-
-                </button>
+        <button
+    class="btn btn-primary"
+    onclick="${section === 'documents'
+        ? "showProjectSection('documents', " + project.id + ", this)"
+        : "addProjectItem('" + section + "', " + project.id + ")"
+    }"
+>
+    + Add ${titles[section]}
+</button>
 
             </div>
 
@@ -2473,10 +2475,17 @@ function addProjectItem(section, id){
 
     if(!project) return;
 
-    alert(
-        `${section.toUpperCase()} section for "${project.name}" is ready to be connected.`
-    );
+    if(section === "documents"){
+        showProjectSection("documents", id);
+        return;
+    }
 
+    if(section === "drawings"){
+        showProjectSection("drawings", id);
+        return;
+    }
+
+    showProjectSection(section, id);
 }
 
 
