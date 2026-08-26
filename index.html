@@ -1994,6 +1994,356 @@ if(section === "drawings"){
 
     return;
 }
+/* =========================
+   DOCUMENTS
+========================= */
+
+if(section === "documents"){
+
+    const documents = project.documents || [];
+
+    content.innerHTML = `
+
+        <div class="section-header">
+
+            <div>
+                <h2>Documents</h2>
+                <p>Project documents and files</p>
+            </div>
+
+            <button
+                class="btn btn-primary"
+                onclick="uploadDocument(${project.id})">
+                + Add Document
+            </button>
+
+        </div>
+
+        ${
+            documents.length === 0
+
+            ?
+
+            `
+            <div class="empty">
+
+                <div style="font-size:48px;">📄</div>
+
+                <h3>No Documents yet</h3>
+
+                <p>
+                    Upload the first document for this project.
+                </p>
+
+            </div>
+            `
+
+            :
+
+            `
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Document</th>
+                        <th>File Type</th>
+                        <th>Uploaded By</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    ${documents.map((doc,index) => `
+
+                        <tr>
+
+                            <td>
+
+                                <strong>
+                                    ${escapeHTML(doc.title || doc.fileName || "-")}
+                                </strong>
+
+                                <div style="
+                                    margin-top:4px;
+                                    color:#64748b;
+                                    font-size:13px;
+                                ">
+                                    ${escapeHTML(doc.fileName || "")}
+                                </div>
+
+                            </td>
+
+                            <td>
+                                ${escapeHTML(doc.fileType || "-")}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(doc.uploadedBy || "-")}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(doc.date || "-")}
+                            </td>
+
+                            <td>
+
+                                <div class="actions">
+
+                                    <button
+                                        class="action-btn"
+                                        onclick="viewDocument(${project.id},${index})">
+                                        View
+                                    </button>
+
+                                    <button
+                                        class="action-btn"
+                                        onclick="deleteDocument(${project.id},${index})">
+                                        Delete
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    `).join("")}
+
+                </tbody>
+
+            </table>
+
+            `
+        }
+
+    `;
+
+    return;
+}
+
+
+/* =========================
+   UPLOAD DOCUMENT
+========================= */
+
+function uploadDocument(projectId){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project) return;
+
+
+    const input = document.createElement("input");
+
+    input.type = "file";
+
+    input.accept = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.dwg,.zip";
+
+    input.onchange = function(){
+
+        const file = input.files[0];
+
+        if(!file) return;
+
+
+        const title = prompt(
+            "Document Title:",
+            file.name
+        );
+
+        if(title === null) return;
+
+
+        const uploadedBy = prompt(
+            "Uploaded By:",
+            "Project Manager"
+        );
+
+        if(uploadedBy === null) return;
+
+
+        const reader = new FileReader();
+
+
+        reader.onload = function(e){
+
+            if(!project.documents){
+
+                project.documents = [];
+
+            }
+
+
+            project.documents.push({
+
+                id: Date.now(),
+
+                title: title || file.name,
+
+                fileName: file.name,
+
+                fileType: file.type || "Unknown",
+
+                fileData: e.target.result,
+
+                uploadedBy:
+                    uploadedBy || "Project Manager",
+
+                date:
+                    new Date()
+                    .toISOString()
+                    .split("T")[0]
+
+            });
+
+
+            persist();
+
+
+            showProjectSection(
+                "documents",
+                projectId
+            );
+
+        };
+
+
+        reader.readAsDataURL(file);
+
+    };
+
+
+    input.click();
+
+}
+
+
+/* =========================
+   VIEW DOCUMENT
+========================= */
+
+function viewDocument(projectId,index){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project || !project.documents) return;
+
+
+    const doc = project.documents[index];
+
+    if(!doc || !doc.fileData){
+
+        alert("No file is attached to this document.");
+
+        return;
+
+    }
+
+
+    const newWindow = window.open(
+        "",
+        "_blank"
+    );
+
+    if(!newWindow){
+
+        alert(
+            "Please allow pop-ups to view the document."
+        );
+
+        return;
+
+    }
+
+
+    newWindow.document.write(`
+
+        <html>
+
+        <head>
+
+            <title>
+                ${escapeHTML(doc.fileName || "Document")}
+            </title>
+
+        </head>
+
+        <body style="
+            margin:0;
+            background:#f1f5f9;
+        ">
+
+            <iframe
+                src="${doc.fileData}"
+                style="
+                    width:100%;
+                    height:100vh;
+                    border:0;
+                    background:white;
+                ">
+            </iframe>
+
+        </body>
+
+        </html>
+
+    `);
+
+}
+
+
+/* =========================
+   DELETE DOCUMENT
+========================= */
+
+function deleteDocument(projectId,index){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project || !project.documents) return;
+
+
+    const doc = project.documents[index];
+
+    if(!doc) return;
+
+
+    const confirmed = confirm(
+        `Are you sure you want to delete "${doc.fileName}"?`
+    );
+
+    if(!confirmed) return;
+
+
+    project.documents.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    showProjectSection(
+        "documents",
+        projectId
+    );
+
+}
+
 
 const titles = {
 
@@ -2040,13 +2390,15 @@ const sectionTitle = titles[section] || section || "Section";
 
                 </div>
 
-                <button
-                    class="btn btn-primary"
-                    onclick="addProjectItem('${section}', ${project.id})">
-
-                    + Add ${titles[section]}
-
-                </button>
+        <button
+    class="btn btn-primary"
+    onclick="${section === 'documents'
+        ? "showProjectSection('documents', " + project.id + ", this)"
+        : "addProjectItem('" + section + "', " + project.id + ")"
+    }"
+>
+    + Add ${titles[section]}
+</button>
 
             </div>
 
@@ -2123,10 +2475,17 @@ function addProjectItem(section, id){
 
     if(!project) return;
 
-    alert(
-        `${section.toUpperCase()} section for "${project.name}" is ready to be connected.`
-    );
+    if(section === "documents"){
+        showProjectSection("documents", id);
+        return;
+    }
 
+    if(section === "drawings"){
+        showProjectSection("drawings", id);
+        return;
+    }
+
+    showProjectSection(section, id);
 }
 
 
