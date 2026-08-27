@@ -2133,7 +2133,7 @@ if(section === "documents"){
    UPLOAD DOCUMENT
 ========================= */
 
-function uploadDocument(projectId){
+window.uploadDocument = function uploadDocument(projectId){
 
     const project = projects.find(
         p => p.id === projectId
