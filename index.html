@@ -4114,7 +4114,73 @@ window.viewDocument = function(projectId, index){
     window.open(doc.fileData, "_blank");
 
 };   
+    
 </script>
+window.viewDocument = function(projectId, index){
 
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project || !project.documents){
+        alert("Project or documents not found.");
+        return;
+    }
+
+    const doc = project.documents[index];
+
+    if(!doc || !doc.fileData){
+        alert("No file is attached to this document.");
+        return;
+    }
+
+    const newWindow = window.open();
+
+    if(!newWindow){
+        alert("Please allow pop-ups for this website.");
+        return;
+    }
+
+    newWindow.document.write(`
+        <html>
+        <head>
+            <title>${doc.title || doc.fileName || "Document"}</title>
+            <style>
+                body {
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                    background: #f1f5f9;
+                }
+
+                .header {
+                    padding: 15px 20px;
+                    background: #ffffff;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 18px;
+                    font-weight: bold;
+                }
+
+                iframe {
+                    width: 100%;
+                    height: calc(100vh - 60px);
+                    border: none;
+                }
+            </style>
+        </head>
+
+        <body>
+
+            <div class="header">
+                ${doc.title || doc.fileName || "Document"}
+            </div>
+
+            <iframe src="${doc.fileData}"></iframe>
+
+        </body>
+        </html>
+    `);
+
+    newWindow.document.close();
+};
 </body>
 </html>
