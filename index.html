@@ -2127,13 +2127,11 @@ if(section === "documents"){
 
     return;
 }
-
-
 /* =========================
    UPLOAD DOCUMENT
 ========================= */
 
-window.uploadDocument = function uploadDocument(projectId){
+window.uploadDocument = function(projectId){
 
     const project = projects.find(
         p => p.id === projectId
@@ -2141,19 +2139,18 @@ window.uploadDocument = function uploadDocument(projectId){
 
     if(!project) return;
 
-
     const input = document.createElement("input");
 
     input.type = "file";
 
-    input.accept = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.dwg,.zip";
+    input.accept =
+        ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.dwg,.zip";
 
     input.onchange = function(){
 
         const file = input.files[0];
 
         if(!file) return;
-
 
         const title = prompt(
             "Document Title:",
@@ -2162,7 +2159,6 @@ window.uploadDocument = function uploadDocument(projectId){
 
         if(title === null) return;
 
-
         const uploadedBy = prompt(
             "Uploaded By:",
             "Project Manager"
@@ -2170,18 +2166,13 @@ window.uploadDocument = function uploadDocument(projectId){
 
         if(uploadedBy === null) return;
 
-
         const reader = new FileReader();
-
 
         reader.onload = function(e){
 
             if(!project.documents){
-
                 project.documents = [];
-
             }
-
 
             project.documents.push({
 
@@ -2205,26 +2196,19 @@ window.uploadDocument = function uploadDocument(projectId){
 
             });
 
-
             persist();
-
 
             showProjectSection(
                 "documents",
                 projectId
             );
-
         };
 
-
         reader.readAsDataURL(file);
-
     };
 
-
     input.click();
-
-}
+};
 
 
 /* =========================
@@ -2239,7 +2223,6 @@ function viewDocument(projectId,index){
 
     if(!project || !project.documents) return;
 
-
     const doc = project.documents[index];
 
     if(!doc || !doc.fileData){
@@ -2247,7 +2230,6 @@ function viewDocument(projectId,index){
         alert("No file is attached to this document.");
 
         return;
-
     }
 
 
