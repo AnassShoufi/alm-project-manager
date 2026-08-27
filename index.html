@@ -2128,94 +2128,6 @@ if(section === "documents"){
  return;
 }
 
-/* =========================
-   UPLOAD DOCUMENT
-========================= */
-
-window.uploadDocument = function(projectId){
-
-    const project = projects.find(
-        p => p.id === projectId
-    );
-
-    if(!project){
-        alert("Project not found.");
-        return;
-    }
-
-    const input = document.createElement("input");
-
-    input.type = "file";
-
-    input.accept =
-        ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.dwg,.zip";
-
-    input.onchange = function(){
-
-        const file = input.files[0];
-
-        if(!file) return;
-
-        const title = prompt(
-            "Document Title:",
-            file.name
-        );
-
-        if(title === null) return;
-
-        const uploadedBy = prompt(
-            "Uploaded By:",
-            "Project Manager"
-        );
-
-        if(uploadedBy === null) return;
-
-        const reader = new FileReader();
-
-        reader.onload = function(e){
-
-            if(!project.documents){
-                project.documents = [];
-            }
-
-            project.documents.push({
-
-                id: Date.now(),
-
-                title: title || file.name,
-
-                fileName: file.name,
-
-                fileType: file.type || "Unknown",
-
-                fileData: e.target.result,
-
-                uploadedBy:
-                    uploadedBy || "Project Manager",
-
-                date:
-                    new Date()
-                    .toISOString()
-                    .split("T")[0]
-
-            });
-
-            persist();
-
-            showProjectSection(
-                "documents",
-                projectId
-            );
-
-        };
-
-        reader.readAsDataURL(file);
-
-    };
-
-    input.click();
-
-};
 
 /* =========================
    VIEW DOCUMENT
@@ -4089,6 +4001,94 @@ function deleteDrawing(projectId, index){
     showProjectSection("drawings", projectId);
 
 }
+    /* =========================
+   UPLOAD DOCUMENT
+========================= */
+
+window.uploadDocument = function(projectId){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project){
+        alert("Project not found.");
+        return;
+    }
+
+    const input = document.createElement("input");
+
+    input.type = "file";
+
+    input.accept =
+        ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.dwg,.zip";
+
+    input.onchange = function(){
+
+        const file = input.files[0];
+
+        if(!file) return;
+
+        const title = prompt(
+            "Document Title:",
+            file.name
+        );
+
+        if(title === null) return;
+
+        const uploadedBy = prompt(
+            "Uploaded By:",
+            "Project Manager"
+        );
+
+        if(uploadedBy === null) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function(e){
+
+            if(!project.documents){
+                project.documents = [];
+            }
+
+            project.documents.push({
+
+                id: Date.now(),
+
+                title: title || file.name,
+
+                fileName: file.name,
+
+                fileType: file.type || "Unknown",
+
+                fileData: e.target.result,
+
+                uploadedBy:
+                    uploadedBy || "Project Manager",
+
+                date:
+                    new Date()
+                    .toISOString()
+                    .split("T")[0]
+
+            });
+
+            persist();
+
+            showProjectSection(
+                "documents",
+                projectId
+            );
+
+        };
+
+        reader.readAsDataURL(file);
+
+    };
+
+    input.click();
+
+};
 </script>
 
 </body>
