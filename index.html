@@ -4100,29 +4100,6 @@ window.viewDocument = function(projectId, index){
     );
 
     if(!project || !project.documents){
-        alert("Project or document not found.");
-        return;
-    }
-
-    const doc = project.documents[index];
-
-    if(!doc || !doc.fileData){
-        alert("No file is attached to this document.");
-        return;
-    }
-
-    window.open(doc.fileData, "_blank");
-
-};   
-    
-</script>
-window.viewDocument = function(projectId, index){
-
-    const project = projects.find(
-        p => p.id === projectId
-    );
-
-    if(!project || !project.documents){
         alert("Project or documents not found.");
         return;
     }
@@ -4134,53 +4111,38 @@ window.viewDocument = function(projectId, index){
         return;
     }
 
-    const newWindow = window.open();
+    // Create a Blob from the stored Base64 data
+    const parts = doc.fileData.split(",");
 
-    if(!newWindow){
-        alert("Please allow pop-ups for this website.");
+    if(parts.length < 2){
+        alert("Invalid file data.");
         return;
     }
 
-    newWindow.document.write(`
-        <html>
-        <head>
-            <title>${doc.title || doc.fileName || "Document"}</title>
-            <style>
-                body {
-                    margin: 0;
-                    font-family: Arial, sans-serif;
-                    background: #f1f5f9;
-                }
+    const mimeType =
+        parts[0].match(/data:(.*?);base64/)?.[1]
+        || doc.fileType
+        || "application/octet-stream";
 
-                .header {
-                    padding: 15px 20px;
-                    background: #ffffff;
-                    border-bottom: 1px solid #ddd;
-                    font-size: 18px;
-                    font-weight: bold;
-                }
+    const byteCharacters = atob(parts[1]);
 
-                iframe {
-                    width: 100%;
-                    height: calc(100vh - 60px);
-                    border: none;
-                }
-            </style>
-        </head>
+    const byteNumbers = new Array(byteCharacters.length);
 
-        <body>
+    for(let i = 0; i < byteCharacters.length; i++){
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
 
-            <div class="header">
-                ${doc.title || doc.fileName || "Document"}
-            </div>
+    const byteArray = new Uint8Array(byteNumbers);
 
-            <iframe src="${doc.fileData}"></iframe>
+    const blob = new Blob(
+        [byteArray],
+        { type: mimeType }
+    );
 
-        </body>
-        </html>
-    `);
+    const blobURL = URL.createObjectURL(blob);
 
-    newWindow.document.close();
+    // Open the actual file
+    window.open(blobURL, "_blank");
 };
 </body>
 </html>
