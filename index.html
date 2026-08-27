@@ -2133,7 +2133,7 @@ if(section === "documents"){
    VIEW DOCUMENT
 ========================= */
 
-function viewDocument(projectId,index){
+window.viewDocument = function(projectId,index){
 
     const project = projects.find(
         p => p.id === projectId
@@ -4089,6 +4089,7 @@ window.uploadDocument = function(projectId){
     input.click();
 
 };
+    
 </script>
 
 </body>
