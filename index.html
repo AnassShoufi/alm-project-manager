@@ -1284,6 +1284,7 @@ if (!projects) {
     projects = defaultProjects;
     localStorage.setItem("alm_projects", JSON.stringify(projects));
 }
+    window.projects = projects;
 
 let editingId = null;
 
