@@ -1827,7 +1827,7 @@ function projectOverviewHTML(project){
    PROJECT SECTIONS
 ========================= */
 
-function showProjectSection(section, id, button){
+window.showProjectSection = function(section, id, button){
 
     const project = projects.find(p => p.id === id);
 
