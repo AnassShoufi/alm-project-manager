@@ -2011,11 +2011,11 @@ if(section === "documents"){
                 <p>Project documents and files</p>
             </div>
 
-            <button
-                class="btn btn-primary"
-                onclick="window.uploadDocument(${project.id})"
-                + Add Document
-            </button>
+          <button
+    class="btn btn-primary"
+    onclick="window.uploadDocument(${project.id})">
+    + Add Document
+</button>
 
         </div>
 
@@ -2125,8 +2125,9 @@ if(section === "documents"){
 
     `;
 
-    return;
+ return;
 }
+
 /* =========================
    UPLOAD DOCUMENT
 ========================= */
@@ -2137,7 +2138,10 @@ window.uploadDocument = function(projectId){
         p => p.id === projectId
     );
 
-    if(!project) return;
+    if(!project){
+        alert("Project not found.");
+        return;
+    }
 
     const input = document.createElement("input");
 
@@ -2202,14 +2206,16 @@ window.uploadDocument = function(projectId){
                 "documents",
                 projectId
             );
+
         };
 
         reader.readAsDataURL(file);
+
     };
 
     input.click();
-};
 
+};
 
 /* =========================
    VIEW DOCUMENT
