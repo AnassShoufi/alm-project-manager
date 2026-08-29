@@ -2884,7 +2884,7 @@ window.viewBOQ = function(projectId,index){
    BOQ FOLDERS
 ========================= */
 
-let boqCurrentFolder = {};
+window.boqCurrentFolder = window.boqCurrentFolder || {};
 
 function ensureBOQFolders(project){
 
@@ -2922,7 +2922,7 @@ function ensureBOQFolders(project){
 
 /* CREATE FOLDER */
 
-window.createBOQFolder = function(projectId,parentId){
+window.createBOQFolder = function(projectId,parentId = null){
 
     const project = projects.find(
         p => p.id === projectId
@@ -2985,67 +2985,6 @@ window.createBOQFolder = function(projectId,parentId){
 };
 
 
-
-    /* =========================
-       ROOT
-    ========================= */
-
-    if(folderId === null || folderId === undefined){
-
-        window.boqCurrentFolder[project.id] = null;
-
-        console.log(
-            "OPENING BOQ ROOT"
-        );
-
-        showProjectSection(
-            "boq",
-            project.id
-        );
-
-        return;
-    }
-
-    /* =========================
-       FIND FOLDER
-    ========================= */
-
-    const folder = project.boqFolders.find(
-        f => String(f.id) === String(folderId)
-    );
-
-    if(!folder){
-
-        console.error(
-            "BOQ FOLDER NOT FOUND:",
-            folderId,
-            project.boqFolders
-        );
-
-        return;
-    }
-
-    /* =========================
-       SAVE CURRENT FOLDER
-    ========================= */
-
-    window.boqCurrentFolder[project.id] = folder.id;
-
-    console.log(
-        "FOLDER FOUND:",
-        folder.name,
-        folder.id
-    );
-
-    /* =========================
-       REFRESH BOQ
-    ========================= */
-
-    showProjectSection(
-        "boq",
-        project.id
-    );
-};
 
 /* GET CURRENT FOLDER */
 
