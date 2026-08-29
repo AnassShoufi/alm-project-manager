@@ -2660,14 +2660,45 @@ window.createBOQFolder = function(projectId){
    OPEN BOQ FOLDER
 ========================= */
 
-window.openBOQFolder = function(
-    projectId,
-    folderId
-){
+window.openBOQFolder = function(projectId, folderId){
 
-    window.boqCurrentFolder[
-        projectId
-    ] = folderId || null;
+    console.log("OPEN BOQ FOLDER:", projectId, folderId);
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project){
+        console.log("PROJECT NOT FOUND");
+        return;
+    }
+
+    ensureBOQFolders(project);
+
+    console.log("BOQ FOLDERS:", project.boqFolders);
+
+    if(folderId === null){
+
+        boqCurrentFolder[projectId] = null;
+
+        showProjectSection(
+            "boq",
+            projectId
+        );
+
+        return;
+    }
+
+    const folder = project.boqFolders.find(
+        f => String(f.id) === String(folderId)
+    );
+
+    if(!folder){
+        console.log("FOLDER NOT FOUND:", folderId);
+        return;
+    }
+
+    boqCurrentFolder[projectId] = folderId;
 
     showProjectSection(
         "boq",
