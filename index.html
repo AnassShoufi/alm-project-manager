@@ -2136,38 +2136,159 @@ if(section === "documents"){
 if(section === "boq"){
 
     const boqs = project.boqs || [];
+    const folders = project.boqFolders || [];
+
+    if(!project.boqFolders){
+        project.boqFolders = [];
+    }
+
+    const currentFolderId =
+        window.boqCurrentFolder?.[project.id] || null;
+
+    const currentFolder =
+        folders.find(f => f.id === currentFolderId);
+
+    const currentFolderName =
+        currentFolder ? currentFolder.name : "BOQ";
+
+    const visibleBoqs =
+        boqs
+        .map((boq,index) => ({boq,index}))
+        .filter(item =>
+            (item.boq.folderId || null) === currentFolderId
+        );
 
     content.innerHTML = `
 
         <div class="section-header">
 
             <div>
+
                 <h2>Bill of Quantities (BOQ)</h2>
-                <p>Project BOQ files</p>
+
+                <p>
+                    ${currentFolderId
+                        ? `
+                        <button
+                            class="action-btn"
+                            onclick="window.openBOQFolder(
+                                ${project.id},
+                                null
+                            )">
+                            ← BOQ
+                        </button>
+                        /
+                        ${escapeHTML(currentFolderName)}
+                        `
+                        : "Project BOQ files"
+                    }
+                </p>
+
             </div>
 
-            <button
-                class="btn btn-primary"
-                onclick="window.uploadBOQ(${project.id})">
-                + Add BOQ
-            </button>
+            <div style="display:flex; gap:10px;">
+
+                <button
+                    class="btn btn-secondary"
+                    onclick="window.createBOQFolder(${project.id})">
+                    📁 New Folder
+                </button>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="window.uploadBOQ(${project.id})">
+                    + Add BOQ
+                </button>
+
+            </div>
 
         </div>
 
         ${
-            boqs.length === 0
+            !currentFolderId && folders.length > 0
+
+            ?
+
+            `
+            <div
+                style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(auto-fill,minmax(220px,1fr));
+                    gap:16px;
+                    margin-bottom:25px;
+                "
+            >
+
+                ${folders.map(folder => `
+
+                    <div
+                        onclick="
+                            window.openBOQFolder(
+                                ${project.id},
+                                '${folder.id}'
+                            )
+                        "
+                        style="
+                            border:1px solid #ddd;
+                            border-radius:10px;
+                            padding:22px;
+                            cursor:pointer;
+                            background:#fff;
+                            box-shadow:0 2px 6px rgba(0,0,0,.05);
+                        "
+                    >
+
+                        <div style="font-size:42px;">
+                            📁
+                        </div>
+
+                        <strong>
+                            ${escapeHTML(folder.name)}
+                        </strong>
+
+                    </div>
+
+                `).join("")}
+
+            </div>
+            `
+
+            :
+
+            ""
+        }
+
+        ${
+            visibleBoqs.length === 0
 
             ?
 
             `
             <div class="empty">
 
-                <div style="font-size:48px;">💰</div>
+                <div style="font-size:48px;">
+                    ${
+                        currentFolderId
+                        ? "📂"
+                        : "💰"
+                    }
+                </div>
 
-                <h3>No BOQ uploaded yet</h3>
+                <h3>
+                    ${
+                        currentFolderId
+                        ? "This folder is empty"
+                        : "No BOQ uploaded yet"
+                    }
+                </h3>
 
                 <p>
-                    Upload the BOQ for this project.
+                    ${
+                        currentFolderId
+                        ? "Upload a BOQ file into this folder."
+                        : "Create a folder or upload a BOQ file."
+                    }
                 </p>
 
             </div>
@@ -2179,18 +2300,27 @@ if(section === "boq"){
             <table>
 
                 <thead>
+
                     <tr>
+
                         <th>BOQ</th>
                         <th>File Type</th>
                         <th>Uploaded By</th>
                         <th>Date</th>
                         <th>Actions</th>
+
                     </tr>
+
                 </thead>
 
                 <tbody>
 
-                    ${boqs.map((boq,index) => `
+                    ${visibleBoqs.map(item => {
+
+                        const boq = item.boq;
+                        const index = item.index;
+
+                        return `
 
                         <tr>
 
@@ -2210,7 +2340,8 @@ if(section === "boq"){
 
                             <td>
                                 ${escapeHTML(
-                                    boq.uploadedBy || "Project Manager"
+                                    boq.uploadedBy ||
+                                    "Project Manager"
                                 )}
                             </td>
 
@@ -2226,17 +2357,34 @@ if(section === "boq"){
 
                                     <button
                                         class="action-btn"
-                                        onclick="viewBOQ(${project.id},${index})">
+                                        onclick="
+                                            viewBOQ(
+                                                ${project.id},
+                                                ${index}
+                                            )
+                                        ">
                                         View
                                     </button>
-<button
-    class="action-btn"
-    onclick="downloadBOQ(${project.id},${index})">
-    Download
-</button>
+
                                     <button
                                         class="action-btn"
-                                        onclick="deleteBOQ(${project.id},${index})">
+                                        onclick="
+                                            downloadBOQ(
+                                                ${project.id},
+                                                ${index}
+                                            )
+                                        ">
+                                        Download
+                                    </button>
+
+                                    <button
+                                        class="action-btn"
+                                        onclick="
+                                            deleteBOQ(
+                                                ${project.id},
+                                                ${index}
+                                            )
+                                        ">
                                         Delete
                                     </button>
 
@@ -2246,7 +2394,9 @@ if(section === "boq"){
 
                         </tr>
 
-                    `).join("")}
+                        `;
+
+                    }).join("")}
 
                 </tbody>
 
@@ -2455,6 +2605,80 @@ const sectionTitle = titles[section] || section || "Section";
     `;
 
 }
+    /* =========================
+   BOQ FOLDERS
+========================= */
+
+window.boqCurrentFolder =
+    window.boqCurrentFolder || {};
+
+
+/* =========================
+   CREATE BOQ FOLDER
+========================= */
+
+window.createBOQFolder = function(projectId){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project) return;
+
+    if(!project.boqFolders){
+        project.boqFolders = [];
+    }
+
+    const name = prompt(
+        "Enter folder name:"
+    );
+
+    if(!name || !name.trim()){
+        return;
+    }
+
+    const folder = {
+
+        id:
+            "boq_folder_" +
+            Date.now(),
+
+        name:
+            name.trim()
+
+    };
+
+    project.boqFolders.push(folder);
+
+    persist();
+
+    showProjectSection(
+        "boq",
+        projectId
+    );
+
+};
+
+
+/* =========================
+   OPEN BOQ FOLDER
+========================= */
+
+window.openBOQFolder = function(
+    projectId,
+    folderId
+){
+
+    window.boqCurrentFolder[
+        projectId
+    ] = folderId || null;
+
+    showProjectSection(
+        "boq",
+        projectId
+    );
+
+};
 /* =========================
    UPLOAD BOQ
 ========================= */
@@ -2467,11 +2691,20 @@ window.uploadBOQ = function(projectId){
 
     if(!project) return;
 
-    const input = document.createElement("input");
+    if(!project.boqs){
+        project.boqs = [];
+    }
+
+    const currentFolderId =
+        window.boqCurrentFolder?.[projectId] || null;
+
+    const input =
+        document.createElement("input");
 
     input.type = "file";
 
-    input.accept = ".pdf,.xlsx,.xls,.csv";
+    input.accept =
+        ".pdf,.xlsx,.xls,.csv";
 
     input.onchange = function(){
 
@@ -2479,17 +2712,15 @@ window.uploadBOQ = function(projectId){
 
         if(!file) return;
 
-        const reader = new FileReader();
+        const reader =
+            new FileReader();
 
         reader.onload = function(e){
 
-            if(!project.boqs){
-                project.boqs = [];
-            }
-
             project.boqs.push({
 
-                fileName: file.name,
+                fileName:
+                    file.name,
 
                 fileType:
                     file.type || "Unknown",
@@ -2503,7 +2734,10 @@ window.uploadBOQ = function(projectId){
                 date:
                     new Date()
                     .toISOString()
-                    .split("T")[0]
+                    .split("T")[0],
+
+                folderId:
+                    currentFolderId
 
             });
 
