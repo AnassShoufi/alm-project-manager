@@ -2664,22 +2664,29 @@ window.createBOQFolder = function(projectId){
 
 window.openBOQFolder = function(projectId, folderId){
 
-    console.log("OPEN BOQ FOLDER:", projectId, folderId);
+    console.log("OPEN BOQ FOLDER:", {
+        projectId: projectId,
+        folderId: folderId
+    });
 
     const project = projects.find(
         p => p.id === projectId
     );
 
     if(!project){
-        console.log("PROJECT NOT FOUND");
+        console.error("Project not found:", projectId);
         return;
     }
 
     ensureBOQFolders(project);
 
-    console.log("BOQ FOLDERS:", project.boqFolders);
+    if(!project.boqFolders){
+        console.error("boqFolders does not exist");
+        return;
+    }
 
-    if(folderId === null){
+    /* ROOT */
+    if(folderId === null || folderId === undefined){
 
         boqCurrentFolder[projectId] = null;
 
@@ -2691,17 +2698,32 @@ window.openBOQFolder = function(projectId, folderId){
         return;
     }
 
+    /* FIND FOLDER */
     const folder = project.boqFolders.find(
         f => String(f.id) === String(folderId)
     );
 
     if(!folder){
-        console.log("FOLDER NOT FOUND:", folderId);
+
+        console.error(
+            "BOQ folder not found:",
+            folderId,
+            project.boqFolders
+        );
+
         return;
     }
 
-    boqCurrentFolder[projectId] = folderId;
+    /* SAVE CURRENT FOLDER */
+    boqCurrentFolder[projectId] = folder.id;
 
+    console.log(
+        "Opening folder:",
+        folder.name,
+        folder.id
+    );
+
+    /* REFRESH BOQ */
     showProjectSection(
         "boq",
         projectId
