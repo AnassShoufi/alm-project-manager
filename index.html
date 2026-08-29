@@ -2222,9 +2222,11 @@ if(section === "boq"){
 
                 ${folders.map(folder => `
 
-                    <div
-                       onclick="openBOQFolder(${project.id}, '${folder.id}')"
-                       
+                  <div
+    onclick="
+        console.log('FOLDER CLICKED', '${folder.id}');
+        window.openBOQFolder(${project.id}, '${folder.id}');
+    "
                         style="
                             border:1px solid #ddd;
                             border-radius:10px;
