@@ -2224,9 +2224,10 @@ if(section === "boq"){
 
                   <div
     onclick="
-        console.log('FOLDER CLICKED', '${folder.id}');
-        window.openBOQFolder(${project.id}, '${folder.id}');
-    "
+    console.log('FOLDER CLICKED', '${folder.id}');
+    console.log('ABOUT TO OPEN BOQ FOLDER');
+    window.openBOQFolder(${project.id}, '${folder.id}');
+"
                         style="
                             border:1px solid #ddd;
                             border-radius:10px;
