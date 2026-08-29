@@ -2223,12 +2223,8 @@ if(section === "boq"){
                 ${folders.map(folder => `
 
                     <div
-                        onclick="
-                            window.openBOQFolder(
-                                ${project.id},
-                                '${folder.id}'
-                            )
-                        "
+                       onclick="openBOQFolder(${project.id}, '${folder.id}')"
+                       
                         style="
                             border:1px solid #ddd;
                             border-radius:10px;
@@ -2933,9 +2929,11 @@ window.createBOQFolder = function(projectId,parentId){
 };
 
 
-/* OPEN FOLDER */
+/* =========================
+   OPEN BOQ FOLDER
+========================= */
 
-window.openBOQFolder = function(projectId,folderId){
+window.openBOQFolder = function(projectId, folderId){
 
     const project = projects.find(
         p => p.id === projectId
@@ -2945,8 +2943,28 @@ window.openBOQFolder = function(projectId,folderId){
 
     ensureBOQFolders(project);
 
+    /*
+       NULL = ROOT BOQ FOLDER
+    */
+
+    if(folderId === null){
+
+        boqCurrentFolder[projectId] = null;
+
+        showProjectSection(
+            "boq",
+            projectId
+        );
+
+        return;
+    }
+
+    /*
+       OPEN NORMAL FOLDER
+    */
+
     const folder = project.boqFolders.find(
-        f => f.id === folderId
+        f => String(f.id) === String(folderId)
     );
 
     if(!folder) return;
@@ -2959,7 +2977,6 @@ window.openBOQFolder = function(projectId,folderId){
     );
 
 };
-
 
 /* GO BACK TO ROOT */
 
