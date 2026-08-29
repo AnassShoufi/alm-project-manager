@@ -2985,68 +2985,67 @@ window.createBOQFolder = function(projectId,parentId){
 };
 
 
-/* =========================
-   OPEN BOQ FOLDER
-========================= */
 
-window.openBOQFolder = function(projectId, folderId){
+    /* =========================
+       ROOT
+    ========================= */
 
-    const project = projects.find(
-        p => p.id === projectId
-    );
+    if(folderId === null || folderId === undefined){
 
-    if(!project) return;
+        window.boqCurrentFolder[project.id] = null;
 
-    ensureBOQFolders(project);
-
-    /*
-       NULL = ROOT BOQ FOLDER
-    */
-
-    if(folderId === null){
-
-        window.boqCurrentFolder[projectId] = null;
+        console.log(
+            "OPENING BOQ ROOT"
+        );
 
         showProjectSection(
             "boq",
-            projectId
+            project.id
         );
 
         return;
     }
 
-    /*
-       OPEN NORMAL FOLDER
-    */
+    /* =========================
+       FIND FOLDER
+    ========================= */
 
     const folder = project.boqFolders.find(
         f => String(f.id) === String(folderId)
     );
 
-    if(!folder) return;
+    if(!folder){
 
-    boqCurrentFolder[projectId] = folderId;
+        console.error(
+            "BOQ FOLDER NOT FOUND:",
+            folderId,
+            project.boqFolders
+        );
+
+        return;
+    }
+
+    /* =========================
+       SAVE CURRENT FOLDER
+    ========================= */
+
+    window.boqCurrentFolder[project.id] = folder.id;
+
+    console.log(
+        "FOLDER FOUND:",
+        folder.name,
+        folder.id
+    );
+
+    /* =========================
+       REFRESH BOQ
+    ========================= */
 
     showProjectSection(
         "boq",
-        projectId
+        project.id
     );
-
 };
-
-/* GO BACK TO ROOT */
-
-window.goBOQRoot = function(projectId){
-
-    boqCurrentFolder[projectId] = null;
-
-    showProjectSection(
-        "boq",
-        projectId
-    );
-
-};
-
 
 /* GET CURRENT FOLDER */
 
