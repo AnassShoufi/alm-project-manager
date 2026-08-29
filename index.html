@@ -2248,7 +2248,35 @@ const currentFolder =
                         <strong>
                             ${escapeHTML(folder.name)}
                         </strong>
+<div style="
+    margin-top:15px;
+    display:flex;
+    justify-content:center;
+">
 
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
+            window.deleteBOQFolder(
+                '${project.id}',
+                '${folder.id}'
+            );
+        "
+        style="
+            background:#dc2626;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:7px 14px;
+            cursor:pointer;
+            font-size:13px;
+        "
+    >
+        🗑 Delete
+    </button>
+
+</div>
                     </div>
 
                 `).join("")}
@@ -2984,7 +3012,110 @@ window.createBOQFolder = function(projectId,parentId = null){
 
 };
 
+/* =========================
+   DELETE BOQ FOLDER
+========================= */
 
+window.deleteBOQFolder = function(projectId, folderId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    ensureBOQFolders(project);
+
+    /* NEVER DELETE ROOT */
+    if(folderId === "root" || folderId === null){
+        alert("The main BOQ folder cannot be deleted.");
+        return;
+    }
+
+    const folder = project.boqFolders.find(
+        f => String(f.id) === String(folderId)
+    );
+
+    if(!folder){
+        console.error(
+            "BOQ FOLDER NOT FOUND:",
+            folderId
+        );
+        return;
+    }
+
+    /* CONFIRM */
+    const confirmed = confirm(
+        `Delete folder "${folder.name}"?\n\n` +
+        `All subfolders and BOQ files inside this folder will also be deleted.`
+    );
+
+    if(!confirmed) return;
+
+    /* FIND ALL FOLDERS TO DELETE */
+    const foldersToDelete = new Set([
+        String(folderId)
+    ]);
+
+    let changed = true;
+
+    while(changed){
+
+        changed = false;
+
+        project.boqFolders.forEach(f => {
+
+            if(
+                f.parentId !== null &&
+                foldersToDelete.has(String(f.parentId)) &&
+                !foldersToDelete.has(String(f.id))
+            ){
+
+                foldersToDelete.add(String(f.id));
+
+                changed = true;
+            }
+
+        });
+
+    }
+
+    /* DELETE BOQ FILES INSIDE THESE FOLDERS */
+
+    if(project.boqs){
+
+        project.boqs = project.boqs.filter(
+            boq =>
+                !foldersToDelete.has(
+                    String(boq.folderId)
+                )
+        );
+
+    }
+
+    /* DELETE FOLDERS */
+
+    project.boqFolders =
+        project.boqFolders.filter(
+            f =>
+                !foldersToDelete.has(
+                    String(f.id)
+                )
+        );
+
+    /* GO BACK TO PARENT FOLDER */
+
+    window.boqCurrentFolder[projectId] =
+        folder.parentId ?? null;
+
+    persist();
+
+    showProjectSection(
+        "boq",
+        projectId
+    );
+
+};
 
 /* GET CURRENT FOLDER */
 
