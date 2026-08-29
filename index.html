@@ -2594,6 +2594,172 @@ window.viewBOQ = function(projectId,index){
     `);
 
 };
+    /* =========================
+   BOQ FOLDERS
+========================= */
+
+let boqCurrentFolder = {};
+
+function ensureBOQFolders(project){
+
+    if(!project.boqFolders){
+
+        project.boqFolders = [
+            {
+                id: "root",
+                name: "BOQ",
+                parentId: null,
+                files: project.boqs || []
+            }
+        ];
+
+        project.boqs = [];
+
+        persist();
+    }
+
+    if(!project.boqFolders.find(f => f.id === "root")){
+
+        project.boqFolders.unshift({
+            id: "root",
+            name: "BOQ",
+            parentId: null,
+            files: []
+        });
+
+        persist();
+    }
+
+    return project.boqFolders;
+}
+
+
+/* CREATE FOLDER */
+
+window.createBOQFolder = function(projectId,parentId){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project) return;
+
+    ensureBOQFolders(project);
+
+    const folderName = prompt(
+        "Enter folder name:"
+    );
+
+    if(!folderName) return;
+
+    const cleanName = folderName.trim();
+
+    if(!cleanName) return;
+
+    const exists = project.boqFolders.some(
+        folder =>
+            folder.parentId === parentId &&
+            folder.name.toLowerCase() === cleanName.toLowerCase()
+    );
+
+    if(exists){
+
+        alert("A folder with this name already exists.");
+
+        return;
+    }
+
+    project.boqFolders.push({
+
+        id:
+            "boq-folder-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
+
+        name: cleanName,
+
+        parentId: parentId,
+
+        files: []
+
+    });
+
+    persist();
+
+    boqCurrentFolder[projectId] = parentId;
+
+    showProjectSection(
+        "boq",
+        projectId
+    );
+
+};
+
+
+/* OPEN FOLDER */
+
+window.openBOQFolder = function(projectId,folderId){
+
+    const project = projects.find(
+        p => p.id === projectId
+    );
+
+    if(!project) return;
+
+    ensureBOQFolders(project);
+
+    const folder = project.boqFolders.find(
+        f => f.id === folderId
+    );
+
+    if(!folder) return;
+
+    boqCurrentFolder[projectId] = folderId;
+
+    showProjectSection(
+        "boq",
+        projectId
+    );
+
+};
+
+
+/* GO BACK TO ROOT */
+
+window.goBOQRoot = function(projectId){
+
+    boqCurrentFolder[projectId] = "root";
+
+    showProjectSection(
+        "boq",
+        projectId
+    );
+
+};
+
+
+/* GET CURRENT FOLDER */
+
+function getCurrentBOQFolder(project){
+
+    ensureBOQFolders(project);
+
+    const currentId =
+        boqCurrentFolder[project.id] || "root";
+
+    return (
+        project.boqFolders.find(
+            f => f.id === currentId
+        )
+        ||
+        project.boqFolders.find(
+            f => f.id === "root"
+        )
+    );
+}
 /* =========================
    DOWNLOAD BOQ
 ========================= */
