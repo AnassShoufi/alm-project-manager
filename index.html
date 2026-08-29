@@ -2142,11 +2142,13 @@ if(section === "boq"){
         project.boqFolders = [];
     }
 
-    const currentFolderId =
-        window.boqCurrentFolder?.[project.id] || null;
+   const currentFolderId =
+    window.boqCurrentFolder?.[project.id] ?? null;
 
-    const currentFolder =
-        folders.find(f => f.id === currentFolderId);
+const currentFolder =
+    folders.find(
+        f => String(f.id) === String(currentFolderId)
+    );
 
     const currentFolderName =
         currentFolder ? currentFolder.name : "BOQ";
@@ -2154,9 +2156,10 @@ if(section === "boq"){
     const visibleBoqs =
         boqs
         .map((boq,index) => ({boq,index}))
-        .filter(item =>
-            (item.boq.folderId || null) === currentFolderId
-        );
+       .filter(item =>
+    String(item.boq.folderId ?? "") ===
+    String(currentFolderId ?? "")
+);
 
     content.innerHTML = `
 
@@ -2671,25 +2674,22 @@ window.openBOQFolder = function(projectId, folderId){
     });
 
     const project = projects.find(
-        p => p.id === projectId
+        p => String(p.id) === String(projectId)
     );
 
     if(!project){
-        console.error("Project not found:", projectId);
+        console.error("PROJECT NOT FOUND:", projectId);
         return;
     }
 
     ensureBOQFolders(project);
 
-    if(!project.boqFolders){
-        console.error("boqFolders does not exist");
-        return;
-    }
-
     /* ROOT */
     if(folderId === null || folderId === undefined){
 
-        boqCurrentFolder[projectId] = null;
+        window.boqCurrentFolder[projectId] = null;
+
+        console.log("OPENING BOQ ROOT");
 
         showProjectSection(
             "boq",
@@ -2707,7 +2707,7 @@ window.openBOQFolder = function(projectId, folderId){
     if(!folder){
 
         console.error(
-            "BOQ folder not found:",
+            "BOQ FOLDER NOT FOUND:",
             folderId,
             project.boqFolders
         );
@@ -2716,10 +2716,10 @@ window.openBOQFolder = function(projectId, folderId){
     }
 
     /* SAVE CURRENT FOLDER */
-    boqCurrentFolder[projectId] = folder.id;
+    window.boqCurrentFolder[projectId] = folder.id;
 
     console.log(
-        "Opening folder:",
+        "OPENING BOQ FOLDER:",
         folder.name,
         folder.id
     );
@@ -3005,7 +3005,7 @@ window.openBOQFolder = function(projectId, folderId){
 
     if(folderId === null){
 
-        boqCurrentFolder[projectId] = null;
+        window.boqCurrentFolder[projectId] = null;
 
         showProjectSection(
             "boq",
@@ -3038,7 +3038,7 @@ window.openBOQFolder = function(projectId, folderId){
 
 window.goBOQRoot = function(projectId){
 
-    boqCurrentFolder[projectId] = "root";
+    boqCurrentFolder[projectId] = null;
 
     showProjectSection(
         "boq",
