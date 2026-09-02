@@ -2210,37 +2210,59 @@ const currentFolder =
 
         </div>
 
+      ${
+    folders.filter(
+        folder =>
+            (folder.parentId || null) ===
+            (currentFolderId || null)
+    ).length > 0
+
+    ?
+
+    `
+    <div
+        style="
+            display:grid;
+            grid-template-columns:
+                repeat(auto-fill,minmax(220px,1fr));
+            gap:16px;
+            margin-bottom:25px;
+        "
+    >
+
         ${
-            !currentFolderId && folders.length > 0
+            folders
+            .filter(
+                folder =>
+                    (folder.parentId || null) ===
+                    (currentFolderId || null)
+            )
+            .map(folder => `
 
-            ?
+                <div
+                    style="
+                        border:1px solid #ddd;
+                        border-radius:10px;
+                        padding:22px;
+                        background:#fff;
+                        box-shadow:0 2px 6px rgba(0,0,0,.05);
+                    "
+                >
 
-            `
-            <div
-                style="
-                    display:grid;
-                    grid-template-columns:
-                        repeat(auto-fill,minmax(220px,1fr));
-                    gap:16px;
-                    margin-bottom:25px;
-                "
-            >
+                    <div
+                        onclick="
+                            console.log(
+                                'FOLDER CLICKED',
+                                '${folder.id}'
+                            );
 
-                ${folders.map(folder => `
-
-                  <div
-    onclick="
-    console.log('FOLDER CLICKED', '${folder.id}');
-    console.log('ABOUT TO OPEN BOQ FOLDER');
-    window.openBOQFolder(${project.id}, '${folder.id}');
-"
+                            window.openBOQFolder(
+                                ${project.id},
+                                '${folder.id}'
+                            );
+                        "
                         style="
-                            border:1px solid #ddd;
-                            border-radius:10px;
-                            padding:22px;
                             cursor:pointer;
-                            background:#fff;
-                            box-shadow:0 2px 6px rgba(0,0,0,.05);
                         "
                     >
 
@@ -2251,46 +2273,52 @@ const currentFolder =
                         <strong>
                             ${escapeHTML(folder.name)}
                         </strong>
-<div style="
-    margin-top:15px;
-    display:flex;
-    justify-content:center;
-">
 
-    <button
-        type="button"
-        onclick="
-            event.stopPropagation();
-            window.deleteBOQFolder(
-                '${project.id}',
-                '${folder.id}'
-            );
-        "
-        style="
-            background:#dc2626;
-            color:white;
-            border:none;
-            border-radius:6px;
-            padding:7px 14px;
-            cursor:pointer;
-            font-size:13px;
-        "
-    >
-        🗑 Delete
-    </button>
-
-</div>
                     </div>
 
-                `).join("")}
+                    <div style="
+                        margin-top:15px;
+                        display:flex;
+                        justify-content:center;
+                    ">
 
-            </div>
-            `
+                        <button
+                            type="button"
+                            onclick="
+                                event.stopPropagation();
 
-            :
+                                window.deleteBOQFolder(
+                                    '${project.id}',
+                                    '${folder.id}'
+                                );
+                            "
+                            style="
+                                background:#dc2626;
+                                color:white;
+                                border:none;
+                                border-radius:6px;
+                                padding:7px 14px;
+                                cursor:pointer;
+                                font-size:13px;
+                            "
+                        >
+                            🗑 Delete
+                        </button>
 
-            ""
+                    </div>
+
+                </div>
+
+            `).join("")
         }
+
+    </div>
+    `
+
+    :
+
+    ""
+}
 
         ${
             visibleBoqs.length === 0
