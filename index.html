@@ -2191,11 +2191,14 @@ const currentFolder =
 
             <div style="display:flex; gap:10px;">
 
-                <button
-                    class="btn btn-secondary"
-                    onclick="window.createBOQFolder(${project.id})">
-                    📁 New Folder
-                </button>
+               <button
+    class="btn btn-secondary"
+    onclick="window.createBOQFolder(
+        ${project.id},
+        ${currentFolderId ? `'${currentFolderId}'` : "null"}
+    )">
+    📁 ${currentFolderId ? "New Subfolder" : "New Main Folder"}
+</button>
 
                 <button
                     class="btn btn-primary"
