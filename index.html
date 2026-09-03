@@ -5264,7 +5264,7 @@ function deleteDrawing(projectId, index){
 window.uploadDocument = function(projectId){
 
     const project = projects.find(
-        p => p.id === projectId
+        p => String(p.id) === String(projectId)
     );
 
     if(!project){
