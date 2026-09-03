@@ -2896,7 +2896,7 @@ window.createDocumentsFolder = function(projectId, parentId = null){
 function deleteDocument(projectId,index){
 
     const project = projects.find(
-        p => p.id === projectId
+        p => String(p.id) === String(projectId)
     );
 
     if(!project || !project.documents) return;
@@ -5352,7 +5352,7 @@ window.uploadDocument = function(projectId){
 window.viewDocument = function(projectId, index){
 
     const project = projects.find(
-        p => p.id === projectId
+       p => String(p.id) === String(projectId)
     );
 
     if(!project || !project.documents){
