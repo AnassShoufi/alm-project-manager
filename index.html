@@ -2811,7 +2811,84 @@ window.viewDocument = function(projectId,index){
 
 }
 
+/* =========================
+   DOCUMENTS FOLDERS
+========================= */
 
+window.documentsCurrentFolder =
+    window.documentsCurrentFolder || {};
+
+
+/* =========================
+   CREATE DOCUMENTS FOLDER
+========================= */
+
+window.createDocumentsFolder = function(projectId, parentId = null){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+
+    if(!project.documentsFolders){
+
+        project.documentsFolders = [
+            {
+                id: "root",
+                name: "Documents",
+                parentId: null,
+                files: []
+            }
+        ];
+
+    }
+
+
+    const name = prompt(
+        "Enter folder name:"
+    );
+
+
+    if(!name || !name.trim()){
+        return;
+    }
+
+
+    const folder = {
+
+        id:
+            "documents_folder_" +
+            Date.now() +
+            "_" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
+
+        name:
+            name.trim(),
+
+        parentId:
+            parentId,
+
+        files: []
+
+    };
+
+
+    project.documentsFolders.push(folder);
+
+
+    persist();
+
+
+    showProjectSection(
+        "documents",
+        projectId
+    );
+
+};
 /* =========================
    DELETE DOCUMENT
 ========================= */
