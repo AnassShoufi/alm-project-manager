@@ -1830,8 +1830,9 @@ function projectOverviewHTML(project){
 
 window.showProjectSection = function(section, id, button){
 
-    const project = projects.find(p => p.id === id);
-
+    const project = projects.find(
+    p => String(p.id) === String(id)
+);
     if(!project) return;
 
 
