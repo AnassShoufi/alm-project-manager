@@ -2001,39 +2001,170 @@ if(section === "drawings"){
 
 if(section === "documents"){
 
+    /* =========================
+       DOCUMENTS FOLDERS
+    ========================= */
+
+    if(!project.documentsFolders){
+
+        project.documentsFolders = [
+            {
+                id: "root",
+                name: "Documents",
+                parentId: null,
+                files: []
+            }
+        ];
+
+    }
+
+    window.documentsCurrentFolder =
+        window.documentsCurrentFolder || {};
+
+    const folders = project.documentsFolders;
+
     const documents = project.documents || [];
+
+    const currentFolderId =
+        window.documentsCurrentFolder[project.id] ?? null;
+
+    const currentFolder =
+        folders.find(
+            f => String(f.id) === String(currentFolderId)
+        );
+
+    const currentFolderName =
+        currentFolder
+            ? currentFolder.name
+            : "Documents";
+
+
+    /* =========================
+       VISIBLE FOLDERS
+    ========================= */
+
+    const visibleFolders =
+        folders.filter(
+            folder =>
+                (folder.parentId || null) ===
+                (currentFolderId || null)
+        );
+
+
+    /* =========================
+       VISIBLE DOCUMENTS
+    ========================= */
+
+    const visibleDocuments =
+        documents
+            .map((doc,index) => ({
+                doc,
+                index
+            }))
+            .filter(item =>
+                String(item.doc.folderId ?? "") ===
+                String(currentFolderId ?? "")
+            );
+
+
+    /* =========================
+       DOCUMENTS UI
+    ========================= */
 
     content.innerHTML = `
 
         <div class="section-header">
 
             <div>
-                <h2>Documents</h2>
-                <p>Project documents and files</p>
+
+                <h2>${escapeHTML(currentFolderName)}</h2>
+
+                <p>
+                    Project documents and files
+                </p>
+
             </div>
 
-          <button
-    class="btn btn-primary"
-    onclick="window.uploadDocument(${project.id})">
-    + Add Document
-</button>
+
+            <div style="
+                display:flex;
+                gap:10px;
+                align-items:center;
+            ">
+
+                ${
+                    currentFolderId !== null
+                    ?
+
+                    `
+                    <button
+                        class="btn btn-secondary"
+                        onclick="
+                            window.openDocumentsFolder(
+                                '${project.id}',
+                                null
+                            );
+                        ">
+                        ← Back
+                    </button>
+                    `
+
+                    :
+
+                    ``
+                }
+
+
+                <button
+                    class="btn btn-primary"
+                    onclick="
+                        window.createDocumentsFolder(
+                            '${project.id}',
+                            ${currentFolderId === null ? "null" : `'${currentFolderId}'`}
+                        );
+                    ">
+
+                    📁 ${
+                        currentFolderId === null
+                        ? "New Main Folder"
+                        : "New Subfolder"
+                    }
+
+                </button>
+
+
+                <button
+                    class="btn btn-primary"
+                    onclick="
+                        window.uploadDocument(
+                            '${project.id}'
+                        );
+                    ">
+
+                    + Add Document
+
+                </button>
+
+            </div>
 
         </div>
 
+
         ${
-            documents.length === 0
+            visibleFolders.length === 0 &&
+            visibleDocuments.length === 0
 
             ?
 
             `
             <div class="empty">
 
-                <div style="font-size:48px;">📄</div>
+                <div style="font-size:48px;">📁</div>
 
-                <h3>No Documents yet</h3>
+                <h3>Empty Folder</h3>
 
                 <p>
-                    Upload the first document for this project.
+                    Create a folder or upload a document.
                 </p>
 
             </div>
@@ -2043,92 +2174,230 @@ if(section === "documents"){
 
             `
 
-            <table>
+            ${
+                visibleFolders.length > 0
 
-                <thead>
+                ?
 
-                    <tr>
+                `
+                <div style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(auto-fill,minmax(220px,1fr));
+                    gap:16px;
+                    margin-bottom:25px;
+                ">
 
-                        <th>Document</th>
-                        <th>File Type</th>
-                        <th>Uploaded By</th>
-                        <th>Date</th>
-                        <th>Actions</th>
+                    ${visibleFolders.map(folder => `
 
-                    </tr>
+                        <div
+                            style="
+                                border:1px solid #e2e8f0;
+                                border-radius:10px;
+                                padding:18px;
+                                cursor:pointer;
+                                background:#fff;
+                            "
+                            onclick="
+                                window.openDocumentsFolder(
+                                    '${project.id}',
+                                    '${folder.id}'
+                                );
+                            ">
 
-                </thead>
+                            <div style="
+                                font-size:42px;
+                                margin-bottom:10px;
+                            ">
+                                📁
+                            </div>
 
-                <tbody>
+                            <strong>
+                                ${escapeHTML(folder.name)}
+                            </strong>
 
-                    ${documents.map((doc,index) => `
+                            <div style="
+                                margin-top:6px;
+                                color:#64748b;
+                                font-size:13px;
+                            ">
+                                Open folder
+                            </div>
 
-                        <tr>
 
-                            <td>
+                            ${
+                                folder.id !== "root"
 
-                                <strong>
-                                    ${escapeHTML(doc.title || doc.fileName || "-")}
-                                </strong>
+                                ?
 
-                                <div style="
-                                    margin-top:4px;
-                                    color:#64748b;
-                                    font-size:13px;
-                                ">
-                                    ${escapeHTML(doc.fileName || "")}
-                                </div>
+                                `
+                                <button
+                                    class="action-btn"
+                                    style="margin-top:12px;"
+                                    onclick="
+                                        event.stopPropagation();
 
-                            </td>
+                                        window.deleteDocumentsFolder(
+                                            '${project.id}',
+                                            '${folder.id}'
+                                        );
+                                    ">
+                                    Delete
+                                </button>
+                                `
 
-                            <td>
-                                ${escapeHTML(doc.fileType || "-")}
-                            </td>
+                                :
 
-                            <td>
-                                ${escapeHTML(doc.uploadedBy || "-")}
-                            </td>
+                                ``
+                            }
 
-                            <td>
-                                ${escapeHTML(doc.date || "-")}
-                            </td>
-
-                            <td>
-
-                                <div class="actions">
-
-                                    <button
-                                        class="action-btn"
-                                        onclick="viewDocument(${project.id},${index})">
-                                        View
-                                    </button>
-
-                                    <button
-                                        class="action-btn"
-                                        onclick="deleteDocument(${project.id},${index})">
-                                        Delete
-                                    </button>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
+                        </div>
 
                     `).join("")}
 
-                </tbody>
+                </div>
+                `
 
-            </table>
+                :
+
+                ``
+            }
+
+
+            ${
+                visibleDocuments.length > 0
+
+                ?
+
+                `
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Document</th>
+                            <th>File Type</th>
+                            <th>Uploaded By</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${visibleDocuments.map(item => {
+
+                            const doc = item.doc;
+                            const index = item.index;
+
+                            return `
+
+                                <tr>
+
+                                    <td>
+
+                                        <strong>
+                                            ${escapeHTML(
+                                                doc.title ||
+                                                doc.fileName ||
+                                                "-"
+                                            )}
+                                        </strong>
+
+                                        <div style="
+                                            margin-top:4px;
+                                            color:#64748b;
+                                            font-size:13px;
+                                        ">
+
+                                            ${escapeHTML(
+                                                doc.fileName || ""
+                                            )}
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <td>
+                                        ${escapeHTML(
+                                            doc.fileType || "-"
+                                        )}
+                                    </td>
+
+
+                                    <td>
+                                        ${escapeHTML(
+                                            doc.uploadedBy || "-"
+                                        )}
+                                    </td>
+
+
+                                    <td>
+                                        ${escapeHTML(
+                                            doc.date || "-"
+                                        )}
+                                    </td>
+
+
+                                    <td>
+
+                                        <div class="actions">
+
+                                            <button
+                                                class="action-btn"
+                                                onclick="
+                                                    viewDocument(
+                                                        '${project.id}',
+                                                        ${index}
+                                                    );
+                                                ">
+                                                View
+                                            </button>
+
+
+                                            <button
+                                                class="action-btn"
+                                                onclick="
+                                                    deleteDocument(
+                                                        '${project.id}',
+                                                        ${index}
+                                                    );
+                                                ">
+                                                Delete
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            `;
+
+                        }).join("")}
+
+                    </tbody>
+
+                </table>
+                `
+
+                :
+
+                ``
+            }
 
             `
+
         }
 
     `;
 
- return;
+    return;
 }
-
 /* =========================
    BOQ
 ========================= */
