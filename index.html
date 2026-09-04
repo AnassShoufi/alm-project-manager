@@ -1894,6 +1894,17 @@ if(section === "documents"){
     return;
 
 }
+    /* =========================
+   PAYMENTS
+========================= */
+
+if(section === "payments"){
+
+    renderPaymentsSection(project);
+
+    return;
+
+}
 /* =========================
    BOQ
 ========================= */
@@ -9345,6 +9356,873 @@ function(projectId,index){
 
     showProjectSection(
         "tasks",
+        project.id
+    );
+
+};
+    /* =====================================================
+   PAYMENTS MODULE
+===================================================== */
+
+window.renderPaymentsSection = function(project){
+
+    if(!project.payments){
+        project.payments = [];
+    }
+
+    const payments = project.payments;
+
+    const totalAmount = payments.reduce(
+        (sum,p) => sum + (Number(p.amount) || 0),
+        0
+    );
+
+    const pendingPayments = payments.filter(
+        p => p.status === "Pending"
+    ).length;
+
+    const certifiedPayments = payments.filter(
+        p => p.status === "Certified"
+    ).length;
+
+    const paidPayments = payments.filter(
+        p => p.status === "Paid"
+    ).length;
+
+    const formatAmount = amount => {
+
+        const number = Number(amount) || 0;
+
+        return number.toLocaleString(
+            undefined,
+            {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+            }
+        );
+
+    };
+
+    const statusBadge = status => {
+
+        let cls = "badge-onhold";
+
+        if(status === "Pending"){
+            cls = "badge-delayed";
+        }
+
+        if(status === "Submitted"){
+            cls = "badge-active";
+        }
+
+        if(status === "Certified"){
+            cls = "badge-completed";
+        }
+
+        if(status === "Paid"){
+            cls = "badge-completed";
+        }
+
+        if(status === "Rejected"){
+            cls = "badge-onhold";
+        }
+
+        return `
+            <span class="badge ${cls}">
+                ${escapeHTML(status || "-")}
+            </span>
+        `;
+
+    };
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!content) return;
+
+
+    content.innerHTML = `
+
+        <div class="project-section">
+
+            <!-- HEADER -->
+
+            <div class="project-section-header">
+
+                <div>
+
+                    <h3>
+                        Payments
+                    </h3>
+
+                    <p>
+                        Payment register for
+                        ${escapeHTML(project.name)}
+                    </p>
+
+                </div>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="
+                        window.createPayment(
+                            '${project.id}'
+                        )
+                    "
+                >
+                    + Add Payment
+                </button>
+
+            </div>
+
+
+            <!-- SUMMARY -->
+
+            <div
+                style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(
+                            4,
+                            minmax(0,1fr)
+                        );
+                    gap:15px;
+                    margin-bottom:25px;
+                "
+            >
+
+                <div class="project-info-card">
+
+                    <span>
+                        Total Payment Amount
+                    </span>
+
+                    <strong>
+                        ${formatAmount(totalAmount)}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>
+                        Pending
+                    </span>
+
+                    <strong>
+                        ${pendingPayments}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>
+                        Certified
+                    </span>
+
+                    <strong>
+                        ${certifiedPayments}
+                    </strong>
+
+                </div>
+
+
+                <div class="project-info-card">
+
+                    <span>
+                        Paid
+                    </span>
+
+                    <strong>
+                        ${paidPayments}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- PAYMENT TABLE -->
+
+            ${
+                payments.length === 0
+
+                ?
+
+                `
+                <div class="empty">
+
+                    <div
+                        style="
+                            font-size:48px;
+                        "
+                    >
+                        💵
+                    </div>
+
+                    <h3>
+                        No payments yet
+                    </h3>
+
+                    <p>
+                        Add the first payment
+                        record for this project.
+                    </p>
+
+                </div>
+                `
+
+                :
+
+                `
+                <div
+                    style="
+                        overflow-x:auto;
+                    "
+                >
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Payment No.
+                                </th>
+
+                                <th>
+                                    Type
+                                </th>
+
+                                <th>
+                                    Description
+                                </th>
+
+                                <th>
+                                    Payee
+                                </th>
+
+                                <th>
+                                    Amount
+                                </th>
+
+                                <th>
+                                    Payment Date
+                                </th>
+
+                                <th>
+                                    Due Date
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Reference
+                                </th>
+
+                                <th>
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            ${
+                                payments
+                                .map(
+                                    (
+                                        payment,
+                                        index
+                                    ) => `
+
+                                    <tr>
+
+                                        <td>
+
+                                            <strong>
+                                                ${escapeHTML(
+                                                    payment.paymentNo ||
+                                                    "-"
+                                                )}
+                                            </strong>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                payment.type ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                payment.description ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                payment.payee ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <strong>
+                                                ${formatAmount(
+                                                    payment.amount
+                                                )}
+                                            </strong>
+
+                                            ${
+                                                payment.currency
+                                                ?
+                                                `
+                                                <span
+                                                    style="
+                                                        color:#708096;
+                                                        font-size:12px;
+                                                        margin-left:4px;
+                                                    "
+                                                >
+                                                    ${escapeHTML(
+                                                        payment.currency
+                                                    )}
+                                                </span>
+                                                `
+                                                :
+                                                ""
+                                            }
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                payment.paymentDate ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                payment.dueDate ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${statusBadge(
+                                                payment.status
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                payment.reference ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div
+                                                class="actions"
+                                            >
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        window.editPayment(
+                                                            '${project.id}',
+                                                            ${index}
+                                                        )
+                                                    "
+                                                >
+                                                    Edit
+                                                </button>
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        window.deletePayment(
+                                                            '${project.id}',
+                                                            ${index}
+                                                        )
+                                                    "
+                                                >
+                                                    Delete
+                                                </button>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                `
+                                )
+                                .join("")
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+                `
+
+            }
+
+        </div>
+
+    `;
+
+};
+
+
+/* =====================================================
+   CREATE PAYMENT
+===================================================== */
+
+window.createPayment = function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project) return;
+
+
+    if(!project.payments){
+        project.payments = [];
+    }
+
+
+    const paymentNo =
+        prompt(
+            "Payment No.:"
+        );
+
+    if(paymentNo === null) return;
+
+
+    const type =
+        prompt(
+            "Payment Type:\n\n" +
+            "IPC / Advance / Retention / Final / Other",
+            "IPC"
+        );
+
+    if(type === null) return;
+
+
+    const description =
+        prompt(
+            "Description:"
+        );
+
+    if(description === null) return;
+
+
+    const payee =
+        prompt(
+            "Contractor / Payee:"
+        );
+
+    if(payee === null) return;
+
+
+    const amount =
+        prompt(
+            "Amount:"
+        );
+
+    if(amount === null) return;
+
+
+    const currency =
+        prompt(
+            "Currency:",
+            "NGN"
+        );
+
+    if(currency === null) return;
+
+
+    const paymentDate =
+        prompt(
+            "Payment Date:",
+            new Date()
+                .toISOString()
+                .split("T")[0]
+        );
+
+    if(paymentDate === null) return;
+
+
+    const dueDate =
+        prompt(
+            "Due Date:"
+        );
+
+    if(dueDate === null) return;
+
+
+    const status =
+        prompt(
+            "Status:\n\n" +
+            "Pending / Submitted / Certified / Paid / Rejected",
+            "Pending"
+        );
+
+    if(status === null) return;
+
+
+    const reference =
+        prompt(
+            "Reference / Invoice / Certificate No.:"
+        );
+
+    if(reference === null) return;
+
+
+    const remarks =
+        prompt(
+            "Remarks:"
+        );
+
+    if(remarks === null) return;
+
+
+    project.payments.push({
+
+        id:
+            "payment-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
+
+        projectId:
+            project.id,
+
+        paymentNo:
+            paymentNo.trim(),
+
+        type:
+            type.trim(),
+
+        description:
+            description.trim(),
+
+        payee:
+            payee.trim(),
+
+        amount:
+            Number(amount) || 0,
+
+        currency:
+            currency.trim(),
+
+        paymentDate:
+            paymentDate.trim(),
+
+        dueDate:
+            dueDate.trim(),
+
+        status:
+            status.trim(),
+
+        reference:
+            reference.trim(),
+
+        remarks:
+            remarks.trim(),
+
+        createdDate:
+            new Date()
+                .toLocaleDateString()
+
+    });
+
+
+    persist();
+
+
+    window.showProjectSection(
+        "payments",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   EDIT PAYMENT
+===================================================== */
+
+window.editPayment = function(
+    projectId,
+    index
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(
+        !project ||
+        !project.payments
+    ){
+        return;
+    }
+
+
+    const payment =
+        project.payments[index];
+
+    if(!payment) return;
+
+
+    const paymentNo =
+        prompt(
+            "Payment No.:",
+            payment.paymentNo || ""
+        );
+
+    if(paymentNo === null) return;
+
+
+    const type =
+        prompt(
+            "Payment Type:",
+            payment.type || ""
+        );
+
+    if(type === null) return;
+
+
+    const description =
+        prompt(
+            "Description:",
+            payment.description || ""
+        );
+
+    if(description === null) return;
+
+
+    const payee =
+        prompt(
+            "Contractor / Payee:",
+            payment.payee || ""
+        );
+
+    if(payee === null) return;
+
+
+    const amount =
+        prompt(
+            "Amount:",
+            payment.amount || ""
+        );
+
+    if(amount === null) return;
+
+
+    const currency =
+        prompt(
+            "Currency:",
+            payment.currency || "NGN"
+        );
+
+    if(currency === null) return;
+
+
+    const paymentDate =
+        prompt(
+            "Payment Date:",
+            payment.paymentDate || ""
+        );
+
+    if(paymentDate === null) return;
+
+
+    const dueDate =
+        prompt(
+            "Due Date:",
+            payment.dueDate || ""
+        );
+
+    if(dueDate === null) return;
+
+
+    const status =
+        prompt(
+            "Status:",
+            payment.status || "Pending"
+        );
+
+    if(status === null) return;
+
+
+    const reference =
+        prompt(
+            "Reference:",
+            payment.reference || ""
+        );
+
+    if(reference === null) return;
+
+
+    const remarks =
+        prompt(
+            "Remarks:",
+            payment.remarks || ""
+        );
+
+    if(remarks === null) return;
+
+
+    payment.paymentNo =
+        paymentNo.trim();
+
+    payment.type =
+        type.trim();
+
+    payment.description =
+        description.trim();
+
+    payment.payee =
+        payee.trim();
+
+    payment.amount =
+        Number(amount) || 0;
+
+    payment.currency =
+        currency.trim();
+
+    payment.paymentDate =
+        paymentDate.trim();
+
+    payment.dueDate =
+        dueDate.trim();
+
+    payment.status =
+        status.trim();
+
+    payment.reference =
+        reference.trim();
+
+    payment.remarks =
+        remarks.trim();
+
+
+    persist();
+
+
+    window.showProjectSection(
+        "payments",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   DELETE PAYMENT
+===================================================== */
+
+window.deletePayment = function(
+    projectId,
+    index
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(
+        !project ||
+        !project.payments
+    ){
+        return;
+    }
+
+
+    const payment =
+        project.payments[index];
+
+    if(!payment) return;
+
+
+    const confirmed =
+        confirm(
+            `Are you sure you want to delete payment "${payment.paymentNo || payment.description || "Payment"}"?`
+        );
+
+    if(!confirmed) return;
+
+
+    project.payments.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    window.showProjectSection(
+        "payments",
         project.id
     );
 
