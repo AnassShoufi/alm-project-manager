@@ -9360,8 +9360,8 @@ function(projectId,index){
     );
 
 };
-   /* =====================================================
-   PAYMENTS MODULE
+ /* =====================================================
+   PAYMENTS - EDITABLE REGISTER
 ===================================================== */
 
 window.renderPaymentsSection = function(project){
@@ -9372,26 +9372,34 @@ window.renderPaymentsSection = function(project){
 
     const payments = project.payments;
 
-    const formatAmount = amount => {
+    const content =
+        document.getElementById("projectSectionContent");
 
-        const number = Number(amount) || 0;
+    if(!content) return;
+
+
+    const formatAmount = value => {
+
+        const number = Number(value) || 0;
 
         return number.toLocaleString(
             undefined,
             {
-                minimumFractionDigits:2,
-                maximumFractionDigits:2
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             }
         );
 
     };
 
-    const totalInvoiceValue =
+
+    const totalInvoice =
         payments.reduce(
             (sum,p) =>
                 sum + (Number(p.invoiceValue) || 0),
             0
         );
+
 
     const totalReceived =
         payments.reduce(
@@ -9400,16 +9408,9 @@ window.renderPaymentsSection = function(project){
             0
         );
 
+
     const totalBalance =
-        totalInvoiceValue - totalReceived;
-
-
-    const content =
-        document.getElementById(
-            "projectSectionContent"
-        );
-
-    if(!content) return;
+        totalInvoice - totalReceived;
 
 
     content.innerHTML = `
@@ -9422,12 +9423,10 @@ window.renderPaymentsSection = function(project){
 
                 <div>
 
-                    <h3>
-                        Payments
-                    </h3>
+                    <h3>Payments</h3>
 
                     <p>
-                        Payment register for
+                        Payment Register for
                         ${escapeHTML(project.name)}
                     </p>
 
@@ -9437,7 +9436,7 @@ window.renderPaymentsSection = function(project){
                 <button
                     class="btn btn-primary"
                     onclick="
-                        window.createPayment(
+                        window.addPaymentRow(
                             '${project.id}'
                         )
                     "
@@ -9467,9 +9466,7 @@ window.renderPaymentsSection = function(project){
                     </span>
 
                     <strong>
-                        ${formatAmount(
-                            totalInvoiceValue
-                        )}
+                        ${formatAmount(totalInvoice)}
                     </strong>
 
                 </div>
@@ -9482,9 +9479,7 @@ window.renderPaymentsSection = function(project){
                     </span>
 
                     <strong>
-                        ${formatAmount(
-                            totalReceived
-                        )}
+                        ${formatAmount(totalReceived)}
                     </strong>
 
                 </div>
@@ -9493,7 +9488,7 @@ window.renderPaymentsSection = function(project){
                 <div class="project-info-card">
 
                     <span>
-                        Total Balance
+                        Outstanding Balance
                     </span>
 
                     <strong
@@ -9506,9 +9501,7 @@ window.renderPaymentsSection = function(project){
                             };
                         "
                     >
-                        ${formatAmount(
-                            totalBalance
-                        )}
+                        ${formatAmount(totalBalance)}
                     </strong>
 
                 </div>
@@ -9516,349 +9509,507 @@ window.renderPaymentsSection = function(project){
             </div>
 
 
-            <!-- PAYMENT TABLE -->
+            <!-- REGISTER -->
 
-            ${
-                payments.length === 0
+            <div
+                style="
+                    overflow-x:auto;
+                "
+            >
 
-                ?
-
-                `
-                <div class="empty">
-
-                    <div
-                        style="
-                            font-size:48px;
-                        "
-                    >
-                        💵
-                    </div>
-
-                    <h3>
-                        No payments yet
-                    </h3>
-
-                    <p>
-                        Add the first payment
-                        record for this project.
-                    </p>
-
-                </div>
-                `
-
-                :
-
-                `
-                <div
+                <table
+                    class="payments-register"
                     style="
-                        overflow-x:auto;
+                        width:100%;
+                        min-width:1250px;
                     "
                 >
 
-                    <table>
+                    <thead>
 
-                        <thead>
+                        <tr>
 
+                            <th>
+                                Payment Number
+                            </th>
+
+                            <th>
+                                Payment Type
+                            </th>
+
+                            <th>
+                                Contractor
+                            </th>
+
+                            <th>
+                                Invoice Value
+                            </th>
+
+                            <th>
+                                Payment Received
+                            </th>
+
+                            <th>
+                                Balance
+                            </th>
+
+                            <th>
+                                Date of Payment Received
+                            </th>
+
+                            <th>
+                                Invoice PDF
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${
+                            payments.length === 0
+
+                            ?
+
+                            `
                             <tr>
 
-                                <th>
-                                    Payment No.
-                                </th>
+                                <td
+                                    colspan="9"
+                                    style="
+                                        text-align:center;
+                                        padding:40px;
+                                        color:#8a96a3;
+                                    "
+                                >
 
-                                <th>
-                                    Type
-                                </th>
+                                    No payments recorded yet.
 
-                                <th>
-                                    Contractor
-                                </th>
+                                    <br><br>
 
-                                <th>
-                                    Invoice Value
-                                </th>
+                                    Click
+                                    <strong>
+                                        + Add Payment
+                                    </strong>
+                                    to add a payment.
 
-                                <th>
-                                    Payment Received
-                                </th>
-
-                                <th>
-                                    Balance
-                                </th>
-
-                                <th>
-                                    Date of Payment Received
-                                </th>
-
-                                <th>
-                                    Invoice
-                                </th>
-
-                                <th>
-                                    Actions
-                                </th>
+                                </td>
 
                             </tr>
+                            `
 
-                        </thead>
+                            :
 
+                            payments.map(
+                                (payment,index) => {
 
-                        <tbody>
-
-                            ${
-                                payments
-                                .map(
-                                    (
-                                        payment,
-                                        index
-                                    ) => {
-
-                                        const invoiceValue =
-                                            Number(
-                                                payment.invoiceValue
-                                            ) || 0;
-
-                                        const paymentReceived =
-                                            Number(
-                                                payment.paymentReceived
-                                            ) || 0;
-
-                                        const balance =
-                                            invoiceValue -
-                                            paymentReceived;
+                                    const invoiceValue =
+                                        Number(
+                                            payment.invoiceValue
+                                        ) || 0;
 
 
-                                        let balanceStyle =
-                                            "color:#a56a00;";
-
-                                        if(balance === 0){
-
-                                            balanceStyle =
-                                                "color:#148344;";
-
-                                        }
-
-                                        if(balance < 0){
-
-                                            balanceStyle =
-                                                "color:#b42332;";
-
-                                        }
+                                    const paymentReceived =
+                                        Number(
+                                            payment.paymentReceived
+                                        ) || 0;
 
 
-                                        return `
-
-                                        <tr>
-
-                                            <!-- PAYMENT NUMBER -->
-
-                                            <td>
-
-                                                <strong>
-                                                    ${escapeHTML(
-                                                        payment.paymentNo ||
-                                                        "-"
-                                                    )}
-                                                </strong>
-
-                                            </td>
+                                    const balance =
+                                        invoiceValue -
+                                        paymentReceived;
 
 
-                                            <!-- TYPE -->
-
-                                            <td>
-
-                                                ${escapeHTML(
-                                                    payment.type ||
-                                                    "-"
-                                                )}
-
-                                            </td>
+                                    let balanceColor =
+                                        "#a56a00";
 
 
-                                            <!-- CONTRACTOR -->
+                                    if(balance === 0){
 
-                                            <td>
+                                        balanceColor =
+                                            "#148344";
 
-                                                ${escapeHTML(
-                                                    payment.contractor ||
-                                                    "-"
-                                                )}
-
-                                            </td>
+                                    }
 
 
-                                            <!-- INVOICE VALUE -->
+                                    if(balance < 0){
 
-                                            <td>
+                                        balanceColor =
+                                            "#b42332";
 
-                                                <strong>
-                                                    ${formatAmount(
-                                                        invoiceValue
-                                                    )}
-                                                </strong>
-
-                                            </td>
+                                    }
 
 
-                                            <!-- PAYMENT RECEIVED -->
+                                    return `
 
-                                            <td>
+                                    <tr
+                                        data-payment-row="${index}"
+                                    >
 
-                                                <strong>
-                                                    ${formatAmount(
-                                                        paymentReceived
-                                                    )}
-                                                </strong>
+                                        <!-- PAYMENT NUMBER -->
 
-                                            </td>
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                value="${escapeHTML(
+                                                    payment.paymentNo || ""
+                                                )}"
+                                                placeholder="Payment No."
+                                                onchange="
+                                                    window.updatePaymentField(
+                                                        '${project.id}',
+                                                        ${index},
+                                                        'paymentNo',
+                                                        this.value
+                                                    )
+                                                "
+                                                style="
+                                                    width:120px;
+                                                "
+                                            >
+
+                                        </td>
 
 
-                                            <!-- BALANCE -->
+                                        <!-- PAYMENT TYPE -->
 
-                                            <td>
+                                        <td>
 
-                                                <strong
-                                                    style="
-                                                        ${balanceStyle}
-                                                    "
+                                            <select
+                                                onchange="
+                                                    window.updatePaymentField(
+                                                        '${project.id}',
+                                                        ${index},
+                                                        'type',
+                                                        this.value
+                                                    )
+                                                "
+                                            >
+
+                                                <option
+                                                    value=""
+                                                    ${
+                                                        !payment.type
+                                                        ? "selected"
+                                                        : ""
+                                                    }
                                                 >
-                                                    ${formatAmount(
-                                                        balance
-                                                    )}
-                                                </strong>
+                                                    Select Type
+                                                </option>
 
-                                            </td>
+                                                <option
+                                                    value="Advance"
+                                                    ${
+                                                        payment.type === "Advance"
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    Advance
+                                                </option>
 
+                                                <option
+                                                    value="Valuation"
+                                                    ${
+                                                        payment.type === "Valuation"
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    Valuation
+                                                </option>
 
-                                            <!-- DATE -->
+                                                <option
+                                                    value="Retention"
+                                                    ${
+                                                        payment.type === "Retention"
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    Retention
+                                                </option>
 
-                                            <td>
+                                                <option
+                                                    value="Additional Advance"
+                                                    ${
+                                                        payment.type === "Additional Advance"
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    Additional Advance
+                                                </option>
 
-                                                ${escapeHTML(
-                                                    payment.paymentReceivedDate ||
-                                                    "-"
-                                                )}
+                                                <option
+                                                    value="Final Payment"
+                                                    ${
+                                                        payment.type === "Final Payment"
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    Final Payment
+                                                </option>
 
-                                            </td>
+                                                <option
+                                                    value="Other"
+                                                    ${
+                                                        payment.type === "Other"
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    Other
+                                                </option>
 
+                                            </select>
 
-                                            <!-- INVOICE -->
-
-                                            <td>
-
-                                                ${
-                                                    payment.invoiceFileData
-
-                                                    ?
-
-                                                    `
-                                                    <div
-                                                        style="
-                                                            display:flex;
-                                                            gap:6px;
-                                                            flex-wrap:wrap;
-                                                        "
-                                                    >
-
-                                                        <button
-                                                            class="action-btn"
-                                                            onclick="
-                                                                window.viewPaymentInvoice(
-                                                                    '${project.id}',
-                                                                    ${index}
-                                                                )
-                                                            "
-                                                        >
-                                                            📄 View
-                                                        </button>
-
-
-                                                        <button
-                                                            class="action-btn"
-                                                            onclick="
-                                                                window.downloadPaymentInvoice(
-                                                                    '${project.id}',
-                                                                    ${index}
-                                                                )
-                                                            "
-                                                        >
-                                                            Download
-                                                        </button>
-
-                                                    </div>
-                                                    `
-
-                                                    :
-
-                                                    `
-                                                    <span
-                                                        style="
-                                                            color:#9aa5b1;
-                                                            font-size:13px;
-                                                        "
-                                                    >
-                                                        No Invoice
-                                                    </span>
-                                                    `
-                                                }
-
-                                            </td>
+                                        </td>
 
 
-                                            <!-- ACTIONS -->
+                                        <!-- CONTRACTOR -->
 
-                                            <td>
+                                        <td>
 
+                                            <input
+                                                type="text"
+                                                value="${escapeHTML(
+                                                    payment.contractor || ""
+                                                )}"
+                                                placeholder="Contractor"
+                                                onchange="
+                                                    window.updatePaymentField(
+                                                        '${project.id}',
+                                                        ${index},
+                                                        'contractor',
+                                                        this.value
+                                                    )
+                                                "
+                                                style="
+                                                    width:170px;
+                                                "
+                                            >
+
+                                        </td>
+
+
+                                        <!-- INVOICE VALUE -->
+
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                value="${
+                                                    payment.invoiceValue || ""
+                                                }"
+                                                placeholder="0.00"
+                                                step="0.01"
+                                                min="0"
+                                                oninput="
+                                                    window.updatePaymentAmount(
+                                                        '${project.id}',
+                                                        ${index},
+                                                        'invoiceValue',
+                                                        this.value
+                                                    )
+                                                "
+                                                style="
+                                                    width:150px;
+                                                    text-align:right;
+                                                "
+                                            >
+
+                                        </td>
+
+
+                                        <!-- PAYMENT RECEIVED -->
+
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                value="${
+                                                    payment.paymentReceived || ""
+                                                }"
+                                                placeholder="0.00"
+                                                step="0.01"
+                                                min="0"
+                                                oninput="
+                                                    window.updatePaymentAmount(
+                                                        '${project.id}',
+                                                        ${index},
+                                                        'paymentReceived',
+                                                        this.value
+                                                    )
+                                                "
+                                                style="
+                                                    width:150px;
+                                                    text-align:right;
+                                                "
+                                            >
+
+                                        </td>
+
+
+                                        <!-- BALANCE -->
+
+                                        <td>
+
+                                            <strong
+                                                id="
+                                                    payment-balance-${index}
+                                                "
+                                                style="
+                                                    color:${balanceColor};
+                                                    white-space:nowrap;
+                                                "
+                                            >
+                                                ${formatAmount(balance)}
+                                            </strong>
+
+                                        </td>
+
+
+                                        <!-- DATE -->
+
+                                        <td>
+
+                                            <input
+                                                type="date"
+                                                value="${
+                                                    payment.paymentReceivedDate || ""
+                                                }"
+                                                onchange="
+                                                    window.updatePaymentField(
+                                                        '${project.id}',
+                                                        ${index},
+                                                        'paymentReceivedDate',
+                                                        this.value
+                                                    )
+                                                "
+                                            >
+
+                                        </td>
+
+
+                                        <!-- INVOICE -->
+
+                                        <td>
+
+                                            ${
+                                                payment.invoiceFileData
+
+                                                ?
+
+                                                `
                                                 <div
-                                                    class="actions"
+                                                    style="
+                                                        display:flex;
+                                                        gap:5px;
+                                                        align-items:center;
+                                                    "
                                                 >
 
                                                     <button
                                                         class="action-btn"
                                                         onclick="
-                                                            window.editPayment(
+                                                            window.viewPaymentInvoice(
                                                                 '${project.id}',
                                                                 ${index}
                                                             )
                                                         "
                                                     >
-                                                        Edit
+                                                        📄 View
                                                     </button>
 
 
                                                     <button
                                                         class="action-btn"
                                                         onclick="
-                                                            window.deletePayment(
+                                                            window.downloadPaymentInvoice(
                                                                 '${project.id}',
                                                                 ${index}
                                                             )
                                                         "
                                                     >
-                                                        Delete
+                                                        Download
                                                     </button>
 
                                                 </div>
+                                                `
 
-                                            </td>
+                                                :
 
-                                        </tr>
+                                                `
+                                                <label
+                                                    class="action-btn"
+                                                    style="
+                                                        cursor:pointer;
+                                                        display:inline-block;
+                                                    "
+                                                >
 
-                                        `;
+                                                    📎 Upload
 
-                                    }
-                                )
-                                .join("")
-                            }
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf,application/pdf"
+                                                        style="display:none"
+                                                        onchange="
+                                                            window.uploadPaymentInvoice(
+                                                                '${project.id}',
+                                                                ${index},
+                                                                this.files[0]
+                                                            )
+                                                        "
+                                                    >
 
-                        </tbody>
+                                                </label>
+                                                `
+                                            }
 
-                    </table>
+                                        </td>
 
-                </div>
-                `
 
-            }
+                                        <!-- ACTIONS -->
+
+                                        <td>
+
+                                            <button
+                                                class="action-btn"
+                                                onclick="
+                                                    window.deletePayment(
+                                                        '${project.id}',
+                                                        ${index}
+                                                    )
+                                                "
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                    `;
+
+                                }
+                            ).join("")
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
@@ -9868,10 +10019,10 @@ window.renderPaymentsSection = function(project){
 
 
 /* =====================================================
-   CREATE PAYMENT
+   ADD NEW PAYMENT ROW
 ===================================================== */
 
-window.createPayment = function(projectId){
+window.addPaymentRow = function(projectId){
 
     const project =
         projects.find(
@@ -9888,218 +10039,68 @@ window.createPayment = function(projectId){
     }
 
 
-    const paymentNo =
-        prompt(
-            "Payment Number:"
-        );
+    project.payments.push({
 
-    if(paymentNo === null) return;
+        id:
+            "payment-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
 
-    if(!paymentNo.trim()){
+        projectId:
+            project.id,
 
-        alert(
-            "Payment Number is required."
-        );
+        paymentNo:
+            "",
 
-        return;
+        type:
+            "",
 
-    }
+        contractor:
+            "",
 
+        invoiceValue:
+            0,
 
-    const type =
-        prompt(
-            "Type:\n\n" +
-            "Advance Payment / Interim Payment / Final Payment / Retention / Other",
-            "Interim Payment"
-        );
+        paymentReceived:
+            0,
 
-    if(type === null) return;
+        paymentReceivedDate:
+            "",
 
+        invoiceFileName:
+            "",
 
-    const contractor =
-        prompt(
-            "Contractor:"
-        );
+        invoiceFileType:
+            "",
 
-    if(contractor === null) return;
+        invoiceFileData:
+            ""
 
-
-    const invoiceValue =
-        prompt(
-            "Invoice Value:"
-        );
-
-    if(invoiceValue === null) return;
-
-
-    const paymentReceived =
-        prompt(
-            "Payment Received:"
-        );
-
-    if(paymentReceived === null) return;
+    });
 
 
-    const paymentReceivedDate =
-        prompt(
-            "Date of Payment Received:",
-            new Date()
-                .toISOString()
-                .split("T")[0]
-        );
-
-    if(paymentReceivedDate === null) return;
+    persist();
 
 
-    /*
-       CREATE TEMPORARY FILE INPUT
-       FOR INVOICE PDF
-    */
-
-    const fileInput =
-        document.createElement("input");
-
-    fileInput.type = "file";
-
-    fileInput.accept = "application/pdf,.pdf";
-
-
-    fileInput.style.display = "none";
-
-
-    document.body.appendChild(
-        fileInput
+    window.renderPaymentsSection(
+        project
     );
-
-
-    fileInput.onchange =
-    function(){
-
-        const file =
-            fileInput.files[0];
-
-
-        if(!file){
-
-            document.body.removeChild(
-                fileInput
-            );
-
-            return;
-
-        }
-
-
-        if(
-            file.type !==
-            "application/pdf"
-        ){
-
-            alert(
-                "Please select a PDF invoice only."
-            );
-
-            document.body.removeChild(
-                fileInput
-            );
-
-            return;
-
-        }
-
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-        function(event){
-
-            project.payments.push({
-
-                id:
-                    "payment-" +
-                    Date.now() +
-                    "-" +
-                    Math.random()
-                        .toString(36)
-                        .substring(2,8),
-
-                projectId:
-                    project.id,
-
-                paymentNo:
-                    paymentNo.trim(),
-
-                type:
-                    type.trim(),
-
-                contractor:
-                    contractor.trim(),
-
-                invoiceValue:
-                    Number(invoiceValue) || 0,
-
-                paymentReceived:
-                    Number(paymentReceived) || 0,
-
-                paymentReceivedDate:
-                    paymentReceivedDate.trim(),
-
-                invoiceFileName:
-                    file.name,
-
-                invoiceFileType:
-                    file.type,
-
-                invoiceFileData:
-                    event.target.result,
-
-                createdDate:
-                    new Date()
-                        .toISOString()
-                        .split("T")[0]
-
-            });
-
-
-            persist();
-
-
-            document.body.removeChild(
-                fileInput
-            );
-
-
-            window.showProjectSection(
-                "payments",
-                project.id
-            );
-
-        };
-
-
-        reader.readAsDataURL(file);
-
-    };
-
-
-    /*
-       OPEN FILE SELECTOR
-    */
-
-    fileInput.click();
 
 };
 
 
 /* =====================================================
-   EDIT PAYMENT
+   UPDATE TEXT / SELECT / DATE FIELD
 ===================================================== */
 
-window.editPayment = function(
+window.updatePaymentField = function(
     projectId,
-    index
+    index,
+    field,
+    value
 ){
 
     const project =
@@ -10111,7 +10112,8 @@ window.editPayment = function(
 
     if(
         !project ||
-        !project.payments
+        !project.payments ||
+        !project.payments[index]
     ){
 
         return;
@@ -10119,106 +10121,140 @@ window.editPayment = function(
     }
 
 
-    const payment =
-        project.payments[index];
-
-    if(!payment) return;
+    project.payments[index][field] =
+        value;
 
 
-    const paymentNo =
-        prompt(
-            "Payment Number:",
-            payment.paymentNo || ""
-        );
-
-    if(paymentNo === null) return;
-
-
-    const type =
-        prompt(
-            "Type:",
-            payment.type || ""
-        );
-
-    if(type === null) return;
-
-
-    const contractor =
-        prompt(
-            "Contractor:",
-            payment.contractor || ""
-        );
-
-    if(contractor === null) return;
-
-
-    const invoiceValue =
-        prompt(
-            "Invoice Value:",
-            payment.invoiceValue || ""
-        );
-
-    if(invoiceValue === null) return;
-
-
-    const paymentReceived =
-        prompt(
-            "Payment Received:",
-            payment.paymentReceived || ""
-        );
-
-    if(paymentReceived === null) return;
-
-
-    const paymentReceivedDate =
-        prompt(
-            "Date of Payment Received:",
-            payment.paymentReceivedDate || ""
-        );
-
-    if(paymentReceivedDate === null) return;
-
-
-    payment.paymentNo =
-        paymentNo.trim();
-
-    payment.type =
-        type.trim();
-
-    payment.contractor =
-        contractor.trim();
-
-    payment.invoiceValue =
-        Number(invoiceValue) || 0;
-
-    payment.paymentReceived =
-        Number(paymentReceived) || 0;
-
-    payment.paymentReceivedDate =
-        paymentReceivedDate.trim();
+    persist();
 
 
     /*
-       ASK WHETHER TO REPLACE INVOICE
+       Keep the row on screen.
+       No popup and no page navigation.
     */
 
-    const replaceInvoice =
-        confirm(
-            payment.invoiceFileData
-            ?
-            "Do you want to replace the existing Invoice PDF?"
-            :
-            "Do you want to upload an Invoice PDF?"
+};
+
+
+/* =====================================================
+   UPDATE PAYMENT AMOUNTS
+===================================================== */
+
+window.updatePaymentAmount = function(
+    projectId,
+    index,
+    field,
+    value
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(
+        !project ||
+        !project.payments ||
+        !project.payments[index]
+    ){
+
+        return;
+
+    }
+
+
+    project.payments[index][field] =
+        Number(value) || 0;
+
+
+    const payment =
+        project.payments[index];
+
+
+    const invoiceValue =
+        Number(
+            payment.invoiceValue
+        ) || 0;
+
+
+    const paymentReceived =
+        Number(
+            payment.paymentReceived
+        ) || 0;
+
+
+    const balance =
+        invoiceValue -
+        paymentReceived;
+
+
+    const balanceElement =
+        document.getElementById(
+            `payment-balance-${index}`
         );
 
 
-    if(!replaceInvoice){
+    if(balanceElement){
 
-        persist();
+        balanceElement.textContent =
+            balance.toLocaleString(
+                undefined,
+                {
+                    minimumFractionDigits:2,
+                    maximumFractionDigits:2
+                }
+            );
 
-        window.showProjectSection(
-            "payments",
-            project.id
+
+        if(balance === 0){
+
+            balanceElement.style.color =
+                "#148344";
+
+        }
+        else if(balance < 0){
+
+            balanceElement.style.color =
+                "#b42332";
+
+        }
+        else{
+
+            balanceElement.style.color =
+                "#a56a00";
+
+        }
+
+    }
+
+
+    persist();
+
+};
+
+
+/* =====================================================
+   UPLOAD INVOICE PDF
+===================================================== */
+
+window.uploadPaymentInvoice = function(
+    projectId,
+    index,
+    file
+){
+
+    if(!file) return;
+
+
+    if(
+        file.type !==
+        "application/pdf"
+    ){
+
+        alert(
+            "Please upload a PDF file only."
         );
 
         return;
@@ -10226,111 +10262,132 @@ window.editPayment = function(
     }
 
 
-    const fileInput =
-        document.createElement("input");
-
-    fileInput.type = "file";
-
-    fileInput.accept =
-        "application/pdf,.pdf";
-
-    fileInput.style.display =
-        "none";
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
 
 
-    document.body.appendChild(
-        fileInput
-    );
+    if(
+        !project ||
+        !project.payments ||
+        !project.payments[index]
+    ){
+
+        return;
+
+    }
 
 
-    fileInput.onchange =
-    function(){
-
-        const file =
-            fileInput.files[0];
+    const reader =
+        new FileReader();
 
 
-        if(!file){
+    reader.onload =
+    function(event){
 
-            document.body.removeChild(
-                fileInput
-            );
-
-            persist();
-
-            window.showProjectSection(
-                "payments",
-                project.id
-            );
-
-            return;
-
-        }
+        const payment =
+            project.payments[index];
 
 
-        if(
-            file.type !==
-            "application/pdf"
-        ){
-
-            alert(
-                "Please select a PDF invoice only."
-            );
-
-            document.body.removeChild(
-                fileInput
-            );
-
-            return;
-
-        }
+        payment.invoiceFileName =
+            file.name;
 
 
-        const reader =
-            new FileReader();
+        payment.invoiceFileType =
+            file.type;
 
 
-        reader.onload =
-        function(event){
-
-            payment.invoiceFileName =
-                file.name;
-
-            payment.invoiceFileType =
-                file.type;
-
-            payment.invoiceFileData =
-                event.target.result;
+        payment.invoiceFileData =
+            event.target.result;
 
 
-            persist();
+        persist();
 
 
-            document.body.removeChild(
-                fileInput
-            );
-
-
-            window.showProjectSection(
-                "payments",
-                project.id
-            );
-
-        };
-
-
-        reader.readAsDataURL(file);
+        window.renderPaymentsSection(
+            project
+        );
 
     };
 
 
-    fileInput.click();
+    reader.readAsDataURL(file);
 
 };
 
 
 /* =====================================================
-   VIEW PAYMENT INVOICE
+   REPLACE INVOICE
+===================================================== */
+
+window.replacePaymentInvoice = function(
+    projectId,
+    index
+){
+
+    const input =
+        document.createElement("input");
+
+
+    input.type =
+        "file";
+
+
+    input.accept =
+        ".pdf,application/pdf";
+
+
+    input.style.display =
+        "none";
+
+
+    document.body.appendChild(
+        input
+    );
+
+
+    input.onchange =
+    function(){
+
+        const file =
+            input.files[0];
+
+
+        if(!file){
+
+            document.body.removeChild(
+                input
+            );
+
+            return;
+
+        }
+
+
+        window.uploadPaymentInvoice(
+            projectId,
+            index,
+            file
+        );
+
+
+        document.body.removeChild(
+            input
+        );
+
+    };
+
+
+    input.click();
+
+};
+
+
+/* =====================================================
+   VIEW INVOICE
 ===================================================== */
 
 window.viewPaymentInvoice = function(
@@ -10345,9 +10402,11 @@ window.viewPaymentInvoice = function(
                 String(projectId)
         );
 
+
     if(
         !project ||
-        !project.payments
+        !project.payments ||
+        !project.payments[index]
     ){
 
         return;
@@ -10358,8 +10417,8 @@ window.viewPaymentInvoice = function(
     const payment =
         project.payments[index];
 
+
     if(
-        !payment ||
         !payment.invoiceFileData
     ){
 
@@ -10372,11 +10431,12 @@ window.viewPaymentInvoice = function(
     }
 
 
+    const base64 =
+        payment.invoiceFileData.split(",")[1];
+
+
     const byteCharacters =
-        atob(
-            payment.invoiceFileData
-                .split(",")[1]
-        );
+        atob(base64);
 
 
     const byteNumbers =
@@ -10407,8 +10467,7 @@ window.viewPaymentInvoice = function(
         new Blob(
             [byteArray],
             {
-                type:
-                    "application/pdf"
+                type:"application/pdf"
             }
         );
 
@@ -10426,11 +10485,10 @@ window.viewPaymentInvoice = function(
 
 
 /* =====================================================
-   DOWNLOAD PAYMENT INVOICE
+   DOWNLOAD INVOICE
 ===================================================== */
 
-window.downloadPaymentInvoice =
-function(
+window.downloadPaymentInvoice = function(
     projectId,
     index
 ){
@@ -10442,9 +10500,11 @@ function(
                 String(projectId)
         );
 
+
     if(
         !project ||
-        !project.payments
+        !project.payments ||
+        !project.payments[index]
     ){
 
         return;
@@ -10457,7 +10517,6 @@ function(
 
 
     if(
-        !payment ||
         !payment.invoiceFileData
     ){
 
@@ -10517,6 +10576,7 @@ window.deletePayment = function(
                 String(projectId)
         );
 
+
     if(
         !project ||
         !project.payments
@@ -10530,16 +10590,19 @@ window.deletePayment = function(
     const payment =
         project.payments[index];
 
+
     if(!payment) return;
 
 
-    const confirmed =
-        confirm(
-            `Are you sure you want to delete payment "${payment.paymentNo || "Payment"}"?`
-        );
+    if(
+        !confirm(
+            `Delete payment "${payment.paymentNo || "New Payment"}"?`
+        )
+    ){
 
+        return;
 
-    if(!confirmed) return;
+    }
 
 
     project.payments.splice(
@@ -10551,9 +10614,8 @@ window.deletePayment = function(
     persist();
 
 
-    window.showProjectSection(
-        "payments",
-        project.id
+    window.renderPaymentsSection(
+        project
     );
 
 };
