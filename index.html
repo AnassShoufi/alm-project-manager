@@ -2246,7 +2246,17 @@ if(section === "reports"){
     return;
 
 }
+/* =========================
+   TASKS
+========================= */
 
+if(section === "tasks"){
+
+    renderTasksSection(project);
+
+    return;
+
+}
 const titles = {
 
     documents: "Documents",
@@ -8465,6 +8475,880 @@ function(projectId,index){
     );
 
 };  
+    /* =====================================================
+   TASKS MODULE
+===================================================== */
+
+function renderTasksSection(project){
+
+    if(!project.tasks){
+
+        project.tasks = [];
+
+    }
+
+
+    const tasks =
+        project.tasks;
+
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+
+    if(!content){
+
+        console.error(
+            "projectSectionContent not found."
+        );
+
+        return;
+
+    }
+
+
+    content.innerHTML = `
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    Tasks
+                </h2>
+
+                <p>
+                    Project tasks and assignments
+                </p>
+
+            </div>
+
+
+            <button
+                class="btn btn-primary"
+                onclick="
+                    window.createTask(
+                        '${project.id}'
+                    );
+                "
+            >
+
+                + New Task
+
+            </button>
+
+        </div>
+
+
+        ${
+            tasks.length === 0
+
+            ?
+
+            `
+
+            <div class="empty">
+
+                <div
+                    style="
+                        font-size:48px;
+                    "
+                >
+                    ☑
+                </div>
+
+
+                <h3>
+                    No tasks yet
+                </h3>
+
+
+                <p>
+                    Create the first task for this project.
+                </p>
+
+            </div>
+
+            `
+
+            :
+
+            `
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Task</th>
+
+                        <th>Assigned To</th>
+
+                        <th>Priority</th>
+
+                        <th>Status</th>
+
+                        <th>Due Date</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${
+
+                        tasks
+                            .map((task,index) => {
+
+                                return `
+
+                                    <tr>
+
+                                        <td>
+
+                                            <strong>
+
+                                                ${escapeHTML(
+                                                    task.title ||
+                                                    "-"
+                                                )}
+
+                                            </strong>
+
+
+                                            ${
+                                                task.description
+
+                                                ?
+
+                                                `
+
+                                                <div
+                                                    style="
+                                                        margin-top:4px;
+                                                        color:#64748b;
+                                                        font-size:13px;
+                                                    "
+                                                >
+
+                                                    ${escapeHTML(
+                                                        task.description
+                                                    )}
+
+                                                </div>
+
+                                                `
+
+                                                :
+
+                                                ``
+                                            }
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                task.assignedTo ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${taskPriorityBadge(
+                                                task.priority
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${taskStatusBadge(
+                                                task.status
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                task.dueDate ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div
+                                                class="actions"
+                                            >
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        window.editTask(
+                                                            '${project.id}',
+                                                            ${index}
+                                                        );
+                                                    "
+                                                >
+
+                                                    Edit
+
+                                                </button>
+
+
+                                                ${
+                                                    task.status !==
+                                                    "Completed"
+
+                                                    ?
+
+                                                    `
+
+                                                    <button
+                                                        class="action-btn"
+                                                        onclick="
+                                                            window.completeTask(
+                                                                '${project.id}',
+                                                                ${index}
+                                                            );
+                                                        "
+                                                    >
+
+                                                        Complete
+
+                                                    </button>
+
+                                                    `
+
+                                                    :
+
+                                                    ``
+                                                }
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        window.deleteTask(
+                                                            '${project.id}',
+                                                            ${index}
+                                                        );
+                                                    "
+                                                >
+
+                                                    Delete
+
+                                                </button>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                `;
+
+                            })
+
+                            .join("")
+
+                    }
+
+                </tbody>
+
+            </table>
+
+            `
+
+        }
+
+    `;
+
+}
+
+
+/* =====================================================
+   TASK PRIORITY BADGE
+===================================================== */
+
+function taskPriorityBadge(priority){
+
+    let cls =
+        "badge-onhold";
+
+
+    if(priority === "Low"){
+
+        cls =
+            "badge-completed";
+
+    }
+
+
+    if(priority === "Medium"){
+
+        cls =
+            "badge-active";
+
+    }
+
+
+    if(priority === "High"){
+
+        cls =
+            "badge-delayed";
+
+    }
+
+
+    if(priority === "Critical"){
+
+        cls =
+            "badge-onhold";
+
+    }
+
+
+    return `
+
+        <span
+            class="badge ${cls}"
+        >
+
+            ${escapeHTML(
+                priority || "Medium"
+            )}
+
+        </span>
+
+    `;
+
+}
+
+
+/* =====================================================
+   TASK STATUS BADGE
+===================================================== */
+
+function taskStatusBadge(status){
+
+    let cls =
+        "badge-onhold";
+
+
+    if(status === "Pending"){
+
+        cls =
+            "badge-delayed";
+
+    }
+
+
+    if(status === "In Progress"){
+
+        cls =
+            "badge-active";
+
+    }
+
+
+    if(status === "Completed"){
+
+        cls =
+            "badge-completed";
+
+    }
+
+
+    if(status === "On Hold"){
+
+        cls =
+            "badge-onhold";
+
+    }
+
+
+    return `
+
+        <span
+            class="badge ${cls}"
+        >
+
+            ${escapeHTML(
+                status || "Pending"
+            )}
+
+        </span>
+
+    `;
+
+}
+
+
+/* =====================================================
+   CREATE TASK
+===================================================== */
+
+window.createTask =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project) return;
+
+
+    if(!project.tasks){
+
+        project.tasks = [];
+
+    }
+
+
+    const title =
+        prompt(
+            "Task Title:"
+        );
+
+
+    if(title === null) return;
+
+
+    if(!title.trim()){
+
+        alert(
+            "Task title is required."
+        );
+
+        return;
+
+    }
+
+
+    const description =
+        prompt(
+            "Description:",
+            ""
+        );
+
+
+    if(description === null) return;
+
+
+    const assignedTo =
+        prompt(
+            "Assigned To:",
+            ""
+        );
+
+
+    if(assignedTo === null) return;
+
+
+    const priority =
+        prompt(
+            "Priority: Low / Medium / High / Critical",
+            "Medium"
+        );
+
+
+    if(priority === null) return;
+
+
+    const status =
+        prompt(
+            "Status: Pending / In Progress / Completed / On Hold",
+            "Pending"
+        );
+
+
+    if(status === null) return;
+
+
+    const startDate =
+        prompt(
+            "Start Date:",
+            new Date()
+                .toISOString()
+                .split("T")[0]
+        );
+
+
+    if(startDate === null) return;
+
+
+    const dueDate =
+        prompt(
+            "Due Date:",
+            ""
+        );
+
+
+    if(dueDate === null) return;
+
+
+    const remarks =
+        prompt(
+            "Remarks:",
+            ""
+        );
+
+
+    if(remarks === null) return;
+
+
+    project.tasks.push({
+
+        id:
+            "task-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
+
+        title:
+            title.trim(),
+
+        description:
+            description.trim(),
+
+        assignedTo:
+            assignedTo.trim(),
+
+        priority:
+            priority.trim(),
+
+        status:
+            status.trim(),
+
+        startDate:
+            startDate.trim(),
+
+        dueDate:
+            dueDate.trim(),
+
+        remarks:
+            remarks.trim(),
+
+        createdDate:
+            new Date()
+                .toISOString()
+                .split("T")[0]
+
+    });
+
+
+    persist();
+
+
+    showProjectSection(
+        "tasks",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   EDIT TASK
+===================================================== */
+
+window.editTask =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(
+        !project ||
+        !project.tasks
+    ){
+
+        return;
+
+    }
+
+
+    const task =
+        project.tasks[index];
+
+
+    if(!task) return;
+
+
+    const title =
+        prompt(
+            "Task Title:",
+            task.title || ""
+        );
+
+
+    if(title === null) return;
+
+
+    if(!title.trim()){
+
+        alert(
+            "Task title is required."
+        );
+
+        return;
+
+    }
+
+
+    const description =
+        prompt(
+            "Description:",
+            task.description || ""
+        );
+
+
+    if(description === null) return;
+
+
+    const assignedTo =
+        prompt(
+            "Assigned To:",
+            task.assignedTo || ""
+        );
+
+
+    if(assignedTo === null) return;
+
+
+    const priority =
+        prompt(
+            "Priority: Low / Medium / High / Critical",
+            task.priority || "Medium"
+        );
+
+
+    if(priority === null) return;
+
+
+    const status =
+        prompt(
+            "Status: Pending / In Progress / Completed / On Hold",
+            task.status || "Pending"
+        );
+
+
+    if(status === null) return;
+
+
+    const startDate =
+        prompt(
+            "Start Date:",
+            task.startDate || ""
+        );
+
+
+    if(startDate === null) return;
+
+
+    const dueDate =
+        prompt(
+            "Due Date:",
+            task.dueDate || ""
+        );
+
+
+    if(dueDate === null) return;
+
+
+    const remarks =
+        prompt(
+            "Remarks:",
+            task.remarks || ""
+        );
+
+
+    if(remarks === null) return;
+
+
+    task.title =
+        title.trim();
+
+
+    task.description =
+        description.trim();
+
+
+    task.assignedTo =
+        assignedTo.trim();
+
+
+    task.priority =
+        priority.trim();
+
+
+    task.status =
+        status.trim();
+
+
+    task.startDate =
+        startDate.trim();
+
+
+    task.dueDate =
+        dueDate.trim();
+
+
+    task.remarks =
+        remarks.trim();
+
+
+    persist();
+
+
+    showProjectSection(
+        "tasks",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   COMPLETE TASK
+===================================================== */
+
+window.completeTask =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(
+        !project ||
+        !project.tasks
+    ){
+
+        return;
+
+    }
+
+
+    const task =
+        project.tasks[index];
+
+
+    if(!task) return;
+
+
+    task.status =
+        "Completed";
+
+
+    task.completedDate =
+        new Date()
+            .toISOString()
+            .split("T")[0];
+
+
+    persist();
+
+
+    showProjectSection(
+        "tasks",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   DELETE TASK
+===================================================== */
+
+window.deleteTask =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(
+        !project ||
+        !project.tasks
+    ){
+
+        return;
+
+    }
+
+
+    const task =
+        project.tasks[index];
+
+
+    if(!task) return;
+
+
+    const confirmed =
+        confirm(
+
+            `Are you sure you want to delete "${task.title}"?`
+
+        );
+
+
+    if(!confirmed) return;
+
+
+    project.tasks.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    showProjectSection(
+        "tasks",
+        project.id
+    );
+
+};
 </script>
 </body>
 </html>
