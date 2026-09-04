@@ -2235,7 +2235,17 @@ const currentFolder =
     return;
 }
 
+/* =========================
+   REPORTS
+========================= */
 
+if(section === "reports"){
+
+    renderReportsSection(project);
+
+    return;
+
+}
 
 const titles = {
 
@@ -7041,6 +7051,1420 @@ function(projectId,index){
     );
 
 };
+  /* =====================================================
+   REPORTS MODULE
+   Same folder system as Documents & Drawings
+===================================================== */
+
+window.reportsCurrentFolder =
+    window.reportsCurrentFolder || {};
+
+
+/* =====================================================
+   ENSURE REPORT FOLDERS
+===================================================== */
+
+function ensureReportsFolders(project){
+
+    if(!project.reportsFolders){
+
+        project.reportsFolders = [
+
+            {
+                id: "root",
+                name: "Reports",
+                parentId: null,
+                files: []
+            }
+
+        ];
+
+        persist();
+
+    }
+
+
+    if(
+        !project.reportsFolders.find(
+            folder =>
+                String(folder.id) === "root"
+        )
+    ){
+
+        project.reportsFolders.unshift({
+
+            id: "root",
+            name: "Reports",
+            parentId: null,
+            files: []
+
+        });
+
+        persist();
+
+    }
+
+
+    return project.reportsFolders;
+
+}
+
+
+/* =====================================================
+   RENDER REPORTS
+===================================================== */
+
+function renderReportsSection(project){
+
+    ensureReportsFolders(project);
+
+
+    const folders =
+        project.reportsFolders || [];
+
+
+    const reports =
+        project.reports || [];
+
+
+    const currentFolderId =
+        window.reportsCurrentFolder[
+            project.id
+        ] ?? null;
+
+
+    const currentFolder =
+        folders.find(
+            folder =>
+                String(folder.id) ===
+                String(currentFolderId)
+        );
+
+
+    const currentFolderName =
+        currentFolder
+            ? currentFolder.name
+            : "Reports";
+
+
+    /* =========================
+       VISIBLE FOLDERS
+    ========================= */
+
+    const visibleFolders =
+        folders.filter(
+            folder =>
+                (folder.parentId || null) ===
+                (currentFolderId || null)
+        );
+
+
+    /* =========================
+       VISIBLE REPORTS
+    ========================= */
+
+    const visibleReports =
+
+        reports
+            .map((report,index) => ({
+                report,
+                index
+            }))
+
+            .filter(item =>
+
+                String(
+                    item.report.folderId ?? ""
+                ) ===
+
+                String(
+                    currentFolderId ?? ""
+                )
+
+            );
+
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+
+    if(!content){
+
+        console.error(
+            "projectSectionContent not found."
+        );
+
+        return;
+
+    }
+
+
+    content.innerHTML = `
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    ${escapeHTML(
+                        currentFolderName
+                    )}
+                </h2>
+
+                <p>
+                    Project reports and records
+                </p>
+
+            </div>
+
+
+            <div style="
+                display:flex;
+                gap:10px;
+                align-items:center;
+                flex-wrap:wrap;
+            ">
+
+
+                ${
+                    currentFolderId !== null
+
+                    ?
+
+                    `
+
+                    <button
+                        class="btn btn-secondary"
+                        onclick="
+                            window.goBackReportsFolder(
+                                '${project.id}'
+                            );
+                        "
+                    >
+
+                        ← Back
+
+                    </button>
+
+                    `
+
+                    :
+
+                    ``
+                }
+
+
+                <button
+                    class="btn btn-primary"
+                    onclick="
+                        window.createReportsFolder(
+                            '${project.id}',
+                            ${
+                                currentFolderId === null
+                                ? "null"
+                                : `'${currentFolderId}'`
+                            }
+                        );
+                    "
+                >
+
+                    📁 ${
+                        currentFolderId === null
+                        ? "New Main Folder"
+                        : "New Subfolder"
+                    }
+
+                </button>
+
+
+                <button
+                    class="btn btn-primary"
+                    onclick="
+                        window.uploadReport(
+                            '${project.id}'
+                        );
+                    "
+                >
+
+                    + Add Report
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        ${
+            visibleFolders.length > 0
+
+            ?
+
+            `
+
+            <div
+                style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(
+                            auto-fill,
+                            minmax(220px,1fr)
+                        );
+                    gap:16px;
+                    margin-bottom:25px;
+                "
+            >
+
+                ${
+
+                    visibleFolders
+                        .map(folder => `
+
+                        <div
+                            style="
+                                border:1px solid #ddd;
+                                border-radius:10px;
+                                padding:22px;
+                                background:#fff;
+                                box-shadow:
+                                    0 2px 6px
+                                    rgba(0,0,0,.05);
+                            "
+                        >
+
+                            <div
+                                onclick="
+                                    window.openReportsFolder(
+                                        '${project.id}',
+                                        '${folder.id}'
+                                    );
+                                "
+                                style="
+                                    cursor:pointer;
+                                "
+                            >
+
+                                <div
+                                    style="
+                                        font-size:42px;
+                                    "
+                                >
+                                    📁
+                                </div>
+
+
+                                <strong>
+
+                                    ${escapeHTML(
+                                        folder.name
+                                    )}
+
+                                </strong>
+
+                            </div>
+
+
+                            ${
+                                folder.id !== "root"
+
+                                ?
+
+                                `
+
+                                <div
+                                    style="
+                                        margin-top:15px;
+                                        display:flex;
+                                        justify-content:center;
+                                    "
+                                >
+
+                                    <button
+                                        type="button"
+                                        onclick="
+                                            event.stopPropagation();
+
+                                            window.deleteReportsFolder(
+                                                '${project.id}',
+                                                '${folder.id}'
+                                            );
+                                        "
+                                        style="
+                                            background:#dc2626;
+                                            color:white;
+                                            border:none;
+                                            border-radius:6px;
+                                            padding:7px 14px;
+                                            cursor:pointer;
+                                            font-size:13px;
+                                        "
+                                    >
+
+                                        🗑 Delete
+
+                                    </button>
+
+                                </div>
+
+                                `
+
+                                :
+
+                                ``
+                            }
+
+                        </div>
+
+                    `)
+
+                    .join("")
+
+                }
+
+            </div>
+
+            `
+
+            :
+
+            ``
+        }
+
+
+        ${
+            visibleReports.length === 0
+
+            ?
+
+            `
+
+            <div class="empty">
+
+                <div style="
+                    font-size:48px;
+                ">
+                    📊
+                </div>
+
+
+                <h3>
+
+                    ${
+                        currentFolderId === null
+                        ? "No reports yet"
+                        : "This folder is empty"
+                    }
+
+                </h3>
+
+
+                <p>
+
+                    ${
+                        currentFolderId === null
+
+                        ?
+
+                        "Create a folder or upload a report."
+
+                        :
+
+                        "Create a subfolder or upload a report into this folder."
+
+                    }
+
+                </p>
+
+            </div>
+
+            `
+
+            :
+
+            `
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Report</th>
+
+                        <th>File Type</th>
+
+                        <th>Uploaded By</th>
+
+                        <th>Date</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${
+
+                        visibleReports
+                            .map(item => {
+
+                                const report =
+                                    item.report;
+
+                                const index =
+                                    item.index;
+
+
+                                return `
+
+                                    <tr>
+
+                                        <td>
+
+                                            <strong>
+
+                                                ${escapeHTML(
+                                                    report.title ||
+                                                    report.fileName ||
+                                                    "-"
+                                                )}
+
+                                            </strong>
+
+
+                                            <div
+                                                style="
+                                                    margin-top:4px;
+                                                    color:#64748b;
+                                                    font-size:13px;
+                                                "
+                                            >
+
+                                                ${escapeHTML(
+                                                    report.fileName ||
+                                                    ""
+                                                )}
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                report.fileType ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                report.uploadedBy ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHTML(
+                                                report.date ||
+                                                "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div
+                                                class="actions"
+                                            >
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        window.viewReport(
+                                                            '${project.id}',
+                                                            ${index}
+                                                        );
+                                                    "
+                                                >
+
+                                                    View
+
+                                                </button>
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        window.downloadReport(
+                                                            '${project.id}',
+                                                            ${index}
+                                                        );
+                                                    "
+                                                >
+
+                                                    Download
+
+                                                </button>
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        window.deleteReport(
+                                                            '${project.id}',
+                                                            ${index}
+                                                        );
+                                                    "
+                                                >
+
+                                                    Delete
+
+                                                </button>
+
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                `;
+
+                            })
+
+                            .join("")
+
+                    }
+
+                </tbody>
+
+            </table>
+
+            `
+
+        }
+
+    `;
+
+}
+
+
+/* =====================================================
+   CREATE REPORT FOLDER
+===================================================== */
+
+window.createReportsFolder =
+function(projectId, parentId = null){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project) return;
+
+
+    ensureReportsFolders(project);
+
+
+    const folderName =
+        prompt(
+            "Enter folder name:"
+        );
+
+
+    if(!folderName) return;
+
+
+    const cleanName =
+        folderName.trim();
+
+
+    if(!cleanName) return;
+
+
+    const exists =
+        project.reportsFolders.some(
+            folder =>
+
+                String(
+                    folder.parentId ?? null
+                ) ===
+                String(
+                    parentId ?? null
+                )
+
+                &&
+
+                String(
+                    folder.name
+                ).toLowerCase() ===
+                cleanName.toLowerCase()
+        );
+
+
+    if(exists){
+
+        alert(
+            "A folder with this name already exists."
+        );
+
+        return;
+
+    }
+
+
+    project.reportsFolders.push({
+
+        id:
+            "reports-folder-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
+
+        name:
+            cleanName,
+
+        parentId:
+            parentId,
+
+        files: []
+
+    });
+
+
+    persist();
+
+
+    window.reportsCurrentFolder[
+        project.id
+    ] =
+        parentId;
+
+
+    showProjectSection(
+        "reports",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   OPEN REPORT FOLDER
+===================================================== */
+
+window.openReportsFolder =
+function(projectId, folderId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project) return;
+
+
+    ensureReportsFolders(project);
+
+
+    if(
+        folderId === null ||
+        folderId === undefined
+    ){
+
+        window.reportsCurrentFolder[
+            project.id
+        ] = null;
+
+
+        showProjectSection(
+            "reports",
+            project.id
+        );
+
+
+        return;
+
+    }
+
+
+    const folder =
+        project.reportsFolders.find(
+            f =>
+                String(f.id) ===
+                String(folderId)
+        );
+
+
+    if(!folder) return;
+
+
+    window.reportsCurrentFolder[
+        project.id
+    ] =
+        folder.id;
+
+
+    showProjectSection(
+        "reports",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   BACK TO PARENT
+===================================================== */
+
+window.goBackReportsFolder =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project) return;
+
+
+    ensureReportsFolders(project);
+
+
+    const currentId =
+        window.reportsCurrentFolder[
+            project.id
+        ] ?? null;
+
+
+    if(currentId === null){
+
+        return;
+
+    }
+
+
+    const currentFolder =
+        project.reportsFolders.find(
+            folder =>
+                String(folder.id) ===
+                String(currentId)
+        );
+
+
+    if(!currentFolder){
+
+        window.reportsCurrentFolder[
+            project.id
+        ] = null;
+
+    }else{
+
+        window.reportsCurrentFolder[
+            project.id
+        ] =
+            currentFolder.parentId ?? null;
+
+    }
+
+
+    showProjectSection(
+        "reports",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   DELETE REPORT FOLDER
+===================================================== */
+
+window.deleteReportsFolder =
+function(projectId, folderId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project) return;
+
+
+    ensureReportsFolders(project);
+
+
+    if(
+        String(folderId) === "root"
+    ){
+
+        alert(
+            "The main Reports folder cannot be deleted."
+        );
+
+        return;
+
+    }
+
+
+    const folder =
+        project.reportsFolders.find(
+            f =>
+                String(f.id) ===
+                String(folderId)
+        );
+
+
+    if(!folder) return;
+
+
+    const confirmed =
+        confirm(
+
+            `Delete folder "${folder.name}"?\n\n` +
+
+            `All subfolders and reports inside this folder will also be deleted.`
+
+        );
+
+
+    if(!confirmed) return;
+
+
+    const foldersToDelete =
+        new Set([
+            String(folderId)
+        ]);
+
+
+    let changed = true;
+
+
+    while(changed){
+
+        changed = false;
+
+
+        project.reportsFolders.forEach(
+            child => {
+
+                if(
+
+                    child.parentId !== null &&
+
+                    foldersToDelete.has(
+                        String(child.parentId)
+                    ) &&
+
+                    !foldersToDelete.has(
+                        String(child.id)
+                    )
+
+                ){
+
+                    foldersToDelete.add(
+                        String(child.id)
+                    );
+
+                    changed = true;
+
+                }
+
+            }
+        );
+
+    }
+
+
+    if(project.reports){
+
+        project.reports =
+            project.reports.filter(
+                report =>
+
+                    !foldersToDelete.has(
+                        String(
+                            report.folderId
+                        )
+                    )
+            );
+
+    }
+
+
+    project.reportsFolders =
+        project.reportsFolders.filter(
+            folder =>
+
+                !foldersToDelete.has(
+                    String(folder.id)
+                )
+        );
+
+
+    window.reportsCurrentFolder[
+        project.id
+    ] =
+        folder.parentId ?? null;
+
+
+    persist();
+
+
+    showProjectSection(
+        "reports",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
+   UPLOAD REPORT
+===================================================== */
+
+window.uploadReport =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project){
+
+        alert(
+            "Project not found."
+        );
+
+        return;
+
+    }
+
+
+    ensureReportsFolders(project);
+
+
+    const currentFolderId =
+        window.reportsCurrentFolder[
+            project.id
+        ] ?? null;
+
+
+    const input =
+        document.createElement(
+            "input"
+        );
+
+
+    input.type = "file";
+
+
+    input.accept =
+        ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip";
+
+
+    input.onchange =
+    function(){
+
+        const file =
+            input.files[0];
+
+
+        if(!file) return;
+
+
+        const title =
+            prompt(
+                "Report Title:",
+                file.name
+            );
+
+
+        if(title === null) return;
+
+
+        const uploadedBy =
+            prompt(
+                "Uploaded By:",
+                "Project Manager"
+            );
+
+
+        if(uploadedBy === null) return;
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+        function(e){
+
+            if(!project.reports){
+
+                project.reports = [];
+
+            }
+
+
+            project.reports.push({
+
+                id:
+                    "report-" +
+                    Date.now() +
+                    "-" +
+                    Math.random()
+                        .toString(36)
+                        .substring(2,8),
+
+                title:
+                    title || file.name,
+
+                fileName:
+                    file.name,
+
+                fileType:
+                    file.type ||
+                    "Unknown",
+
+                fileData:
+                    e.target.result,
+
+                uploadedBy:
+                    uploadedBy ||
+                    "Project Manager",
+
+                date:
+                    new Date()
+                        .toISOString()
+                        .split("T")[0],
+
+                folderId:
+                    currentFolderId
+
+            });
+
+
+            persist();
+
+
+            showProjectSection(
+                "reports",
+                project.id
+            );
+
+        };
+
+
+        reader.readAsDataURL(file);
+
+    };
+
+
+    input.click();
+
+};
+
+
+/* =====================================================
+   VIEW REPORT
+===================================================== */
+
+window.viewReport =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(
+        !project ||
+        !project.reports
+    ){
+
+        alert(
+            "Project or reports not found."
+        );
+
+        return;
+
+    }
+
+
+    const report =
+        project.reports[index];
+
+
+    if(
+        !report ||
+        !report.fileData
+    ){
+
+        alert(
+            "No file is attached to this report."
+        );
+
+        return;
+
+    }
+
+
+    const parts =
+        report.fileData.split(",");
+
+
+    if(parts.length < 2){
+
+        alert(
+            "Invalid file data."
+        );
+
+        return;
+
+    }
+
+
+    const mimeType =
+        parts[0]
+            .match(
+                /data:(.*?);base64/
+            )?.[1]
+
+        ||
+
+        report.fileType
+
+        ||
+
+        "application/octet-stream";
+
+
+    const byteCharacters =
+        atob(parts[1]);
+
+
+    const byteNumbers =
+        new Array(
+            byteCharacters.length
+        );
+
+
+    for(
+        let i = 0;
+        i < byteCharacters.length;
+        i++
+    ){
+
+        byteNumbers[i] =
+            byteCharacters.charCodeAt(i);
+
+    }
+
+
+    const byteArray =
+        new Uint8Array(
+            byteNumbers
+        );
+
+
+    const blob =
+        new Blob(
+            [byteArray],
+            {
+                type: mimeType
+            }
+        );
+
+
+    const blobURL =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    window.open(
+        blobURL,
+        "_blank"
+    );
+
+};
+
+
+/* =====================================================
+   DOWNLOAD REPORT
+===================================================== */
+
+window.downloadReport =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(
+        !project ||
+        !project.reports
+    ){
+
+        alert(
+            "Project or reports not found."
+        );
+
+        return;
+
+    }
+
+
+    const report =
+        project.reports[index];
+
+
+    if(
+        !report ||
+        !report.fileData
+    ){
+
+        alert(
+            "No file is attached to this report."
+        );
+
+        return;
+
+    }
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        report.fileData;
+
+
+    link.download =
+        report.fileName ||
+        "Report";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+};
+
+
+/* =====================================================
+   DELETE REPORT
+===================================================== */
+
+window.deleteReport =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(
+        !project ||
+        !project.reports
+    ){
+
+        alert(
+            "Project or reports not found."
+        );
+
+        return;
+
+    }
+
+
+    const report =
+        project.reports[index];
+
+
+    if(!report) return;
+
+
+    const confirmed =
+        confirm(
+            `Are you sure you want to delete "${report.fileName}"?`
+        );
+
+
+    if(!confirmed) return;
+
+
+    project.reports.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    showProjectSection(
+        "reports",
+        project.id
+    );
+
+};  
 </script>
 </body>
 </html>
