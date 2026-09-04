@@ -9433,16 +9433,31 @@ window.renderPaymentsSection = function(project){
                 </div>
 
 
-                <button
-                    class="btn btn-primary"
-                    onclick="
-                        window.addPaymentRow(
-                            '${project.id}'
-                        )
-                    "
-                >
-                    + Add Payment
-                </button>
+                <div style="display:flex; gap:10px;">
+
+    <button
+        class="btn btn-secondary"
+        onclick="
+            window.downloadPaymentsExcel(
+                '${project.id}'
+            )
+        "
+    >
+        ⬇ Download Excel
+    </button>
+
+    <button
+        class="btn btn-primary"
+        onclick="
+            window.addPaymentRow(
+                '${project.id}'
+            )
+        "
+    >
+        + Add Payment
+    </button>
+
+</div>
 
             </div>
 
@@ -10616,6 +10631,180 @@ window.deletePayment = function(
 
     window.renderPaymentsSection(
         project
+    );
+
+};
+    /* =====================================================
+   DOWNLOAD PAYMENTS AS EXCEL
+===================================================== */
+
+window.downloadPaymentsExcel = function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+
+        alert("Project not found.");
+
+        return;
+
+    }
+
+
+    if(
+        !project.payments ||
+        project.payments.length === 0
+    ){
+
+        alert(
+            "There are no payments to export."
+        );
+
+        return;
+
+    }
+
+
+    const payments =
+        project.payments;
+
+
+    /*
+       Prepare Excel data
+    */
+
+    const rows =
+        payments.map(
+            payment => {
+
+                const invoiceValue =
+                    Number(
+                        payment.invoiceValue
+                    ) || 0;
+
+
+                const paymentReceived =
+                    Number(
+                        payment.paymentReceived
+                    ) || 0;
+
+
+                const balance =
+                    invoiceValue -
+                    paymentReceived;
+
+
+                return {
+
+                    "Payment Number":
+                        payment.paymentNo || "",
+
+                    "Payment Type":
+                        payment.type || "",
+
+                    "Contractor":
+                        payment.contractor || "",
+
+                    "Invoice Value":
+                        invoiceValue,
+
+                    "Payment Received":
+                        paymentReceived,
+
+                    "Balance":
+                        balance,
+
+                    "Date of Payment Received":
+                        payment.paymentReceivedDate || "",
+
+                    "Invoice PDF":
+                        payment.invoiceFileName || ""
+
+                };
+
+            }
+        );
+
+
+    /*
+       Create worksheet
+    */
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            rows
+        );
+
+
+    /*
+       Set column widths
+    */
+
+    worksheet["!cols"] = [
+
+        { wch:18 },
+
+        { wch:22 },
+
+        { wch:30 },
+
+        { wch:18 },
+
+        { wch:20 },
+
+        { wch:18 },
+
+        { wch:28 },
+
+        { wch:35 }
+
+    ];
+
+
+    /*
+       Create workbook
+    */
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Payments"
+    );
+
+
+    /*
+       File name
+    */
+
+    const safeProjectName =
+        String(project.name || "Project")
+            .replace(
+                /[\\\/:*?"<>|]/g,
+                "_"
+            );
+
+
+    const fileName =
+        safeProjectName +
+        "_Payments.xlsx";
+
+
+    /*
+       Download
+    */
+
+    XLSX.writeFile(
+        workbook,
+        fileName
     );
 
 };
