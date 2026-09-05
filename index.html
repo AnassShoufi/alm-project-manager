@@ -862,6 +862,260 @@ tr:hover td{
         gap:15px;
     }
 }
+    /* =====================================================
+   MANPOWER MODULE
+===================================================== */
+
+.manpower-dashboard{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.manpower-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+}
+
+.manpower-stat{
+    background:white;
+    border:1px solid #e1e5ea;
+    border-radius:10px;
+    padding:20px;
+}
+
+.manpower-stat-label{
+    color:#708096;
+    font-size:13px;
+    margin-bottom:8px;
+}
+
+.manpower-stat-value{
+    font-size:30px;
+    font-weight:bold;
+    color:#17243a;
+}
+
+.manpower-stat-sub{
+    margin-top:5px;
+    color:#708096;
+    font-size:12px;
+}
+
+.manpower-chart-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.manpower-chart{
+    background:white;
+    border:1px solid #e1e5ea;
+    border-radius:10px;
+    padding:20px;
+}
+
+.manpower-chart h3{
+    font-size:17px;
+    color:#17243a;
+    margin-bottom:5px;
+}
+
+.manpower-chart p{
+    color:#708096;
+    font-size:12px;
+    margin-bottom:18px;
+}
+
+.manpower-bar-row{
+    display:grid;
+    grid-template-columns:145px 1fr 45px;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.manpower-bar-label{
+    font-size:12px;
+    color:#46566c;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.manpower-bar-track{
+    height:10px;
+    background:#edf1f5;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.manpower-bar-fill{
+    height:100%;
+    background:#1976b8;
+    border-radius:20px;
+}
+
+.manpower-bar-value{
+    font-size:12px;
+    font-weight:bold;
+    text-align:right;
+}
+
+.manpower-table-wrap{
+    overflow-x:auto;
+}
+
+.manpower-table{
+    min-width:1200px;
+}
+
+.manpower-table input,
+.manpower-table select{
+    width:100%;
+    min-width:100px;
+    padding:8px 9px;
+    border:1px solid #d4dae2;
+    border-radius:5px;
+    background:white;
+    font-size:13px;
+}
+
+.manpower-table input:focus,
+.manpower-table select:focus{
+    outline:none;
+    border-color:#1976b8;
+}
+
+.manpower-number{
+    width:75px !important;
+    min-width:75px !important;
+    text-align:center;
+}
+
+.manpower-total-cell{
+    font-weight:bold;
+    font-size:15px;
+    color:#17243a;
+    text-align:center;
+}
+
+.manpower-type-direct{
+    background:#e8f3fb;
+    color:#176394;
+    padding:5px 8px;
+    border-radius:5px;
+    font-size:11px;
+    font-weight:bold;
+}
+
+.manpower-type-sub{
+    background:#fef3c7;
+    color:#946200;
+    padding:5px 8px;
+    border-radius:5px;
+    font-size:11px;
+    font-weight:bold;
+}
+
+.manpower-current-stage{
+    background:#f7f9fb;
+    border:1px solid #e1e5ea;
+    border-radius:10px;
+    padding:18px 20px;
+}
+
+.manpower-current-stage-label{
+    color:#708096;
+    font-size:12px;
+    margin-bottom:5px;
+}
+
+.manpower-current-stage-value{
+    font-size:20px;
+    font-weight:bold;
+    color:#17243a;
+}
+
+.manpower-trend{
+    width:100%;
+    height:220px;
+}
+
+.manpower-trend svg{
+    width:100%;
+    height:100%;
+}
+
+.manpower-empty{
+    text-align:center;
+    padding:45px 20px;
+    color:#708096;
+}
+
+.manpower-empty-icon{
+    font-size:45px;
+    margin-bottom:12px;
+}
+
+.manpower-section-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:15px;
+}
+
+.manpower-section-title h2{
+    font-size:20px;
+    color:#17243a;
+}
+
+.manpower-section-title p{
+    color:#708096;
+    font-size:13px;
+    margin-top:4px;
+}
+
+.manpower-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.manpower-small-btn{
+    border:1px solid #d8dee6;
+    background:white;
+    padding:7px 10px;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:12px;
+}
+
+.manpower-small-btn:hover{
+    background:#f0f4f8;
+}
+
+@media(max-width:1000px){
+
+    .manpower-stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .manpower-chart-grid{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:700px){
+
+    .manpower-stats{
+        grid-template-columns:1fr;
+    }
+
+}
 </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -2268,6 +2522,11 @@ if(section === "tasks"){
 
     return;
 
+}
+    if(section === "manpower"){
+    renderManpowerSection(project);
+
+    return;
 }
 const titles = {
 
@@ -10985,7 +11244,1475 @@ window.downloadPaymentsExcel = function(
 
 };
 
+/* =====================================================
+   MANPOWER MODULE
+===================================================== */
 
+const manpowerWorkStages = [
+    "Site Preparation",
+    "Earthworks",
+    "Piling Works",
+    "Foundation Works",
+    "Superstructure",
+    "Blockwork",
+    "Roofing Works",
+    "MEP Works",
+    "Plastering Works",
+    "Flooring & Tiling",
+    "Ceiling Works",
+    "Doors & Windows",
+    "Painting Works",
+    "External Works",
+    "Landscaping",
+    "Testing & Commissioning",
+    "Other"
+];
+
+const manpowerTrades = [
+    "Project Management",
+    "Engineers",
+    "Quantity Surveyors",
+    "Surveyors",
+    "Supervisors / Foremen",
+    "Skilled Workers",
+    "Unskilled Workers",
+    "Equipment Operators",
+    "General / Support Staff",
+    "Carpenters",
+    "Iron Benders",
+    "Masons",
+    "Piling",
+    "MEP",
+    "Tilers",
+    "Ceiling Installers",
+    "Welders",
+    "Roofers",
+    "Door Installers",
+    "Window Installers",
+    "Painters",
+    "Plasterers",
+    "Waterproofing",
+    "Aluminium",
+    "Glass",
+    "Steel Structure",
+    "Scaffolding",
+    "Landscaping",
+    "Other"
+];
+
+/* =====================================================
+   MANPOWER PROJECT
+===================================================== */
+
+function getManpowerProject(projectId){
+
+    return projects.find(
+        p =>
+            String(p.id) ===
+            String(projectId)
+    );
+
+}
+
+
+/* =====================================================
+   ENSURE MANPOWER DATA
+===================================================== */
+
+function ensureManpowerData(project){
+
+    if(!project.manpowerRecords){
+
+        project.manpowerRecords = [];
+
+        persist();
+
+    }
+
+    return project.manpowerRecords;
+
+}
+
+
+/* =====================================================
+   NUMBER HELPER
+===================================================== */
+
+function manpowerNumber(value){
+
+    const n = Number(value);
+
+    return Number.isFinite(n)
+        ? Math.max(0, n)
+        : 0;
+
+}
+
+
+/* =====================================================
+   CURRENT DATE
+===================================================== */
+
+function manpowerToday(){
+
+    return new Date()
+        .toISOString()
+        .split("T")[0];
+
+}
+
+
+/* =====================================================
+   CURRENT TOTAL
+===================================================== */
+
+function getCurrentManpowerTotal(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    if(records.length === 0){
+        return 0;
+    }
+
+    const latestDate =
+        records.reduce(
+            (latest,record) =>
+                record.date > latest
+                    ? record.date
+                    : latest,
+            ""
+        );
+
+    return records
+        .filter(
+            record =>
+                record.date === latestDate
+        )
+        .reduce(
+            (sum,record) =>
+                sum + manpowerNumber(record.count),
+            0
+        );
+
+}
+
+
+/* =====================================================
+   CURRENT DIRECT TOTAL
+===================================================== */
+
+function getCurrentDirectManpower(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    if(records.length === 0){
+        return 0;
+    }
+
+    const latestDate =
+        records.reduce(
+            (latest,record) =>
+                record.date > latest
+                    ? record.date
+                    : latest,
+            ""
+        );
+
+    return records
+        .filter(
+            record =>
+                record.date === latestDate &&
+                record.type === "Direct"
+        )
+        .reduce(
+            (sum,record) =>
+                sum + manpowerNumber(record.count),
+            0
+        );
+
+}
+
+
+/* =====================================================
+   CURRENT SUBCONTRACTOR TOTAL
+===================================================== */
+
+function getCurrentSubcontractorManpower(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    if(records.length === 0){
+        return 0;
+    }
+
+    const latestDate =
+        records.reduce(
+            (latest,record) =>
+                record.date > latest
+                    ? record.date
+                    : latest,
+            ""
+        );
+
+    return records
+        .filter(
+            record =>
+                record.date === latestDate &&
+                record.type === "Subcontractor"
+        )
+        .reduce(
+            (sum,record) =>
+                sum + manpowerNumber(record.count),
+            0
+        );
+
+}
+
+
+/* =====================================================
+   LATEST DATE
+===================================================== */
+
+function getLatestManpowerDate(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    if(records.length === 0){
+        return "-";
+    }
+
+    return records.reduce(
+        (latest,record) =>
+            record.date > latest
+                ? record.date
+                : latest,
+        ""
+    );
+
+}
+
+
+/* =====================================================
+   CURRENT WORK STAGES
+===================================================== */
+
+function getCurrentWorkStages(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    const latestDate =
+        getLatestManpowerDate(project);
+
+    if(latestDate === "-"){
+        return [];
+    }
+
+    return [
+        ...new Set(
+            records
+                .filter(
+                    record =>
+                        record.date === latestDate
+                )
+                .map(
+                    record =>
+                        record.workStage
+                )
+                .filter(Boolean)
+        )
+    ];
+
+}
+
+
+/* =====================================================
+   MANPOWER STATUS
+===================================================== */
+
+function manpowerTypeBadge(type){
+
+    if(type === "Subcontractor"){
+
+        return `
+            <span class="manpower-type-sub">
+                Subcontractor
+            </span>
+        `;
+
+    }
+
+    return `
+        <span class="manpower-type-direct">
+            Direct
+        </span>
+    `;
+
+}
+
+
+/* =====================================================
+   MANPOWER RENDER
+===================================================== */
+
+function renderManpowerSection(project){
+
+    const records =
+        ensureManpowerData(project);
+
+    const currentTotal =
+        getCurrentManpowerTotal(project);
+
+    const currentDirect =
+        getCurrentDirectManpower(project);
+
+    const currentSub =
+        getCurrentSubcontractorManpower(project);
+
+    const latestDate =
+        getLatestManpowerDate(project);
+
+    const currentStages =
+        getCurrentWorkStages(project);
+
+    const stageTotals = {};
+
+    const tradeTotals = {};
+
+    records
+        .filter(
+            record =>
+                record.date === latestDate
+        )
+        .forEach(record => {
+
+            const count =
+                manpowerNumber(
+                    record.count
+                );
+
+            const stage =
+                record.workStage ||
+                "Other";
+
+            const trade =
+                record.trade ||
+                "Other";
+
+            stageTotals[stage] =
+                (stageTotals[stage] || 0) +
+                count;
+
+            tradeTotals[trade] =
+                (tradeTotals[trade] || 0) +
+                count;
+
+        });
+
+    const stageEntries =
+        Object.entries(stageTotals)
+            .sort(
+                (a,b) =>
+                    b[1] - a[1]
+            );
+
+    const tradeEntries =
+        Object.entries(tradeTotals)
+            .sort(
+                (a,b) =>
+                    b[1] - a[1]
+            );
+
+    const maxStage =
+        Math.max(
+            ...stageEntries.map(
+                item => item[1]
+            ),
+            1
+        );
+
+    const maxTrade =
+        Math.max(
+            ...tradeEntries.map(
+                item => item[1]
+            ),
+            1
+        );
+
+    const dates = [
+        ...new Set(
+            records
+                .map(
+                    record =>
+                        record.date
+                )
+                .filter(Boolean)
+        )
+    ]
+    .sort();
+
+    const dailyTotals =
+        dates.map(date => ({
+            date,
+            total:
+                records
+                    .filter(
+                        record =>
+                            record.date === date
+                    )
+                    .reduce(
+                        (sum,record) =>
+                            sum +
+                            manpowerNumber(
+                                record.count
+                            ),
+                        0
+                    )
+        }));
+
+    const maxTrend =
+        Math.max(
+            ...dailyTotals.map(
+                item => item.total
+            ),
+            1
+        );
+
+    const trendPoints =
+        dailyTotals.length > 0
+        ?
+        dailyTotals.map(
+            (item,index) => {
+
+                const x =
+                    dailyTotals.length === 1
+                    ? 50
+                    : 20 +
+                        (
+                            index /
+                            (dailyTotals.length - 1)
+                        ) * 360;
+
+                const y =
+                    180 -
+                    (
+                        item.total /
+                        maxTrend
+                    ) * 145;
+
+                return {
+                    x,
+                    y,
+                    total:item.total,
+                    date:item.date
+                };
+
+            }
+        )
+        :
+        [];
+
+    const polyline =
+        trendPoints
+            .map(
+                point =>
+                    `${point.x},${point.y}`
+            )
+            .join(" ");
+
+    const recordRows =
+        records.map(
+            (record,index) => {
+
+                const count =
+                    manpowerNumber(
+                        record.count
+                    );
+
+                return `
+                    <tr>
+
+                        <td>
+                            <input
+                                type="date"
+                                value="${escapeHTML(
+                                    record.date || ""
+                                )}"
+                                onchange="
+                                    updateManpowerField(
+                                        ${JSON.stringify(project.id)},
+                                        ${index},
+                                        'date',
+                                        this.value
+                                    )
+                                "
+                            >
+                        </td>
+
+                        <td>
+                            <select
+                                onchange="
+                                    updateManpowerField(
+                                        ${JSON.stringify(project.id)},
+                                        ${index},
+                                        'workStage',
+                                        this.value
+                                    )
+                                "
+                            >
+                                ${
+                                    manpowerWorkStages
+                                        .map(
+                                            stage => `
+                                                <option
+                                                    value="${escapeHTML(stage)}"
+                                                    ${
+                                                        record.workStage === stage
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    ${escapeHTML(stage)}
+                                                </option>
+                                            `
+                                        )
+                                        .join("")
+                                }
+                            </select>
+                        </td>
+
+                        <td>
+                            <select
+                                onchange="
+                                    updateManpowerField(
+                                        ${JSON.stringify(project.id)},
+                                        ${index},
+                                        'type',
+                                        this.value
+                                    )
+                                "
+                            >
+                                <option
+                                    value="Direct"
+                                    ${
+                                        record.type === "Direct"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Direct
+                                </option>
+
+                                <option
+                                    value="Subcontractor"
+                                    ${
+                                        record.type === "Subcontractor"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Subcontractor
+                                </option>
+                            </select>
+                        </td>
+
+                        <td>
+                            <select
+                                onchange="
+                                    updateManpowerField(
+                                        ${JSON.stringify(project.id)},
+                                        ${index},
+                                        'trade',
+                                        this.value
+                                    )
+                                "
+                            >
+                                ${
+                                    manpowerTrades
+                                        .map(
+                                            trade => `
+                                                <option
+                                                    value="${escapeHTML(trade)}"
+                                                    ${
+                                                        record.trade === trade
+                                                        ? "selected"
+                                                        : ""
+                                                    }
+                                                >
+                                                    ${escapeHTML(trade)}
+                                                </option>
+                                            `
+                                        )
+                                        .join("")
+                                }
+                            </select>
+                        </td>
+
+                        <td>
+                            <input
+                                type="text"
+                                value="${escapeHTML(
+                                    record.company || "ALM"
+                                )}"
+                                placeholder="Company / Subcontractor"
+                                onchange="
+                                    updateManpowerField(
+                                        ${JSON.stringify(project.id)},
+                                        ${index},
+                                        'company',
+                                        this.value
+                                    )
+                                "
+                            >
+                        </td>
+
+                        <td>
+                            <input
+                                class="manpower-number"
+                                type="number"
+                                min="0"
+                                step="1"
+                                value="${count}"
+                                oninput="
+                                    updateManpowerNumber(
+                                        ${JSON.stringify(project.id)},
+                                        ${index},
+                                        this.value
+                                    )
+                                "
+                            >
+                        </td>
+
+                        <td class="manpower-total-cell">
+                            ${count}
+                        </td>
+
+                        <td>
+                            <input
+                                type="text"
+                                value="${escapeHTML(
+                                    record.remarks || ""
+                                )}"
+                                placeholder="Remarks"
+                                onchange="
+                                    updateManpowerField(
+                                        ${JSON.stringify(project.id)},
+                                        ${index},
+                                        'remarks',
+                                        this.value
+                                    )
+                                "
+                            >
+                        </td>
+
+                        <td>
+                            <button
+                                class="manpower-small-btn"
+                                onclick="
+                                    deleteManpowerRecord(
+                                        ${JSON.stringify(project.id)},
+                                        ${index}
+                                    )
+                                "
+                            >
+                                Delete
+                            </button>
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+        )
+        .join("");
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!content){
+        return;
+    }
+
+    content.innerHTML = `
+
+        <div class="manpower-dashboard">
+
+            <div class="manpower-section-title">
+
+                <div>
+                    <h2>Manpower Management</h2>
+
+                    <p>
+                        Workforce deployment by date,
+                        work stage and trade
+                    </p>
+                </div>
+
+                <div class="manpower-actions">
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="
+                            addManpowerRecord(
+                                ${JSON.stringify(project.id)}
+                            )
+                        "
+                    >
+                        + Add Manpower
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="manpower-stats">
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Current Manpower
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${currentTotal}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        Latest date: ${escapeHTML(
+                            latestDate
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Direct Manpower
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${currentDirect}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        ALM workforce
+                    </div>
+
+                </div>
+
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Subcontractor Manpower
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${currentSub}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        Subcontracted workforce
+                    </div>
+
+                </div>
+
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Recorded Dates
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${dates.length}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        Manpower history
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="manpower-current-stage">
+
+                <div class="manpower-current-stage-label">
+                    Current Work Stage
+                </div>
+
+                <div class="manpower-current-stage-value">
+
+                    ${
+                        currentStages.length
+                        ?
+                        currentStages
+                            .map(
+                                stage =>
+                                    escapeHTML(stage)
+                            )
+                            .join(" • ")
+                        :
+                        "No manpower records yet"
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="manpower-chart-grid">
+
+                <div class="manpower-chart">
+
+                    <h3>
+                        Manpower Trend
+                    </h3>
+
+                    <p>
+                        Total manpower by recorded date
+                    </p>
+
+                    ${
+                        trendPoints.length === 0
+                        ?
+                        `
+                        <div class="manpower-empty">
+                            No trend data yet.
+                        </div>
+                        `
+                        :
+                        `
+                        <div class="manpower-trend">
+
+                            <svg
+                                viewBox="0 0 400 210"
+                                preserveAspectRatio="none"
+                            >
+
+                                <line
+                                    x1="20"
+                                    y1="180"
+                                    x2="380"
+                                    y2="180"
+                                    stroke="#dfe5ec"
+                                />
+
+                                <line
+                                    x1="20"
+                                    y1="35"
+                                    x2="20"
+                                    y2="180"
+                                    stroke="#dfe5ec"
+                                />
+
+                                <polyline
+                                    points="${polyline}"
+                                    fill="none"
+                                    stroke="#1976b8"
+                                    stroke-width="3"
+                                />
+
+                                ${
+                                    trendPoints
+                                        .map(
+                                            point => `
+                                                <circle
+                                                    cx="${point.x}"
+                                                    cy="${point.y}"
+                                                    r="4"
+                                                    fill="#1976b8"
+                                                >
+                                                    <title>
+                                                        ${point.date}: ${point.total}
+                                                    </title>
+                                                </circle>
+                                            `
+                                        )
+                                        .join("")
+                                }
+
+                            </svg>
+
+                        </div>
+                        `
+                    }
+
+                </div>
+
+
+                <div class="manpower-chart">
+
+                    <h3>
+                        Manpower by Work Stage
+                    </h3>
+
+                    <p>
+                        Current workforce deployment
+                    </p>
+
+                    ${
+                        stageEntries.length === 0
+                        ?
+                        `
+                        <div class="manpower-empty">
+                            No stage data yet.
+                        </div>
+                        `
+                        :
+                        stageEntries
+                            .map(
+                                item => `
+
+                                    <div class="manpower-bar-row">
+
+                                        <div class="manpower-bar-label">
+                                            ${escapeHTML(item[0])}
+                                        </div>
+
+                                        <div class="manpower-bar-track">
+
+                                            <div
+                                                class="manpower-bar-fill"
+                                                style="
+                                                    width:${
+                                                        (
+                                                            item[1] /
+                                                            maxStage
+                                                        ) * 100
+                                                    }%;
+                                                "
+                                            ></div>
+
+                                        </div>
+
+                                        <div class="manpower-bar-value">
+                                            ${item[1]}
+                                        </div>
+
+                                    </div>
+
+                                `
+                            )
+                            .join("")
+                    }
+
+                </div>
+
+
+                <div class="manpower-chart">
+
+                    <h3>
+                        Manpower by Trade
+                    </h3>
+
+                    <p>
+                        Current workforce composition
+                    </p>
+
+                    ${
+                        tradeEntries.length === 0
+                        ?
+                        `
+                        <div class="manpower-empty">
+                            No trade data yet.
+                        </div>
+                        `
+                        :
+                        tradeEntries
+                            .map(
+                                item => `
+
+                                    <div class="manpower-bar-row">
+
+                                        <div class="manpower-bar-label">
+                                            ${escapeHTML(item[0])}
+                                        </div>
+
+                                        <div class="manpower-bar-track">
+
+                                            <div
+                                                class="manpower-bar-fill"
+                                                style="
+                                                    width:${
+                                                        (
+                                                            item[1] /
+                                                            maxTrade
+                                                        ) * 100
+                                                    }%;
+                                                "
+                                            ></div>
+
+                                        </div>
+
+                                        <div class="manpower-bar-value">
+                                            ${item[1]}
+                                        </div>
+
+                                    </div>
+
+                                `
+                            )
+                            .join("")
+                    }
+
+                </div>
+
+
+                <div class="manpower-chart">
+
+                    <h3>
+                        Workforce Composition
+                    </h3>
+
+                    <p>
+                        Direct vs subcontractor
+                    </p>
+
+                    <div style="
+                        display:grid;
+                        grid-template-columns:1fr 1fr;
+                        gap:15px;
+                        margin-top:25px;
+                    ">
+
+                        <div style="
+                            text-align:center;
+                            padding:25px 10px;
+                            background:#e8f3fb;
+                            border-radius:10px;
+                        ">
+
+                            <div style="
+                                font-size:32px;
+                                font-weight:bold;
+                                color:#176394;
+                            ">
+                                ${currentDirect}
+                            </div>
+
+                            <div style="
+                                margin-top:5px;
+                                font-size:12px;
+                                color:#176394;
+                            ">
+                                Direct
+                            </div>
+
+                        </div>
+
+
+                        <div style="
+                            text-align:center;
+                            padding:25px 10px;
+                            background:#fef3c7;
+                            border-radius:10px;
+                        ">
+
+                            <div style="
+                                font-size:32px;
+                                font-weight:bold;
+                                color:#946200;
+                            ">
+                                ${currentSub}
+                            </div>
+
+                            <div style="
+                                margin-top:5px;
+                                font-size:12px;
+                                color:#946200;
+                            ">
+                                Subcontractor
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Manpower Register
+                        </h2>
+
+                        <p style="
+                            color:#708096;
+                            margin-top:5px;
+                            font-size:13px;
+                        ">
+                            Daily manpower deployment record
+                        </p>
+
+                    </div>
+
+                    <div>
+                        ${records.length} record(s)
+                    </div>
+
+                </div>
+
+
+                ${
+                    records.length === 0
+
+                    ?
+
+                    `
+                    <div class="manpower-empty">
+
+                        <div class="manpower-empty-icon">
+                            👷
+                        </div>
+
+                        <h3>
+                            No manpower records yet
+                        </h3>
+
+                        <p style="margin-top:8px;">
+                            Add the first manpower record
+                            for this project.
+                        </p>
+
+                    </div>
+                    `
+
+                    :
+
+                    `
+                    <div class="manpower-table-wrap">
+
+                        <table class="manpower-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Date</th>
+                                    <th>Work Stage</th>
+                                    <th>Type</th>
+                                    <th>Trade</th>
+                                    <th>Company / Subcontractor</th>
+                                    <th>Count</th>
+                                    <th>Total</th>
+                                    <th>Remarks</th>
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                ${recordRows}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   ADD MANPOWER RECORD
+===================================================== */
+
+window.addManpowerRecord = function(projectId){
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(!project){
+        return;
+    }
+
+    ensureManpowerData(project);
+
+    project.manpowerRecords.push({
+
+        id:
+            "manpower-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
+
+        date:
+            manpowerToday(),
+
+        workStage:
+            "Other",
+
+        type:
+            "Direct",
+
+        trade:
+            "Skilled Workers",
+
+        company:
+            "ALM",
+
+        count:
+            0,
+
+        remarks:
+            ""
+
+    });
+
+    persist();
+
+    renderManpowerSection(project);
+
+};
+
+
+/* =====================================================
+   UPDATE MANPOWER FIELD
+===================================================== */
+
+window.updateManpowerField = function(
+    projectId,
+    index,
+    field,
+    value
+){
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(
+        !project ||
+        !project.manpowerRecords ||
+        !project.manpowerRecords[index]
+    ){
+        return;
+    }
+
+    project.manpowerRecords[index][field] =
+        value;
+
+    if(field === "type"){
+
+        if(value === "Direct"){
+
+            if(
+                !project.manpowerRecords[index].company ||
+                project.manpowerRecords[index].company === ""
+            ){
+
+                project.manpowerRecords[index].company =
+                    "ALM";
+
+            }
+
+        }
+
+    }
+
+    persist();
+
+    renderManpowerSection(project);
+
+};
+
+
+/* =====================================================
+   UPDATE MANPOWER NUMBER
+===================================================== */
+
+window.updateManpowerNumber = function(
+    projectId,
+    index,
+    value
+){
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(
+        !project ||
+        !project.manpowerRecords ||
+        !project.manpowerRecords[index]
+    ){
+        return;
+    }
+
+    project.manpowerRecords[index].count =
+        manpowerNumber(value);
+
+    persist();
+
+    renderManpowerSection(project);
+
+};
+
+
+/* =====================================================
+   DELETE MANPOWER RECORD
+===================================================== */
+
+window.deleteManpowerRecord = function(
+    projectId,
+    index
+){
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(
+        !project ||
+        !project.manpowerRecords ||
+        !project.manpowerRecords[index]
+    ){
+        return;
+    }
+
+    const record =
+        project.manpowerRecords[index];
+
+    const confirmed =
+        confirm(
+            `Delete manpower record for ${
+                record.date || "this date"
+            }?`
+        );
+
+    if(!confirmed){
+        return;
+    }
+
+    project.manpowerRecords.splice(
+        index,
+        1
+    );
+
+    persist();
+
+    renderManpowerSection(project);
+
+};
+
+
+/* =====================================================
+   MANPOWER EXCEL EXPORT
+===================================================== */
+
+window.downloadManpowerExcel = function(
+    projectId
+){
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(!project){
+        return;
+    }
+
+    if(
+        typeof XLSX === "undefined"
+    ){
+
+        alert(
+            "Excel library is not loaded."
+        );
+
+        return;
+
+    }
+
+    const rows =
+        (project.manpowerRecords || [])
+            .map(record => ({
+
+                "Date":
+                    record.date || "",
+
+                "Work Stage":
+                    record.workStage || "",
+
+                "Type":
+                    record.type || "",
+
+                "Trade":
+                    record.trade || "",
+
+                "Company / Subcontractor":
+                    record.company || "",
+
+                "Manpower":
+                    manpowerNumber(
+                        record.count
+                    ),
+
+                "Remarks":
+                    record.remarks || ""
+
+            }));
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(rows);
+
+    worksheet["!cols"] = [
+
+        {wch:15},
+        {wch:25},
+        {wch:18},
+        {wch:25},
+        {wch:30},
+        {wch:12},
+        {wch:40}
+
+    ];
+
+    const workbook =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Manpower"
+    );
+
+    XLSX.writeFile(
+        workbook,
+        `${
+            project.name ||
+            "Project"
+        }-Manpower.xlsx`
+    );
+
+};
 </script>
 </body>
 </html>
