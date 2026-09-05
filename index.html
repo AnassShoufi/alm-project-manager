@@ -11254,6 +11254,90 @@ let manpowerFilters = {
     type: "All",
     trade: "All"
 };
+    let manpowerTrendMode = "weekly";
+
+
+function getManpowerPeriodData(records, mode){
+
+    const grouped = {};
+
+    records.forEach(record => {
+
+        if(!record.date){
+            return;
+        }
+
+        const date =
+            new Date(record.date + "T00:00:00");
+
+        let key = "";
+
+        if(mode === "monthly"){
+
+            key =
+                date.getFullYear() +
+                "-" +
+                String(
+                    date.getMonth() + 1
+                ).padStart(2,"0");
+
+        }else{
+
+            const firstDay =
+                new Date(
+                    date.getFullYear(),
+                    0,
+                    1
+                );
+
+            const dayOfYear =
+                Math.floor(
+                    (
+                        date - firstDay
+                    ) /
+                    86400000
+                );
+
+            const week =
+                Math.ceil(
+                    (
+                        dayOfYear +
+                        firstDay.getDay() +
+                        1
+                    ) / 7
+                );
+
+            key =
+                date.getFullYear() +
+                "-W" +
+                String(week).padStart(2,"0");
+
+        }
+
+        if(!grouped[key]){
+            grouped[key] = 0;
+        }
+
+        grouped[key] +=
+            manpowerNumber(
+                record.count
+            );
+
+    });
+
+    return Object.entries(grouped)
+        .sort(
+            (a,b) =>
+                a[0].localeCompare(b[0])
+        )
+        .map(
+            item => ({
+                period:item[0],
+                total:item[1]
+            })
+        );
+
+}
 const manpowerWorkStages = [
     "Site Preparation",
     "Earthworks",
@@ -12988,7 +13072,369 @@ const maxSubcontractor =
 
 
             </div>
+<div class="panel">
 
+    <div class="panel-header">
+
+        <div>
+
+            <h2>
+                Client Manpower Trend
+            </h2>
+
+            <p style="
+                color:#708096;
+                margin-top:5px;
+                font-size:13px;
+            ">
+                Workforce deployment trend for project presentation
+            </p>
+
+        </div>
+
+
+        <div style="
+            display:flex;
+            gap:8px;
+        ">
+
+            <button
+                class="manpower-small-btn"
+                onclick="
+                    manpowerTrendMode='weekly';
+                    renderManpowerSection(
+                        getManpowerProject(
+                            ${JSON.stringify(project.id)}
+                        )
+                    );
+                "
+                ${
+                    manpowerTrendMode === "weekly"
+                    ? 'style="background:#1976b8;color:white;"'
+                    : ""
+                }
+            >
+                Weekly
+            </button>
+
+
+            <button
+                class="manpower-small-btn"
+                onclick="
+                    manpowerTrendMode='monthly';
+                    renderManpowerSection(
+                        getManpowerProject(
+                            ${JSON.stringify(project.id)}
+                        )
+                    );
+                "
+                ${
+                    manpowerTrendMode === "monthly"
+                    ? 'style="background:#1976b8;color:white;"'
+                    : ""
+                }
+            >
+                Monthly
+            </button>
+
+
+            <button
+                class="manpower-small-btn"
+                onclick="
+                    printManpowerReport(
+                        ${JSON.stringify(project.id)}
+                    )
+                "
+            >
+                🖨 Client View
+            </button>
+
+        </div>
+
+    </div>
+
+
+    ${
+        (() => {
+
+            const periodData =
+                getManpowerPeriodData(
+                    filteredRecords,
+                    manpowerTrendMode
+                );
+
+            if(periodData.length === 0){
+
+                return `
+                    <div class="manpower-empty">
+                        No manpower data for the selected period.
+                    </div>
+                `;
+
+            }
+
+
+            const maxValue =
+                Math.max(
+                    ...periodData.map(
+                        item => item.total
+                    ),
+                    1
+                );
+
+
+            const points =
+                periodData.map(
+                    (item,index) => {
+
+                        const x =
+                            periodData.length === 1
+                            ?
+                            50
+                            :
+                            30 +
+                            (
+                                index /
+                                (periodData.length - 1)
+                            ) * 340;
+
+                        const y =
+                            210 -
+                            (
+                                item.total /
+                                maxValue
+                            ) * 165;
+
+                        return {
+                            x,
+                            y,
+                            total:item.total,
+                            period:item.period
+                        };
+
+                    }
+                );
+
+
+            const line =
+                points
+                    .map(
+                        point =>
+                            `${point.x},${point.y}`
+                    )
+                    .join(" ");
+
+
+            const peak =
+                Math.max(
+                    ...periodData.map(
+                        item => item.total
+                    )
+                );
+
+
+            const average =
+                periodData.reduce(
+                    (sum,item) =>
+                        sum + item.total,
+                    0
+                ) /
+                periodData.length;
+
+
+            const minimum =
+                Math.min(
+                    ...periodData.map(
+                        item => item.total
+                    )
+                );
+
+
+            return `
+
+                <div style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(3,1fr);
+                    gap:12px;
+                    margin-bottom:20px;
+                ">
+
+
+                    <div style="
+                        background:#f7f9fb;
+                        border:1px solid #e1e5ea;
+                        border-radius:8px;
+                        padding:15px;
+                        text-align:center;
+                    ">
+
+                        <div style="
+                            font-size:11px;
+                            color:#708096;
+                        ">
+                            PERIOD AVERAGE
+                        </div>
+
+                        <div style="
+                            font-size:24px;
+                            font-weight:bold;
+                            margin-top:5px;
+                        ">
+                            ${average.toFixed(1)}
+                        </div>
+
+                    </div>
+
+
+                    <div style="
+                        background:#f7f9fb;
+                        border:1px solid #e1e5ea;
+                        border-radius:8px;
+                        padding:15px;
+                        text-align:center;
+                    ">
+
+                        <div style="
+                            font-size:11px;
+                            color:#708096;
+                        ">
+                            PEAK MANPOWER
+                        </div>
+
+                        <div style="
+                            font-size:24px;
+                            font-weight:bold;
+                            margin-top:5px;
+                        ">
+                            ${peak}
+                        </div>
+
+                    </div>
+
+
+                    <div style="
+                        background:#f7f9fb;
+                        border:1px solid #e1e5ea;
+                        border-radius:8px;
+                        padding:15px;
+                        text-align:center;
+                    ">
+
+                        <div style="
+                            font-size:11px;
+                            color:#708096;
+                        ">
+                            MINIMUM MANPOWER
+                        </div>
+
+                        <div style="
+                            font-size:24px;
+                            font-weight:bold;
+                            margin-top:5px;
+                        ">
+                            ${minimum}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div style="
+                    width:100%;
+                    height:280px;
+                ">
+
+                    <svg
+                        viewBox="0 0 400 250"
+                        preserveAspectRatio="none"
+                        style="
+                            width:100%;
+                            height:100%;
+                        "
+                    >
+
+                        <line
+                            x1="30"
+                            y1="210"
+                            x2="370"
+                            y2="210"
+                            stroke="#dfe5ec"
+                        />
+
+                        <line
+                            x1="30"
+                            y1="45"
+                            x2="30"
+                            y2="210"
+                            stroke="#dfe5ec"
+                        />
+
+
+                        <polyline
+                            points="${line}"
+                            fill="none"
+                            stroke="#1976b8"
+                            stroke-width="3"
+                        />
+
+
+                        ${
+                            points
+                                .map(
+                                    point => `
+
+                                        <circle
+                                            cx="${point.x}"
+                                            cy="${point.y}"
+                                            r="5"
+                                            fill="#1976b8"
+                                        >
+
+                                            <title>
+                                                ${point.period}:
+                                                ${point.total} manpower
+                                            </title>
+
+                                        </circle>
+
+                                    `
+                                )
+                                .join("")
+                        }
+
+
+                        ${
+                            points
+                                .map(
+                                    point => `
+
+                                        <text
+                                            x="${point.x}"
+                                            y="235"
+                                            text-anchor="middle"
+                                            font-size="9"
+                                            fill="#708096"
+                                        >
+                                            ${point.period}
+                                        </text>
+
+                                    `
+                                )
+                                .join("")
+                        }
+
+                    </svg>
+
+                </div>
+
+            `;
+
+        })()
+    }
+
+</div>
 
             <!-- REGISTER -->
 
@@ -13135,6 +13581,331 @@ window.resetManpowerFilters = function(
     }
 
     renderManpowerSection(project);
+
+};
+    window.printManpowerReport = function(projectId){
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(!project){
+        return;
+    }
+
+
+    const records =
+        project.manpowerRecords || [];
+
+
+    const latestDate =
+        getLatestManpowerDate(project);
+
+
+    const currentRecords =
+        records.filter(
+            record =>
+                record.date === latestDate
+        );
+
+
+    const currentTotal =
+        currentRecords.reduce(
+            (sum,record) =>
+                sum +
+                manpowerNumber(
+                    record.count
+                ),
+            0
+        );
+
+
+    const direct =
+        currentRecords
+            .filter(
+                record =>
+                    record.type === "Direct"
+            )
+            .reduce(
+                (sum,record) =>
+                    sum +
+                    manpowerNumber(
+                        record.count
+                    ),
+                0
+            );
+
+
+    const subcontractor =
+        currentRecords
+            .filter(
+                record =>
+                    record.type === "Subcontractor"
+            )
+            .reduce(
+                (sum,record) =>
+                    sum +
+                    manpowerNumber(
+                        record.count
+                    ),
+                0
+            );
+
+
+    const stageTotals = {};
+
+    currentRecords.forEach(record => {
+
+        const stage =
+            record.workStage ||
+            "Other";
+
+        stageTotals[stage] =
+            (stageTotals[stage] || 0) +
+            manpowerNumber(
+                record.count
+            );
+
+    });
+
+
+    const stageRows =
+        Object.entries(stageTotals)
+            .sort(
+                (a,b) =>
+                    b[1] - a[1]
+            )
+            .map(
+                item => `
+                    <tr>
+                        <td>
+                            ${escapeHTML(item[0])}
+                        </td>
+
+                        <td style="text-align:right;">
+                            ${item[1]}
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+
+
+    const printWindow =
+        window.open(
+            "",
+            "_blank"
+        );
+
+
+    printWindow.document.write(`
+
+        <!DOCTYPE html>
+
+        <html>
+
+        <head>
+
+            <title>
+                Manpower Report -
+                ${escapeHTML(project.name || "Project")}
+            </title>
+
+            <style>
+
+                body{
+                    font-family:Arial,sans-serif;
+                    margin:40px;
+                    color:#17243a;
+                }
+
+                h1{
+                    margin-bottom:5px;
+                }
+
+                .subtitle{
+                    color:#708096;
+                    margin-bottom:30px;
+                }
+
+                .summary{
+                    display:grid;
+                    grid-template-columns:
+                        repeat(3,1fr);
+                    gap:15px;
+                    margin-bottom:30px;
+                }
+
+                .box{
+                    border:1px solid #ddd;
+                    padding:20px;
+                    text-align:center;
+                }
+
+                .label{
+                    font-size:12px;
+                    color:#708096;
+                }
+
+                .value{
+                    font-size:30px;
+                    font-weight:bold;
+                    margin-top:8px;
+                }
+
+                table{
+                    width:100%;
+                    border-collapse:collapse;
+                    margin-top:15px;
+                }
+
+                th,td{
+                    border:1px solid #ddd;
+                    padding:10px;
+                    text-align:left;
+                }
+
+                th{
+                    background:#f3f5f7;
+                }
+
+                @media print{
+
+                    body{
+                        margin:20px;
+                    }
+
+                }
+
+            </style>
+
+        </head>
+
+
+        <body>
+
+            <h1>
+                Manpower Report
+            </h1>
+
+            <div class="subtitle">
+
+                ${escapeHTML(
+                    project.name || "Project"
+                )}
+
+                &nbsp; | &nbsp;
+
+                Latest Date:
+                ${escapeHTML(latestDate)}
+
+            </div>
+
+
+            <div class="summary">
+
+
+                <div class="box">
+
+                    <div class="label">
+                        CURRENT MANPOWER
+                    </div>
+
+                    <div class="value">
+                        ${currentTotal}
+                    </div>
+
+                </div>
+
+
+                <div class="box">
+
+                    <div class="label">
+                        DIRECT MANPOWER
+                    </div>
+
+                    <div class="value">
+                        ${direct}
+                    </div>
+
+                </div>
+
+
+                <div class="box">
+
+                    <div class="label">
+                        SUBCONTRACTOR MANPOWER
+                    </div>
+
+                    <div class="value">
+                        ${subcontractor}
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <h2>
+                Manpower by Work Stage
+            </h2>
+
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Work Stage
+                        </th>
+
+                        <th>
+                            Manpower
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${
+                        stageRows ||
+                        `
+                        <tr>
+                            <td colspan="2">
+                                No manpower records.
+                            </td>
+                        </tr>
+                        `
+                    }
+
+                </tbody>
+
+            </table>
+
+
+            <script>
+
+                window.onload = function(){
+
+                    window.print();
+
+                };
+
+            <\/script>
+
+        </body>
+
+        </html>
+
+    `);
+
+
+    printWindow.document.close();
 
 };
 window.addManpowerRecord = function(projectId){
