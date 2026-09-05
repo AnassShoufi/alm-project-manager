@@ -9837,7 +9837,7 @@ function buildPaymentRow(project,index,payment){
 
     let invoiceCell = "";
 
-    if(payment.fileData){
+    if(payment.fileData || payment.invoiceFileData){
 
         invoiceCell = `
 
@@ -9855,7 +9855,7 @@ function buildPaymentRow(project,index,payment){
                     text-overflow:ellipsis;
                     white-space:nowrap;
                 ">
-                    ${escapeHTML(payment.fileName || "Invoice PDF")}
+                    ${escapeHTML(payment.fileName || payment.invoiceFileName || "Invoice PDF")}
                 </span>
 
                 <div style="display:flex;gap:4px;">
@@ -9914,7 +9914,7 @@ function buildPaymentRow(project,index,payment){
             <input
                 type="file"
                 accept="application/pdf,.pdf"
-                onchange="uploadPaymentInvoice(${project.id},${index},this)"
+                onchange="uploadPaymentInvoice(${project.id},${index},this.files[0])"
                 style="
                     width:150px;
                     font-size:11px;
@@ -10691,80 +10691,101 @@ window.viewPaymentInvoice = function(
     const project =
         getPaymentsProject(projectId);
 
-    if(!project || !project.payments[index]){
+    if(
+        !project ||
+        !project.payments ||
+        !project.payments[index]
+    ){
         return;
     }
 
     const payment =
         project.payments[index];
 
-    if(!payment.fileData){
+    const fileData =
+        payment.fileData ||
+        payment.invoiceFileData;
 
-        alert("No invoice PDF attached.");
+    if(!fileData){
+
+        alert("No Invoice PDF is attached.");
 
         return;
     }
 
 
-    const newWindow =
-        window.open("", "_blank");
+    try{
 
-    if(!newWindow){
+        const base64 =
+            fileData.split(",")[1];
 
-        alert(
-            "Please allow pop-ups to view the invoice."
+        if(!base64){
+
+            alert("Invalid Invoice PDF data.");
+
+            return;
+        }
+
+
+        const byteCharacters =
+            atob(base64);
+
+        const byteNumbers =
+            new Array(
+                byteCharacters.length
+            );
+
+        for(
+            let i = 0;
+            i < byteCharacters.length;
+            i++
+        ){
+
+            byteNumbers[i] =
+                byteCharacters.charCodeAt(i);
+
+        }
+
+
+        const byteArray =
+            new Uint8Array(
+                byteNumbers
+            );
+
+
+        const blob =
+            new Blob(
+                [byteArray],
+                {
+                    type:"application/pdf"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(blob);
+
+
+        window.open(
+            url,
+            "_blank"
         );
 
-        return;
+
+    }catch(error){
+
+        console.error(
+            "Invoice PDF error:",
+            error
+        );
+
+        alert(
+            "Unable to open the Invoice PDF."
+        );
+
     }
 
-
-    newWindow.document.write(`
-
-        <html>
-
-            <head>
-
-                <title>
-                    ${escapeHTML(
-                        payment.fileName ||
-                        "Payment Invoice"
-                    )}
-                </title>
-
-                <style>
-                    html,body{
-                        margin:0;
-                        height:100%;
-                        overflow:hidden;
-                    }
-
-                    iframe{
-                        width:100%;
-                        height:100%;
-                        border:none;
-                    }
-                </style>
-
-            </head>
-
-            <body>
-
-                <iframe
-                    src="${payment.fileData}"
-                ></iframe>
-
-            </body>
-
-        </html>
-
-    `);
-
-    newWindow.document.close();
-
 };
-
-
 /* =====================================================
    DOWNLOAD INVOICE
 ===================================================== */
