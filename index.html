@@ -9361,7 +9361,7 @@ function(projectId,index){
     );
 
 };
- /* =====================================================
+/* =====================================================
    PAYMENTS - EDITABLE REGISTER
 ===================================================== */
 
@@ -9394,6 +9394,23 @@ window.renderPaymentsSection = function(project){
     };
 
 
+    /*
+       CONTRACT VALUE
+    */
+
+    const contractValue =
+        Number(
+            project.contractValue ||
+            project.contractAmount ||
+            project.value ||
+            0
+        ) || 0;
+
+
+    /*
+       TOTALS
+    */
+
     const totalInvoice =
         payments.reduce(
             (sum,p) =>
@@ -9414,6 +9431,87 @@ window.renderPaymentsSection = function(project){
         totalInvoice - totalReceived;
 
 
+    /*
+       PERCENTAGES
+    */
+
+    const invoicedPercentage =
+        contractValue > 0
+        ?
+        (totalInvoice / contractValue) * 100
+        :
+        0;
+
+
+    const paidPercentage =
+        contractValue > 0
+        ?
+        (totalReceived / contractValue) * 100
+        :
+        0;
+
+
+    /*
+       PAYMENT STATUS
+    */
+
+    const getPaymentStatus = payment => {
+
+        const invoiceValue =
+            Number(payment.invoiceValue) || 0;
+
+        const paymentReceived =
+            Number(payment.paymentReceived) || 0;
+
+
+        if(invoiceValue <= 0){
+
+            return {
+                text: "No Invoice",
+                color: "#708096"
+            };
+
+        }
+
+
+        if(paymentReceived > invoiceValue){
+
+            return {
+                text: "Overpaid",
+                color: "#b42332"
+            };
+
+        }
+
+
+        if(paymentReceived === invoiceValue){
+
+            return {
+                text: "Fully Paid",
+                color: "#148344"
+            };
+
+        }
+
+
+        if(paymentReceived > 0){
+
+            return {
+                text: "Partially Paid",
+                color: "#a56a00"
+            };
+
+        }
+
+
+        return {
+            text: "Not Paid",
+            color: "#b42332"
+        };
+
+    };
+
+
     content.innerHTML = `
 
         <div class="project-section">
@@ -9424,7 +9522,9 @@ window.renderPaymentsSection = function(project){
 
                 <div>
 
-                    <h3>Payments</h3>
+                    <h3>
+                        Payments
+                    </h3>
 
                     <p>
                         Payment Register for
@@ -9434,36 +9534,42 @@ window.renderPaymentsSection = function(project){
                 </div>
 
 
-                <div style="display:flex; gap:10px;">
+                <div
+                    style="
+                        display:flex;
+                        gap:10px;
+                    "
+                >
 
-    <button
-        class="btn btn-secondary"
-        onclick="
-            window.downloadPaymentsExcel(
-                '${project.id}'
-            )
-        "
-    >
-        ⬇ Download Excel
-    </button>
+                    <button
+                        class="btn btn-secondary"
+                        onclick="
+                            window.downloadPaymentsExcel(
+                                '${project.id}'
+                            )
+                        "
+                    >
+                        ⬇ Download Excel
+                    </button>
 
-    <button
-        class="btn btn-primary"
-        onclick="
-            window.addPaymentRow(
-                '${project.id}'
-            )
-        "
-    >
-        + Add Payment
-    </button>
 
-</div>
+                    <button
+                        class="btn btn-primary"
+                        onclick="
+                            window.addPaymentRow(
+                                '${project.id}'
+                            )
+                        "
+                    >
+                        + Add Payment
+                    </button>
+
+                </div>
 
             </div>
 
 
-            <!-- SUMMARY -->
+            <!-- FINANCIAL SUMMARY -->
 
             <div
                 style="
@@ -9471,22 +9577,52 @@ window.renderPaymentsSection = function(project){
                     grid-template-columns:
                         repeat(3,minmax(0,1fr));
                     gap:15px;
-                    margin-bottom:25px;
+                    margin-bottom:15px;
                 "
             >
+
+                <!-- CONTRACT VALUE -->
 
                 <div class="project-info-card">
 
                     <span>
-                        Total Invoice Value
+                        Contract Value
+                    </span>
+
+                    <strong>
+                        ${formatAmount(contractValue)}
+                    </strong>
+
+                </div>
+
+
+                <!-- TOTAL INVOICED -->
+
+                <div class="project-info-card">
+
+                    <span>
+                        Total Invoiced
                     </span>
 
                     <strong>
                         ${formatAmount(totalInvoice)}
                     </strong>
 
+                    <small
+                        style="
+                            display:block;
+                            margin-top:5px;
+                            color:#708096;
+                        "
+                    >
+                        ${invoicedPercentage.toFixed(1)}%
+                        of Contract
+                    </small>
+
                 </div>
 
+
+                <!-- TOTAL RECEIVED -->
 
                 <div class="project-info-card">
 
@@ -9498,8 +9634,33 @@ window.renderPaymentsSection = function(project){
                         ${formatAmount(totalReceived)}
                     </strong>
 
+                    <small
+                        style="
+                            display:block;
+                            margin-top:5px;
+                            color:#708096;
+                        "
+                    >
+                        ${paidPercentage.toFixed(1)}%
+                        of Contract
+                    </small>
+
                 </div>
 
+            </div>
+
+
+            <!-- BALANCE SUMMARY -->
+
+            <div
+                style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(2,minmax(0,1fr));
+                    gap:15px;
+                    margin-bottom:25px;
+                "
+            >
 
                 <div class="project-info-card">
 
@@ -9513,6 +9674,9 @@ window.renderPaymentsSection = function(project){
                             ${
                                 totalBalance === 0
                                 ? "#148344"
+                                :
+                                totalBalance < 0
+                                ? "#b42332"
                                 : "#a56a00"
                             };
                         "
@@ -9522,10 +9686,23 @@ window.renderPaymentsSection = function(project){
 
                 </div>
 
+
+                <div class="project-info-card">
+
+                    <span>
+                        Contract Paid
+                    </span>
+
+                    <strong>
+                        ${paidPercentage.toFixed(1)}%
+                    </strong>
+
+                </div>
+
             </div>
 
 
-            <!-- REGISTER -->
+            <!-- PAYMENT REGISTER -->
 
             <div
                 style="
@@ -9537,7 +9714,7 @@ window.renderPaymentsSection = function(project){
                     class="payments-register"
                     style="
                         width:100%;
-                        min-width:1250px;
+                        min-width:1400px;
                     "
                 >
 
@@ -9570,6 +9747,10 @@ window.renderPaymentsSection = function(project){
                             </th>
 
                             <th>
+                                Status
+                            </th>
+
+                            <th>
                                 Date of Payment Received
                             </th>
 
@@ -9597,7 +9778,7 @@ window.renderPaymentsSection = function(project){
                             <tr>
 
                                 <td
-                                    colspan="9"
+                                    colspan="10"
                                     style="
                                         text-align:center;
                                         padding:40px;
@@ -9642,24 +9823,10 @@ window.renderPaymentsSection = function(project){
                                         paymentReceived;
 
 
-                                    let balanceColor =
-                                        "#a56a00";
-
-
-                                    if(balance === 0){
-
-                                        balanceColor =
-                                            "#148344";
-
-                                    }
-
-
-                                    if(balance < 0){
-
-                                        balanceColor =
-                                            "#b42332";
-
-                                    }
+                                    const status =
+                                        getPaymentStatus(
+                                            payment
+                                        );
 
 
                                     return `
@@ -9884,11 +10051,38 @@ window.renderPaymentsSection = function(project){
                                                     payment-balance-${index}
                                                 "
                                                 style="
-                                                    color:${balanceColor};
+                                                    color:
+                                                    ${
+                                                        balance === 0
+                                                        ? "#148344"
+                                                        :
+                                                        balance < 0
+                                                        ? "#b42332"
+                                                        : "#a56a00"
+                                                    };
                                                     white-space:nowrap;
                                                 "
                                             >
                                                 ${formatAmount(balance)}
+                                            </strong>
+
+                                        </td>
+
+
+                                        <!-- STATUS -->
+
+                                        <td>
+
+                                            <strong
+                                                id="
+                                                    payment-status-${index}
+                                                "
+                                                style="
+                                                    color:${status.color};
+                                                    white-space:nowrap;
+                                                "
+                                            >
+                                                ${status.text}
                                             </strong>
 
                                         </td>
@@ -10032,8 +10226,6 @@ window.renderPaymentsSection = function(project){
     `;
 
 };
-
-
 /* =====================================================
    ADD NEW PAYMENT ROW
 ===================================================== */
