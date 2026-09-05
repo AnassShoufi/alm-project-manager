@@ -9398,13 +9398,18 @@ window.renderPaymentsSection = function(project){
        CONTRACT VALUE
     */
 
-    const contractValue =
-        Number(
-            project.contractValue ||
-            project.contractAmount ||
-            project.value ||
-            0
-        ) || 0;
+  const contractValueRaw =
+    project.contractValue ||
+    project.contractAmount ||
+    project.value ||
+    0;
+
+const contractValue =
+    Number(
+        String(contractValueRaw)
+            .replace(/,/g, "")
+            .replace(/[^\d.-]/g, "")
+    ) || 0;
 
 
     /*
