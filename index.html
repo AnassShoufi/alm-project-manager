@@ -9993,27 +9993,38 @@ const contractValue =
 
                                         <td>
 
-                                            <input
-                                                type="number"
-                                                value="${
-                                                    payment.invoiceValue || ""
-                                                }"
-                                                placeholder="0.00"
-                                                step="0.01"
-                                                min="0"
-                                                oninput="
-                                                    window.updatePaymentAmount(
-                                                        '${project.id}',
-                                                        ${index},
-                                                        'invoiceValue',
-                                                        this.value
-                                                    )
-                                                "
-                                                style="
-                                                    width:150px;
-                                                    text-align:right;
-                                                "
-                                            >
+                                           <input
+    type="text"
+    value="${
+        payment.invoiceValue
+        ? Number(payment.invoiceValue).toLocaleString(
+            undefined,
+            {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+            }
+        )
+        : ""
+    }"
+    placeholder="0.00"
+    inputmode="decimal"
+    onfocus="
+        this.value =
+            this.value.replace(/,/g,'');
+    "
+    onblur="
+        window.formatPaymentInput(
+            this,
+            '${project.id}',
+            ${index},
+            'invoiceValue'
+        )
+    "
+    style="
+        width:150px;
+        text-align:right;
+    "
+>
 
                                         </td>
 
@@ -10022,27 +10033,38 @@ const contractValue =
 
                                         <td>
 
-                                            <input
-                                                type="number"
-                                                value="${
-                                                    payment.paymentReceived || ""
-                                                }"
-                                                placeholder="0.00"
-                                                step="0.01"
-                                                min="0"
-                                                oninput="
-                                                    window.updatePaymentAmount(
-                                                        '${project.id}',
-                                                        ${index},
-                                                        'paymentReceived',
-                                                        this.value
-                                                    )
-                                                "
-                                                style="
-                                                    width:150px;
-                                                    text-align:right;
-                                                "
-                                            >
+                                           <input
+    type="text"
+    value="${
+        payment.paymentReceived
+        ? Number(payment.paymentReceived).toLocaleString(
+            undefined,
+            {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+            }
+        )
+        : ""
+    }"
+    placeholder="0.00"
+    inputmode="decimal"
+    onfocus="
+        this.value =
+            this.value.replace(/,/g,'');
+    "
+    onblur="
+        window.formatPaymentInput(
+            this,
+            '${project.id}',
+            ${index},
+            'paymentReceived'
+        )
+    "
+    style="
+        width:150px;
+        text-align:right;
+    "
+>
 
                                         </td>
 
@@ -10446,7 +10468,143 @@ window.updatePaymentAmount = function(
     persist();
 
 };
+/* =====================================================
+   FORMAT PAYMENT AMOUNT INPUT
+===================================================== */
 
+window.formatPaymentInput = function(
+    input,
+    projectId,
+    index,
+    field
+){
+
+    let rawValue =
+        String(input.value || "")
+            .replace(/,/g,"")
+            .trim();
+
+
+    if(rawValue === ""){
+
+        rawValue = "0";
+
+    }
+
+
+    const numericValue =
+        Number(rawValue) || 0;
+
+
+    /*
+       Save numeric value
+    */
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(
+        !project ||
+        !project.payments ||
+        !project.payments[index]
+    ){
+
+        return;
+
+    }
+
+
+    project.payments[index][field] =
+        numericValue;
+
+
+    persist();
+
+
+    /*
+       Format the value visually
+    */
+
+    input.value =
+        numericValue.toLocaleString(
+            undefined,
+            {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+            }
+        );
+
+
+    /*
+       Update Balance
+    */
+
+    const payment =
+        project.payments[index];
+
+
+    const invoiceValue =
+        Number(
+            payment.invoiceValue
+        ) || 0;
+
+
+    const paymentReceived =
+        Number(
+            payment.paymentReceived
+        ) || 0;
+
+
+    const balance =
+        invoiceValue -
+        paymentReceived;
+
+
+    const balanceElement =
+        document.getElementById(
+            `payment-balance-${index}`
+        );
+
+
+    if(balanceElement){
+
+        balanceElement.textContent =
+            balance.toLocaleString(
+                undefined,
+                {
+                    minimumFractionDigits:2,
+                    maximumFractionDigits:2
+                }
+            );
+
+
+        if(balance === 0){
+
+            balanceElement.style.color =
+                "#148344";
+
+        }
+        else if(balance < 0){
+
+            balanceElement.style.color =
+                "#b42332";
+
+        }
+        else{
+
+            balanceElement.style.color =
+                "#a56a00";
+
+        }
+
+    }
+
+};
 
 /* =====================================================
    UPLOAD INVOICE PDF
