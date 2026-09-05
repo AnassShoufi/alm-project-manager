@@ -11774,6 +11774,7 @@ function renderManpowerSection(project){
     ================================================= */
 
     const tradeTotals = {};
+    const subcontractorTotals = {};
 
     filteredRecords.forEach(record => {
 
@@ -11784,6 +11785,23 @@ function renderManpowerSection(project){
         tradeTotals[trade] =
             (tradeTotals[trade] || 0) +
             manpowerNumber(record.count);
+        if(
+    record.type === "Subcontractor" &&
+    record.company
+){
+
+    const company =
+        record.company.trim();
+
+    if(company){
+
+        subcontractorTotals[company] =
+            (subcontractorTotals[company] || 0) +
+            manpowerNumber(record.count);
+
+    }
+
+}
 
     });
 
@@ -11793,6 +11811,44 @@ function renderManpowerSection(project){
                 (a,b) =>
                     b[1] - a[1]
             );
+    const subcontractorTotals = {};
+
+filteredRecords.forEach(record => {
+
+    if(
+        record.type === "Subcontractor" &&
+        record.company
+    ){
+
+        const company =
+            record.company.trim();
+
+        if(company){
+
+            subcontractorTotals[company] =
+                (subcontractorTotals[company] || 0) +
+                manpowerNumber(record.count);
+
+        }
+
+    }
+
+});
+
+const subcontractorEntries =
+    Object.entries(subcontractorTotals)
+        .sort(
+            (a,b) =>
+                b[1] - a[1]
+        );
+
+const maxSubcontractor =
+    Math.max(
+        ...subcontractorEntries.map(
+            item => item[1]
+        ),
+        1
+    );
 
 
     const maxStage =
