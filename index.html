@@ -11247,7 +11247,13 @@ window.downloadPaymentsExcel = function(
 /* =====================================================
    MANPOWER MODULE
 ===================================================== */
-
+let manpowerFilters = {
+    dateFrom: "",
+    dateTo: "",
+    workStage: "All",
+    type: "All",
+    trade: "All"
+};
 const manpowerWorkStages = [
     "Site Preparation",
     "Earthworks",
@@ -11561,57 +11567,199 @@ function manpowerTypeBadge(type){
 
 function renderManpowerSection(project){
 
-    const records =
+    const allRecords =
         ensureManpowerData(project);
 
-    const currentTotal =
-        getCurrentManpowerTotal(project);
+    const filteredRecords =
+        allRecords.filter(record => {
 
-    const currentDirect =
-        getCurrentDirectManpower(project);
+            if(
+                manpowerFilters.dateFrom &&
+                record.date < manpowerFilters.dateFrom
+            ){
+                return false;
+            }
 
-    const currentSub =
-        getCurrentSubcontractorManpower(project);
+            if(
+                manpowerFilters.dateTo &&
+                record.date > manpowerFilters.dateTo
+            ){
+                return false;
+            }
+
+            if(
+                manpowerFilters.workStage !== "All" &&
+                record.workStage !== manpowerFilters.workStage
+            ){
+                return false;
+            }
+
+            if(
+                manpowerFilters.type !== "All" &&
+                record.type !== manpowerFilters.type
+            ){
+                return false;
+            }
+
+            if(
+                manpowerFilters.trade !== "All" &&
+                record.trade !== manpowerFilters.trade
+            ){
+                return false;
+            }
+
+            return true;
+
+        });
+
+
+    /* =================================================
+       CURRENT / LATEST DATA
+    ================================================= */
 
     const latestDate =
         getLatestManpowerDate(project);
 
-    const currentStages =
-        getCurrentWorkStages(project);
+    const currentRecords =
+        allRecords.filter(
+            record =>
+                record.date === latestDate
+        );
+
+    const currentTotal =
+        currentRecords.reduce(
+            (sum,record) =>
+                sum +
+                manpowerNumber(record.count),
+            0
+        );
+
+    const currentDirect =
+        currentRecords
+            .filter(
+                record =>
+                    record.type === "Direct"
+            )
+            .reduce(
+                (sum,record) =>
+                    sum +
+                    manpowerNumber(record.count),
+                0
+            );
+
+    const currentSub =
+        currentRecords
+            .filter(
+                record =>
+                    record.type === "Subcontractor"
+            )
+            .reduce(
+                (sum,record) =>
+                    sum +
+                    manpowerNumber(record.count),
+                0
+            );
+
+
+    /* =================================================
+       FILTERED DATE DATA
+    ================================================= */
+
+    const dates = [
+        ...new Set(
+            filteredRecords
+                .map(record => record.date)
+                .filter(Boolean)
+        )
+    ].sort();
+
+
+    const dailyTotals =
+        dates.map(date => {
+
+            const total =
+                filteredRecords
+                    .filter(
+                        record =>
+                            record.date === date
+                    )
+                    .reduce(
+                        (sum,record) =>
+                            sum +
+                            manpowerNumber(
+                                record.count
+                            ),
+                        0
+                    );
+
+            return {
+                date,
+                total
+            };
+
+        });
+
+
+    /* =================================================
+       SUMMARY
+    ================================================= */
+
+    const dailyValues =
+        dailyTotals.map(
+            item => item.total
+        );
+
+    const averageManpower =
+        dailyValues.length
+        ?
+        dailyValues.reduce(
+            (a,b) => a + b,
+            0
+        ) / dailyValues.length
+        :
+        0;
+
+    const peakManpower =
+        dailyValues.length
+        ?
+        Math.max(...dailyValues)
+        :
+        0;
+
+    const minimumManpower =
+        dailyValues.length
+        ?
+        Math.min(...dailyValues)
+        :
+        0;
+
+    const latestFilteredManpower =
+        dailyTotals.length
+        ?
+        dailyTotals[
+            dailyTotals.length - 1
+        ].total
+        :
+        0;
+
+
+    /* =================================================
+       STAGE TOTALS
+    ================================================= */
 
     const stageTotals = {};
 
-    const tradeTotals = {};
+    filteredRecords.forEach(record => {
 
-    records
-        .filter(
-            record =>
-                record.date === latestDate
-        )
-        .forEach(record => {
+        const stage =
+            record.workStage ||
+            "Other";
 
-            const count =
-                manpowerNumber(
-                    record.count
-                );
+        stageTotals[stage] =
+            (stageTotals[stage] || 0) +
+            manpowerNumber(record.count);
 
-            const stage =
-                record.workStage ||
-                "Other";
-
-            const trade =
-                record.trade ||
-                "Other";
-
-            stageTotals[stage] =
-                (stageTotals[stage] || 0) +
-                count;
-
-            tradeTotals[trade] =
-                (tradeTotals[trade] || 0) +
-                count;
-
-        });
+    });
 
     const stageEntries =
         Object.entries(stageTotals)
@@ -11620,12 +11768,32 @@ function renderManpowerSection(project){
                     b[1] - a[1]
             );
 
+
+    /* =================================================
+       TRADE TOTALS
+    ================================================= */
+
+    const tradeTotals = {};
+
+    filteredRecords.forEach(record => {
+
+        const trade =
+            record.trade ||
+            "Other";
+
+        tradeTotals[trade] =
+            (tradeTotals[trade] || 0) +
+            manpowerNumber(record.count);
+
+    });
+
     const tradeEntries =
         Object.entries(tradeTotals)
             .sort(
                 (a,b) =>
                     b[1] - a[1]
             );
+
 
     const maxStage =
         Math.max(
@@ -11643,59 +11811,31 @@ function renderManpowerSection(project){
             1
         );
 
-    const dates = [
-        ...new Set(
-            records
-                .map(
-                    record =>
-                        record.date
-                )
-                .filter(Boolean)
-        )
-    ]
-    .sort();
 
-    const dailyTotals =
-        dates.map(date => ({
-            date,
-            total:
-                records
-                    .filter(
-                        record =>
-                            record.date === date
-                    )
-                    .reduce(
-                        (sum,record) =>
-                            sum +
-                            manpowerNumber(
-                                record.count
-                            ),
-                        0
-                    )
-        }));
+    /* =================================================
+       TREND
+    ================================================= */
 
     const maxTrend =
         Math.max(
-            ...dailyTotals.map(
-                item => item.total
-            ),
+            ...dailyValues,
             1
         );
 
     const trendPoints =
-        dailyTotals.length > 0
-        ?
         dailyTotals.map(
             (item,index) => {
 
                 const x =
                     dailyTotals.length === 1
-                    ? 50
-                    : 20 +
-                        (
-                            index /
-                            (dailyTotals.length - 1)
-                        ) * 360;
+                    ?
+                    50
+                    :
+                    20 +
+                    (
+                        index /
+                        (dailyTotals.length - 1)
+                    ) * 360;
 
                 const y =
                     180 -
@@ -11712,9 +11852,8 @@ function renderManpowerSection(project){
                 };
 
             }
-        )
-        :
-        [];
+        );
+
 
     const polyline =
         trendPoints
@@ -11724,211 +11863,262 @@ function renderManpowerSection(project){
             )
             .join(" ");
 
-    const recordRows =
-        records.map(
-            (record,index) => {
 
-                const count =
-                    manpowerNumber(
-                        record.count
-                    );
+    /* =================================================
+       FILTER OPTIONS
+    ================================================= */
 
-                return `
-                    <tr>
-
-                        <td>
-                            <input
-                                type="date"
-                                value="${escapeHTML(
-                                    record.date || ""
-                                )}"
-                                onchange="
-                                    updateManpowerField(
-                                        ${JSON.stringify(project.id)},
-                                        ${index},
-                                        'date',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
-
-                        <td>
-                            <select
-                                onchange="
-                                    updateManpowerField(
-                                        ${JSON.stringify(project.id)},
-                                        ${index},
-                                        'workStage',
-                                        this.value
-                                    )
-                                "
-                            >
-                                ${
-                                    manpowerWorkStages
-                                        .map(
-                                            stage => `
-                                                <option
-                                                    value="${escapeHTML(stage)}"
-                                                    ${
-                                                        record.workStage === stage
-                                                        ? "selected"
-                                                        : ""
-                                                    }
-                                                >
-                                                    ${escapeHTML(stage)}
-                                                </option>
-                                            `
-                                        )
-                                        .join("")
-                                }
-                            </select>
-                        </td>
-
-                        <td>
-                            <select
-                                onchange="
-                                    updateManpowerField(
-                                        ${JSON.stringify(project.id)},
-                                        ${index},
-                                        'type',
-                                        this.value
-                                    )
-                                "
-                            >
-                                <option
-                                    value="Direct"
-                                    ${
-                                        record.type === "Direct"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                >
-                                    Direct
-                                </option>
-
-                                <option
-                                    value="Subcontractor"
-                                    ${
-                                        record.type === "Subcontractor"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                >
-                                    Subcontractor
-                                </option>
-                            </select>
-                        </td>
-
-                        <td>
-                            <select
-                                onchange="
-                                    updateManpowerField(
-                                        ${JSON.stringify(project.id)},
-                                        ${index},
-                                        'trade',
-                                        this.value
-                                    )
-                                "
-                            >
-                                ${
-                                    manpowerTrades
-                                        .map(
-                                            trade => `
-                                                <option
-                                                    value="${escapeHTML(trade)}"
-                                                    ${
-                                                        record.trade === trade
-                                                        ? "selected"
-                                                        : ""
-                                                    }
-                                                >
-                                                    ${escapeHTML(trade)}
-                                                </option>
-                                            `
-                                        )
-                                        .join("")
-                                }
-                            </select>
-                        </td>
-
-                        <td>
-                            <input
-                                type="text"
-                                value="${escapeHTML(
-                                    record.company || "ALM"
-                                )}"
-                                placeholder="Company / Subcontractor"
-                                onchange="
-                                    updateManpowerField(
-                                        ${JSON.stringify(project.id)},
-                                        ${index},
-                                        'company',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
-
-                        <td>
-                            <input
-                                class="manpower-number"
-                                type="number"
-                                min="0"
-                                step="1"
-                                value="${count}"
-                                oninput="
-                                    updateManpowerNumber(
-                                        ${JSON.stringify(project.id)},
-                                        ${index},
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
-
-                        <td class="manpower-total-cell">
-                            ${count}
-                        </td>
-
-                        <td>
-                            <input
-                                type="text"
-                                value="${escapeHTML(
-                                    record.remarks || ""
-                                )}"
-                                placeholder="Remarks"
-                                onchange="
-                                    updateManpowerField(
-                                        ${JSON.stringify(project.id)},
-                                        ${index},
-                                        'remarks',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
-
-                        <td>
-                            <button
-                                class="manpower-small-btn"
-                                onclick="
-                                    deleteManpowerRecord(
-                                        ${JSON.stringify(project.id)},
-                                        ${index}
-                                    )
-                                "
-                            >
-                                Delete
-                            </button>
-                        </td>
-
-                    </tr>
-                `;
-
-            }
+    const availableTrades = [
+        ...new Set(
+            allRecords
+                .map(
+                    record =>
+                        record.trade
+                )
+                .filter(Boolean)
         )
+    ].sort();
+
+
+    /* =================================================
+       TABLE
+    ================================================= */
+
+    const recordRows =
+        filteredRecords.map(record => {
+
+            const originalIndex =
+                allRecords.indexOf(record);
+
+            const count =
+                manpowerNumber(
+                    record.count
+                );
+
+            return `
+                <tr>
+
+                    <td>
+                        <input
+                            type="date"
+                            value="${escapeHTML(
+                                record.date || ""
+                            )}"
+                            onchange="
+                                updateManpowerField(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex},
+                                    'date',
+                                    this.value
+                                )
+                            "
+                        >
+                    </td>
+
+
+                    <td>
+
+                        <select
+                            onchange="
+                                updateManpowerField(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex},
+                                    'workStage',
+                                    this.value
+                                )
+                            "
+                        >
+
+                            ${
+                                manpowerWorkStages
+                                    .map(
+                                        stage => `
+                                            <option
+                                                value="${escapeHTML(stage)}"
+                                                ${
+                                                    record.workStage === stage
+                                                    ? "selected"
+                                                    : ""
+                                                }
+                                            >
+                                                ${escapeHTML(stage)}
+                                            </option>
+                                        `
+                                    )
+                                    .join("")
+                            }
+
+                        </select>
+
+                    </td>
+
+
+                    <td>
+
+                        <select
+                            onchange="
+                                updateManpowerField(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex},
+                                    'type',
+                                    this.value
+                                )
+                            "
+                        >
+
+                            <option
+                                value="Direct"
+                                ${
+                                    record.type === "Direct"
+                                    ? "selected"
+                                    : ""
+                                }
+                            >
+                                Direct
+                            </option>
+
+                            <option
+                                value="Subcontractor"
+                                ${
+                                    record.type === "Subcontractor"
+                                    ? "selected"
+                                    : ""
+                                }
+                            >
+                                Subcontractor
+                            </option>
+
+                        </select>
+
+                    </td>
+
+
+                    <td>
+
+                        <select
+                            onchange="
+                                updateManpowerField(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex},
+                                    'trade',
+                                    this.value
+                                )
+                            "
+                        >
+
+                            ${
+                                manpowerTrades
+                                    .map(
+                                        trade => `
+                                            <option
+                                                value="${escapeHTML(trade)}"
+                                                ${
+                                                    record.trade === trade
+                                                    ? "selected"
+                                                    : ""
+                                                }
+                                            >
+                                                ${escapeHTML(trade)}
+                                            </option>
+                                        `
+                                    )
+                                    .join("")
+                            }
+
+                        </select>
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="text"
+                            value="${escapeHTML(
+                                record.company || "ALM"
+                            )}"
+                            placeholder="Company / Subcontractor"
+                            onchange="
+                                updateManpowerField(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex},
+                                    'company',
+                                    this.value
+                                )
+                            "
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            class="manpower-number"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value="${count}"
+                            oninput="
+                                updateManpowerNumber(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex},
+                                    this.value
+                                )
+                            "
+                        >
+
+                    </td>
+
+
+                    <td class="manpower-total-cell">
+                        ${count}
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="text"
+                            value="${escapeHTML(
+                                record.remarks || ""
+                            )}"
+                            placeholder="Remarks"
+                            onchange="
+                                updateManpowerField(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex},
+                                    'remarks',
+                                    this.value
+                                )
+                            "
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <button
+                            class="manpower-small-btn"
+                            onclick="
+                                deleteManpowerRecord(
+                                    ${JSON.stringify(project.id)},
+                                    ${originalIndex}
+                                )
+                            "
+                        >
+                            Delete
+                        </button>
+
+                    </td>
+
+                </tr>
+            `;
+
+        })
         .join("");
+
 
     const content =
         document.getElementById(
@@ -11939,20 +12129,33 @@ function renderManpowerSection(project){
         return;
     }
 
+
+    /* =================================================
+       RENDER
+    ================================================= */
+
     content.innerHTML = `
 
         <div class="manpower-dashboard">
 
+
+            <!-- HEADER -->
+
             <div class="manpower-section-title">
 
                 <div>
-                    <h2>Manpower Management</h2>
+
+                    <h2>
+                        Manpower Management
+                    </h2>
 
                     <p>
-                        Workforce deployment by date,
-                        work stage and trade
+                        Workforce deployment,
+                        manpower history and work-stage allocation
                     </p>
+
                 </div>
+
 
                 <div class="manpower-actions">
 
@@ -11967,12 +12170,27 @@ function renderManpowerSection(project){
                         + Add Manpower
                     </button>
 
+
+                    <button
+                        class="manpower-small-btn"
+                        onclick="
+                            downloadManpowerExcel(
+                                ${JSON.stringify(project.id)}
+                            )
+                        "
+                    >
+                        ⬇ Download Excel
+                    </button>
+
                 </div>
 
             </div>
 
 
+            <!-- CURRENT MANPOWER -->
+
             <div class="manpower-stats">
+
 
                 <div class="manpower-stat">
 
@@ -11985,9 +12203,8 @@ function renderManpowerSection(project){
                     </div>
 
                     <div class="manpower-stat-sub">
-                        Latest date: ${escapeHTML(
-                            latestDate
-                        )}
+                        Latest recorded date:
+                        ${escapeHTML(latestDate)}
                     </div>
 
                 </div>
@@ -12038,13 +12255,90 @@ function renderManpowerSection(project){
                     </div>
 
                     <div class="manpower-stat-sub">
-                        Manpower history
+                        Filtered period
                     </div>
 
                 </div>
 
             </div>
 
+
+            <!-- SUMMARY -->
+
+            <div class="manpower-stats">
+
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Average Manpower
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${averageManpower.toFixed(1)}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        Average per recorded day
+                    </div>
+
+                </div>
+
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Peak Manpower
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${peakManpower}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        Maximum manpower
+                    </div>
+
+                </div>
+
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Minimum Manpower
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${minimumManpower}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        Minimum manpower
+                    </div>
+
+                </div>
+
+
+                <div class="manpower-stat">
+
+                    <div class="manpower-stat-label">
+                        Latest Filtered
+                    </div>
+
+                    <div class="manpower-stat-value">
+                        ${latestFilteredManpower}
+                    </div>
+
+                    <div class="manpower-stat-sub">
+                        Latest value in selection
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CURRENT STAGE -->
 
             <div class="manpower-current-stage">
 
@@ -12055,14 +12349,23 @@ function renderManpowerSection(project){
                 <div class="manpower-current-stage-value">
 
                     ${
-                        currentStages.length
+                        currentRecords.length
                         ?
-                        currentStages
-                            .map(
-                                stage =>
-                                    escapeHTML(stage)
+                        [
+                            ...new Set(
+                                currentRecords
+                                    .map(
+                                        record =>
+                                            record.workStage
+                                    )
+                                    .filter(Boolean)
                             )
-                            .join(" • ")
+                        ]
+                        .map(
+                            stage =>
+                                escapeHTML(stage)
+                        )
+                        .join(" • ")
                         :
                         "No manpower records yet"
                     }
@@ -12072,7 +12375,295 @@ function renderManpowerSection(project){
             </div>
 
 
+            <!-- FILTERS -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Filters
+                        </h2>
+
+                        <p style="
+                            color:#708096;
+                            font-size:13px;
+                            margin-top:5px;
+                        ">
+                            Filter the dashboard and manpower register
+                        </p>
+
+                    </div>
+
+                    <button
+                        class="manpower-small-btn"
+                        onclick="
+                            resetManpowerFilters(
+                                ${JSON.stringify(project.id)}
+                            )
+                        "
+                    >
+                        Reset Filters
+                    </button>
+
+                </div>
+
+
+                <div style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(5, minmax(140px,1fr));
+                    gap:12px;
+                ">
+
+
+                    <div>
+
+                        <label style="
+                            display:block;
+                            font-size:12px;
+                            color:#708096;
+                            margin-bottom:5px;
+                        ">
+                            From Date
+                        </label>
+
+                        <input
+                            type="date"
+                            style="
+                                width:100%;
+                                padding:9px;
+                                border:1px solid #d4dae2;
+                                border-radius:5px;
+                            "
+                            value="${escapeHTML(
+                                manpowerFilters.dateFrom
+                            )}"
+                            onchange="
+                                setManpowerFilter(
+                                    ${JSON.stringify(project.id)},
+                                    'dateFrom',
+                                    this.value
+                                )
+                            "
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label style="
+                            display:block;
+                            font-size:12px;
+                            color:#708096;
+                            margin-bottom:5px;
+                        ">
+                            To Date
+                        </label>
+
+                        <input
+                            type="date"
+                            style="
+                                width:100%;
+                                padding:9px;
+                                border:1px solid #d4dae2;
+                                border-radius:5px;
+                            "
+                            value="${escapeHTML(
+                                manpowerFilters.dateTo
+                            )}"
+                            onchange="
+                                setManpowerFilter(
+                                    ${JSON.stringify(project.id)},
+                                    'dateTo',
+                                    this.value
+                                )
+                            "
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label style="
+                            display:block;
+                            font-size:12px;
+                            color:#708096;
+                            margin-bottom:5px;
+                        ">
+                            Work Stage
+                        </label>
+
+                        <select
+                            style="
+                                width:100%;
+                                padding:9px;
+                                border:1px solid #d4dae2;
+                                border-radius:5px;
+                            "
+                            onchange="
+                                setManpowerFilter(
+                                    ${JSON.stringify(project.id)},
+                                    'workStage',
+                                    this.value
+                                )
+                            "
+                        >
+
+                            <option value="All">
+                                All Work Stages
+                            </option>
+
+                            ${
+                                manpowerWorkStages
+                                    .map(
+                                        stage => `
+                                            <option
+                                                value="${escapeHTML(stage)}"
+                                                ${
+                                                    manpowerFilters.workStage === stage
+                                                    ? "selected"
+                                                    : ""
+                                                }
+                                            >
+                                                ${escapeHTML(stage)}
+                                            </option>
+                                        `
+                                    )
+                                    .join("")
+                            }
+
+                        </select>
+
+                    </div>
+
+
+                    <div>
+
+                        <label style="
+                            display:block;
+                            font-size:12px;
+                            color:#708096;
+                            margin-bottom:5px;
+                        ">
+                            Workforce Type
+                        </label>
+
+                        <select
+                            style="
+                                width:100%;
+                                padding:9px;
+                                border:1px solid #d4dae2;
+                                border-radius:5px;
+                            "
+                            onchange="
+                                setManpowerFilter(
+                                    ${JSON.stringify(project.id)},
+                                    'type',
+                                    this.value
+                                )
+                            "
+                        >
+
+                            <option value="All">
+                                Direct + Subcontractor
+                            </option>
+
+                            <option
+                                value="Direct"
+                                ${
+                                    manpowerFilters.type === "Direct"
+                                    ? "selected"
+                                    : ""
+                                }
+                            >
+                                Direct
+                            </option>
+
+                            <option
+                                value="Subcontractor"
+                                ${
+                                    manpowerFilters.type === "Subcontractor"
+                                    ? "selected"
+                                    : ""
+                                }
+                            >
+                                Subcontractor
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div>
+
+                        <label style="
+                            display:block;
+                            font-size:12px;
+                            color:#708096;
+                            margin-bottom:5px;
+                        ">
+                            Trade
+                        </label>
+
+                        <select
+                            style="
+                                width:100%;
+                                padding:9px;
+                                border:1px solid #d4dae2;
+                                border-radius:5px;
+                            "
+                            onchange="
+                                setManpowerFilter(
+                                    ${JSON.stringify(project.id)},
+                                    'trade',
+                                    this.value
+                                )
+                            "
+                        >
+
+                            <option value="All">
+                                All Trades
+                            </option>
+
+                            ${
+                                availableTrades
+                                    .map(
+                                        trade => `
+                                            <option
+                                                value="${escapeHTML(trade)}"
+                                                ${
+                                                    manpowerFilters.trade === trade
+                                                    ? "selected"
+                                                    : ""
+                                                }
+                                            >
+                                                ${escapeHTML(trade)}
+                                            </option>
+                                        `
+                                    )
+                                    .join("")
+                            }
+
+                        </select>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- CHARTS -->
+
             <div class="manpower-chart-grid">
+
 
                 <div class="manpower-chart">
 
@@ -12081,18 +12672,22 @@ function renderManpowerSection(project){
                     </h3>
 
                     <p>
-                        Total manpower by recorded date
+                        Total manpower by date
                     </p>
 
                     ${
                         trendPoints.length === 0
+
                         ?
+
                         `
                         <div class="manpower-empty">
-                            No trend data yet.
+                            No data for the selected period.
                         </div>
                         `
+
                         :
+
                         `
                         <div class="manpower-trend">
 
@@ -12135,7 +12730,8 @@ function renderManpowerSection(project){
                                                     fill="#1976b8"
                                                 >
                                                     <title>
-                                                        ${point.date}: ${point.total}
+                                                        ${point.date}:
+                                                        ${point.total}
                                                     </title>
                                                 </circle>
                                             `
@@ -12147,6 +12743,7 @@ function renderManpowerSection(project){
 
                         </div>
                         `
+
                     }
 
                 </div>
@@ -12159,18 +12756,22 @@ function renderManpowerSection(project){
                     </h3>
 
                     <p>
-                        Current workforce deployment
+                        Workforce deployment
                     </p>
 
                     ${
                         stageEntries.length === 0
+
                         ?
+
                         `
                         <div class="manpower-empty">
-                            No stage data yet.
+                            No data available.
                         </div>
                         `
+
                         :
+
                         stageEntries
                             .map(
                                 item => `
@@ -12206,6 +12807,7 @@ function renderManpowerSection(project){
                                 `
                             )
                             .join("")
+
                     }
 
                 </div>
@@ -12218,18 +12820,22 @@ function renderManpowerSection(project){
                     </h3>
 
                     <p>
-                        Current workforce composition
+                        Workforce composition
                     </p>
 
                     ${
                         tradeEntries.length === 0
+
                         ?
+
                         `
                         <div class="manpower-empty">
-                            No trade data yet.
+                            No data available.
                         </div>
                         `
+
                         :
+
                         tradeEntries
                             .map(
                                 item => `
@@ -12265,6 +12871,7 @@ function renderManpowerSection(project){
                                 `
                             )
                             .join("")
+
                     }
 
                 </div>
@@ -12273,12 +12880,13 @@ function renderManpowerSection(project){
                 <div class="manpower-chart">
 
                     <h3>
-                        Workforce Composition
+                        Direct vs Subcontractor
                     </h3>
 
                     <p>
-                        Direct vs subcontractor
+                        Current workforce composition
                     </p>
+
 
                     <div style="
                         display:grid;
@@ -12286,6 +12894,7 @@ function renderManpowerSection(project){
                         gap:15px;
                         margin-top:25px;
                     ">
+
 
                         <div style="
                             text-align:center;
@@ -12338,12 +12947,16 @@ function renderManpowerSection(project){
 
                         </div>
 
+
                     </div>
 
                 </div>
 
+
             </div>
 
+
+            <!-- REGISTER -->
 
             <div class="panel">
 
@@ -12360,20 +12973,17 @@ function renderManpowerSection(project){
                             margin-top:5px;
                             font-size:13px;
                         ">
-                            Daily manpower deployment record
+                            ${filteredRecords.length}
+                            record(s) shown
                         </p>
 
-                    </div>
-
-                    <div>
-                        ${records.length} record(s)
                     </div>
 
                 </div>
 
 
                 ${
-                    records.length === 0
+                    filteredRecords.length === 0
 
                     ?
 
@@ -12385,12 +12995,12 @@ function renderManpowerSection(project){
                         </div>
 
                         <h3>
-                            No manpower records yet
+                            No records found
                         </h3>
 
                         <p style="margin-top:8px;">
-                            Add the first manpower record
-                            for this project.
+                            Try changing the filters
+                            or add a new manpower record.
                         </p>
 
                     </div>
@@ -12435,17 +13045,64 @@ function renderManpowerSection(project){
 
             </div>
 
+
         </div>
 
     `;
 
 }
-
-
 /* =====================================================
    ADD MANPOWER RECORD
 ===================================================== */
+/* =====================================================
+   MANPOWER FILTERS
+===================================================== */
 
+window.setManpowerFilter = function(
+    projectId,
+    field,
+    value
+){
+
+    manpowerFilters[field] =
+        value;
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(!project){
+        return;
+    }
+
+    renderManpowerSection(project);
+
+};
+
+
+window.resetManpowerFilters = function(
+    projectId
+){
+
+    manpowerFilters = {
+
+        dateFrom: "",
+        dateTo: "",
+        workStage: "All",
+        type: "All",
+        trade: "All"
+
+    };
+
+    const project =
+        getManpowerProject(projectId);
+
+    if(!project){
+        return;
+    }
+
+    renderManpowerSection(project);
+
+};
 window.addManpowerRecord = function(projectId){
 
     const project =
