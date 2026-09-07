@@ -12319,6 +12319,7 @@ window.renderManpowerSection = function(project){
 almMP3RenderMonthlyFlow(project);
 almMP4RenderWorkStageAnalysis(project);
 almMP5RenderTradeAnalysis(project);
+almMP6RenderDeploymentTimeline(project);
 };
 
 
@@ -15100,6 +15101,773 @@ function almMP5RenderTradeAnalysis(
 
 /* =====================================================
    END MANPOWER STEP 5
+===================================================== */
+    /* =====================================================
+   MANPOWER STEP 6
+   DEPLOYMENT TIMELINE
+===================================================== */
+
+
+/* =====================================================
+   GET TIMELINE RANGE
+===================================================== */
+
+function almMP6GetTimelineRange(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    const validRecords =
+        records.filter(
+            record =>
+                record.startDate &&
+                record.endDate &&
+                record.endDate >= record.startDate
+        );
+
+    if(!validRecords.length){
+
+        return null;
+
+    }
+
+    let startDate =
+        validRecords[0].startDate;
+
+    let endDate =
+        validRecords[0].endDate;
+
+
+    validRecords.forEach(
+        record => {
+
+            if(record.startDate < startDate){
+
+                startDate =
+                    record.startDate;
+
+            }
+
+            if(record.endDate > endDate){
+
+                endDate =
+                    record.endDate;
+
+            }
+
+        }
+    );
+
+
+    return {
+
+        startDate,
+
+        endDate
+
+    };
+
+}
+
+
+/* =====================================================
+   BUILD TIMELINE
+===================================================== */
+
+function almMP6BuildTimeline(project){
+
+    const records =
+        (project.manpowerRecords || [])
+            .filter(
+                record =>
+                    record.startDate &&
+                    record.endDate &&
+                    record.endDate >= record.startDate
+            );
+
+
+    if(!records.length){
+
+        return `
+            <div style="
+                padding:40px;
+                text-align:center;
+                color:#64748b;
+            ">
+                No dated manpower deployments
+                available for the timeline.
+            </div>
+        `;
+
+    }
+
+
+    const range =
+        almMP6GetTimelineRange(project);
+
+
+    if(!range){
+
+        return "";
+
+    }
+
+
+    const start =
+        new Date(
+            range.startDate + "T00:00:00"
+        );
+
+
+    const end =
+        new Date(
+            range.endDate + "T00:00:00"
+        );
+
+
+    const totalDays =
+        Math.max(
+            1,
+            Math.ceil(
+                (
+                    end - start
+                ) /
+                86400000
+            ) + 1
+        );
+
+
+    /*
+       Timeline width.
+       More days = wider timeline.
+    */
+
+    const dayWidth = 9;
+
+    const timelineWidth =
+        Math.max(
+            850,
+            totalDays * dayWidth
+        );
+
+
+    const labelWidth = 280;
+
+    const manpowerWidth = 90;
+
+    const rowHeight = 52;
+
+    const headerHeight = 65;
+
+
+    const height =
+        headerHeight +
+        records.length *
+        rowHeight +
+        20;
+
+
+    /* ---------------------------------------------
+       MONTH HEADERS
+    --------------------------------------------- */
+
+    let monthHeaders = "";
+
+    let cursor =
+        new Date(
+            start.getFullYear(),
+            start.getMonth(),
+            1
+        );
+
+
+    while(cursor <= end){
+
+        const monthStart =
+            new Date(cursor);
+
+
+        const nextMonth =
+            new Date(
+                cursor.getFullYear(),
+                cursor.getMonth() + 1,
+                1
+            );
+
+
+        const visibleStart =
+            monthStart < start
+            ? start
+            : monthStart;
+
+
+        const visibleEnd =
+            nextMonth > end
+            ? end
+            : new Date(
+                nextMonth.getTime() - 86400000
+            );
+
+
+        const offsetStart =
+            Math.max(
+                0,
+                Math.round(
+                    (
+                        visibleStart - start
+                    ) /
+                    86400000
+                )
+            );
+
+
+        const days =
+            Math.round(
+                (
+                    visibleEnd -
+                    visibleStart
+                ) /
+                86400000
+            ) + 1;
+
+
+        const x =
+            offsetStart *
+            dayWidth;
+
+
+        const width =
+            days *
+            dayWidth;
+
+
+        const label =
+            cursor.toLocaleDateString(
+                "en-GB",
+                {
+                    month:"short",
+                    year:"numeric"
+                }
+            );
+
+
+        monthHeaders += `
+
+            <rect
+                x="${x}"
+                y="0"
+                width="${width}"
+                height="32"
+                fill="#f3f6fa"
+                stroke="#e5e7eb"
+            />
+
+            <text
+                x="${x + width / 2}"
+                y="20"
+                text-anchor="middle"
+                font-size="11"
+                font-weight="600"
+                fill="#374151"
+            >
+                ${label}
+            </text>
+
+        `;
+
+
+        cursor.setMonth(
+            cursor.getMonth() + 1
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       DATE GRID
+    --------------------------------------------- */
+
+    let grid = "";
+
+
+    let gridDate =
+        new Date(start);
+
+
+    while(gridDate <= end){
+
+        const dayIndex =
+            Math.round(
+                (
+                    gridDate - start
+                ) /
+                86400000
+            );
+
+
+        const x =
+            dayIndex *
+            dayWidth;
+
+
+        const isMonthStart =
+            gridDate.getDate() === 1;
+
+
+        if(
+            isMonthStart ||
+            gridDate.getDate() === 15
+        ){
+
+            grid += `
+
+                <line
+                    x1="${x}"
+                    y1="32"
+                    x2="${x}"
+                    y2="${height}"
+                    stroke="#e5e7eb"
+                    stroke-width="1"
+                />
+
+                <text
+                    x="${x + 3}"
+                    y="50"
+                    font-size="9"
+                    fill="#64748b"
+                >
+                    ${String(
+                        gridDate.getDate()
+                    ).padStart(2,"0")}
+                </text>
+
+            `;
+
+        }
+
+
+        gridDate.setDate(
+            gridDate.getDate() + 1
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       DEPLOYMENT ROWS
+    --------------------------------------------- */
+
+    let rows = "";
+
+
+    records.forEach(
+        (record,index) => {
+
+            const recordStart =
+                new Date(
+                    record.startDate +
+                    "T00:00:00"
+                );
+
+
+            const recordEnd =
+                new Date(
+                    record.endDate +
+                    "T00:00:00"
+                );
+
+
+            const startOffset =
+                Math.max(
+                    0,
+                    Math.round(
+                        (
+                            recordStart -
+                            start
+                        ) /
+                        86400000
+                    )
+                );
+
+
+            const duration =
+                Math.round(
+                    (
+                        recordEnd -
+                        recordStart
+                    ) /
+                    86400000
+                ) + 1;
+
+
+            const barX =
+                startOffset *
+                dayWidth;
+
+
+            const barWidth =
+                Math.max(
+                    dayWidth,
+                    duration *
+                    dayWidth
+                );
+
+
+            const rowY =
+                headerHeight +
+                index *
+                rowHeight;
+
+
+            const typeLabel =
+                record.type ===
+                "Subcontractor"
+                ?
+                "Subcontractor"
+                :
+                "Direct";
+
+
+            rows += `
+
+                <!-- ROW BACKGROUND -->
+
+                <rect
+                    x="0"
+                    y="${rowY}"
+                    width="${timelineWidth}"
+                    height="${rowHeight}"
+                    fill="${
+                        index % 2 === 0
+                        ? "#ffffff"
+                        : "#fafbfc"
+                    }"
+                    stroke="#eef0f3"
+                />
+
+
+                <!-- BAR -->
+
+                <rect
+                    x="${barX}"
+                    y="${rowY + 14}"
+                    width="${barWidth}"
+                    height="24"
+                    rx="5"
+                    fill="#17243a"
+                />
+
+
+                <!-- MANPOWER ON BAR -->
+
+                <text
+                    x="${barX + barWidth / 2}"
+                    y="${rowY + 30}"
+                    text-anchor="middle"
+                    font-size="10"
+                    font-weight="700"
+                    fill="white"
+                >
+                    ${Number(
+                        record.manpower || 0
+                    )}
+                </text>
+
+
+                <!-- LEFT LABEL -->
+
+                <text
+                    x="${-labelWidth + 10}"
+                    y="${rowY + 19}"
+                    font-size="11"
+                    font-weight="600"
+                    fill="#374151"
+                >
+                    ${almManpowerEscape(
+                        record.workStage ||
+                        "Unspecified"
+                    )}
+                </text>
+
+
+                <text
+                    x="${-labelWidth + 10}"
+                    y="${rowY + 35}"
+                    font-size="9"
+                    fill="#64748b"
+                >
+                    ${almManpowerEscape(
+                        record.trade || ""
+                    )}
+                    ${
+                        record.company
+                        ?
+                        " • " +
+                        almManpowerEscape(
+                            record.company
+                        )
+                        :
+                        ""
+                    }
+                </text>
+
+
+                <!-- RIGHT MANPOWER -->
+
+                <text
+                    x="${timelineWidth + 15}"
+                    y="${rowY + 29}"
+                    font-size="11"
+                    font-weight="700"
+                    fill="#17243a"
+                >
+                    ${Number(
+                        record.manpower || 0
+                    )}
+                </text>
+
+            `;
+
+        }
+    );
+
+
+    /*
+       SVG uses a negative left area for labels.
+       Wrap everything in a translated group.
+    */
+
+    return `
+
+        <div style="
+            overflow-x:auto;
+            width:100%;
+            padding-bottom:8px;
+        ">
+
+            <svg
+                viewBox="
+                    ${-labelWidth}
+                    0
+                    ${timelineWidth +
+                      labelWidth +
+                      manpowerWidth}
+                    ${height}
+                "
+                style="
+                    width:100%;
+                    min-width:1100px;
+                    height:auto;
+                    display:block;
+                "
+            >
+
+                <!-- HEADER LABEL -->
+
+                <text
+                    x="${-labelWidth + 10}"
+                    y="20"
+                    font-size="11"
+                    font-weight="700"
+                    fill="#374151"
+                >
+                    WORK STAGE / TRADE
+                </text>
+
+
+                <!-- HEADER MANPOWER -->
+
+                <text
+                    x="${timelineWidth + 15}"
+                    y="20"
+                    font-size="11"
+                    font-weight="700"
+                    fill="#374151"
+                >
+                    No.
+                </text>
+
+
+                <!-- MONTH HEADERS -->
+
+                ${monthHeaders}
+
+
+                <!-- GRID -->
+
+                ${grid}
+
+
+                <!-- ROWS -->
+
+                ${rows}
+
+            </svg>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   RENDER TIMELINE
+===================================================== */
+
+function almMP6RenderDeploymentTimeline(
+    project
+){
+
+    const container =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+
+    if(!container){
+
+        return;
+
+    }
+
+
+    const records =
+        project.manpowerRecords || [];
+
+
+    const validRecords =
+        records.filter(
+            record =>
+                record.startDate &&
+                record.endDate &&
+                record.endDate >= record.startDate
+        );
+
+
+    const section =
+        document.createElement(
+            "div"
+        );
+
+
+    section.innerHTML = `
+
+        <div style="
+            margin-top:20px;
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:10px;
+            overflow:hidden;
+        ">
+
+
+            <!-- HEADER -->
+
+            <div style="
+                padding:17px 18px;
+                border-bottom:1px solid #e5e7eb;
+            ">
+
+                <div style="
+                    font-size:16px;
+                    font-weight:700;
+                    color:#17243a;
+                ">
+                    Manpower Deployment Timeline
+                </div>
+
+
+                <div style="
+                    margin-top:4px;
+                    color:#64748b;
+                    font-size:12px;
+                ">
+                    Planned manpower deployment
+                    by work stage and trade.
+                </div>
+
+            </div>
+
+
+            <!-- TIMELINE -->
+
+            <div style="
+                padding:20px;
+            ">
+
+                ${
+                    validRecords.length
+                    ?
+                    almMP6BuildTimeline(project)
+                    :
+                    `
+                        <div style="
+                            padding:40px;
+                            text-align:center;
+                            color:#64748b;
+                        ">
+                            Add Start Date and End Date
+                            to manpower deployments
+                            to display the timeline.
+                        </div>
+                    `
+                }
+
+            </div>
+
+
+            <!-- LEGEND -->
+
+            <div style="
+                padding:
+                    0
+                    20px
+                    18px
+                    20px;
+
+                display:flex;
+                gap:20px;
+                flex-wrap:wrap;
+                color:#64748b;
+                font-size:11px;
+            ">
+
+                <span>
+                    <span style="
+                        display:inline-block;
+                        width:12px;
+                        height:12px;
+                        border-radius:3px;
+                        background:#17243a;
+                        vertical-align:-2px;
+                        margin-right:5px;
+                    "></span>
+                    Deployment
+                </span>
+
+
+                <span>
+                    Number shown on each bar =
+                    manpower
+                </span>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    container.appendChild(
+        section
+    );
+
+}
+
+
+/* =====================================================
+   END MANPOWER STEP 6
 ===================================================== */
 </script>
 </body>
