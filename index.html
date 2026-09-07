@@ -12994,6 +12994,190 @@ function(
     */
 
     persist();
+    updateVariationLiveDisplay(
+    projectId,
+    variationIndex
+);
+    function updateVariationLiveDisplay(
+    projectId,
+    variationIndex
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[variationIndex]
+    ){
+
+        return;
+
+    }
+
+
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    const totals =
+        getVariationPaymentTotals(
+            variation
+        );
+
+
+    const status =
+        getVariationFinancialStatus(
+            variation
+        );
+
+
+    /* ==========================================
+       UPDATE MAIN VARIATION ROW
+    ========================================== */
+
+    const mainRow =
+        document.getElementById(
+            `variation-row-${variationIndex}`
+        );
+
+
+    if(mainRow){
+
+        /*
+           Columns:
+           0 Number
+           1 Type
+           2 Description
+           3 Contractor
+           4 Submitted
+           5 Approved
+           6 Status
+           7 Payment Stages
+           8 Action
+        */
+
+
+        if(mainRow.cells[6]){
+
+            mainRow.cells[6].innerHTML =
+                variationFinancialBadge(
+                    status
+                );
+
+        }
+
+
+        if(mainRow.cells[7]){
+
+            mainRow.cells[7].querySelector(
+                "button"
+            ).innerText =
+                `${
+                    (variation.paymentStages || []).length
+                } Stage(s)`;
+
+        }
+
+    }
+
+
+    /* ==========================================
+       UPDATE STAGE TOTALS
+    ========================================== */
+
+    const stageRow =
+        document.getElementById(
+            `variation-stages-${variationIndex}`
+        );
+
+
+    if(stageRow){
+
+        const text =
+            stageRow.innerText;
+
+
+        /*
+           Find the three summary values
+           inside the Payment / Invoice Stages
+           section and update them without
+           rebuilding the section.
+        */
+
+
+        const allDivs =
+            stageRow.querySelectorAll(
+                "div"
+            );
+
+
+        allDivs.forEach(
+            div => {
+
+                const content =
+                    div.textContent.trim();
+
+
+                if(
+                    content.startsWith(
+                        "Total Invoiced:"
+                    )
+                ){
+
+                    div.innerHTML =
+                        `<strong>Total Invoiced:</strong> ${
+                            formatVariationMoney(
+                                totals.invoiced
+                            )
+                        }`;
+
+                }
+
+
+                if(
+                    content.startsWith(
+                        "Total Received:"
+                    )
+                ){
+
+                    div.innerHTML =
+                        `<strong>Total Received:</strong> ${
+                            formatVariationMoney(
+                                totals.received
+                            )
+                        }`;
+
+                }
+
+
+                if(
+                    content.startsWith(
+                        "Balance:"
+                    )
+                ){
+
+                    div.innerHTML =
+                        `<strong>Balance:</strong> ${
+                            formatVariationMoney(
+                                totals.balance
+                            )
+                        }`;
+
+                }
+
+            }
+        );
+
+    }
+
+}
 
 };
 
