@@ -15898,489 +15898,12 @@ function almMP6RenderDeploymentTimeline(
 /* =====================================================
    END MANPOWER STEP 6
 ===================================================== */
-    /* =====================================================
+  /* =====================================================
    MANPOWER STEP 7
-   CLIENT REVIEW
+   CLIENT REVIEW - PROFESSIONAL REPORT
 ===================================================== */
 
-function almMP7BuildMonthlyTable(project){
-
-    const months =
-        almMP3GetMonthlyData(project);
-
-    if(!months.length){
-
-        return `
-            <div style="
-                padding:30px;
-                text-align:center;
-                color:#64748b;
-            ">
-                No monthly manpower data available.
-            </div>
-        `;
-
-    }
-
-    const rows =
-        months.map(
-            item => `
-
-                <tr>
-
-                    <td>
-                        ${almManpowerEscape(item.label)}
-                    </td>
-
-                    <td style="text-align:right;">
-                        ${item.average.toFixed(1)}
-                    </td>
-
-                    <td style="text-align:right;">
-                        ${item.peak}
-                    </td>
-
-                    <td style="text-align:right;">
-                        ${item.monthEnd}
-                    </td>
-
-                    <td style="text-align:right;">
-                        ${item.directAverage.toFixed(1)}
-                    </td>
-
-                    <td style="text-align:right;">
-                        ${item.subcontractorAverage.toFixed(1)}
-                    </td>
-
-                </tr>
-
-            `
-        ).join("");
-
-
-    return `
-
-        <table class="mp7-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Month</th>
-
-                    <th style="text-align:right;">
-                        Average
-                    </th>
-
-                    <th style="text-align:right;">
-                        Peak
-                    </th>
-
-                    <th style="text-align:right;">
-                        Month-End
-                    </th>
-
-                    <th style="text-align:right;">
-                        Direct Avg.
-                    </th>
-
-                    <th style="text-align:right;">
-                        Subcontractor Avg.
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                ${rows}
-
-            </tbody>
-
-        </table>
-
-    `;
-
-}
-
-
-/* =====================================================
-   WORK STAGE TABLE
-===================================================== */
-
-function almMP7BuildStageTable(project){
-
-    const data =
-        almMP4GetWorkStageData(project);
-
-    if(!data.length){
-
-        return `
-            <div style="
-                padding:30px;
-                text-align:center;
-                color:#64748b;
-            ">
-                No active work-stage manpower.
-            </div>
-        `;
-
-    }
-
-    const total =
-        data.reduce(
-            (sum,item) =>
-                sum + item.total,
-            0
-        );
-
-    const rows =
-        data.map(
-            item => {
-
-                const percentage =
-                    total > 0
-                    ?
-                    (
-                        item.total /
-                        total
-                    ) * 100
-                    :
-                    0;
-
-                return `
-
-                    <tr>
-
-                        <td>
-                            ${almManpowerEscape(
-                                item.stage
-                            )}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${item.total}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${item.direct}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${item.subcontractor}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${percentage.toFixed(1)}%
-                        </td>
-
-                    </tr>
-
-                `;
-
-            }
-        ).join("");
-
-
-    return `
-
-        <table class="mp7-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Work Stage</th>
-
-                    <th style="text-align:right;">
-                        Total
-                    </th>
-
-                    <th style="text-align:right;">
-                        Direct
-                    </th>
-
-                    <th style="text-align:right;">
-                        Subcontractor
-                    </th>
-
-                    <th style="text-align:right;">
-                        % of Total
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                ${rows}
-
-            </tbody>
-
-        </table>
-
-    `;
-
-}
-
-
-/* =====================================================
-   TRADE TABLE
-===================================================== */
-
-function almMP7BuildTradeTable(project){
-
-    const data =
-        almMP5GetTradeData(project);
-
-    if(!data.length){
-
-        return `
-            <div style="
-                padding:30px;
-                text-align:center;
-                color:#64748b;
-            ">
-                No active trade manpower.
-            </div>
-        `;
-
-    }
-
-    const total =
-        data.reduce(
-            (sum,item) =>
-                sum + item.total,
-            0
-        );
-
-    const rows =
-        data.map(
-            item => {
-
-                const percentage =
-                    total > 0
-                    ?
-                    (
-                        item.total /
-                        total
-                    ) * 100
-                    :
-                    0;
-
-                return `
-
-                    <tr>
-
-                        <td>
-                            ${almManpowerEscape(
-                                item.trade
-                            )}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${item.total}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${item.direct}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${item.subcontractor}
-                        </td>
-
-                        <td style="text-align:right;">
-                            ${percentage.toFixed(1)}%
-                        </td>
-
-                    </tr>
-
-                `;
-
-            }
-        ).join("");
-
-
-    return `
-
-        <table class="mp7-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Trade</th>
-
-                    <th style="text-align:right;">
-                        Total
-                    </th>
-
-                    <th style="text-align:right;">
-                        Direct
-                    </th>
-
-                    <th style="text-align:right;">
-                        Subcontractor
-                    </th>
-
-                    <th style="text-align:right;">
-                        % of Total
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                ${rows}
-
-            </tbody>
-
-        </table>
-
-    `;
-
-}
-
-
-/* =====================================================
-   ACTIVE REGISTER
-===================================================== */
-
-function almMP7BuildActiveRegister(project){
-
-    const selectedDate =
-        project.manpowerAsOfDate ||
-        almMP2Today();
-
-    const records =
-        (project.manpowerRecords || [])
-            .filter(
-                record =>
-                    almMP2IsActive(
-                        record,
-                        selectedDate
-                    )
-            );
-
-    if(!records.length){
-
-        return `
-            <div style="
-                padding:30px;
-                text-align:center;
-                color:#64748b;
-            ">
-                No active manpower deployments.
-            </div>
-        `;
-
-    }
-
-    const rows =
-        records.map(
-            record => `
-
-                <tr>
-
-                    <td>
-                        ${almManpowerEscape(
-                            record.workStage
-                        )}
-                    </td>
-
-                    <td>
-                        ${almManpowerEscape(
-                            record.scope
-                        )}
-                    </td>
-
-                    <td>
-                        ${almManpowerEscape(
-                            record.type
-                        )}
-                    </td>
-
-                    <td>
-                        ${almManpowerEscape(
-                            record.trade
-                        )}
-                    </td>
-
-                    <td>
-                        ${almManpowerEscape(
-                            record.company
-                        )}
-                    </td>
-
-                    <td>
-                        ${record.startDate}
-                    </td>
-
-                    <td>
-                        ${record.endDate}
-                    </td>
-
-                    <td style="text-align:right;">
-                        ${Number(
-                            record.manpower || 0
-                        )}
-                    </td>
-
-                </tr>
-
-            `
-        ).join("");
-
-
-    return `
-
-        <table class="mp7-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Work Stage</th>
-                    <th>Scope / Activity</th>
-                    <th>Type</th>
-                    <th>Trade</th>
-                    <th>Company</th>
-                    <th>Start</th>
-                    <th>End</th>
-
-                    <th style="text-align:right;">
-                        Manpower
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                ${rows}
-
-            </tbody>
-
-        </table>
-
-    `;
-
-}
-
-
-/* =====================================================
-   OPEN CLIENT REVIEW
-===================================================== */
-
-window.almOpenManpowerClientReview = function(
-    projectId
-){
+window.almOpenManpowerClientReview = function(projectId){
 
     const project =
         projects.find(
@@ -16424,682 +15947,1822 @@ window.almOpenManpowerClientReview = function(
         );
 
 
-    const overlay =
-        document.createElement(
-            "div"
+    const records =
+        project.manpowerRecords || [];
+
+
+    const activeRecords =
+        records.filter(
+            record =>
+                almMP2IsActive(
+                    record,
+                    selectedDate
+                )
         );
 
 
-    overlay.id =
-        "almManpowerClientReview";
-
-
-    overlay.innerHTML = `
-
-        <style>
-
-            .mp7-overlay{
-
-                position:fixed;
-                inset:0;
-
-                background:
-                    rgba(15,23,42,.72);
-
-                z-index:99999;
-
-                overflow-y:auto;
-
-                padding:30px;
-
-            }
-
-
-            .mp7-report{
-
-                max-width:1250px;
-
-                margin:0 auto;
-
-                background:white;
-
-                border-radius:10px;
-
-                overflow:hidden;
-
-                box-shadow:
-                    0 20px 60px
-                    rgba(0,0,0,.25);
-
-            }
-
-
-            .mp7-cover{
-
-                background:#17243a;
-
-                color:white;
-
-                padding:35px 40px;
-
-            }
-
-
-            .mp7-section{
-
-                padding:28px 32px;
-
-                border-bottom:
-                    1px solid #e5e7eb;
-
-            }
-
-
-            .mp7-section-title{
-
-                font-size:18px;
-
-                font-weight:700;
-
-                color:#17243a;
-
-                margin-bottom:5px;
-
-            }
-
-
-            .mp7-section-subtitle{
-
-                font-size:12px;
-
-                color:#64748b;
-
-                margin-bottom:18px;
-
-            }
-
-
-            .mp7-cards{
-
-                display:grid;
-
-                grid-template-columns:
-                    repeat(
-                        6,
-                        minmax(110px,1fr)
-                    );
-
-                gap:12px;
-
-            }
-
-
-            .mp7-card{
-
-                border:
-                    1px solid #e5e7eb;
-
-                border-radius:8px;
-
-                padding:15px;
-
-            }
-
-
-            .mp7-card-label{
-
-                font-size:10px;
-
-                color:#64748b;
-
-                margin-bottom:7px;
-
-            }
-
-
-            .mp7-card-value{
-
-                font-size:24px;
-
-                font-weight:700;
-
-                color:#17243a;
-
-            }
-
-
-            .mp7-table{
-
-                width:100%;
-
-                border-collapse:collapse;
-
-                font-size:11px;
-
-            }
-
-
-            .mp7-table th{
-
-                background:#f3f6fa;
-
-                color:#374151;
-
-                font-weight:700;
-
-                padding:10px;
-
-                text-align:left;
-
-                border-bottom:
-                    1px solid #e5e7eb;
-
-            }
-
-
-            .mp7-table td{
-
-                padding:9px 10px;
-
-                border-bottom:
-                    1px solid #edf0f3;
-
-                color:#374151;
-
-            }
-
-
-            .mp7-actions{
-
-                position:sticky;
-
-                top:0;
-
-                z-index:10;
-
-                display:flex;
-
-                justify-content:flex-end;
-
-                gap:8px;
-
-                padding:12px 16px;
-
-                background:white;
-
-                border-bottom:
-                    1px solid #e5e7eb;
-
-            }
-
-
-            .mp7-button{
-
-                border:none;
-
-                border-radius:6px;
-
-                padding:9px 14px;
-
-                font-weight:600;
-
-                cursor:pointer;
-
-            }
-
-
-            @media print{
-
-                .mp7-overlay{
-
-                    position:static;
-
-                    background:white;
-
-                    padding:0;
-
-                }
-
-
-                .mp7-report{
-
-                    max-width:none;
-
-                    box-shadow:none;
-
-                    border-radius:0;
-
-                }
-
-
-                .mp7-actions{
-
-                    display:none;
-
-                }
-
-
-                .mp7-section{
-
-                    break-inside:avoid;
-
-                }
-
-            }
-
-        </style>
-
-
-        <div class="mp7-overlay">
-
-            <div class="mp7-report">
-
-
-                <!-- ACTION BAR -->
-
-                <div class="mp7-actions">
-
-                    <button
-                        class="mp7-button"
-                        style="
-                            background:#17243a;
-                            color:white;
-                        "
-                        onclick="
-                            window.print()
-                        "
-                    >
-                        Print / PDF
-                    </button>
-
-
-                    <button
-                        class="mp7-button"
-                        style="
-                            background:#e5e7eb;
-                            color:#374151;
-                        "
-                        onclick="
-                            document
-                                .getElementById(
-                                    'almManpowerClientReview'
-                                )
-                                .remove()
-                        "
-                    >
-                        Close
-                    </button>
-
-                </div>
-
-
-                <!-- COVER -->
-
-                <div class="mp7-cover">
-
-                    <div style="
-                        font-size:11px;
-                        letter-spacing:1.5px;
-                        opacity:.75;
-                        margin-bottom:10px;
-                    ">
-                        PROJECT MANAGEMENT REPORT
-                    </div>
-
-
-                    <div style="
-                        font-size:28px;
-                        font-weight:700;
-                        margin-bottom:8px;
-                    ">
-                        Manpower Review
-                    </div>
-
-
-                    <div style="
-                        font-size:15px;
-                        opacity:.9;
-                    ">
+    /* =================================================
+       MONTHLY TABLE
+    ================================================= */
+
+    const monthlyRows =
+        months.length
+        ?
+        months.map(
+            item => `
+
+                <tr>
+
+                    <td>
                         ${almManpowerEscape(
-                            project.name ||
-                            project.projectName ||
-                            "Project"
+                            item.label
                         )}
-                    </div>
+                    </td>
+
+                    <td class="num">
+                        ${item.average.toFixed(1)}
+                    </td>
+
+                    <td class="num">
+                        ${item.peak}
+                    </td>
+
+                    <td class="num">
+                        ${item.monthEnd}
+                    </td>
+
+                    <td class="num">
+                        ${item.directAverage.toFixed(1)}
+                    </td>
+
+                    <td class="num">
+                        ${item.subcontractorAverage.toFixed(1)}
+                    </td>
+
+                </tr>
+
+            `
+        ).join("")
+        :
+        `
+            <tr>
+                <td colspan="6"
+                    class="empty">
+                    No monthly manpower data available.
+                </td>
+            </tr>
+        `;
 
 
-                    <div style="
-                        margin-top:18px;
-                        font-size:12px;
-                        opacity:.75;
-                    ">
-                        Manpower Position as of
-                        <strong>
-                            ${selectedDate}
-                        </strong>
-                    </div>
+    /* =================================================
+       STAGE TABLE
+    ================================================= */
 
-                </div>
+    const stageTotal =
+        stageData.reduce(
+            (sum,item) =>
+                sum + item.total,
+            0
+        );
 
 
-                <!-- CURRENT POSITION -->
+    const stageRows =
+        stageData.length
+        ?
+        stageData.map(
+            item => {
 
-                <div class="mp7-section">
-
-                    <div class="mp7-section-title">
-                        Current Manpower Position
-                    </div>
-
-                    <div class="mp7-section-subtitle">
-                        Active manpower deployment
-                        as of ${selectedDate}.
-                    </div>
-
-
-                    <div class="mp7-cards">
-
-
-                        <div class="mp7-card">
-
-                            <div class="mp7-card-label">
-                                CURRENT MANPOWER
-                            </div>
-
-                            <div class="mp7-card-value">
-                                ${stats.total}
-                            </div>
-
-                        </div>
+                const percentage =
+                    stageTotal > 0
+                    ?
+                    (
+                        item.total /
+                        stageTotal
+                    ) * 100
+                    :
+                    0;
 
 
-                        <div class="mp7-card">
+                return `
 
-                            <div class="mp7-card-label">
-                                DIRECT
-                            </div>
+                    <tr>
 
-                            <div class="mp7-card-value">
-                                ${stats.direct}
-                            </div>
+                        <td>
+                            ${almManpowerEscape(
+                                item.stage
+                            )}
+                        </td>
 
-                        </div>
+                        <td class="num">
+                            ${item.total}
+                        </td>
 
+                        <td class="num">
+                            ${item.direct}
+                        </td>
 
-                        <div class="mp7-card">
+                        <td class="num">
+                            ${item.subcontractor}
+                        </td>
 
-                            <div class="mp7-card-label">
-                                SUBCONTRACTOR
-                            </div>
+                        <td class="num">
+                            ${percentage.toFixed(1)}%
+                        </td>
 
-                            <div class="mp7-card-value">
-                                ${stats.subcontractor}
-                            </div>
+                    </tr>
 
-                        </div>
+                `;
 
-
-                        <div class="mp7-card">
-
-                            <div class="mp7-card-label">
-                                DEPLOYMENTS
-                            </div>
-
-                            <div class="mp7-card-value">
-                                ${stats.activeDeployments}
-                            </div>
-
-                        </div>
-
-
-                        <div class="mp7-card">
-
-                            <div class="mp7-card-label">
-                                WORK STAGES
-                            </div>
-
-                            <div class="mp7-card-value">
-                                ${stats.activeStages}
-                            </div>
-
-                        </div>
+            }
+        ).join("")
+        :
+        `
+            <tr>
+                <td colspan="5"
+                    class="empty">
+                    No active work-stage manpower.
+                </td>
+            </tr>
+        `;
 
 
-                        <div class="mp7-card">
+    /* =================================================
+       TRADE TABLE
+    ================================================= */
 
-                            <div class="mp7-card-label">
-                                TRADES
-                            </div>
-
-                            <div class="mp7-card-value">
-                                ${stats.activeTrades}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
+    const tradeTotal =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + item.total,
+            0
+        );
 
 
-                <!-- MONTHLY FLOW -->
+    const tradeRows =
+        tradeData.length
+        ?
+        tradeData.map(
+            item => {
 
-                <div class="mp7-section">
-
-                    <div class="mp7-section-title">
-                        Monthly Manpower Flow
-                    </div>
-
-                    <div class="mp7-section-subtitle">
-                        Manpower deployment trend
-                        throughout the project period.
-                    </div>
-
-
-                    ${
-                        months.length
-                        ?
-                        almMP3BuildChart(
-                            months
-                        )
-                        :
-                        `
-                            <div style="
-                                padding:30px;
-                                text-align:center;
-                                color:#64748b;
-                            ">
-                                No monthly data available.
-                            </div>
-                        `
-                    }
+                const percentage =
+                    tradeTotal > 0
+                    ?
+                    (
+                        item.total /
+                        tradeTotal
+                    ) * 100
+                    :
+                    0;
 
 
-                    <div style="
-                        margin-top:20px;
-                        overflow-x:auto;
-                    ">
+                return `
 
-                        ${almMP7BuildMonthlyTable(
-                            project
+                    <tr>
+
+                        <td>
+                            ${almManpowerEscape(
+                                item.trade
+                            )}
+                        </td>
+
+                        <td class="num">
+                            ${item.total}
+                        </td>
+
+                        <td class="num">
+                            ${item.direct}
+                        </td>
+
+                        <td class="num">
+                            ${item.subcontractor}
+                        </td>
+
+                        <td class="num">
+                            ${percentage.toFixed(1)}%
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+        ).join("")
+        :
+        `
+            <tr>
+                <td colspan="5"
+                    class="empty">
+                    No active trade manpower.
+                </td>
+            </tr>
+        `;
+
+
+    /* =================================================
+       ACTIVE REGISTER
+    ================================================= */
+
+    const registerRows =
+        activeRecords.length
+        ?
+        activeRecords.map(
+            record => `
+
+                <tr>
+
+                    <td>
+                        ${almManpowerEscape(
+                            record.workStage || ""
                         )}
+                    </td>
 
-                    </div>
-
-                </div>
-
-
-                <!-- WORK STAGE -->
-
-                <div class="mp7-section">
-
-                    <div class="mp7-section-title">
-                        Manpower by Work Stage
-                    </div>
-
-                    <div class="mp7-section-subtitle">
-                        Current manpower allocation
-                        by active work stage.
-                    </div>
-
-
-                    ${
-                        stageData.length
-                        ?
-                        almMP4BuildWorkStageChart(
-                            stageData
-                        )
-                        :
-                        `
-                            <div style="
-                                padding:30px;
-                                text-align:center;
-                                color:#64748b;
-                            ">
-                                No work-stage data available.
-                            </div>
-                        `
-                    }
-
-
-                    <div style="
-                        margin-top:20px;
-                        overflow-x:auto;
-                    ">
-
-                        ${almMP7BuildStageTable(
-                            project
+                    <td>
+                        ${almManpowerEscape(
+                            record.scope || ""
                         )}
+                    </td>
 
-                    </div>
-
-                </div>
-
-
-                <!-- TRADE -->
-
-                <div class="mp7-section">
-
-                    <div class="mp7-section-title">
-                        Manpower by Trade
-                    </div>
-
-                    <div class="mp7-section-subtitle">
-                        Current manpower allocation
-                        by trade.
-                    </div>
-
-
-                    ${
-                        tradeData.length
-                        ?
-                        almMP5BuildTradeChart(
-                            tradeData
-                        )
-                        :
-                        `
-                            <div style="
-                                padding:30px;
-                                text-align:center;
-                                color:#64748b;
-                            ">
-                                No trade data available.
-                            </div>
-                        `
-                    }
-
-
-                    <div style="
-                        margin-top:20px;
-                        overflow-x:auto;
-                    ">
-
-                        ${almMP7BuildTradeTable(
-                            project
+                    <td>
+                        ${almManpowerEscape(
+                            record.type || ""
                         )}
+                    </td>
 
-                    </div>
-
-                </div>
-
-
-                <!-- DIRECT / SUBCONTRACTOR -->
-
-                <div class="mp7-section">
-
-                    <div class="mp7-section-title">
-                        Direct vs Subcontractor
-                    </div>
-
-                    <div class="mp7-section-subtitle">
-                        Current manpower composition.
-                    </div>
-
-
-                    ${almMP5BuildTypeChart(
-                        tradeData
-                    )}
-
-                </div>
-
-
-                <!-- TIMELINE -->
-
-                <div class="mp7-section">
-
-                    <div class="mp7-section-title">
-                        Manpower Deployment Timeline
-                    </div>
-
-                    <div class="mp7-section-subtitle">
-                        Planned deployment by work stage,
-                        trade and company.
-                    </div>
-
-
-                    ${almMP6BuildTimeline(
-                        project
-                    )}
-
-                </div>
-
-
-                <!-- ACTIVE REGISTER -->
-
-                <div class="mp7-section">
-
-                    <div class="mp7-section-title">
-                        Active Manpower Deployment Register
-                    </div>
-
-                    <div class="mp7-section-subtitle">
-                        Deployments active as of
-                        ${selectedDate}.
-                    </div>
-
-
-                    <div style="
-                        overflow-x:auto;
-                    ">
-
-                        ${almMP7BuildActiveRegister(
-                            project
+                    <td>
+                        ${almManpowerEscape(
+                            record.trade || ""
                         )}
+                    </td>
+
+                    <td>
+                        ${almManpowerEscape(
+                            record.company || ""
+                        )}
+                    </td>
+
+                    <td>
+                        ${record.startDate || ""}
+                    </td>
+
+                    <td>
+                        ${record.endDate || ""}
+                    </td>
+
+                    <td class="num strong">
+                        ${Number(
+                            record.manpower || 0
+                        )}
+                    </td>
+
+                </tr>
+
+            `
+        ).join("")
+        :
+        `
+            <tr>
+                <td colspan="8"
+                    class="empty">
+                    No active manpower deployments.
+                </td>
+            </tr>
+        `;
+
+
+    /* =================================================
+       DIRECT / SUBCONTRACTOR
+    ================================================= */
+
+    const direct =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + item.direct,
+            0
+        );
+
+
+    const subcontractor =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + item.subcontractor,
+            0
+        );
+
+
+    const total =
+        direct +
+        subcontractor;
+
+
+    const directPercent =
+        total > 0
+        ?
+        (direct / total) * 100
+        :
+        0;
+
+
+    const subcontractorPercent =
+        total > 0
+        ?
+        (subcontractor / total) * 100
+        :
+        0;
+
+
+    /* =================================================
+       OPEN CLEAN REPORT WINDOW
+    ================================================= */
+
+    const reportWindow =
+        window.open(
+            "",
+            "_blank"
+        );
+
+
+    if(!reportWindow){
+
+        alert(
+            "Please allow pop-ups for Client Review."
+        );
+
+        return;
+
+    }
+
+
+    reportWindow.document.open();
+
+
+    reportWindow.document.write(`
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+    Manpower Review -
+    ${almManpowerEscape(
+        project.name ||
+        project.projectName ||
+        "Project"
+    )}
+</title>
+
+
+<style>
+
+@page{
+
+    size:A4 landscape;
+
+    margin:10mm;
+
+}
+
+
+*{
+
+    box-sizing:border-box;
+
+}
+
+
+html,
+body{
+
+    margin:0;
+
+    padding:0;
+
+    background:#ffffff;
+
+    color:#17243a;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size:10px;
+
+}
+
+
+body{
+
+    padding:0;
+
+}
+
+
+.report{
+
+    width:100%;
+
+    max-width:277mm;
+
+    margin:0 auto;
+
+}
+
+
+.toolbar{
+
+    position:sticky;
+
+    top:0;
+
+    z-index:100;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:8px;
+
+    padding:10px;
+
+    background:#ffffff;
+
+    border-bottom:
+        1px solid #e5e7eb;
+
+}
+
+
+.toolbar button{
+
+    border:none;
+
+    border-radius:6px;
+
+    padding:9px 16px;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+}
+
+
+.printBtn{
+
+    background:#17243a;
+
+    color:#ffffff;
+
+}
+
+
+.closeBtn{
+
+    background:#e5e7eb;
+
+    color:#17243a;
+
+}
+
+
+/* ==============================================
+   COVER
+============================================== */
+
+.cover{
+
+    min-height:175mm;
+
+    background:#17243a;
+
+    color:#ffffff;
+
+    padding:
+        28mm
+        25mm;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:space-between;
+
+    page-break-after:always;
+
+}
+
+
+.brand{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+
+.brandMark{
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:8px;
+
+    background:#f5a900;
+
+    color:#ffffff;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:17px;
+
+    font-weight:800;
+
+}
+
+
+.brandText{
+
+    font-size:17px;
+
+    font-weight:700;
+
+}
+
+
+.coverMain{
+
+    max-width:850px;
+
+}
+
+
+.kicker{
+
+    font-size:11px;
+
+    letter-spacing:3px;
+
+    opacity:.65;
+
+    margin-bottom:18px;
+
+}
+
+
+.coverTitle{
+
+    font-size:38px;
+
+    line-height:1.1;
+
+    font-weight:800;
+
+    margin-bottom:12px;
+
+}
+
+
+.coverProject{
+
+    font-size:20px;
+
+    opacity:.9;
+
+}
+
+
+.coverDate{
+
+    margin-top:28px;
+
+    font-size:12px;
+
+    opacity:.7;
+
+}
+
+
+.coverFooter{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:9px;
+
+    opacity:.55;
+
+}
+
+
+/* ==============================================
+   SECTIONS
+============================================== */
+
+.page{
+
+    page-break-after:always;
+
+}
+
+
+.page:last-child{
+
+    page-break-after:auto;
+
+}
+
+
+.section{
+
+    margin-bottom:16px;
+
+}
+
+
+.sectionHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-end;
+
+    border-bottom:
+        2px solid #17243a;
+
+    padding-bottom:8px;
+
+    margin-bottom:13px;
+
+}
+
+
+.sectionTitle{
+
+    font-size:17px;
+
+    font-weight:800;
+
+    color:#17243a;
+
+}
+
+
+.sectionSub{
+
+    font-size:9px;
+
+    color:#64748b;
+
+}
+
+
+.sectionNote{
+
+    font-size:9px;
+
+    color:#64748b;
+
+    margin-bottom:12px;
+
+}
+
+
+/* ==============================================
+   KPI CARDS
+============================================== */
+
+.kpis{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(6,1fr);
+
+    gap:10px;
+
+    margin-bottom:18px;
+
+}
+
+
+.kpi{
+
+    border:
+        1px solid #dfe5ec;
+
+    border-radius:7px;
+
+    padding:13px;
+
+    background:#ffffff;
+
+}
+
+
+.kpiLabel{
+
+    font-size:8px;
+
+    font-weight:700;
+
+    letter-spacing:.7px;
+
+    color:#64748b;
+
+    text-transform:uppercase;
+
+}
+
+
+.kpiValue{
+
+    font-size:25px;
+
+    line-height:1;
+
+    font-weight:800;
+
+    color:#17243a;
+
+    margin-top:9px;
+
+}
+
+
+.kpiLine{
+
+    margin-top:8px;
+
+    height:3px;
+
+    background:#17243a;
+
+    border-radius:4px;
+
+}
+
+
+/* ==============================================
+   CHART BOX
+============================================== */
+
+.chartBox{
+
+    border:
+        1px solid #e1e6ed;
+
+    border-radius:7px;
+
+    padding:12px;
+
+    background:#ffffff;
+
+    overflow:hidden;
+
+}
+
+
+.chartBox svg{
+
+    max-width:100% !important;
+
+    min-width:0 !important;
+
+    width:100% !important;
+
+    height:auto !important;
+
+    display:block;
+
+}
+
+
+/* ==============================================
+   TWO COLUMNS
+============================================== */
+
+.twoCol{
+
+    display:grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:15px;
+
+}
+
+
+.panel{
+
+    border:
+        1px solid #e1e6ed;
+
+    border-radius:7px;
+
+    overflow:hidden;
+
+    background:#ffffff;
+
+}
+
+
+.panelTitle{
+
+    padding:10px 12px;
+
+    background:#f5f7fa;
+
+    font-size:11px;
+
+    font-weight:800;
+
+    color:#17243a;
+
+}
+
+
+/* ==============================================
+   TABLES
+============================================== */
+
+.tableWrap{
+
+    width:100%;
+
+    overflow:hidden;
+
+}
+
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    table-layout:fixed;
+
+}
+
+
+th{
+
+    background:#17243a;
+
+    color:#ffffff;
+
+    font-size:8px;
+
+    font-weight:700;
+
+    padding:7px 6px;
+
+    text-align:left;
+
+    white-space:nowrap;
+
+}
+
+
+td{
+
+    padding:6px;
+
+    border-bottom:
+        1px solid #e8ecf1;
+
+    color:#334155;
+
+    font-size:8.5px;
+
+    vertical-align:middle;
+
+    word-wrap:break-word;
+
+}
+
+
+tbody tr:nth-child(even){
+
+    background:#fafbfc;
+
+}
+
+
+.num{
+
+    text-align:right;
+
+    font-variant-numeric:
+        tabular-nums;
+
+}
+
+
+.strong{
+
+    font-weight:800;
+
+    color:#17243a;
+
+}
+
+
+.empty{
+
+    text-align:center;
+
+    padding:25px;
+
+    color:#94a3b8;
+
+}
+
+
+/* ==============================================
+   REGISTER TABLE
+============================================== */
+
+.register th:nth-child(1){
+
+    width:14%;
+
+}
+
+
+.register th:nth-child(2){
+
+    width:19%;
+
+}
+
+
+.register th:nth-child(3){
+
+    width:11%;
+
+}
+
+
+.register th:nth-child(4){
+
+    width:12%;
+
+}
+
+
+.register th:nth-child(5){
+
+    width:15%;
+
+}
+
+
+.register th:nth-child(6){
+
+    width:9%;
+
+}
+
+
+.register th:nth-child(7){
+
+    width:9%;
+
+}
+
+
+.register th:nth-child(8){
+
+    width:6%;
+
+}
+
+
+/* ==============================================
+   DIRECT / SUB
+============================================== */
+
+.composition{
+
+    padding:16px;
+
+}
+
+
+.compRow{
+
+    margin-bottom:17px;
+
+}
+
+
+.compHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:6px;
+
+    font-size:10px;
+
+    font-weight:700;
+
+}
+
+
+.compTrack{
+
+    width:100%;
+
+    height:9px;
+
+    background:#e8ecf1;
+
+    border-radius:10px;
+
+    overflow:hidden;
+
+}
+
+
+.compFill{
+
+    height:100%;
+
+    background:#17243a;
+
+    border-radius:10px;
+
+}
+
+
+/* ==============================================
+   FOOTER
+============================================== */
+
+.reportFooter{
+
+    text-align:center;
+
+    padding:10px 0;
+
+    font-size:8px;
+
+    color:#94a3b8;
+
+    border-top:
+        1px solid #e5e7eb;
+
+}
+
+
+/* ==============================================
+   PRINT
+============================================== */
+
+@media print{
+
+    .toolbar{
+
+        display:none !important;
+
+    }
+
+
+    .report{
+
+        max-width:none;
+
+    }
+
+
+    .page{
+
+        page-break-after:always;
+
+    }
+
+
+    .cover{
+
+        page-break-after:always;
+
+    }
+
+
+    .section{
+
+        break-inside:avoid;
+
+    }
+
+
+    table{
+
+        break-inside:auto;
+
+    }
+
+
+    tr{
+
+        break-inside:avoid;
+
+    }
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="toolbar">
+
+    <button
+        class="printBtn"
+        onclick="window.print()"
+    >
+        Print / Save PDF
+    </button>
+
+
+    <button
+        class="closeBtn"
+        onclick="window.close()"
+    >
+        Close
+    </button>
+
+</div>
+
+
+<div class="report">
+
+
+<!-- ==================================================
+     COVER
+=================================================== -->
+
+<div class="cover">
+
+
+    <div class="brand">
+
+        <div class="brandMark">
+            ALM
+        </div>
+
+        <div class="brandText">
+            ALM Project Manager
+        </div>
+
+    </div>
+
+
+    <div class="coverMain">
+
+        <div class="kicker">
+            PROJECT MANAGEMENT REPORT
+        </div>
+
+
+        <div class="coverTitle">
+            Manpower Review
+        </div>
+
+
+        <div class="coverProject">
+
+            ${almManpowerEscape(
+                project.name ||
+                project.projectName ||
+                "Project"
+            )}
+
+        </div>
+
+
+        <div class="coverDate">
+
+            Manpower Position as of
+
+            <strong>
+                ${selectedDate}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div class="coverFooter">
+
+        <span>
+            Manpower Management
+        </span>
+
+        <span>
+            Confidential Project Report
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+     PAGE 2 - EXECUTIVE SUMMARY
+=================================================== -->
+
+<div class="page">
+
+
+    <div class="sectionHeader">
+
+        <div>
+
+            <div class="sectionTitle">
+                Executive Manpower Summary
+            </div>
+
+            <div class="sectionSub">
+                Current manpower position
+                and project deployment overview
+            </div>
+
+        </div>
+
+
+        <div class="sectionSub">
+            As of ${selectedDate}
+        </div>
+
+    </div>
+
+
+    <div class="kpis">
+
+
+        <div class="kpi">
+
+            <div class="kpiLabel">
+                Current Manpower
+            </div>
+
+            <div class="kpiValue">
+                ${stats.total}
+            </div>
+
+            <div class="kpiLine"></div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpiLabel">
+                Direct
+            </div>
+
+            <div class="kpiValue">
+                ${stats.direct}
+            </div>
+
+            <div class="kpiLine"></div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpiLabel">
+                Subcontractor
+            </div>
+
+            <div class="kpiValue">
+                ${stats.subcontractor}
+            </div>
+
+            <div class="kpiLine"></div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpiLabel">
+                Deployments
+            </div>
+
+            <div class="kpiValue">
+                ${stats.activeDeployments}
+            </div>
+
+            <div class="kpiLine"></div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpiLabel">
+                Work Stages
+            </div>
+
+            <div class="kpiValue">
+                ${stats.activeStages}
+            </div>
+
+            <div class="kpiLine"></div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpiLabel">
+                Trades
+            </div>
+
+            <div class="kpiValue">
+                ${stats.activeTrades}
+            </div>
+
+            <div class="kpiLine"></div>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="sectionHeader">
+
+            <div class="sectionTitle">
+                Monthly Manpower Flow
+            </div>
+
+            <div class="sectionSub">
+                Project manpower deployment trend
+            </div>
+
+        </div>
+
+
+        <div class="chartBox">
+
+            ${
+                months.length
+                ?
+                almMP3BuildChart(months)
+                :
+                `
+                    <div class="empty">
+                        No monthly data available.
+                    </div>
+                `
+            }
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="sectionHeader">
+
+            <div class="sectionTitle">
+                Monthly Manpower Summary
+            </div>
+
+        </div>
+
+
+        <div class="tableWrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Month</th>
+
+                        <th class="num">
+                            Average
+                        </th>
+
+                        <th class="num">
+                            Peak
+                        </th>
+
+                        <th class="num">
+                            Month-End
+                        </th>
+
+                        <th class="num">
+                            Direct Avg.
+                        </th>
+
+                        <th class="num">
+                            Subcontractor Avg.
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${monthlyRows}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- ==================================================
+     PAGE 3 - WORK STAGE
+=================================================== -->
+
+<div class="page">
+
+
+    <div class="sectionHeader">
+
+        <div>
+
+            <div class="sectionTitle">
+                Manpower by Work Stage
+            </div>
+
+            <div class="sectionSub">
+                Current manpower allocation
+                across active work stages
+            </div>
+
+        </div>
+
+
+        <div class="sectionSub">
+            As of ${selectedDate}
+        </div>
+
+    </div>
+
+
+    <div class="chartBox">
+
+        ${
+            stageData.length
+            ?
+            almMP4BuildWorkStageChart(
+                stageData
+            )
+            :
+            `
+                <div class="empty">
+                    No work-stage data available.
+                </div>
+            `
+        }
+
+    </div>
+
+
+    <div style="height:15px;"></div>
+
+
+    <div class="tableWrap">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Work Stage
+                    </th>
+
+                    <th class="num">
+                        Total
+                    </th>
+
+                    <th class="num">
+                        Direct
+                    </th>
+
+                    <th class="num">
+                        Subcontractor
+                    </th>
+
+                    <th class="num">
+                        % of Total
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                ${stageRows}
+
+            </tbody>
+
+
+            ${
+                stageData.length
+                ?
+                `
+                    <tfoot>
+
+                        <tr style="
+                            background:#f5f7fa;
+                            font-weight:800;
+                        ">
+
+                            <td>
+                                Total
+                            </td>
+
+                            <td class="num">
+                                ${stageTotal}
+                            </td>
+
+                            <td class="num">
+                                ${direct}
+                            </td>
+
+                            <td class="num">
+                                ${subcontractor}
+                            </td>
+
+                            <td class="num">
+                                100.0%
+                            </td>
+
+                        </tr>
+
+                    </tfoot>
+                `
+                :
+                ""
+            }
+
+        </table>
+
+    </div>
+
+
+</div>
+
+
+<!-- ==================================================
+     PAGE 4 - TRADE
+=================================================== -->
+
+<div class="page">
+
+
+    <div class="sectionHeader">
+
+        <div>
+
+            <div class="sectionTitle">
+                Workforce Composition
+            </div>
+
+            <div class="sectionSub">
+                Current manpower by trade
+                and employment source
+            </div>
+
+        </div>
+
+
+        <div class="sectionSub">
+            As of ${selectedDate}
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="sectionHeader">
+
+            <div class="sectionTitle">
+                Manpower by Trade
+            </div>
+
+        </div>
+
+
+        <div class="chartBox">
+
+            ${
+                tradeData.length
+                ?
+                almMP5BuildTradeChart(
+                    tradeData
+                )
+                :
+                `
+                    <div class="empty">
+                        No trade data available.
+                    </div>
+                `
+            }
+
+        </div>
+
+    </div>
+
+
+    <div class="twoCol">
+
+
+        <div class="panel">
+
+            <div class="panelTitle">
+                Trade Summary
+            </div>
+
+
+            <div class="tableWrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Trade
+                            </th>
+
+                            <th class="num">
+                                Total
+                            </th>
+
+                            <th class="num">
+                                Direct
+                            </th>
+
+                            <th class="num">
+                                Sub.
+                            </th>
+
+                            <th class="num">
+                                %
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${tradeRows}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panelTitle">
+                Direct vs Subcontractor
+            </div>
+
+
+            <div class="composition">
+
+
+                <div class="compRow">
+
+                    <div class="compHeader">
+
+                        <span>
+                            DIRECT
+                        </span>
+
+                        <span>
+                            ${direct}
+                            &nbsp;(
+                            ${directPercent.toFixed(1)}%
+                            )
+                        </span>
+
+                    </div>
+
+
+                    <div class="compTrack">
+
+                        <div
+                            class="compFill"
+                            style="
+                                width:
+                                ${directPercent}%;
+                            "
+                        ></div>
 
                     </div>
 
                 </div>
 
 
-                <!-- FOOTER -->
+                <div class="compRow">
+
+                    <div class="compHeader">
+
+                        <span>
+                            SUBCONTRACTOR
+                        </span>
+
+                        <span>
+                            ${subcontractor}
+                            &nbsp;(
+                            ${subcontractorPercent.toFixed(1)}%
+                            )
+                        </span>
+
+                    </div>
+
+
+                    <div class="compTrack">
+
+                        <div
+                            class="compFill"
+                            style="
+                                width:
+                                ${subcontractorPercent}%;
+                                opacity:.55;
+                            "
+                        ></div>
+
+                    </div>
+
+                </div>
+
 
                 <div style="
-                    padding:18px 32px;
-                    font-size:10px;
-                    color:#94a3b8;
+                    margin-top:24px;
+                    padding:12px;
+                    background:#f5f7fa;
                     text-align:center;
+                    font-size:11px;
                 ">
 
-                    Manpower Management Report
+                    Total Current Manpower
+
+                    <strong>
+                        ${total}
+                    </strong>
 
                 </div>
 
@@ -17108,19 +17771,198 @@ window.almOpenManpowerClientReview = function(
 
         </div>
 
-    `;
+
+    </div>
 
 
-    document.body.appendChild(
-        overlay
-    );
+</div>
+
+
+<!-- ==================================================
+     PAGE 5 - TIMELINE
+=================================================== -->
+
+<div class="page">
+
+
+    <div class="sectionHeader">
+
+        <div>
+
+            <div class="sectionTitle">
+                Manpower Deployment Timeline
+            </div>
+
+            <div class="sectionSub">
+                Planned deployment period
+                by work stage and trade
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="chartBox">
+
+        ${almMP6BuildTimeline(project)}
+
+    </div>
+
+
+    <div class="sectionNote"
+         style="margin-top:10px;">
+
+        The timeline illustrates the planned
+        manpower deployment period based on
+        the recorded Starting Date and End Date.
+
+    </div>
+
+
+</div>
+
+
+<!-- ==================================================
+     PAGE 6 - REGISTER
+=================================================== -->
+
+<div class="page">
+
+
+    <div class="sectionHeader">
+
+        <div>
+
+            <div class="sectionTitle">
+                Active Manpower Deployment Register
+            </div>
+
+            <div class="sectionSub">
+                Deployments active as of
+                ${selectedDate}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="tableWrap">
+
+        <table class="register">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Work Stage
+                    </th>
+
+                    <th>
+                        Scope / Activity
+                    </th>
+
+                    <th>
+                        Type
+                    </th>
+
+                    <th>
+                        Trade
+                    </th>
+
+                    <th>
+                        Company / Subcontractor
+                    </th>
+
+                    <th>
+                        Start
+                    </th>
+
+                    <th>
+                        End
+                    </th>
+
+                    <th class="num">
+                        No.
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                ${registerRows}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div style="
+        margin-top:15px;
+        padding:11px 14px;
+        background:#f5f7fa;
+        border-left:4px solid #17243a;
+        font-size:9px;
+        color:#475569;
+    ">
+
+        <strong>
+            Total Active Manpower:
+        </strong>
+
+        ${stats.total}
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        <strong>
+            Direct:
+        </strong>
+
+        ${stats.direct}
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        <strong>
+            Subcontractor:
+        </strong>
+
+        ${stats.subcontractor}
+
+    </div>
+
+
+    <div class="reportFooter">
+
+        ALM Project Manager —
+        Manpower Management Report —
+        ${selectedDate}
+
+    </div>
+
+
+</div>
+
+
+</div>
+
+
+</body>
+
+</html>
+
+    `);
+
+
+    reportWindow.document.close();
 
 };
-
-
-/* =====================================================
-   END MANPOWER STEP 7
-===================================================== */
 </script>
 </body>
 </html>
