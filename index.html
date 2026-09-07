@@ -15898,18 +15898,16 @@ function almMP6RenderDeploymentTimeline(
 /* =====================================================
    END MANPOWER STEP 6
 ===================================================== */
-  /* =====================================================
+/* =====================================================
    MANPOWER STEP 7
-   CLIENT REVIEW - PROFESSIONAL REPORT
+   FINAL CLIENT REVIEW
 ===================================================== */
 
 window.almOpenManpowerClientReview = function(projectId){
 
     const project =
         projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
+            p => String(p.id) === String(projectId)
         );
 
     if(!project){
@@ -15930,21 +15928,15 @@ window.almOpenManpowerClientReview = function(projectId){
 
 
     const months =
-        almMP3GetMonthlyData(
-            project
-        );
+        almMP3GetMonthlyData(project);
 
 
     const stageData =
-        almMP4GetWorkStageData(
-            project
-        );
+        almMP4GetWorkStageData(project);
 
 
     const tradeData =
-        almMP5GetTradeData(
-            project
-        );
+        almMP5GetTradeData(project);
 
 
     const records =
@@ -15962,6 +15954,81 @@ window.almOpenManpowerClientReview = function(projectId){
 
 
     /* =================================================
+       HELPERS
+    ================================================= */
+
+    function esc(value){
+
+        return almManpowerEscape(
+            value == null ? "" : value
+        );
+
+    }
+
+
+    function totalStage(){
+
+        return stageData.reduce(
+            (sum,item) =>
+                sum + Number(item.total || 0),
+            0
+        );
+
+    }
+
+
+    function totalTrade(){
+
+        return tradeData.reduce(
+            (sum,item) =>
+                sum + Number(item.total || 0),
+            0
+        );
+
+    }
+
+
+    const stageTotal =
+        totalStage();
+
+
+    const tradeTotal =
+        totalTrade();
+
+
+    const direct =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + Number(item.direct || 0),
+            0
+        );
+
+
+    const subcontractor =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + Number(item.subcontractor || 0),
+            0
+        );
+
+
+    const directPercent =
+        stats.total > 0
+        ?
+        (direct / stats.total) * 100
+        :
+        0;
+
+
+    const subcontractorPercent =
+        stats.total > 0
+        ?
+        (subcontractor / stats.total) * 100
+        :
+        0;
+
+
+    /* =================================================
        MONTHLY TABLE
     ================================================= */
 
@@ -15973,30 +16040,26 @@ window.almOpenManpowerClientReview = function(projectId){
 
                 <tr>
 
-                    <td>
-                        ${almManpowerEscape(
-                            item.label
-                        )}
+                    <td>${esc(item.label)}</td>
+
+                    <td class="right">
+                        ${Number(item.average || 0).toFixed(1)}
                     </td>
 
-                    <td class="num">
-                        ${item.average.toFixed(1)}
+                    <td class="right">
+                        ${Number(item.peak || 0)}
                     </td>
 
-                    <td class="num">
-                        ${item.peak}
+                    <td class="right">
+                        ${Number(item.monthEnd || 0)}
                     </td>
 
-                    <td class="num">
-                        ${item.monthEnd}
+                    <td class="right">
+                        ${Number(item.directAverage || 0).toFixed(1)}
                     </td>
 
-                    <td class="num">
-                        ${item.directAverage.toFixed(1)}
-                    </td>
-
-                    <td class="num">
-                        ${item.subcontractorAverage.toFixed(1)}
+                    <td class="right">
+                        ${Number(item.subcontractorAverage || 0).toFixed(1)}
                     </td>
 
                 </tr>
@@ -16006,8 +16069,7 @@ window.almOpenManpowerClientReview = function(projectId){
         :
         `
             <tr>
-                <td colspan="6"
-                    class="empty">
+                <td colspan="6" class="empty">
                     No monthly manpower data available.
                 </td>
             </tr>
@@ -16018,25 +16080,17 @@ window.almOpenManpowerClientReview = function(projectId){
        STAGE TABLE
     ================================================= */
 
-    const stageTotal =
-        stageData.reduce(
-            (sum,item) =>
-                sum + item.total,
-            0
-        );
-
-
     const stageRows =
         stageData.length
         ?
         stageData.map(
             item => {
 
-                const percentage =
+                const pct =
                     stageTotal > 0
                     ?
                     (
-                        item.total /
+                        Number(item.total || 0) /
                         stageTotal
                     ) * 100
                     :
@@ -16047,26 +16101,22 @@ window.almOpenManpowerClientReview = function(projectId){
 
                     <tr>
 
-                        <td>
-                            ${almManpowerEscape(
-                                item.stage
-                            )}
+                        <td>${esc(item.stage)}</td>
+
+                        <td class="right">
+                            ${Number(item.total || 0)}
                         </td>
 
-                        <td class="num">
-                            ${item.total}
+                        <td class="right">
+                            ${Number(item.direct || 0)}
                         </td>
 
-                        <td class="num">
-                            ${item.direct}
+                        <td class="right">
+                            ${Number(item.subcontractor || 0)}
                         </td>
 
-                        <td class="num">
-                            ${item.subcontractor}
-                        </td>
-
-                        <td class="num">
-                            ${percentage.toFixed(1)}%
+                        <td class="right">
+                            ${pct.toFixed(1)}%
                         </td>
 
                     </tr>
@@ -16078,9 +16128,8 @@ window.almOpenManpowerClientReview = function(projectId){
         :
         `
             <tr>
-                <td colspan="5"
-                    class="empty">
-                    No active work-stage manpower.
+                <td colspan="5" class="empty">
+                    No work-stage data available.
                 </td>
             </tr>
         `;
@@ -16090,25 +16139,17 @@ window.almOpenManpowerClientReview = function(projectId){
        TRADE TABLE
     ================================================= */
 
-    const tradeTotal =
-        tradeData.reduce(
-            (sum,item) =>
-                sum + item.total,
-            0
-        );
-
-
     const tradeRows =
         tradeData.length
         ?
         tradeData.map(
             item => {
 
-                const percentage =
+                const pct =
                     tradeTotal > 0
                     ?
                     (
-                        item.total /
+                        Number(item.total || 0) /
                         tradeTotal
                     ) * 100
                     :
@@ -16119,26 +16160,22 @@ window.almOpenManpowerClientReview = function(projectId){
 
                     <tr>
 
-                        <td>
-                            ${almManpowerEscape(
-                                item.trade
-                            )}
+                        <td>${esc(item.trade)}</td>
+
+                        <td class="right">
+                            ${Number(item.total || 0)}
                         </td>
 
-                        <td class="num">
-                            ${item.total}
+                        <td class="right">
+                            ${Number(item.direct || 0)}
                         </td>
 
-                        <td class="num">
-                            ${item.direct}
+                        <td class="right">
+                            ${Number(item.subcontractor || 0)}
                         </td>
 
-                        <td class="num">
-                            ${item.subcontractor}
-                        </td>
-
-                        <td class="num">
-                            ${percentage.toFixed(1)}%
+                        <td class="right">
+                            ${pct.toFixed(1)}%
                         </td>
 
                     </tr>
@@ -16150,16 +16187,15 @@ window.almOpenManpowerClientReview = function(projectId){
         :
         `
             <tr>
-                <td colspan="5"
-                    class="empty">
-                    No active trade manpower.
+                <td colspan="5" class="empty">
+                    No trade data available.
                 </td>
             </tr>
         `;
 
 
     /* =================================================
-       ACTIVE REGISTER
+       REGISTER
     ================================================= */
 
     const registerRows =
@@ -16171,47 +16207,35 @@ window.almOpenManpowerClientReview = function(projectId){
                 <tr>
 
                     <td>
-                        ${almManpowerEscape(
-                            record.workStage || ""
-                        )}
+                        ${esc(record.workStage)}
                     </td>
 
                     <td>
-                        ${almManpowerEscape(
-                            record.scope || ""
-                        )}
+                        ${esc(record.scope)}
                     </td>
 
                     <td>
-                        ${almManpowerEscape(
-                            record.type || ""
-                        )}
+                        ${esc(record.type)}
                     </td>
 
                     <td>
-                        ${almManpowerEscape(
-                            record.trade || ""
-                        )}
+                        ${esc(record.trade)}
                     </td>
 
                     <td>
-                        ${almManpowerEscape(
-                            record.company || ""
-                        )}
+                        ${esc(record.company)}
                     </td>
 
                     <td>
-                        ${record.startDate || ""}
+                        ${esc(record.startDate)}
                     </td>
 
                     <td>
-                        ${record.endDate || ""}
+                        ${esc(record.endDate)}
                     </td>
 
-                    <td class="num strong">
-                        ${Number(
-                            record.manpower || 0
-                        )}
+                    <td class="right bold">
+                        ${Number(record.manpower || 0)}
                     </td>
 
                 </tr>
@@ -16221,8 +16245,7 @@ window.almOpenManpowerClientReview = function(projectId){
         :
         `
             <tr>
-                <td colspan="8"
-                    class="empty">
+                <td colspan="8" class="empty">
                     No active manpower deployments.
                 </td>
             </tr>
@@ -16230,48 +16253,7 @@ window.almOpenManpowerClientReview = function(projectId){
 
 
     /* =================================================
-       DIRECT / SUBCONTRACTOR
-    ================================================= */
-
-    const direct =
-        tradeData.reduce(
-            (sum,item) =>
-                sum + item.direct,
-            0
-        );
-
-
-    const subcontractor =
-        tradeData.reduce(
-            (sum,item) =>
-                sum + item.subcontractor,
-            0
-        );
-
-
-    const total =
-        direct +
-        subcontractor;
-
-
-    const directPercent =
-        total > 0
-        ?
-        (direct / total) * 100
-        :
-        0;
-
-
-    const subcontractorPercent =
-        total > 0
-        ?
-        (subcontractor / total) * 100
-        :
-        0;
-
-
-    /* =================================================
-       OPEN CLEAN REPORT WINDOW
+       OPEN REPORT
     ================================================= */
 
     const reportWindow =
@@ -16306,22 +16288,26 @@ window.almOpenManpowerClientReview = function(projectId){
 <meta charset="UTF-8">
 
 <title>
-    Manpower Review -
-    ${almManpowerEscape(
-        project.name ||
-        project.projectName ||
-        "Project"
-    )}
+Manpower Review -
+${esc(
+    project.name ||
+    project.projectName ||
+    "Project"
+)}
 </title>
 
 
 <style>
 
+/* =====================================================
+   PAGE
+===================================================== */
+
 @page{
 
     size:A4 landscape;
 
-    margin:10mm;
+    margin:8mm;
 
 }
 
@@ -16340,23 +16326,25 @@ body{
 
     padding:0;
 
-    background:#ffffff;
-
-    color:#17243a;
-
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-    font-size:10px;
+    color:#17243a;
+
+    background:white;
+
+    font-size:9px;
 
 }
 
 
 body{
 
-    padding:0;
+    -webkit-print-color-adjust:exact;
+
+    print-color-adjust:exact;
 
 }
 
@@ -16365,33 +16353,29 @@ body{
 
     width:100%;
 
-    max-width:277mm;
+    max-width:281mm;
 
-    margin:0 auto;
+    margin:auto;
 
 }
 
 
 .toolbar{
 
-    position:sticky;
-
-    top:0;
-
-    z-index:100;
+    height:42px;
 
     display:flex;
 
     justify-content:flex-end;
 
+    align-items:center;
+
     gap:8px;
-
-    padding:10px;
-
-    background:#ffffff;
 
     border-bottom:
         1px solid #e5e7eb;
+
+    margin-bottom:8px;
 
 }
 
@@ -16400,11 +16384,11 @@ body{
 
     border:none;
 
-    border-radius:6px;
+    border-radius:5px;
 
-    padding:9px 16px;
+    padding:8px 15px;
 
-    font-size:11px;
+    font-size:10px;
 
     font-weight:700;
 
@@ -16413,39 +16397,112 @@ body{
 }
 
 
-.printBtn{
+.print{
 
     background:#17243a;
 
-    color:#ffffff;
+    color:white;
 
 }
 
 
-.closeBtn{
+.close{
 
-    background:#e5e7eb;
+    background:#e8edf3;
 
     color:#17243a;
 
 }
 
 
-/* ==============================================
+/* =====================================================
+   REPORT PAGES
+===================================================== */
+
+.page{
+
+    min-height:188mm;
+
+    page-break-after:always;
+
+    position:relative;
+
+    padding:3mm 2mm;
+
+}
+
+
+.page:last-child{
+
+    page-break-after:auto;
+
+}
+
+
+.pageHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-end;
+
+    border-bottom:
+        2px solid #17243a;
+
+    padding-bottom:7px;
+
+    margin-bottom:12px;
+
+}
+
+
+.pageTitle{
+
+    font-size:18px;
+
+    font-weight:800;
+
+    letter-spacing:-.2px;
+
+}
+
+
+.pageSub{
+
+    margin-top:3px;
+
+    font-size:8px;
+
+    color:#64748b;
+
+}
+
+
+.pageDate{
+
+    font-size:8px;
+
+    color:#64748b;
+
+}
+
+
+/* =====================================================
    COVER
-============================================== */
+===================================================== */
 
 .cover{
 
-    min-height:175mm;
+    min-height:188mm;
 
     background:#17243a;
 
-    color:#ffffff;
+    color:white;
 
     padding:
-        28mm
-        25mm;
+        22mm
+        24mm;
 
     display:flex;
 
@@ -16458,28 +16515,26 @@ body{
 }
 
 
-.brand{
+.coverBrand{
 
     display:flex;
 
     align-items:center;
 
-    gap:12px;
+    gap:10px;
 
 }
 
 
-.brandMark{
+.logo{
 
-    width:42px;
+    width:39px;
 
-    height:42px;
+    height:39px;
 
     border-radius:8px;
 
     background:#f5a900;
-
-    color:#ffffff;
 
     display:flex;
 
@@ -16487,165 +16542,91 @@ body{
 
     justify-content:center;
 
-    font-size:17px;
+    font-size:14px;
 
     font-weight:800;
 
 }
 
 
-.brandText{
+.brandName{
 
-    font-size:17px;
+    font-size:15px;
 
     font-weight:700;
 
 }
 
 
-.coverMain{
+.coverCenter{
 
-    max-width:850px;
+    max-width:800px;
 
 }
 
 
-.kicker{
+.coverKicker{
 
-    font-size:11px;
+    font-size:9px;
 
     letter-spacing:3px;
 
-    opacity:.65;
+    opacity:.55;
 
-    margin-bottom:18px;
+    margin-bottom:12px;
 
 }
 
 
 .coverTitle{
 
-    font-size:38px;
-
-    line-height:1.1;
+    font-size:39px;
 
     font-weight:800;
 
-    margin-bottom:12px;
+    letter-spacing:-1px;
+
+    margin-bottom:9px;
 
 }
 
 
 .coverProject{
 
-    font-size:20px;
+    font-size:19px;
 
-    opacity:.9;
+    opacity:.88;
 
 }
 
 
 .coverDate{
 
-    margin-top:28px;
+    margin-top:20px;
 
-    font-size:12px;
+    font-size:10px;
 
-    opacity:.7;
+    opacity:.65;
 
 }
 
 
-.coverFooter{
+.coverBottom{
 
     display:flex;
 
     justify-content:space-between;
 
-    font-size:9px;
+    font-size:8px;
 
-    opacity:.55;
-
-}
-
-
-/* ==============================================
-   SECTIONS
-============================================== */
-
-.page{
-
-    page-break-after:always;
+    opacity:.5;
 
 }
 
 
-.page:last-child{
-
-    page-break-after:auto;
-
-}
-
-
-.section{
-
-    margin-bottom:16px;
-
-}
-
-
-.sectionHeader{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:flex-end;
-
-    border-bottom:
-        2px solid #17243a;
-
-    padding-bottom:8px;
-
-    margin-bottom:13px;
-
-}
-
-
-.sectionTitle{
-
-    font-size:17px;
-
-    font-weight:800;
-
-    color:#17243a;
-
-}
-
-
-.sectionSub{
-
-    font-size:9px;
-
-    color:#64748b;
-
-}
-
-
-.sectionNote{
-
-    font-size:9px;
-
-    color:#64748b;
-
-    margin-bottom:12px;
-
-}
-
-
-/* ==============================================
-   KPI CARDS
-============================================== */
+/* =====================================================
+   KPI
+===================================================== */
 
 .kpis{
 
@@ -16654,164 +16635,143 @@ body{
     grid-template-columns:
         repeat(6,1fr);
 
-    gap:10px;
+    gap:8px;
 
-    margin-bottom:18px;
+    margin-bottom:12px;
 
 }
 
 
 .kpi{
 
+    min-height:52px;
+
     border:
-        1px solid #dfe5ec;
+        1px solid #dce3ea;
 
-    border-radius:7px;
+    border-radius:6px;
 
-    padding:13px;
+    padding:9px 10px;
 
-    background:#ffffff;
+    background:#fff;
 
 }
 
 
 .kpiLabel{
 
-    font-size:8px;
+    font-size:7px;
 
     font-weight:700;
 
     letter-spacing:.7px;
 
-    color:#64748b;
-
-    text-transform:uppercase;
+    color:#718096;
 
 }
 
 
 .kpiValue{
 
-    font-size:25px;
+    font-size:22px;
 
     line-height:1;
 
     font-weight:800;
 
-    color:#17243a;
-
-    margin-top:9px;
+    margin-top:7px;
 
 }
 
 
-.kpiLine{
+.kpiAccent{
 
-    margin-top:8px;
+    width:28px;
 
     height:3px;
 
-    background:#17243a;
+    background:#f5a900;
 
-    border-radius:4px;
+    margin-top:7px;
 
-}
-
-
-/* ==============================================
-   CHART BOX
-============================================== */
-
-.chartBox{
-
-    border:
-        1px solid #e1e6ed;
-
-    border-radius:7px;
-
-    padding:12px;
-
-    background:#ffffff;
-
-    overflow:hidden;
+    border-radius:3px;
 
 }
 
 
-.chartBox svg{
+/* =====================================================
+   SECTION
+===================================================== */
 
-    max-width:100% !important;
+.section{
 
-    min-width:0 !important;
-
-    width:100% !important;
-
-    height:auto !important;
-
-    display:block;
+    margin-bottom:12px;
 
 }
 
 
-/* ==============================================
-   TWO COLUMNS
-============================================== */
+.sectionTitle{
 
-.twoCol{
-
-    display:grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap:15px;
-
-}
-
-
-.panel{
-
-    border:
-        1px solid #e1e6ed;
-
-    border-radius:7px;
-
-    overflow:hidden;
-
-    background:#ffffff;
-
-}
-
-
-.panelTitle{
-
-    padding:10px 12px;
-
-    background:#f5f7fa;
-
-    font-size:11px;
+    font-size:12px;
 
     font-weight:800;
 
-    color:#17243a;
+    margin-bottom:6px;
 
 }
 
 
-/* ==============================================
-   TABLES
-============================================== */
+.sectionCaption{
 
-.tableWrap{
+    font-size:8px;
+
+    color:#718096;
+
+    margin-bottom:7px;
+
+}
+
+
+/* =====================================================
+   CHARTS
+===================================================== */
+
+.chart{
 
     width:100%;
+
+    border:
+        1px solid #dfe5eb;
+
+    border-radius:6px;
+
+    padding:7px;
+
+    background:white;
 
     overflow:hidden;
 
 }
 
 
-table{
+.chart svg{
+
+    display:block;
+
+    width:100% !important;
+
+    max-width:100% !important;
+
+    height:auto !important;
+
+}
+
+
+/* =====================================================
+   TABLES
+===================================================== */
+
+.table{
 
     width:100%;
 
@@ -16822,53 +16782,53 @@ table{
 }
 
 
-th{
+.table th{
 
     background:#17243a;
 
-    color:#ffffff;
+    color:white;
 
-    font-size:8px;
+    padding:6px 7px;
+
+    font-size:7.5px;
 
     font-weight:700;
 
-    padding:7px 6px;
-
     text-align:left;
-
-    white-space:nowrap;
 
 }
 
 
-td{
+.table td{
 
-    padding:6px;
+    padding:5px 7px;
 
     border-bottom:
-        1px solid #e8ecf1;
+        1px solid #e6ebf0;
+
+    font-size:8px;
 
     color:#334155;
 
-    font-size:8.5px;
-
     vertical-align:middle;
+
+    overflow:hidden;
 
     word-wrap:break-word;
 
 }
 
 
-tbody tr:nth-child(even){
+.table tbody tr:nth-child(even){
 
-    background:#fafbfc;
+    background:#f8fafc;
 
 }
 
 
-.num{
+.right{
 
-    text-align:right;
+    text-align:right !important;
 
     font-variant-numeric:
         tabular-nums;
@@ -16876,168 +16836,219 @@ tbody tr:nth-child(even){
 }
 
 
-.strong{
+.bold{
 
     font-weight:800;
 
-    color:#17243a;
+    color:#17243a !important;
 
 }
 
 
 .empty{
 
-    text-align:center;
+    text-align:center !important;
 
-    padding:25px;
+    padding:18px !important;
 
-    color:#94a3b8;
+    color:#94a3b8 !important;
 
 }
 
 
-/* ==============================================
-   REGISTER TABLE
-============================================== */
+/* =====================================================
+   MONTHLY TABLE
+===================================================== */
 
-.register th:nth-child(1){
+.monthly th:nth-child(1){
+    width:30%;
+}
 
+.monthly th:nth-child(2),
+.monthly th:nth-child(3),
+.monthly th:nth-child(4),
+.monthly th:nth-child(5),
+.monthly th:nth-child(6){
     width:14%;
+}
+
+
+/* =====================================================
+   TWO COLUMN
+===================================================== */
+
+.two{
+
+    display:grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:10px;
 
 }
 
 
-.register th:nth-child(2){
+.panel{
 
-    width:19%;
+    border:
+        1px solid #dfe5eb;
 
-}
-
-
-.register th:nth-child(3){
-
-    width:11%;
-
-}
-
-
-.register th:nth-child(4){
-
-    width:12%;
-
-}
-
-
-.register th:nth-child(5){
-
-    width:15%;
-
-}
-
-
-.register th:nth-child(6){
-
-    width:9%;
-
-}
-
-
-.register th:nth-child(7){
-
-    width:9%;
-
-}
-
-
-.register th:nth-child(8){
-
-    width:6%;
-
-}
-
-
-/* ==============================================
-   DIRECT / SUB
-============================================== */
-
-.composition{
-
-    padding:16px;
-
-}
-
-
-.compRow{
-
-    margin-bottom:17px;
-
-}
-
-
-.compHeader{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    margin-bottom:6px;
-
-    font-size:10px;
-
-    font-weight:700;
-
-}
-
-
-.compTrack{
-
-    width:100%;
-
-    height:9px;
-
-    background:#e8ecf1;
-
-    border-radius:10px;
+    border-radius:6px;
 
     overflow:hidden;
 
 }
 
 
-.compFill{
+.panelHeader{
+
+    background:#f4f7fa;
+
+    padding:7px 9px;
+
+    font-size:9px;
+
+    font-weight:800;
+
+}
+
+
+.panelBody{
+
+    padding:8px;
+
+}
+
+
+/* =====================================================
+   COMPOSITION
+===================================================== */
+
+.compositionRow{
+
+    margin-bottom:13px;
+
+}
+
+
+.compositionHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:9px;
+
+    font-weight:700;
+
+    margin-bottom:5px;
+
+}
+
+
+.track{
+
+    width:100%;
+
+    height:8px;
+
+    background:#e7ecf1;
+
+    border-radius:8px;
+
+    overflow:hidden;
+
+}
+
+
+.fill{
 
     height:100%;
 
     background:#17243a;
 
-    border-radius:10px;
+}
+
+
+.fill.sub{
+
+    opacity:.5;
 
 }
 
 
-/* ==============================================
+/* =====================================================
+   REGISTER
+===================================================== */
+
+.register th:nth-child(1){
+    width:13%;
+}
+
+.register th:nth-child(2){
+    width:19%;
+}
+
+.register th:nth-child(3){
+    width:10%;
+}
+
+.register th:nth-child(4){
+    width:12%;
+}
+
+.register th:nth-child(5){
+    width:16%;
+}
+
+.register th:nth-child(6){
+    width:10%;
+}
+
+.register th:nth-child(7){
+    width:10%;
+}
+
+.register th:nth-child(8){
+    width:6%;
+
+}
+
+
+/* =====================================================
    FOOTER
-============================================== */
+===================================================== */
 
-.reportFooter{
+.footer{
 
-    text-align:center;
+    position:absolute;
 
-    padding:10px 0;
+    left:2mm;
 
-    font-size:8px;
+    right:2mm;
 
-    color:#94a3b8;
+    bottom:2mm;
 
     border-top:
         1px solid #e5e7eb;
 
+    padding-top:5px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:7px;
+
+    color:#94a3b8;
+
 }
 
 
-/* ==============================================
+/* =====================================================
    PRINT
-============================================== */
+===================================================== */
 
 @media print{
 
@@ -17048,49 +17059,14 @@ tbody tr:nth-child(even){
     }
 
 
-    .report{
-
-        max-width:none;
-
-    }
-
-
     .page{
 
-        page-break-after:always;
+        min-height:188mm;
 
     }
 
-
-    .cover{
-
-        page-break-after:always;
-
-    }
-
-
-    .section{
-
-        break-inside:avoid;
-
-    }
-
-
-    table{
-
-        break-inside:auto;
-
-    }
-
-
-    tr{
-
-        break-inside:avoid;
-
-    }
 
 }
-
 
 </style>
 
@@ -17103,7 +17079,7 @@ tbody tr:nth-child(even){
 <div class="toolbar">
 
     <button
-        class="printBtn"
+        class="print"
         onclick="window.print()"
     >
         Print / Save PDF
@@ -17111,7 +17087,7 @@ tbody tr:nth-child(even){
 
 
     <button
-        class="closeBtn"
+        class="close"
         onclick="window.close()"
     >
         Close
@@ -17125,27 +17101,26 @@ tbody tr:nth-child(even){
 
 <!-- ==================================================
      COVER
-=================================================== -->
+================================================== -->
 
 <div class="cover">
 
+    <div class="coverBrand">
 
-    <div class="brand">
-
-        <div class="brandMark">
+        <div class="logo">
             ALM
         </div>
 
-        <div class="brandText">
+        <div class="brandName">
             ALM Project Manager
         </div>
 
     </div>
 
 
-    <div class="coverMain">
+    <div class="coverCenter">
 
-        <div class="kicker">
+        <div class="coverKicker">
             PROJECT MANAGEMENT REPORT
         </div>
 
@@ -17157,7 +17132,7 @@ tbody tr:nth-child(even){
 
         <div class="coverProject">
 
-            ${almManpowerEscape(
+            ${esc(
                 project.name ||
                 project.projectName ||
                 "Project"
@@ -17179,7 +17154,7 @@ tbody tr:nth-child(even){
     </div>
 
 
-    <div class="coverFooter">
+    <div class="coverBottom">
 
         <span>
             Manpower Management
@@ -17195,29 +17170,30 @@ tbody tr:nth-child(even){
 
 
 <!-- ==================================================
-     PAGE 2 - EXECUTIVE SUMMARY
-=================================================== -->
+     PAGE 1
+     EXECUTIVE SUMMARY
+================================================== -->
 
 <div class="page">
 
 
-    <div class="sectionHeader">
+    <div class="pageHeader">
 
         <div>
 
-            <div class="sectionTitle">
+            <div class="pageTitle">
                 Executive Manpower Summary
             </div>
 
-            <div class="sectionSub">
-                Current manpower position
-                and project deployment overview
+            <div class="pageSub">
+                Current manpower position and
+                deployment trend
             </div>
 
         </div>
 
 
-        <div class="sectionSub">
+        <div class="pageDate">
             As of ${selectedDate}
         </div>
 
@@ -17230,14 +17206,14 @@ tbody tr:nth-child(even){
         <div class="kpi">
 
             <div class="kpiLabel">
-                Current Manpower
+                CURRENT MANPOWER
             </div>
 
             <div class="kpiValue">
                 ${stats.total}
             </div>
 
-            <div class="kpiLine"></div>
+            <div class="kpiAccent"></div>
 
         </div>
 
@@ -17245,14 +17221,14 @@ tbody tr:nth-child(even){
         <div class="kpi">
 
             <div class="kpiLabel">
-                Direct
+                DIRECT
             </div>
 
             <div class="kpiValue">
                 ${stats.direct}
             </div>
 
-            <div class="kpiLine"></div>
+            <div class="kpiAccent"></div>
 
         </div>
 
@@ -17260,14 +17236,14 @@ tbody tr:nth-child(even){
         <div class="kpi">
 
             <div class="kpiLabel">
-                Subcontractor
+                SUBCONTRACTOR
             </div>
 
             <div class="kpiValue">
                 ${stats.subcontractor}
             </div>
 
-            <div class="kpiLine"></div>
+            <div class="kpiAccent"></div>
 
         </div>
 
@@ -17275,14 +17251,14 @@ tbody tr:nth-child(even){
         <div class="kpi">
 
             <div class="kpiLabel">
-                Deployments
+                DEPLOYMENTS
             </div>
 
             <div class="kpiValue">
                 ${stats.activeDeployments}
             </div>
 
-            <div class="kpiLine"></div>
+            <div class="kpiAccent"></div>
 
         </div>
 
@@ -17290,14 +17266,14 @@ tbody tr:nth-child(even){
         <div class="kpi">
 
             <div class="kpiLabel">
-                Work Stages
+                WORK STAGES
             </div>
 
             <div class="kpiValue">
                 ${stats.activeStages}
             </div>
 
-            <div class="kpiLine"></div>
+            <div class="kpiAccent"></div>
 
         </div>
 
@@ -17305,14 +17281,14 @@ tbody tr:nth-child(even){
         <div class="kpi">
 
             <div class="kpiLabel">
-                Trades
+                TRADES
             </div>
 
             <div class="kpiValue">
                 ${stats.activeTrades}
             </div>
 
-            <div class="kpiLine"></div>
+            <div class="kpiAccent"></div>
 
         </div>
 
@@ -17322,20 +17298,17 @@ tbody tr:nth-child(even){
 
     <div class="section">
 
-        <div class="sectionHeader">
+        <div class="sectionTitle">
+            Monthly Manpower Flow
+        </div>
 
-            <div class="sectionTitle">
-                Monthly Manpower Flow
-            </div>
-
-            <div class="sectionSub">
-                Project manpower deployment trend
-            </div>
-
+        <div class="sectionCaption">
+            Average, peak and month-end manpower
+            throughout the project period
         </div>
 
 
-        <div class="chartBox">
+        <div class="chart">
 
             ${
                 months.length
@@ -17356,82 +17329,91 @@ tbody tr:nth-child(even){
 
     <div class="section">
 
-        <div class="sectionHeader">
-
-            <div class="sectionTitle">
-                Monthly Manpower Summary
-            </div>
-
+        <div class="sectionTitle">
+            Monthly Manpower Summary
         </div>
 
 
-        <div class="tableWrap">
+        <table class="table monthly">
 
-            <table>
+            <thead>
 
-                <thead>
+                <tr>
 
-                    <tr>
+                    <th>Month</th>
 
-                        <th>Month</th>
+                    <th class="right">
+                        Average
+                    </th>
 
-                        <th class="num">
-                            Average
-                        </th>
+                    <th class="right">
+                        Peak
+                    </th>
 
-                        <th class="num">
-                            Peak
-                        </th>
+                    <th class="right">
+                        Month-End
+                    </th>
 
-                        <th class="num">
-                            Month-End
-                        </th>
+                    <th class="right">
+                        Direct Avg.
+                    </th>
 
-                        <th class="num">
-                            Direct Avg.
-                        </th>
+                    <th class="right">
+                        Subcontractor Avg.
+                    </th>
 
-                        <th class="num">
-                            Subcontractor Avg.
-                        </th>
+                </tr>
 
-                    </tr>
-
-                </thead>
+            </thead>
 
 
-                <tbody>
+            <tbody>
 
-                    ${monthlyRows}
+                ${monthlyRows}
 
-                </tbody>
+            </tbody>
 
-            </table>
-
-        </div>
+        </table>
 
     </div>
 
+
+    <div class="footer">
+
+        <span>
+            ALM Project Manager
+        </span>
+
+        <span>
+            Manpower Review
+        </span>
+
+        <span>
+            ${selectedDate}
+        </span>
+
+    </div>
 
 </div>
 
 
 <!-- ==================================================
-     PAGE 3 - WORK STAGE
-=================================================== -->
+     PAGE 2
+     WORK STAGE
+================================================== -->
 
 <div class="page">
 
 
-    <div class="sectionHeader">
+    <div class="pageHeader">
 
         <div>
 
-            <div class="sectionTitle">
+            <div class="pageTitle">
                 Manpower by Work Stage
             </div>
 
-            <div class="sectionSub">
+            <div class="pageSub">
                 Current manpower allocation
                 across active work stages
             </div>
@@ -17439,38 +17421,44 @@ tbody tr:nth-child(even){
         </div>
 
 
-        <div class="sectionSub">
+        <div class="pageDate">
             As of ${selectedDate}
         </div>
 
     </div>
 
 
-    <div class="chartBox">
+    <div class="section">
 
-        ${
-            stageData.length
-            ?
-            almMP4BuildWorkStageChart(
-                stageData
-            )
-            :
-            `
-                <div class="empty">
-                    No work-stage data available.
-                </div>
-            `
-        }
+        <div class="chart">
+
+            ${
+                stageData.length
+                ?
+                almMP4BuildWorkStageChart(
+                    stageData
+                )
+                :
+                `
+                    <div class="empty">
+                        No work-stage data available.
+                    </div>
+                `
+            }
+
+        </div>
 
     </div>
 
 
-    <div style="height:15px;"></div>
+    <div class="section">
+
+        <div class="sectionTitle">
+            Work Stage Summary
+        </div>
 
 
-    <div class="tableWrap">
-
-        <table>
+        <table class="table">
 
             <thead>
 
@@ -17480,19 +17468,19 @@ tbody tr:nth-child(even){
                         Work Stage
                     </th>
 
-                    <th class="num">
+                    <th class="right">
                         Total
                     </th>
 
-                    <th class="num">
+                    <th class="right">
                         Direct
                     </th>
 
-                    <th class="num">
+                    <th class="right">
                         Subcontractor
                     </th>
 
-                    <th class="num">
+                    <th class="right">
                         % of Total
                     </th>
 
@@ -17515,27 +17503,27 @@ tbody tr:nth-child(even){
                     <tfoot>
 
                         <tr style="
-                            background:#f5f7fa;
+                            background:#eef2f6;
                             font-weight:800;
                         ">
 
                             <td>
-                                Total
+                                TOTAL
                             </td>
 
-                            <td class="num">
+                            <td class="right">
                                 ${stageTotal}
                             </td>
 
-                            <td class="num">
+                            <td class="right">
                                 ${direct}
                             </td>
 
-                            <td class="num">
+                            <td class="right">
                                 ${subcontractor}
                             </td>
 
-                            <td class="num">
+                            <td class="right">
                                 100.0%
                             </td>
 
@@ -17552,33 +17540,50 @@ tbody tr:nth-child(even){
     </div>
 
 
+    <div class="footer">
+
+        <span>
+            ALM Project Manager
+        </span>
+
+        <span>
+            Work Stage Analysis
+        </span>
+
+        <span>
+            ${selectedDate}
+        </span>
+
+    </div>
+
 </div>
 
 
 <!-- ==================================================
-     PAGE 4 - TRADE
-=================================================== -->
+     PAGE 3
+     WORKFORCE COMPOSITION
+================================================== -->
 
 <div class="page">
 
 
-    <div class="sectionHeader">
+    <div class="pageHeader">
 
         <div>
 
-            <div class="sectionTitle">
+            <div class="pageTitle">
                 Workforce Composition
             </div>
 
-            <div class="sectionSub">
-                Current manpower by trade
+            <div class="pageSub">
+                Manpower distribution by trade
                 and employment source
             </div>
 
         </div>
 
 
-        <div class="sectionSub">
+        <div class="pageDate">
             As of ${selectedDate}
         </div>
 
@@ -17587,16 +17592,12 @@ tbody tr:nth-child(even){
 
     <div class="section">
 
-        <div class="sectionHeader">
-
-            <div class="sectionTitle">
-                Manpower by Trade
-            </div>
-
+        <div class="sectionTitle">
+            Manpower by Trade
         </div>
 
 
-        <div class="chartBox">
+        <div class="chart">
 
             ${
                 tradeData.length
@@ -17617,19 +17618,19 @@ tbody tr:nth-child(even){
     </div>
 
 
-    <div class="twoCol">
+    <div class="two">
 
 
         <div class="panel">
 
-            <div class="panelTitle">
+            <div class="panelHeader">
                 Trade Summary
             </div>
 
 
-            <div class="tableWrap">
+            <div class="panelBody">
 
-                <table>
+                <table class="table">
 
                     <thead>
 
@@ -17639,19 +17640,19 @@ tbody tr:nth-child(even){
                                 Trade
                             </th>
 
-                            <th class="num">
+                            <th class="right">
                                 Total
                             </th>
 
-                            <th class="num">
+                            <th class="right">
                                 Direct
                             </th>
 
-                            <th class="num">
+                            <th class="right">
                                 Sub.
                             </th>
 
-                            <th class="num">
+                            <th class="right">
                                 %
                             </th>
 
@@ -17675,17 +17676,17 @@ tbody tr:nth-child(even){
 
         <div class="panel">
 
-            <div class="panelTitle">
+            <div class="panelHeader">
                 Direct vs Subcontractor
             </div>
 
 
-            <div class="composition">
+            <div class="panelBody">
 
 
-                <div class="compRow">
+                <div class="compositionRow">
 
-                    <div class="compHeader">
+                    <div class="compositionHeader">
 
                         <span>
                             DIRECT
@@ -17693,18 +17694,16 @@ tbody tr:nth-child(even){
 
                         <span>
                             ${direct}
-                            &nbsp;(
-                            ${directPercent.toFixed(1)}%
-                            )
+                            &nbsp; ${directPercent.toFixed(1)}%
                         </span>
 
                     </div>
 
 
-                    <div class="compTrack">
+                    <div class="track">
 
                         <div
-                            class="compFill"
+                            class="fill"
                             style="
                                 width:
                                 ${directPercent}%;
@@ -17716,9 +17715,9 @@ tbody tr:nth-child(even){
                 </div>
 
 
-                <div class="compRow">
+                <div class="compositionRow">
 
-                    <div class="compHeader">
+                    <div class="compositionHeader">
 
                         <span>
                             SUBCONTRACTOR
@@ -17726,22 +17725,20 @@ tbody tr:nth-child(even){
 
                         <span>
                             ${subcontractor}
-                            &nbsp;(
+                            &nbsp;
                             ${subcontractorPercent.toFixed(1)}%
-                            )
                         </span>
 
                     </div>
 
 
-                    <div class="compTrack">
+                    <div class="track">
 
                         <div
-                            class="compFill"
+                            class="fill sub"
                             style="
                                 width:
                                 ${subcontractorPercent}%;
-                                opacity:.55;
                             "
                         ></div>
 
@@ -17751,18 +17748,30 @@ tbody tr:nth-child(even){
 
 
                 <div style="
-                    margin-top:24px;
+                    margin-top:18px;
                     padding:12px;
                     background:#f5f7fa;
+                    border-radius:5px;
                     text-align:center;
-                    font-size:11px;
                 ">
 
-                    Total Current Manpower
+                    <div style="
+                        font-size:7px;
+                        color:#718096;
+                        text-transform:uppercase;
+                        letter-spacing:.6px;
+                    ">
+                        Total Current Manpower
+                    </div>
 
-                    <strong>
-                        ${total}
-                    </strong>
+
+                    <div style="
+                        margin-top:5px;
+                        font-size:23px;
+                        font-weight:800;
+                    ">
+                        ${stats.total}
+                    </div>
 
                 </div>
 
@@ -17775,27 +17784,44 @@ tbody tr:nth-child(even){
     </div>
 
 
+    <div class="footer">
+
+        <span>
+            ALM Project Manager
+        </span>
+
+        <span>
+            Workforce Composition
+        </span>
+
+        <span>
+            ${selectedDate}
+        </span>
+
+    </div>
+
 </div>
 
 
 <!-- ==================================================
-     PAGE 5 - TIMELINE
-=================================================== -->
+     PAGE 4
+     DEPLOYMENT TIMELINE
+================================================== -->
 
 <div class="page">
 
 
-    <div class="sectionHeader">
+    <div class="pageHeader">
 
         <div>
 
-            <div class="sectionTitle">
+            <div class="pageTitle">
                 Manpower Deployment Timeline
             </div>
 
-            <div class="sectionSub">
-                Planned deployment period
-                by work stage and trade
+            <div class="pageSub">
+                Planned manpower deployment
+                by work stage, trade and company
             </div>
 
         </div>
@@ -17803,149 +17829,235 @@ tbody tr:nth-child(even){
     </div>
 
 
-    <div class="chartBox">
+    <div class="chart"
+         style="
+            padding:12px;
+            min-height:155mm;
+         ">
 
         ${almMP6BuildTimeline(project)}
 
     </div>
 
 
-    <div class="sectionNote"
-         style="margin-top:10px;">
+    <div style="
+        margin-top:10px;
+        padding:9px 11px;
+        background:#f5f7fa;
+        border-left:3px solid #f5a900;
+        font-size:8px;
+        color:#64748b;
+    ">
 
         The timeline illustrates the planned
-        manpower deployment period based on
-        the recorded Starting Date and End Date.
+        manpower deployment period based on the
+        recorded Starting Date and End Date.
 
     </div>
 
+
+    <div class="footer">
+
+        <span>
+            ALM Project Manager
+        </span>
+
+        <span>
+            Deployment Timeline
+        </span>
+
+        <span>
+            ${selectedDate}
+        </span>
+
+    </div>
 
 </div>
 
 
 <!-- ==================================================
-     PAGE 6 - REGISTER
-=================================================== -->
+     PAGE 5
+     REGISTER
+================================================== -->
 
 <div class="page">
 
 
-    <div class="sectionHeader">
+    <div class="pageHeader">
 
         <div>
 
-            <div class="sectionTitle">
+            <div class="pageTitle">
                 Active Manpower Deployment Register
             </div>
 
-            <div class="sectionSub">
+            <div class="pageSub">
                 Deployments active as of
                 ${selectedDate}
             </div>
 
         </div>
 
-    </div>
 
-
-    <div class="tableWrap">
-
-        <table class="register">
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Work Stage
-                    </th>
-
-                    <th>
-                        Scope / Activity
-                    </th>
-
-                    <th>
-                        Type
-                    </th>
-
-                    <th>
-                        Trade
-                    </th>
-
-                    <th>
-                        Company / Subcontractor
-                    </th>
-
-                    <th>
-                        Start
-                    </th>
-
-                    <th>
-                        End
-                    </th>
-
-                    <th class="num">
-                        No.
-                    </th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody>
-
-                ${registerRows}
-
-            </tbody>
-
-        </table>
+        <div class="pageDate">
+            ${activeRecords.length}
+            Active Deployments
+        </div>
 
     </div>
+
+
+    <table class="table register">
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Work Stage
+                </th>
+
+                <th>
+                    Scope / Activity
+                </th>
+
+                <th>
+                    Type
+                </th>
+
+                <th>
+                    Trade
+                </th>
+
+                <th>
+                    Company / Subcontractor
+                </th>
+
+                <th>
+                    Start
+                </th>
+
+                <th>
+                    End
+                </th>
+
+                <th class="right">
+                    No.
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            ${registerRows}
+
+        </tbody>
+
+    </table>
 
 
     <div style="
-        margin-top:15px;
-        padding:11px 14px;
-        background:#f5f7fa;
-        border-left:4px solid #17243a;
-        font-size:9px;
-        color:#475569;
+        margin-top:12px;
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:8px;
     ">
 
-        <strong>
-            Total Active Manpower:
-        </strong>
 
-        ${stats.total}
+        <div style="
+            padding:10px;
+            background:#17243a;
+            color:white;
+            border-radius:5px;
+        ">
 
-        &nbsp;&nbsp; | &nbsp;&nbsp;
+            <div style="
+                font-size:7px;
+                opacity:.65;
+            ">
+                TOTAL ACTIVE MANPOWER
+            </div>
 
-        <strong>
-            Direct:
-        </strong>
+            <div style="
+                margin-top:4px;
+                font-size:18px;
+                font-weight:800;
+            ">
+                ${stats.total}
+            </div>
 
-        ${stats.direct}
+        </div>
 
-        &nbsp;&nbsp; | &nbsp;&nbsp;
 
-        <strong>
-            Subcontractor:
-        </strong>
+        <div style="
+            padding:10px;
+            background:#f4f7fa;
+            border-radius:5px;
+        ">
 
-        ${stats.subcontractor}
+            <div style="
+                font-size:7px;
+                color:#718096;
+            ">
+                DIRECT
+            </div>
+
+            <div style="
+                margin-top:4px;
+                font-size:18px;
+                font-weight:800;
+            ">
+                ${stats.direct}
+            </div>
+
+        </div>
+
+
+        <div style="
+            padding:10px;
+            background:#f4f7fa;
+            border-radius:5px;
+        ">
+
+            <div style="
+                font-size:7px;
+                color:#718096;
+            ">
+                SUBCONTRACTOR
+            </div>
+
+            <div style="
+                margin-top:4px;
+                font-size:18px;
+                font-weight:800;
+            ">
+                ${stats.subcontractor}
+            </div>
+
+        </div>
+
 
     </div>
 
 
-    <div class="reportFooter">
+    <div class="footer">
 
-        ALM Project Manager —
-        Manpower Management Report —
-        ${selectedDate}
+        <span>
+            ALM Project Manager
+        </span>
+
+        <span>
+            Active Manpower Register
+        </span>
+
+        <span>
+            ${selectedDate}
+        </span>
 
     </div>
-
 
 </div>
 
