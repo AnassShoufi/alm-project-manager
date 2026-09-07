@@ -12318,6 +12318,7 @@ window.renderManpowerSection = function(project){
     `;
 almMP3RenderMonthlyFlow(project);
 almMP4RenderWorkStageAnalysis(project);
+almMP5RenderTradeAnalysis(project);
 };
 
 
@@ -14204,6 +14205,901 @@ function almMP4RenderWorkStageAnalysis(
 
 /* =====================================================
    END MANPOWER STEP 4
+===================================================== */
+    /* =====================================================
+   MANPOWER STEP 5
+   MANPOWER BY TRADE
+   DIRECT / SUBCONTRACTOR ANALYSIS
+===================================================== */
+
+
+/* =====================================================
+   GET TRADE DATA
+===================================================== */
+
+function almMP5GetTradeData(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    const selectedDate =
+        project.manpowerAsOfDate ||
+        almMP2Today();
+
+    const activeRecords =
+        records.filter(
+            record =>
+                almMP2IsActive(
+                    record,
+                    selectedDate
+                )
+        );
+
+    const tradeMap = {};
+
+    activeRecords.forEach(
+        record => {
+
+            const trade =
+                String(
+                    record.trade || ""
+                ).trim();
+
+            if(!trade){
+                return;
+            }
+
+            if(!tradeMap[trade]){
+
+                tradeMap[trade] = {
+
+                    trade,
+
+                    total: 0,
+
+                    direct: 0,
+
+                    subcontractor: 0,
+
+                    deployments: 0
+
+                };
+
+            }
+
+            const manpower =
+                Number(
+                    record.manpower || 0
+                );
+
+            tradeMap[trade].total +=
+                manpower;
+
+            tradeMap[trade].deployments +=
+                1;
+
+            if(
+                record.type ===
+                "Subcontractor"
+            ){
+
+                tradeMap[trade].subcontractor +=
+                    manpower;
+
+            }else{
+
+                tradeMap[trade].direct +=
+                    manpower;
+
+            }
+
+        }
+    );
+
+    return Object.values(tradeMap)
+        .sort(
+            (a,b) =>
+                b.total - a.total
+        );
+
+}
+
+
+/* =====================================================
+   BUILD TRADE BAR CHART
+===================================================== */
+
+function almMP5BuildTradeChart(
+    tradeData
+){
+
+    if(!tradeData.length){
+
+        return `
+            <div style="
+                padding:40px;
+                text-align:center;
+                color:#64748b;
+            ">
+                No active trade manpower
+                for the selected date.
+            </div>
+        `;
+
+    }
+
+    const width = 1000;
+
+    const rowHeight = 48;
+
+    const height =
+        Math.max(
+            260,
+            80 +
+            tradeData.length *
+            rowHeight
+        );
+
+    const left = 210;
+
+    const right = 60;
+
+    const top = 25;
+
+    const bottom = 35;
+
+    const chartWidth =
+        width -
+        left -
+        right;
+
+    const maxValue =
+        Math.max(
+            1,
+            ...tradeData.map(
+                item =>
+                    item.total
+            )
+        );
+
+    let grid = "";
+
+    for(let i = 0; i <= 5; i++){
+
+        const value =
+            maxValue *
+            (i / 5);
+
+        const x =
+            left +
+            (
+                i / 5
+            ) *
+            chartWidth;
+
+        grid += `
+
+            <line
+                x1="${x}"
+                y1="${top}"
+                x2="${x}"
+                y2="${height - bottom}"
+                stroke="#e5e7eb"
+                stroke-width="1"
+            />
+
+            <text
+                x="${x}"
+                y="${height - 12}"
+                text-anchor="middle"
+                font-size="11"
+                fill="#64748b"
+            >
+                ${Math.round(value)}
+            </text>
+
+        `;
+
+    }
+
+    let bars = "";
+
+    tradeData.forEach(
+        (item,index) => {
+
+            const y =
+                top +
+                index *
+                rowHeight;
+
+            const barWidth =
+                (
+                    item.total /
+                    maxValue
+                ) *
+                chartWidth;
+
+            bars += `
+
+                <text
+                    x="${left - 12}"
+                    y="${y + 23}"
+                    text-anchor="end"
+                    font-size="12"
+                    fill="#374151"
+                >
+                    ${almManpowerEscape(
+                        item.trade
+                    )}
+                </text>
+
+                <rect
+                    x="${left}"
+                    y="${y + 7}"
+                    width="${barWidth}"
+                    height="26"
+                    rx="4"
+                    fill="#17243a"
+                />
+
+                <text
+                    x="${left + barWidth + 8}"
+                    y="${y + 25}"
+                    font-size="12"
+                    font-weight="600"
+                    fill="#17243a"
+                >
+                    ${item.total}
+                </text>
+
+            `;
+
+        }
+    );
+
+    return `
+
+        <div style="
+            width:100%;
+            overflow-x:auto;
+        ">
+
+            <svg
+                viewBox="
+                    0 0
+                    ${width}
+                    ${height}
+                "
+                style="
+                    width:100%;
+                    min-width:750px;
+                    height:auto;
+                    display:block;
+                "
+            >
+
+                ${grid}
+
+                ${bars}
+
+            </svg>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   BUILD DIRECT / SUBCONTRACTOR CHART
+===================================================== */
+
+function almMP5BuildTypeChart(
+    tradeData
+){
+
+    const direct =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + item.direct,
+            0
+        );
+
+    const subcontractor =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + item.subcontractor,
+            0
+        );
+
+    const total =
+        direct +
+        subcontractor;
+
+    if(total === 0){
+
+        return `
+            <div style="
+                padding:40px;
+                text-align:center;
+                color:#64748b;
+            ">
+                No current manpower available.
+            </div>
+        `;
+
+    }
+
+    const directPercent =
+        (
+            direct /
+            total
+        ) * 100;
+
+    const subcontractorPercent =
+        (
+            subcontractor /
+            total
+        ) * 100;
+
+    return `
+
+        <div style="
+            padding:20px 10px;
+        ">
+
+            <div style="
+                display:grid;
+                grid-template-columns:
+                    repeat(2,minmax(180px,1fr));
+                gap:20px;
+            ">
+
+
+                <!-- DIRECT -->
+
+                <div style="
+                    border:1px solid #e5e7eb;
+                    border-radius:10px;
+                    padding:20px;
+                ">
+
+                    <div style="
+                        font-size:12px;
+                        color:#64748b;
+                        margin-bottom:8px;
+                    ">
+                        DIRECT
+                    </div>
+
+                    <div style="
+                        font-size:32px;
+                        font-weight:700;
+                        color:#17243a;
+                    ">
+                        ${direct}
+                    </div>
+
+                    <div style="
+                        margin-top:5px;
+                        font-size:12px;
+                        color:#64748b;
+                    ">
+                        ${directPercent.toFixed(1)}%
+                        of current manpower
+                    </div>
+
+                    <div style="
+                        margin-top:14px;
+                        height:10px;
+                        background:#e5e7eb;
+                        border-radius:10px;
+                        overflow:hidden;
+                    ">
+
+                        <div style="
+                            width:${directPercent}%;
+                            height:100%;
+                            background:#17243a;
+                        "></div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SUBCONTRACTOR -->
+
+                <div style="
+                    border:1px solid #e5e7eb;
+                    border-radius:10px;
+                    padding:20px;
+                ">
+
+                    <div style="
+                        font-size:12px;
+                        color:#64748b;
+                        margin-bottom:8px;
+                    ">
+                        SUBCONTRACTOR
+                    </div>
+
+                    <div style="
+                        font-size:32px;
+                        font-weight:700;
+                        color:#475569;
+                    ">
+                        ${subcontractor}
+                    </div>
+
+                    <div style="
+                        margin-top:5px;
+                        font-size:12px;
+                        color:#64748b;
+                    ">
+                        ${subcontractorPercent.toFixed(1)}%
+                        of current manpower
+                    </div>
+
+                    <div style="
+                        margin-top:14px;
+                        height:10px;
+                        background:#e5e7eb;
+                        border-radius:10px;
+                        overflow:hidden;
+                    ">
+
+                        <div style="
+                            width:${subcontractorPercent}%;
+                            height:100%;
+                            background:#64748b;
+                        "></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div style="
+                margin-top:20px;
+                padding:15px;
+                background:#f8fafc;
+                border-radius:8px;
+                text-align:center;
+                font-size:13px;
+                color:#475569;
+            ">
+
+                Total Current Manpower:
+                <strong style="
+                    color:#17243a;
+                    font-size:16px;
+                ">
+                    ${total}
+                </strong>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   RENDER TRADE ANALYSIS
+===================================================== */
+
+function almMP5RenderTradeAnalysis(
+    project
+){
+
+    const container =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!container){
+        return;
+    }
+
+    const tradeData =
+        almMP5GetTradeData(
+            project
+        );
+
+    const selectedDate =
+        project.manpowerAsOfDate ||
+        almMP2Today();
+
+    const totalCurrent =
+        tradeData.reduce(
+            (sum,item) =>
+                sum + item.total,
+            0
+        );
+
+
+    let rows = "";
+
+
+    if(!tradeData.length){
+
+        rows = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    style="
+                        padding:35px;
+                        text-align:center;
+                        color:#64748b;
+                    "
+                >
+                    No active trade manpower
+                    for ${selectedDate}.
+                </td>
+
+            </tr>
+
+        `;
+
+    }else{
+
+        rows =
+            tradeData.map(
+                item => {
+
+                    const percentage =
+                        totalCurrent > 0
+                        ?
+                        (
+                            item.total /
+                            totalCurrent
+                        ) * 100
+                        :
+                        0;
+
+                    return `
+
+                        <tr>
+
+                            <td style="
+                                padding:11px;
+                                font-weight:600;
+                            ">
+                                ${almManpowerEscape(
+                                    item.trade
+                                )}
+                            </td>
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.total}
+                            </td>
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.direct}
+                            </td>
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.subcontractor}
+                            </td>
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.deployments}
+                            </td>
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${percentage.toFixed(1)}%
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            ).join("");
+
+    }
+
+
+    const section =
+        document.createElement(
+            "div"
+        );
+
+
+    section.innerHTML = `
+
+        <!-- =========================================
+             TRADE ANALYSIS
+        ========================================== -->
+
+        <div style="
+            margin-top:20px;
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:10px;
+            overflow:hidden;
+        ">
+
+
+            <div style="
+                padding:17px 18px;
+                border-bottom:1px solid #e5e7eb;
+            ">
+
+                <div style="
+                    font-size:16px;
+                    font-weight:700;
+                    color:#17243a;
+                ">
+                    Manpower by Trade
+                </div>
+
+                <div style="
+                    margin-top:4px;
+                    color:#64748b;
+                    font-size:12px;
+                ">
+                    Current trade deployment as of
+                    <strong>
+                        ${selectedDate}
+                    </strong>.
+                </div>
+
+            </div>
+
+
+            <div style="
+                padding:20px;
+            ">
+
+                ${almMP5BuildTradeChart(
+                    tradeData
+                )}
+
+            </div>
+
+
+            <div style="
+                padding:
+                    0
+                    20px
+                    20px 20px;
+                overflow-x:auto;
+            ">
+
+                <table style="
+                    width:100%;
+                    min-width:650px;
+                    border-collapse:collapse;
+                    font-size:12px;
+                ">
+
+                    <thead>
+
+                        <tr style="
+                            background:#f3f6fa;
+                            color:#374151;
+                        ">
+
+                            <th style="
+                                padding:11px;
+                                text-align:left;
+                            ">
+                                Trade
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Total
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Direct
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Subcontractor
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Deployments
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                % of Total
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${rows}
+
+                    </tbody>
+
+
+                    ${
+                        tradeData.length
+                        ?
+                        `
+
+                            <tfoot>
+
+                                <tr style="
+                                    background:#f8fafc;
+                                    font-weight:700;
+                                ">
+
+                                    <td style="
+                                        padding:11px;
+                                    ">
+                                        Total
+                                    </td>
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${totalCurrent}
+                                    </td>
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${tradeData.reduce(
+                                            (sum,item) =>
+                                                sum +
+                                                item.direct,
+                                            0
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${tradeData.reduce(
+                                            (sum,item) =>
+                                                sum +
+                                                item.subcontractor,
+                                            0
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${tradeData.reduce(
+                                            (sum,item) =>
+                                                sum +
+                                                item.deployments,
+                                            0
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        100.0%
+                                    </td>
+
+                                </tr>
+
+                            </tfoot>
+
+                        `
+                        :
+                        ""
+                    }
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================
+             DIRECT / SUBCONTRACTOR
+        ========================================== -->
+
+        <div style="
+            margin-top:20px;
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:10px;
+            overflow:hidden;
+        ">
+
+
+            <div style="
+                padding:17px 18px;
+                border-bottom:1px solid #e5e7eb;
+            ">
+
+                <div style="
+                    font-size:16px;
+                    font-weight:700;
+                    color:#17243a;
+                ">
+                    Direct vs Subcontractor
+                </div>
+
+                <div style="
+                    margin-top:4px;
+                    color:#64748b;
+                    font-size:12px;
+                ">
+                    Current manpower composition as of
+                    <strong>
+                        ${selectedDate}
+                    </strong>.
+                </div>
+
+            </div>
+
+
+            ${almMP5BuildTypeChart(
+                tradeData
+            )}
+
+        </div>
+
+    `;
+
+
+    container.appendChild(
+        section
+    );
+
+}
+
+
+/* =====================================================
+   END MANPOWER STEP 5
 ===================================================== */
 </script>
 </body>
