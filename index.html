@@ -12316,7 +12316,7 @@ window.renderManpowerSection = function(project){
         </div>
 
     `;
-
+almMP3RenderMonthlyFlow(project);
 };
 
 
@@ -12507,6 +12507,1004 @@ window.almDeleteManpower = function(
 
 /* =====================================================
    END MANPOWER MODULE - STEP 1
+===================================================== */
+    /* =====================================================
+   MANPOWER STEP 3
+   MONTHLY MANPOWER FLOW
+===================================================== */
+
+
+/* =====================================================
+   GET PROJECT DATE RANGE
+===================================================== */
+
+function almMP3GetProjectDateRange(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+
+    const validRecords =
+        records.filter(
+            record =>
+                record.startDate &&
+                record.endDate
+        );
+
+
+    if(!validRecords.length){
+
+        return null;
+
+    }
+
+
+    let startDate =
+        validRecords[0].startDate;
+
+    let endDate =
+        validRecords[0].endDate;
+
+
+    validRecords.forEach(
+        record => {
+
+            if(
+                record.startDate <
+                startDate
+            ){
+
+                startDate =
+                    record.startDate;
+
+            }
+
+
+            if(
+                record.endDate >
+                endDate
+            ){
+
+                endDate =
+                    record.endDate;
+
+            }
+
+        }
+    );
+
+
+    return {
+
+        startDate,
+
+        endDate
+
+    };
+
+}
+
+
+/* =====================================================
+   MONTHLY MANPOWER CALCULATION
+===================================================== */
+
+function almMP3GetMonthlyData(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+
+    const range =
+        almMP3GetProjectDateRange(project);
+
+
+    if(!range){
+
+        return [];
+
+    }
+
+
+    const start =
+        new Date(
+            range.startDate + "T00:00:00"
+        );
+
+
+    const end =
+        new Date(
+            range.endDate + "T00:00:00"
+        );
+
+
+    start.setDate(1);
+
+    end.setDate(1);
+
+
+    const months = [];
+
+
+    let cursor =
+        new Date(start);
+
+
+    while(cursor <= end){
+
+        const year =
+            cursor.getFullYear();
+
+        const month =
+            cursor.getMonth();
+
+
+        const monthStart =
+            new Date(
+                year,
+                month,
+                1
+            );
+
+
+        const monthEnd =
+            new Date(
+                year,
+                month + 1,
+                0
+            );
+
+
+        const monthStartString =
+            almMP3DateString(
+                monthStart
+            );
+
+
+        const monthEndString =
+            almMP3DateString(
+                monthEnd
+            );
+
+
+        const dailyValues = [];
+
+        const dailyDirect = [];
+
+        const dailySubcontractor = [];
+
+
+        let day =
+            new Date(monthStart);
+
+
+        while(day <= monthEnd){
+
+            const dayString =
+                almMP3DateString(day);
+
+
+            const active =
+                records.filter(
+                    record =>
+                        record.startDate &&
+                        record.endDate &&
+                        record.startDate <= dayString &&
+                        dayString <= record.endDate
+                );
+
+
+            let total = 0;
+
+            let direct = 0;
+
+            let subcontractor = 0;
+
+
+            active.forEach(
+                record => {
+
+                    const manpower =
+                        Number(
+                            record.manpower || 0
+                        );
+
+
+                    total += manpower;
+
+
+                    if(
+                        record.type ===
+                        "Subcontractor"
+                    ){
+
+                        subcontractor +=
+                            manpower;
+
+                    }else{
+
+                        direct +=
+                            manpower;
+
+                    }
+
+                }
+            );
+
+
+            dailyValues.push(total);
+
+            dailyDirect.push(direct);
+
+            dailySubcontractor.push(
+                subcontractor
+            );
+
+
+            day.setDate(
+                day.getDate() + 1
+            );
+
+        }
+
+
+        const average =
+            dailyValues.length
+            ?
+            dailyValues.reduce(
+                (a,b) => a + b,
+                0
+            ) / dailyValues.length
+            :
+            0;
+
+
+        const peak =
+            dailyValues.length
+            ?
+            Math.max(
+                ...dailyValues
+            )
+            :
+            0;
+
+
+        const monthEndValue =
+            dailyValues.length
+            ?
+            dailyValues[
+                dailyValues.length - 1
+            ]
+            :
+            0;
+
+
+        const directAverage =
+            dailyDirect.length
+            ?
+            dailyDirect.reduce(
+                (a,b) => a + b,
+                0
+            ) / dailyDirect.length
+            :
+            0;
+
+
+        const subcontractorAverage =
+            dailySubcontractor.length
+            ?
+            dailySubcontractor.reduce(
+                (a,b) => a + b,
+                0
+            ) / dailySubcontractor.length
+            :
+            0;
+
+
+        months.push({
+
+            year,
+
+            month,
+
+            label:
+                cursor.toLocaleDateString(
+                    "en-GB",
+                    {
+                        month:"short",
+                        year:"numeric"
+                    }
+                ),
+
+            average,
+
+            peak,
+
+            monthEnd:
+                monthEndValue,
+
+            directAverage,
+
+            subcontractorAverage
+
+        });
+
+
+        cursor.setMonth(
+            cursor.getMonth() + 1
+        );
+
+    }
+
+
+    return months;
+
+}
+
+
+/* =====================================================
+   DATE FORMAT
+===================================================== */
+
+function almMP3DateString(date){
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0");
+
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/* =====================================================
+   MONTHLY FLOW GRAPH
+===================================================== */
+
+function almMP3BuildChart(months){
+
+    if(!months.length){
+
+        return `
+            <div style="
+                padding:40px;
+                text-align:center;
+                color:#64748b;
+            ">
+                No dated manpower records available.
+            </div>
+        `;
+
+    }
+
+
+    const width = 1000;
+
+    const height = 330;
+
+    const left = 60;
+
+    const right = 25;
+
+    const top = 25;
+
+    const bottom = 55;
+
+
+    const chartWidth =
+        width - left - right;
+
+
+    const chartHeight =
+        height - top - bottom;
+
+
+    const maxValue =
+        Math.max(
+            1,
+            ...months.map(
+                m =>
+                    Math.max(
+                        m.peak,
+                        m.monthEnd,
+                        m.average
+                    )
+            )
+        );
+
+
+    const points =
+        months.map(
+            (item,index) => {
+
+                const x =
+                    months.length === 1
+                    ?
+                    left + chartWidth / 2
+                    :
+                    left +
+                    (
+                        index /
+                        (months.length - 1)
+                    ) *
+                    chartWidth;
+
+
+                const y =
+                    top +
+                    chartHeight -
+                    (
+                        item.average /
+                        maxValue
+                    ) *
+                    chartHeight;
+
+
+                return `${x},${y}`;
+
+            }
+        ).join(" ");
+
+
+    const peakPoints =
+        months.map(
+            (item,index) => {
+
+                const x =
+                    months.length === 1
+                    ?
+                    left + chartWidth / 2
+                    :
+                    left +
+                    (
+                        index /
+                        (months.length - 1)
+                    ) *
+                    chartWidth;
+
+
+                const y =
+                    top +
+                    chartHeight -
+                    (
+                        item.peak /
+                        maxValue
+                    ) *
+                    chartHeight;
+
+
+                return `${x},${y}`;
+
+            }
+        ).join(" ");
+
+
+    const monthEndPoints =
+        months.map(
+            (item,index) => {
+
+                const x =
+                    months.length === 1
+                    ?
+                    left + chartWidth / 2
+                    :
+                    left +
+                    (
+                        index /
+                        (months.length - 1)
+                    ) *
+                    chartWidth;
+
+
+                const y =
+                    top +
+                    chartHeight -
+                    (
+                        item.monthEnd /
+                        maxValue
+                    ) *
+                    chartHeight;
+
+
+                return `${x},${y}`;
+
+            }
+        ).join(" ");
+
+
+    let grid = "";
+
+
+    for(let i = 0; i <= 4; i++){
+
+        const value =
+            maxValue * (i / 4);
+
+
+        const y =
+            top +
+            chartHeight -
+            (
+                i / 4
+            ) *
+            chartHeight;
+
+
+        grid += `
+
+            <line
+                x1="${left}"
+                y1="${y}"
+                x2="${width - right}"
+                y2="${y}"
+                stroke="#e5e7eb"
+                stroke-width="1"
+            />
+
+            <text
+                x="${left - 10}"
+                y="${y + 4}"
+                text-anchor="end"
+                font-size="11"
+                fill="#64748b"
+            >
+                ${Math.round(value)}
+            </text>
+
+        `;
+
+    }
+
+
+    let labels = "";
+
+
+    months.forEach(
+        (item,index) => {
+
+            const x =
+                months.length === 1
+                ?
+                left + chartWidth / 2
+                :
+                left +
+                (
+                    index /
+                    (months.length - 1)
+                ) *
+                chartWidth;
+
+
+            labels += `
+
+                <text
+                    x="${x}"
+                    y="${height - 20}"
+                    text-anchor="middle"
+                    font-size="11"
+                    fill="#64748b"
+                >
+                    ${item.label}
+                </text>
+
+            `;
+
+        }
+    );
+
+
+    return `
+
+        <div style="
+            width:100%;
+            overflow-x:auto;
+        ">
+
+            <svg
+                viewBox="
+                    0 0 ${width} ${height}
+                "
+                style="
+                    width:100%;
+                    min-width:700px;
+                    height:auto;
+                    display:block;
+                "
+            >
+
+                ${grid}
+
+
+                <line
+                    x1="${left}"
+                    y1="${top}"
+                    x2="${left}"
+                    y2="${top + chartHeight}"
+                    stroke="#94a3b8"
+                    stroke-width="1"
+                />
+
+
+                <line
+                    x1="${left}"
+                    y1="${top + chartHeight}"
+                    x2="${width - right}"
+                    y2="${top + chartHeight}"
+                    stroke="#94a3b8"
+                    stroke-width="1"
+                />
+
+
+                <polyline
+                    points="${points}"
+                    fill="none"
+                    stroke="#17243a"
+                    stroke-width="3"
+                />
+
+
+                <polyline
+                    points="${peakPoints}"
+                    fill="none"
+                    stroke="#64748b"
+                    stroke-width="2"
+                    stroke-dasharray="7 5"
+                />
+
+
+                <polyline
+                    points="${monthEndPoints}"
+                    fill="none"
+                    stroke="#94a3b8"
+                    stroke-width="2"
+                    stroke-dasharray="3 4"
+                />
+
+
+                ${
+                    months.map(
+                        (item,index) => {
+
+                            const x =
+                                months.length === 1
+                                ?
+                                left + chartWidth / 2
+                                :
+                                left +
+                                (
+                                    index /
+                                    (months.length - 1)
+                                ) *
+                                chartWidth;
+
+
+                            const y =
+                                top +
+                                chartHeight -
+                                (
+                                    item.average /
+                                    maxValue
+                                ) *
+                                chartHeight;
+
+
+                            return `
+
+                                <circle
+                                    cx="${x}"
+                                    cy="${y}"
+                                    r="4"
+                                    fill="white"
+                                    stroke="#17243a"
+                                    stroke-width="2"
+                                />
+
+                            `;
+
+                        }
+                    ).join("")
+
+                }
+
+
+                ${labels}
+
+
+                <text
+                    x="${width - 20}"
+                    y="20"
+                    text-anchor="end"
+                    font-size="11"
+                    fill="#64748b"
+                >
+                    Manpower
+                </text>
+
+            </svg>
+
+        </div>
+
+
+        <div style="
+            display:flex;
+            justify-content:center;
+            gap:25px;
+            flex-wrap:wrap;
+            margin-top:8px;
+            font-size:11px;
+            color:#64748b;
+        ">
+
+            <span>
+                <strong style="color:#17243a;">
+                    ━
+                </strong>
+                Average
+            </span>
+
+            <span>
+                <strong style="color:#64748b;">
+                    ┄
+                </strong>
+                Peak
+            </span>
+
+            <span>
+                <strong style="color:#94a3b8;">
+                    ┄
+                </strong>
+                Month-End
+            </span>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   RENDER MONTHLY FLOW
+===================================================== */
+
+function almMP3RenderMonthlyFlow(project){
+
+    const container =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+
+    if(!container){
+
+        return;
+
+    }
+
+
+    const months =
+        almMP3GetMonthlyData(project);
+
+
+    if(!months.length){
+
+        return;
+
+    }
+
+
+    let tableRows = "";
+
+
+    months.forEach(
+        item => {
+
+            tableRows += `
+
+                <tr>
+
+                    <td style="
+                        padding:11px;
+                        font-weight:600;
+                    ">
+                        ${item.label}
+                    </td>
+
+                    <td style="
+                        padding:11px;
+                        text-align:right;
+                    ">
+                        ${item.average.toFixed(1)}
+                    </td>
+
+                    <td style="
+                        padding:11px;
+                        text-align:right;
+                    ">
+                        ${item.peak}
+                    </td>
+
+                    <td style="
+                        padding:11px;
+                        text-align:right;
+                    ">
+                        ${item.monthEnd}
+                    </td>
+
+                    <td style="
+                        padding:11px;
+                        text-align:right;
+                    ">
+                        ${item.directAverage.toFixed(1)}
+                    </td>
+
+                    <td style="
+                        padding:11px;
+                        text-align:right;
+                    ">
+                        ${item.subcontractorAverage.toFixed(1)}
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    const section =
+        document.createElement("div");
+
+
+    section.innerHTML = `
+
+        <div style="
+            margin-top:20px;
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:10px;
+            overflow:hidden;
+        ">
+
+
+            <div style="
+                padding:17px 18px;
+                border-bottom:1px solid #e5e7eb;
+            ">
+
+                <div style="
+                    font-size:16px;
+                    font-weight:700;
+                    color:#17243a;
+                ">
+                    Monthly Manpower Flow
+                </div>
+
+                <div style="
+                    margin-top:4px;
+                    color:#64748b;
+                    font-size:12px;
+                ">
+                    Monthly manpower deployment trend
+                    throughout the recorded project period.
+                </div>
+
+            </div>
+
+
+            <div style="
+                padding:20px;
+                background:#ffffff;
+            ">
+
+                ${almMP3BuildChart(months)}
+
+            </div>
+
+
+            <div style="
+                padding:0 20px 20px 20px;
+                overflow-x:auto;
+            ">
+
+                <table style="
+                    width:100%;
+                    min-width:700px;
+                    border-collapse:collapse;
+                    font-size:12px;
+                ">
+
+                    <thead>
+
+                        <tr style="
+                            background:#f3f6fa;
+                            color:#374151;
+                        ">
+
+                            <th style="
+                                padding:11px;
+                                text-align:left;
+                            ">
+                                Month
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Average Manpower
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Peak
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Month-End
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Direct Average
+                            </th>
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Subcontractor Average
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${tableRows}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    container.appendChild(
+        section
+    );
+
+}
+
+
+/* =====================================================
+   END MANPOWER STEP 3
 ===================================================== */
 </script>
 </body>
