@@ -12317,6 +12317,7 @@ window.renderManpowerSection = function(project){
 
     `;
 almMP3RenderMonthlyFlow(project);
+almMP4RenderWorkStageAnalysis(project);
 };
 
 
@@ -13505,6 +13506,704 @@ function almMP3RenderMonthlyFlow(project){
 
 /* =====================================================
    END MANPOWER STEP 3
+===================================================== */
+    /* =====================================================
+   MANPOWER STEP 4
+   MANPOWER BY WORK STAGE
+===================================================== */
+
+
+/* =====================================================
+   GET WORK STAGE DATA
+===================================================== */
+
+function almMP4GetWorkStageData(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+
+    const selectedDate =
+        project.manpowerAsOfDate ||
+        almMP2Today();
+
+
+    const activeRecords =
+        records.filter(
+            record =>
+                almMP2IsActive(
+                    record,
+                    selectedDate
+                )
+        );
+
+
+    const stageMap = {};
+
+
+    activeRecords.forEach(
+        record => {
+
+            const stage =
+                String(
+                    record.workStage || ""
+                ).trim();
+
+
+            if(!stage){
+                return;
+            }
+
+
+            if(!stageMap[stage]){
+
+                stageMap[stage] = {
+
+                    stage,
+
+                    total: 0,
+
+                    direct: 0,
+
+                    subcontractor: 0,
+
+                    deployments: 0
+
+                };
+
+            }
+
+
+            const manpower =
+                Number(
+                    record.manpower || 0
+                );
+
+
+            stageMap[stage].total +=
+                manpower;
+
+
+            stageMap[stage].deployments +=
+                1;
+
+
+            if(
+                record.type ===
+                "Subcontractor"
+            ){
+
+                stageMap[stage].subcontractor +=
+                    manpower;
+
+            }else{
+
+                stageMap[stage].direct +=
+                    manpower;
+
+            }
+
+        }
+    );
+
+
+    return Object.values(stageMap)
+        .sort(
+            (a,b) =>
+                b.total - a.total
+        );
+
+}
+
+
+/* =====================================================
+   BUILD WORK STAGE BAR CHART
+===================================================== */
+
+function almMP4BuildWorkStageChart(
+    stageData
+){
+
+    if(!stageData.length){
+
+        return `
+            <div style="
+                padding:40px;
+                text-align:center;
+                color:#64748b;
+            ">
+                No active work-stage manpower
+                for the selected date.
+            </div>
+        `;
+
+    }
+
+
+    const width = 1000;
+
+    const rowHeight = 52;
+
+    const height =
+        Math.max(
+            260,
+            90 +
+            stageData.length *
+            rowHeight
+        );
+
+
+    const left = 210;
+
+    const right = 60;
+
+    const top = 30;
+
+    const bottom = 35;
+
+
+    const chartWidth =
+        width -
+        left -
+        right;
+
+
+    const maxValue =
+        Math.max(
+            1,
+            ...stageData.map(
+                item =>
+                    item.total
+            )
+        );
+
+
+    let grid = "";
+
+
+    for(let i = 0; i <= 5; i++){
+
+        const value =
+            maxValue *
+            (i / 5);
+
+
+        const x =
+            left +
+            (
+                i / 5
+            ) *
+            chartWidth;
+
+
+        grid += `
+
+            <line
+                x1="${x}"
+                y1="${top}"
+                x2="${x}"
+                y2="${height - bottom}"
+                stroke="#e5e7eb"
+                stroke-width="1"
+            />
+
+            <text
+                x="${x}"
+                y="${height - 12}"
+                text-anchor="middle"
+                font-size="11"
+                fill="#64748b"
+            >
+                ${Math.round(value)}
+            </text>
+
+        `;
+
+    }
+
+
+    let bars = "";
+
+
+    stageData.forEach(
+        (item,index) => {
+
+            const y =
+                top +
+                index *
+                rowHeight;
+
+
+            const barWidth =
+                (
+                    item.total /
+                    maxValue
+                ) *
+                chartWidth;
+
+
+            bars += `
+
+                <text
+                    x="${left - 12}"
+                    y="${y + 25}"
+                    text-anchor="end"
+                    font-size="12"
+                    fill="#374151"
+                >
+                    ${almManpowerEscape(
+                        item.stage
+                    )}
+                </text>
+
+
+                <rect
+                    x="${left}"
+                    y="${y + 8}"
+                    width="${barWidth}"
+                    height="28"
+                    rx="4"
+                    fill="#17243a"
+                />
+
+
+                <text
+                    x="${left + barWidth + 8}"
+                    y="${y + 27}"
+                    font-size="12"
+                    font-weight="600"
+                    fill="#17243a"
+                >
+                    ${item.total}
+                </text>
+
+            `;
+
+        }
+    );
+
+
+    return `
+
+        <div style="
+            width:100%;
+            overflow-x:auto;
+        ">
+
+            <svg
+                viewBox="
+                    0 0
+                    ${width}
+                    ${height}
+                "
+                style="
+                    width:100%;
+                    min-width:750px;
+                    height:auto;
+                    display:block;
+                "
+            >
+
+                ${grid}
+
+                ${bars}
+
+            </svg>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   RENDER WORK STAGE ANALYSIS
+===================================================== */
+
+function almMP4RenderWorkStageAnalysis(
+    project
+){
+
+    const container =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+
+    if(!container){
+        return;
+    }
+
+
+    const stageData =
+        almMP4GetWorkStageData(
+            project
+        );
+
+
+    const selectedDate =
+        project.manpowerAsOfDate ||
+        almMP2Today();
+
+
+    const totalCurrent =
+        stageData.reduce(
+            (sum,item) =>
+                sum + item.total,
+            0
+        );
+
+
+    let rows = "";
+
+
+    if(!stageData.length){
+
+        rows = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    style="
+                        padding:35px;
+                        text-align:center;
+                        color:#64748b;
+                    "
+                >
+                    No active work-stage manpower
+                    for ${selectedDate}.
+                </td>
+
+            </tr>
+
+        `;
+
+    }else{
+
+        rows =
+            stageData.map(
+                item => {
+
+                    const percentage =
+                        totalCurrent > 0
+                        ?
+                        (
+                            item.total /
+                            totalCurrent
+                        ) * 100
+                        :
+                        0;
+
+
+                    return `
+
+                        <tr>
+
+                            <td style="
+                                padding:11px;
+                                font-weight:600;
+                            ">
+                                ${almManpowerEscape(
+                                    item.stage
+                                )}
+                            </td>
+
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.total}
+                            </td>
+
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.direct}
+                            </td>
+
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.subcontractor}
+                            </td>
+
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${item.deployments}
+                            </td>
+
+
+                            <td style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                ${percentage.toFixed(1)}%
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            ).join("");
+
+    }
+
+
+    const section =
+        document.createElement(
+            "div"
+        );
+
+
+    section.innerHTML = `
+
+        <div style="
+            margin-top:20px;
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:10px;
+            overflow:hidden;
+        ">
+
+
+            <!-- HEADER -->
+
+            <div style="
+                padding:17px 18px;
+                border-bottom:1px solid #e5e7eb;
+            ">
+
+                <div style="
+                    font-size:16px;
+                    font-weight:700;
+                    color:#17243a;
+                ">
+                    Manpower by Work Stage
+                </div>
+
+
+                <div style="
+                    margin-top:4px;
+                    color:#64748b;
+                    font-size:12px;
+                ">
+                    Current manpower distribution by
+                    active work stage as of
+                    <strong>
+                        ${selectedDate}
+                    </strong>.
+                </div>
+
+            </div>
+
+
+            <!-- CHART -->
+
+            <div style="
+                padding:20px;
+            ">
+
+                ${almMP4BuildWorkStageChart(
+                    stageData
+                )}
+
+            </div>
+
+
+            <!-- TABLE -->
+
+            <div style="
+                padding:
+                    0
+                    20px
+                    20px
+                    20px;
+
+                overflow-x:auto;
+            ">
+
+                <table style="
+                    width:100%;
+                    min-width:650px;
+                    border-collapse:collapse;
+                    font-size:12px;
+                ">
+
+                    <thead>
+
+                        <tr style="
+                            background:#f3f6fa;
+                            color:#374151;
+                        ">
+
+                            <th style="
+                                padding:11px;
+                                text-align:left;
+                            ">
+                                Work Stage
+                            </th>
+
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Total
+                            </th>
+
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Direct
+                            </th>
+
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Subcontractor
+                            </th>
+
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                Deployments
+                            </th>
+
+
+                            <th style="
+                                padding:11px;
+                                text-align:right;
+                            ">
+                                % of Total
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${rows}
+
+                    </tbody>
+
+
+                    ${
+                        stageData.length
+                        ?
+                        `
+                            <tfoot>
+
+                                <tr style="
+                                    background:#f8fafc;
+                                    font-weight:700;
+                                ">
+
+                                    <td style="
+                                        padding:11px;
+                                    ">
+                                        Total
+                                    </td>
+
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${totalCurrent}
+                                    </td>
+
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${stageData.reduce(
+                                            (sum,item) =>
+                                                sum +
+                                                item.direct,
+                                            0
+                                        )}
+                                    </td>
+
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${stageData.reduce(
+                                            (sum,item) =>
+                                                sum +
+                                                item.subcontractor,
+                                            0
+                                        )}
+                                    </td>
+
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        ${stageData.reduce(
+                                            (sum,item) =>
+                                                sum +
+                                                item.deployments,
+                                            0
+                                        )}
+                                    </td>
+
+
+                                    <td style="
+                                        padding:11px;
+                                        text-align:right;
+                                    ">
+                                        100.0%
+                                    </td>
+
+                                </tr>
+
+                            </tfoot>
+                        `
+                        :
+                        ""
+                    }
+
+                </table>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    container.appendChild(
+        section
+    );
+
+}
+
+
+/* =====================================================
+   END MANPOWER STEP 4
 ===================================================== */
 </script>
 </body>
