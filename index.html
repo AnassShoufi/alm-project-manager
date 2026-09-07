@@ -16660,13 +16660,15 @@ body{
 
 .page{
 
-    min-height:188mm;
+    min-height:auto;
 
     page-break-after:always;
 
     position:relative;
 
-    padding:2mm 2mm 9mm;
+    padding:2mm 2mm 6mm;
+
+    break-inside:avoid;
 
 }
 
@@ -17529,7 +17531,17 @@ tbody tr:nth-child(even){
 
     .page{
 
-        min-height:188mm;
+        min-height:auto;
+
+        page-break-after:always;
+
+    }
+
+    .panel,
+    .chartBox,
+    table{
+
+        break-inside:avoid;
 
     }
 
