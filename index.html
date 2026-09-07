@@ -14168,7 +14168,883 @@ function(projectId){
 /* =====================================================
    CLIENT VIEW / PRINT
 ===================================================== */
+/* =====================================================
+   MONTHLY MANPOWER REPORT DATA
+===================================================== */
 
+function getManpowerProjectDates(project){
+
+    const records =
+        project.manpowerRecords || [];
+
+    let start =
+        project.startDate || "";
+
+    let end =
+        project.completionDate || "";
+
+    records.forEach(record => {
+
+        if(
+            record.startDate &&
+            (
+                !start ||
+                record.startDate < start
+            )
+        ){
+
+            start =
+                record.startDate;
+
+        }
+
+        if(
+            record.endDate &&
+            (
+                !end ||
+                record.endDate > end
+            )
+        ){
+
+            end =
+                record.endDate;
+
+        }
+
+    });
+
+    if(!start){
+
+        start =
+            manpowerToday();
+
+    }
+
+    if(!end){
+
+        end =
+            start;
+
+    }
+
+    return {
+        start,
+        end
+    };
+
+}
+
+
+/* =====================================================
+   MONTHLY SUMMARY
+===================================================== */
+
+function getManpowerMonthlySummary(
+    project
+){
+
+    const records =
+        project.manpowerRecords || [];
+
+    const projectDates =
+        getManpowerProjectDates(
+            project
+        );
+
+    const startDate =
+        manpowerDateValue(
+            projectDates.start
+        );
+
+    const endDate =
+        manpowerDateValue(
+            projectDates.end
+        );
+
+    const months = [];
+
+    let cursor =
+        new Date(
+            startDate.getFullYear(),
+            startDate.getMonth(),
+            1
+        );
+
+    while(
+        cursor <= endDate
+    ){
+
+        const year =
+            cursor.getFullYear();
+
+        const month =
+            cursor.getMonth();
+
+        const monthStart =
+            new Date(
+                year,
+                month,
+                1
+            );
+
+        const monthEnd =
+            new Date(
+                year,
+                month + 1,
+                0
+            );
+
+        const first =
+            monthStart <
+            startDate
+            ? startDate
+            : monthStart;
+
+        const last =
+            monthEnd >
+            endDate
+            ? endDate
+            : monthEnd;
+
+        const dailyTotals = [];
+
+        let day =
+            new Date(first);
+
+        while(day <= last){
+
+            const date =
+                day
+                    .toISOString()
+                    .split("T")[0];
+
+            const active =
+                records.filter(
+                    record =>
+                        manpowerIsActive(
+                            record,
+                            date
+                        )
+                );
+
+            dailyTotals.push({
+
+                total:
+                    getManpowerTotal(
+                        active
+                    ),
+
+                direct:
+                    getManpowerTotal(
+                        active.filter(
+                            r =>
+                                r.type ===
+                                "Direct"
+                        )
+                    ),
+
+                subcontractor:
+                    getManpowerTotal(
+                        active.filter(
+                            r =>
+                                r.type ===
+                                "Subcontractor"
+                        )
+                    )
+
+            });
+
+            day.setDate(
+                day.getDate() + 1
+            );
+
+        }
+
+        const totals =
+            dailyTotals.map(
+                x => x.total
+            );
+
+        const directTotals =
+            dailyTotals.map(
+                x => x.direct
+            );
+
+        const subTotals =
+            dailyTotals.map(
+                x => x.subcontractor
+            );
+
+        const average =
+            totals.length
+            ?
+            totals.reduce(
+                (a,b) => a + b,
+                0
+            ) /
+            totals.length
+            :
+            0;
+
+        const peak =
+            totals.length
+            ?
+            Math.max(
+                ...totals
+            )
+            :
+            0;
+
+        const monthEndDate =
+            last
+                .toISOString()
+                .split("T")[0];
+
+        const monthEndActive =
+            records.filter(
+                record =>
+                    manpowerIsActive(
+                        record,
+                        monthEndDate
+                    )
+            );
+
+        const monthEnd =
+            getManpowerTotal(
+                monthEndActive
+            );
+
+        const directAverage =
+            directTotals.length
+            ?
+            directTotals.reduce(
+                (a,b) => a + b,
+                0
+            ) /
+            directTotals.length
+            :
+            0;
+
+        const subcontractorAverage =
+            subTotals.length
+            ?
+            subTotals.reduce(
+                (a,b) => a + b,
+                0
+            ) /
+            subTotals.length
+            :
+            0;
+
+        months.push({
+
+            key:
+                `${year}-${String(
+                    month + 1
+                ).padStart(2,"0")}`,
+
+            label:
+                new Date(
+                    year,
+                    month,
+                    1
+                ).toLocaleDateString(
+                    "en-US",
+                    {
+                        month:"short",
+                        year:"numeric"
+                    }
+                ),
+
+            average,
+            peak,
+            monthEnd,
+
+            directAverage,
+
+            subcontractorAverage
+
+        });
+
+        cursor.setMonth(
+            cursor.getMonth() + 1
+        );
+
+    }
+
+    return months;
+
+}
+
+
+/* =====================================================
+   SVG MONTHLY FLOW CHART
+===================================================== */
+
+function manpowerMonthlyFlowSVG(
+    monthly
+){
+
+    if(!monthly.length){
+
+        return `
+            <div style="
+                padding:30px;
+                text-align:center;
+                color:#777;
+            ">
+                No monthly manpower data available.
+            </div>
+        `;
+
+    }
+
+    const width = 900;
+    const height = 360;
+
+    const left = 55;
+    const right = 25;
+    const top = 30;
+    const bottom = 65;
+
+    const chartWidth =
+        width - left - right;
+
+    const chartHeight =
+        height - top - bottom;
+
+    const maxValue =
+        Math.max(
+            ...monthly.map(
+                x =>
+                    Math.max(
+                        x.average,
+                        x.peak
+                    )
+            ),
+            1
+        );
+
+    const points =
+        monthly.map(
+            (item,index) => {
+
+                const x =
+                    monthly.length === 1
+                    ?
+                    width / 2
+                    :
+                    left +
+                    (
+                        index /
+                        (
+                            monthly.length - 1
+                        )
+                    ) *
+                    chartWidth;
+
+                const y =
+                    top +
+                    chartHeight -
+                    (
+                        item.average /
+                        maxValue
+                    ) *
+                    chartHeight;
+
+                return {
+                    x,
+                    y,
+                    item
+                };
+
+            }
+        );
+
+    const peakPoints =
+        monthly.map(
+            (item,index) => {
+
+                const x =
+                    monthly.length === 1
+                    ?
+                    width / 2
+                    :
+                    left +
+                    (
+                        index /
+                        (
+                            monthly.length - 1
+                        )
+                    ) *
+                    chartWidth;
+
+                const y =
+                    top +
+                    chartHeight -
+                    (
+                        item.peak /
+                        maxValue
+                    ) *
+                    chartHeight;
+
+                return {
+                    x,
+                    y,
+                    item
+                };
+
+            }
+        );
+
+    const averageLine =
+        points
+            .map(
+                p =>
+                    `${p.x},${p.y}`
+            )
+            .join(" ");
+
+    const peakLine =
+        peakPoints
+            .map(
+                p =>
+                    `${p.x},${p.y}`
+            )
+            .join(" ");
+
+    const gridLines =
+        [0,0.25,0.5,0.75,1]
+            .map(value => {
+
+                const y =
+                    top +
+                    chartHeight -
+                    value *
+                    chartHeight;
+
+                const label =
+                    Math.round(
+                        maxValue *
+                        value
+                    );
+
+                return `
+
+                    <line
+                        x1="${left}"
+                        y1="${y}"
+                        x2="${width-right}"
+                        y2="${y}"
+                        stroke="#e5e9ee"
+                    />
+
+                    <text
+                        x="${left-10}"
+                        y="${y+4}"
+                        text-anchor="end"
+                        font-size="11"
+                        fill="#708096"
+                    >
+                        ${label}
+                    </text>
+
+                `;
+
+            })
+            .join("");
+
+    const labels =
+        points.map(p => `
+
+            <text
+                x="${p.x}"
+                y="${height-30}"
+                text-anchor="middle"
+                font-size="10"
+                fill="#708096"
+            >
+                ${escapeHTML(
+                    p.item.label
+                )}
+            </text>
+
+        `).join("");
+
+    const averageDots =
+        points.map(p => `
+
+            <circle
+                cx="${p.x}"
+                cy="${p.y}"
+                r="4"
+                fill="#1976b8"
+            />
+
+        `).join("");
+
+    const peakDots =
+        peakPoints.map(p => `
+
+            <circle
+                cx="${p.x}"
+                cy="${p.y}"
+                r="4"
+                fill="#a56a00"
+            />
+
+        `).join("");
+
+    return `
+
+        <div>
+
+            <div style="
+                display:flex;
+                gap:20px;
+                margin-bottom:10px;
+                font-size:12px;
+                color:#566579;
+            ">
+
+                <span>
+                    <span style="
+                        display:inline-block;
+                        width:25px;
+                        height:3px;
+                        background:#1976b8;
+                        vertical-align:middle;
+                        margin-right:5px;
+                    "></span>
+                    Average Manpower
+                </span>
+
+                <span>
+                    <span style="
+                        display:inline-block;
+                        width:25px;
+                        height:3px;
+                        background:#a56a00;
+                        vertical-align:middle;
+                        margin-right:5px;
+                    "></span>
+                    Peak Manpower
+                </span>
+
+            </div>
+
+            <svg
+                viewBox="
+                    0 0 ${width} ${height}
+                "
+                style="
+                    width:100%;
+                    height:auto;
+                "
+            >
+
+                ${gridLines}
+
+                <polyline
+                    points="${averageLine}"
+                    fill="none"
+                    stroke="#1976b8"
+                    stroke-width="3"
+                />
+
+                <polyline
+                    points="${peakLine}"
+                    fill="none"
+                    stroke="#a56a00"
+                    stroke-width="2"
+                    stroke-dasharray="7 5"
+                />
+
+                ${averageDots}
+
+                ${peakDots}
+
+                ${labels}
+
+            </svg>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   MONTHLY WORK STAGE DATA
+===================================================== */
+
+function getManpowerMonthlyStageData(
+    project,
+    monthly
+){
+
+    const records =
+        project.manpowerRecords || [];
+
+    return monthly.map(
+        month => {
+
+            const totals = {};
+
+            const year =
+                Number(
+                    month.key.substring(0,4)
+                );
+
+            const monthNumber =
+                Number(
+                    month.key.substring(5,7)
+                ) - 1;
+
+            const start =
+                new Date(
+                    year,
+                    monthNumber,
+                    1
+                );
+
+            const end =
+                new Date(
+                    year,
+                    monthNumber + 1,
+                    0
+                );
+
+            const days = [];
+
+            let day =
+                new Date(start);
+
+            while(day <= end){
+
+                const date =
+                    day
+                        .toISOString()
+                        .split("T")[0];
+
+                records
+                    .filter(
+                        record =>
+                            manpowerIsActive(
+                                record,
+                                date
+                            )
+                    )
+                    .forEach(record => {
+
+                        const stage =
+                            record.workStage ||
+                            "Other";
+
+                        totals[stage] =
+                            (
+                                totals[stage] ||
+                                0
+                            ) +
+                            manpowerNumber(
+                                record.count
+                            );
+
+                    });
+
+                days.push(
+                    date
+                );
+
+                day.setDate(
+                    day.getDate() + 1
+                );
+
+            }
+
+            Object.keys(totals)
+                .forEach(stage => {
+
+                    totals[stage] =
+                        totals[stage] /
+                        Math.max(
+                            days.length,
+                            1
+                        );
+
+                });
+
+            return {
+                month:
+                    month.label,
+                totals
+            };
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   STAGE CHART
+===================================================== */
+
+function manpowerStageChartSVG(
+    stageData
+){
+
+    const stageTotals = {};
+
+    stageData.forEach(month => {
+
+        Object.entries(
+            month.totals
+        ).forEach(
+            ([stage,value]) => {
+
+                stageTotals[stage] =
+                    (
+                        stageTotals[stage] ||
+                        0
+                    ) +
+                    value;
+
+            }
+        );
+
+    });
+
+    const stages =
+        Object.entries(
+            stageTotals
+        )
+        .sort(
+            (a,b) =>
+                b[1] - a[1]
+        )
+        .slice(0,8);
+
+    if(!stages.length){
+
+        return `
+            <div style="
+                padding:30px;
+                text-align:center;
+                color:#777;
+            ">
+                No work stage data available.
+            </div>
+        `;
+
+    }
+
+    const width = 900;
+    const height = 360;
+
+    const left = 170;
+    const right = 30;
+    const top = 25;
+
+    const barHeight = 27;
+    const gap = 14;
+
+    const maxValue =
+        Math.max(
+            ...stages.map(
+                x => x[1]
+            ),
+            1
+        );
+
+    const bars =
+        stages.map(
+            ([stage,value],index) => {
+
+                const y =
+                    top +
+                    index *
+                    (
+                        barHeight +
+                        gap
+                    );
+
+                const widthValue =
+                    (
+                        value /
+                        maxValue
+                    ) *
+                    (
+                        width -
+                        left -
+                        right
+                    );
+
+                return `
+
+                    <text
+                        x="${left-10}"
+                        y="${y+19}"
+                        text-anchor="end"
+                        font-size="11"
+                        fill="#46566c"
+                    >
+                        ${escapeHTML(stage)}
+                    </text>
+
+                    <rect
+                        x="${left}"
+                        y="${y}"
+                        width="${widthValue}"
+                        height="${barHeight}"
+                        rx="4"
+                        fill="#1976b8"
+                    />
+
+                    <text
+                        x="${left + widthValue + 8}"
+                        y="${y+19}"
+                        font-size="11"
+                        font-weight="bold"
+                        fill="#17243a"
+                    >
+                        ${value.toFixed(1)}
+                    </text>
+
+                `;
+
+            }
+        )
+        .join("");
+
+    return `
+
+        <svg
+            viewBox="
+                0 0
+                ${width}
+                ${top +
+                stages.length *
+                (
+                    barHeight +
+                    gap
+                ) +
+                20}
+            "
+            style="
+                width:100%;
+                height:auto;
+            "
+        >
+
+            ${bars}
+
+        </svg>
+
+    `;
+
+}
 window.printManpowerReport =
 function(projectId){
 
@@ -14183,6 +15059,17 @@ function(projectId){
 
     }
 
+    const monthly =
+        getManpowerMonthlySummary(
+            project
+        );
+
+    const stageData =
+        getManpowerMonthlyStageData(
+            project,
+            monthly
+        );
+
     const asOfDate =
         getManpowerAsOfDate(
             project
@@ -14194,7 +15081,7 @@ function(projectId){
             asOfDate
         );
 
-    const total =
+    const currentTotal =
         getManpowerTotal(
             active
         );
@@ -14202,7 +15089,9 @@ function(projectId){
     const direct =
         getManpowerTotal(
             active.filter(
-                r => r.type === "Direct"
+                r =>
+                    r.type ===
+                    "Direct"
             )
         );
 
@@ -14215,64 +15104,135 @@ function(projectId){
             )
         );
 
-    const stageTotals = {};
 
-    active.forEach(record => {
+    /* =================================================
+       MONTHLY TABLE
+    ================================================= */
 
-        const stage =
-            record.workStage ||
-            "Other";
-
-        stageTotals[stage] =
-            (
-                stageTotals[stage] ||
-                0
-            ) +
-            manpowerNumber(
-                record.count
-            );
-
-    });
-
-    const stageRows =
-        Object.entries(
-            stageTotals
-        )
-        .sort(
-            (a,b) =>
-                b[1] - a[1]
-        )
-        .map(
+    const monthlyRows =
+        monthly.map(
             item => `
+
                 <tr>
+
                     <td>
                         ${escapeHTML(
-                            item[0]
+                            item.label
                         )}
                     </td>
+
                     <td>
-                        ${item[1]}
+                        ${item.average.toFixed(1)}
                     </td>
+
+                    <td>
+                        ${item.peak}
+                    </td>
+
+                    <td>
+                        ${item.monthEnd}
+                    </td>
+
+                    <td>
+                        ${item.directAverage.toFixed(1)}
+                    </td>
+
+                    <td>
+                        ${item.subcontractorAverage.toFixed(1)}
+                    </td>
+
                 </tr>
+
             `
         )
         .join("");
+
+
+    /* =================================================
+       STAGE MONTHLY TABLE
+    ================================================= */
+
+    const allStages = [
+        ...new Set(
+            stageData.flatMap(
+                item =>
+                    Object.keys(
+                        item.totals
+                    )
+            )
+        )
+    ];
+
+    const stageRows =
+        allStages.map(
+            stage => `
+
+                <tr>
+
+                    <td>
+                        ${escapeHTML(stage)}
+                    </td>
+
+                    ${
+                        stageData.map(
+                            item => `
+
+                                <td>
+                                    ${
+                                        item.totals[stage]
+                                        ?
+                                        item.totals[stage]
+                                            .toFixed(1)
+                                        :
+                                        "0.0"
+                                    }
+                                </td>
+
+                            `
+                        ).join("")
+                    }
+
+                </tr>
+
+            `
+        )
+        .join("");
+
+
+    /* =================================================
+       ACTIVE REGISTER
+    ================================================= */
 
     const deploymentRows =
         active
             .slice()
             .sort(
                 (a,b) =>
-                    (
-                        b.count || 0
+                    manpowerNumber(
+                        b.count
                     ) -
-                    (
-                        a.count || 0
+                    manpowerNumber(
+                        a.count
                     )
             )
             .map(
                 record => `
+
                     <tr>
+
+                        <td>
+                            ${escapeHTML(
+                                record.startDate ||
+                                ""
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHTML(
+                                record.endDate ||
+                                ""
+                            )}
+                        </td>
 
                         <td>
                             ${escapeHTML(
@@ -14316,9 +15276,15 @@ function(projectId){
                         </td>
 
                     </tr>
+
                 `
             )
             .join("");
+
+
+    /* =================================================
+       PRINT WINDOW
+    ================================================= */
 
     const printWindow =
         window.open(
@@ -14335,6 +15301,7 @@ function(projectId){
         return;
 
     }
+
 
     printWindow.document.write(`
 
@@ -14354,74 +15321,203 @@ function(projectId){
 
             <style>
 
+                *{
+                    box-sizing:border-box;
+                }
+
                 body{
-                    font-family:Arial,
-                        Helvetica,sans-serif;
+
+                    font-family:
+                        Arial,
+                        Helvetica,
+                        sans-serif;
+
                     color:#17243a;
-                    margin:40px;
+
+                    margin:35px;
+
+                    background:white;
+
                 }
 
                 h1{
-                    margin-bottom:5px;
-                }
 
-                .subtitle{
-                    color:#708096;
-                    margin-bottom:30px;
-                }
+                    margin:0;
 
-                .summary{
-                    display:grid;
-                    grid-template-columns:
-                        repeat(3,1fr);
-                    gap:15px;
-                    margin-bottom:30px;
-                }
+                    font-size:26px;
 
-                .box{
-                    border:1px solid #dfe5ec;
-                    padding:20px;
-                    text-align:center;
-                    border-radius:8px;
-                }
-
-                .label{
-                    color:#708096;
-                    font-size:12px;
-                    font-weight:bold;
-                }
-
-                .value{
-                    font-size:30px;
-                    font-weight:bold;
-                    margin-top:8px;
-                }
-
-                table{
-                    width:100%;
-                    border-collapse:collapse;
-                    margin-top:15px;
-                }
-
-                th,td{
-                    border:1px solid #dfe5ec;
-                    padding:9px;
-                    text-align:left;
-                    font-size:12px;
-                }
-
-                th{
-                    background:#f3f5f7;
                 }
 
                 h2{
+
+                    margin:0 0 6px 0;
+
+                    font-size:18px;
+
+                }
+
+                h3{
+
+                    margin:0 0 5px 0;
+
+                    font-size:14px;
+
+                }
+
+                .subtitle{
+
+                    color:#708096;
+
+                    margin-top:7px;
+
+                    margin-bottom:28px;
+
+                    font-size:12px;
+
+                }
+
+                .section{
+
                     margin-top:30px;
+
+                    page-break-inside:avoid;
+
+                }
+
+                .summary{
+
+                    display:grid;
+
+                    grid-template-columns:
+                        repeat(3,1fr);
+
+                    gap:12px;
+
+                }
+
+                .box{
+
+                    border:
+                        1px solid #dfe5ec;
+
+                    border-radius:7px;
+
+                    padding:17px;
+
+                    text-align:center;
+
+                }
+
+                .label{
+
+                    color:#708096;
+
+                    font-size:10px;
+
+                    font-weight:bold;
+
+                    text-transform:uppercase;
+
+                }
+
+                .value{
+
+                    font-size:27px;
+
+                    font-weight:bold;
+
+                    margin-top:7px;
+
+                }
+
+                .chart-box{
+
+                    border:
+                        1px solid #dfe5ec;
+
+                    border-radius:7px;
+
+                    padding:18px;
+
+                    margin-top:12px;
+
+                }
+
+                table{
+
+                    width:100%;
+
+                    border-collapse:collapse;
+
+                    margin-top:12px;
+
+                }
+
+                th,
+                td{
+
+                    border:
+                        1px solid #dfe5ec;
+
+                    padding:8px;
+
+                    font-size:10px;
+
+                    text-align:left;
+
+                }
+
+                th{
+
+                    background:#f3f5f7;
+
+                    font-weight:bold;
+
+                }
+
+                .report-header{
+
+                    border-bottom:
+                        2px solid #1976b8;
+
+                    padding-bottom:18px;
+
+                }
+
+                .small-note{
+
+                    font-size:10px;
+
+                    color:#708096;
+
+                    margin-top:6px;
+
                 }
 
                 @media print{
 
                     body{
-                        margin:20px;
+
+                        margin:15mm;
+
+                    }
+
+                    .section{
+
+                        page-break-inside:avoid;
+
+                    }
+
+                    table{
+
+                        page-break-inside:auto;
+
+                    }
+
+                    tr{
+
+                        page-break-inside:avoid;
+
                     }
 
                 }
@@ -14432,167 +15528,356 @@ function(projectId){
 
         <body>
 
-            <h1>
-                Manpower Report
-            </h1>
 
-            <div class="subtitle">
+            <!-- HEADER -->
 
+            <div class="report-header">
+
+                <h1>
+                    Manpower Report
+                </h1>
+
+                <div class="subtitle">
+
+                    <strong>
+                        ${escapeHTML(
+                            project.name ||
+                            "Project"
+                        )}
+                    </strong>
+
+                    &nbsp; | &nbsp;
+
+                    Project Manpower Analysis
+
+                    &nbsp; | &nbsp;
+
+                    ${monthly.length
+                        ? escapeHTML(
+                            monthly[0].label
+                        )
+                        : ""
+                    }
+
+                    -
+
+                    ${monthly.length
+                        ? escapeHTML(
+                            monthly[
+                                monthly.length - 1
+                            ].label
+                        )
+                        : ""
+                    }
+
+                </div>
+
+                <div class="small-note">
+
+                    Manpower position as of
+                    <strong>
+                        ${escapeHTML(
+                            asOfDate
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- CURRENT POSITION -->
+
+            <div class="section">
+
+                <h2>
+                    Current Manpower Position
+                </h2>
+
+                <div class="summary">
+
+                    <div class="box">
+
+                        <div class="label">
+                            Current Manpower
+                        </div>
+
+                        <div class="value">
+                            ${currentTotal}
+                        </div>
+
+                    </div>
+
+                    <div class="box">
+
+                        <div class="label">
+                            Direct
+                        </div>
+
+                        <div class="value">
+                            ${direct}
+                        </div>
+
+                    </div>
+
+                    <div class="box">
+
+                        <div class="label">
+                            Subcontractor
+                        </div>
+
+                        <div class="value">
+                            ${subcontractor}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- MONTHLY FLOW -->
+
+            <div class="section">
+
+                <h2>
+                    Monthly Manpower Flow
+                </h2>
+
+                <div class="small-note">
+
+                    Average and peak manpower
+                    throughout the project life.
+
+                </div>
+
+                <div class="chart-box">
+
+                    ${manpowerMonthlyFlowSVG(
+                        monthly
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <!-- MONTHLY SUMMARY -->
+
+            <div class="section">
+
+                <h2>
+                    Monthly Manpower Summary
+                </h2>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Month
+                            </th>
+
+                            <th>
+                                Average
+                            </th>
+
+                            <th>
+                                Peak
+                            </th>
+
+                            <th>
+                                Month End
+                            </th>
+
+                            <th>
+                                Direct Avg.
+                            </th>
+
+                            <th>
+                                Subcontractor Avg.
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${monthlyRows}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- WORK STAGE -->
+
+            <div class="section">
+
+                <h2>
+                    Manpower by Work Stage
+                </h2>
+
+                <div class="small-note">
+
+                    Average manpower contribution
+                    by work stage.
+
+                </div>
+
+                <div class="chart-box">
+
+                    ${manpowerStageChartSVG(
+                        stageData
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <!-- WORK STAGE MONTHLY TABLE -->
+
+            <div class="section">
+
+                <h2>
+                    Monthly Manpower by Work Stage
+                </h2>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Work Stage
+                            </th>
+
+                            ${
+                                stageData
+                                    .map(
+                                        item => `
+                                            <th>
+                                                ${escapeHTML(
+                                                    item.month
+                                                )}
+                                            </th>
+                                        `
+                                    )
+                                    .join("")
+                            }
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${stageRows}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- DEPLOYMENT -->
+
+            <div class="section">
+
+                <h2>
+                    Active Manpower Deployment
+                </h2>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Starting Date
+                            </th>
+
+                            <th>
+                                End Date
+                            </th>
+
+                            <th>
+                                Work Stage
+                            </th>
+
+                            <th>
+                                Scope / Activity
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Trade
+                            </th>
+
+                            <th>
+                                Company
+                            </th>
+
+                            <th>
+                                Manpower
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${
+                            deploymentRows ||
+                            `
+                                <tr>
+
+                                    <td colspan="8">
+                                        No active manpower
+                                        deployments.
+                                    </td>
+
+                                </tr>
+                            `
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div style="
+                margin-top:35px;
+                padding-top:12px;
+                border-top:1px solid #dfe5ec;
+                font-size:9px;
+                color:#708096;
+                text-align:center;
+            ">
+
+                Manpower Report —
                 ${escapeHTML(
                     project.name ||
                     "Project"
                 )}
 
-                &nbsp; | &nbsp;
-
-                Manpower Position as of:
-
-                <strong>
-                    ${escapeHTML(
-                        asOfDate
-                    )}
-                </strong>
-
             </div>
-
-
-            <div class="summary">
-
-                <div class="box">
-
-                    <div class="label">
-                        CURRENT MANPOWER
-                    </div>
-
-                    <div class="value">
-                        ${total}
-                    </div>
-
-                </div>
-
-
-                <div class="box">
-
-                    <div class="label">
-                        DIRECT
-                    </div>
-
-                    <div class="value">
-                        ${direct}
-                    </div>
-
-                </div>
-
-
-                <div class="box">
-
-                    <div class="label">
-                        SUBCONTRACTOR
-                    </div>
-
-                    <div class="value">
-                        ${subcontractor}
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <h2>
-                Manpower by Work Stage
-            </h2>
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Work Stage
-                        </th>
-
-                        <th>
-                            Manpower
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    ${
-                        stageRows ||
-                        `
-                            <tr>
-                                <td colspan="2">
-                                    No manpower deployed.
-                                </td>
-                            </tr>
-                        `
-                    }
-
-                </tbody>
-
-            </table>
-
-
-            <h2>
-                Active Manpower Deployment
-            </h2>
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Work Stage
-                        </th>
-
-                        <th>
-                            Scope / Activity
-                        </th>
-
-                        <th>
-                            Type
-                        </th>
-
-                        <th>
-                            Trade
-                        </th>
-
-                        <th>
-                            Company
-                        </th>
-
-                        <th>
-                            Manpower
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    ${
-                        deploymentRows ||
-                        `
-                            <tr>
-                                <td colspan="6">
-                                    No active manpower.
-                                </td>
-                            </tr>
-                        `
-                    }
-
-                </tbody>
-
-            </table>
 
 
             <script>
@@ -14600,7 +15885,14 @@ function(projectId){
                 window.onload =
                 function(){
 
-                    window.print();
+                    setTimeout(
+                        function(){
+
+                            window.print();
+
+                        },
+                        500
+                    );
 
                 };
 
