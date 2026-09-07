@@ -10414,7 +10414,49 @@ function buildPaymentRow(project,index,payment){
             >
                 ${invoiceCell}
             </td>
+<td style="
+    padding:7px;
+    text-align:center;
+">
 
+    ${variationFinancialBadge(
+        getVariationFinancialStatus(
+            variation
+        )
+    )}
+
+</td>
+
+
+<td style="
+    padding:7px;
+    text-align:center;
+">
+
+    <button
+        onclick="
+            toggleVariationStages(
+                ${project.id},
+                ${index}
+            )
+        "
+        style="
+            border:none;
+            background:#0d6efd;
+            color:white;
+            border-radius:5px;
+            padding:6px 10px;
+            cursor:pointer;
+            font-weight:600;
+        "
+    >
+        ${
+            (variation.paymentStages || []).length
+        }
+        Stage(s)
+    </button>
+
+</td>
 
             <!-- ACTION -->
 
@@ -11748,9 +11790,20 @@ function buildVariationRow(
         );
 
 
-    let status =
-        variation.status ||
-        "Draft";
+    const totals =
+        getVariationPaymentTotals(
+            variation
+        );
+
+
+    const status =
+        getVariationFinancialStatus(
+            variation
+        );
+
+
+    const stageCount =
+        (variation.paymentStages || []).length;
 
 
     return `
@@ -11761,7 +11814,6 @@ function buildVariationRow(
                 border-bottom:1px solid #eee;
             "
         >
-
 
             <!-- NUMBER -->
 
@@ -11799,9 +11851,7 @@ function buildVariationRow(
 
             <!-- TYPE -->
 
-            <td style="
-                padding:7px;
-            ">
+            <td style="padding:7px;">
 
                 <select
                     onchange="
@@ -11824,12 +11874,10 @@ function buildVariationRow(
                         Select Type
                     </option>
 
-
                     <option
                         value="Addition"
                         ${
-                            variation.variationType ===
-                            "Addition"
+                            variation.variationType === "Addition"
                             ? "selected"
                             : ""
                         }
@@ -11837,12 +11885,10 @@ function buildVariationRow(
                         Addition
                     </option>
 
-
                     <option
                         value="Omission"
                         ${
-                            variation.variationType ===
-                            "Omission"
+                            variation.variationType === "Omission"
                             ? "selected"
                             : ""
                         }
@@ -11850,12 +11896,10 @@ function buildVariationRow(
                         Omission
                     </option>
 
-
                     <option
                         value="Design Change"
                         ${
-                            variation.variationType ===
-                            "Design Change"
+                            variation.variationType === "Design Change"
                             ? "selected"
                             : ""
                         }
@@ -11863,12 +11907,10 @@ function buildVariationRow(
                         Design Change
                     </option>
 
-
                     <option
                         value="Client Instruction"
                         ${
-                            variation.variationType ===
-                            "Client Instruction"
+                            variation.variationType === "Client Instruction"
                             ? "selected"
                             : ""
                         }
@@ -11876,12 +11918,10 @@ function buildVariationRow(
                         Client Instruction
                     </option>
 
-
                     <option
                         value="Other"
                         ${
-                            variation.variationType ===
-                            "Other"
+                            variation.variationType === "Other"
                             ? "selected"
                             : ""
                         }
@@ -11896,9 +11936,7 @@ function buildVariationRow(
 
             <!-- DESCRIPTION -->
 
-            <td style="
-                padding:7px;
-            ">
+            <td style="padding:7px;">
 
                 <input
                     type="text"
@@ -11928,9 +11966,7 @@ function buildVariationRow(
 
             <!-- CONTRACTOR -->
 
-            <td style="
-                padding:7px;
-            ">
+            <td style="padding:7px;">
 
                 <input
                     type="text"
@@ -12033,95 +12069,41 @@ function buildVariationRow(
                 text-align:center;
             ">
 
-                <select
-                    onchange="
-                        updateVariationField(
+                ${variationFinancialBadge(
+                    status
+                )}
+
+            </td>
+
+
+            <!-- PAYMENT STAGES -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                <button
+                    onclick="
+                        toggleVariationStages(
                             ${project.id},
-                            ${index},
-                            'status',
-                            this.value
+                            ${index}
                         )
                     "
                     style="
-                        width:125px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
+                        border:none;
+                        background:#0d6efd;
+                        color:white;
+                        border-radius:5px;
+                        padding:6px 10px;
+                        cursor:pointer;
+                        font-weight:600;
                     "
                 >
 
-                    <option
-                        value="Draft"
-                        ${
-                            status === "Draft"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Draft
-                    </option>
+                    ${stageCount} Stage(s)
 
-
-                    <option
-                        value="Submitted"
-                        ${
-                            status === "Submitted"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Submitted
-                    </option>
-
-
-                    <option
-                        value="Under Review"
-                        ${
-                            status === "Under Review"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Under Review
-                    </option>
-
-
-                    <option
-                        value="Approved"
-                        ${
-                            status === "Approved"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Approved
-                    </option>
-
-
-                    <option
-                        value="Rejected"
-                        ${
-                            status === "Rejected"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Rejected
-                    </option>
-
-
-                    <option
-                        value="Closed"
-                        ${
-                            status === "Closed"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Closed
-                    </option>
-
-                </select>
+                </button>
 
             </td>
 
@@ -12156,11 +12138,37 @@ function buildVariationRow(
 
         </tr>
 
+
+        <!-- PAYMENT STAGES ROW -->
+
+        <tr
+            id="variation-stages-${index}"
+            style="
+                display:none;
+                background:#fafafa;
+            "
+        >
+
+            <td
+                colspan="9"
+                style="
+                    padding:15px;
+                "
+            >
+
+                ${buildVariationPaymentStages(
+                    project,
+                    index,
+                    variation
+                )}
+
+            </td>
+
+        </tr>
+
     `;
 
 }
-
-
 /* =====================================================
    UPDATE NORMAL FIELD
 ===================================================== */
@@ -13020,7 +13028,50 @@ function refreshVariationStageAfterEdit(
     );
 
 }
+function refreshVariationStageAfterEdit(
+    projectId,
+    variationIndex
+){
 
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(!project){
+
+        return;
+
+    }
+
+
+    renderVariationsSection(
+        project
+    );
+
+
+    setTimeout(
+        function(){
+
+            const row =
+                document.getElementById(
+                    `variation-stages-${variationIndex}`
+                );
+
+
+            if(row){
+
+                row.style.display =
+                    "table-row";
+
+            }
+
+        },
+        50
+    );
+
+}
 
 /* =====================================================
    BUILD PAYMENT STAGES
