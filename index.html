@@ -11286,259 +11286,558 @@ function almEnsureManpower(project){
 /* =====================================================
    RENDER MANPOWER
 ===================================================== */
+/* =====================================================
+   MANPOWER STEP 2
+   CURRENT MANPOWER POSITION
+===================================================== */
+
+function almMP2Today(){
+
+    const d = new Date();
+
+    const year =
+        d.getFullYear();
+
+    const month =
+        String(d.getMonth() + 1)
+        .padStart(2,"0");
+
+    const day =
+        String(d.getDate())
+        .padStart(2,"0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/* =====================================================
+   CHECK ACTIVE MANPOWER
+===================================================== */
+
+function almMP2IsActive(
+    record,
+    selectedDate
+){
+
+    if(!record.startDate || !record.endDate){
+        return false;
+    }
+
+    return (
+        record.startDate <= selectedDate &&
+        selectedDate <= record.endDate
+    );
+
+}
+
+
+/* =====================================================
+   CURRENT MANPOWER CALCULATION
+===================================================== */
+
+function almMP2GetCurrentStats(
+    project,
+    selectedDate
+){
+
+    const records =
+        project.manpowerRecords || [];
+
+
+    const activeRecords =
+        records.filter(
+            record =>
+                almMP2IsActive(
+                    record,
+                    selectedDate
+                )
+        );
+
+
+    const total =
+        activeRecords.reduce(
+            (sum,record) =>
+                sum + Number(record.manpower || 0),
+            0
+        );
+
+
+    const direct =
+        activeRecords
+            .filter(
+                record =>
+                    record.type === "Direct"
+            )
+            .reduce(
+                (sum,record) =>
+                    sum + Number(record.manpower || 0),
+                0
+            );
+
+
+    const subcontractor =
+        activeRecords
+            .filter(
+                record =>
+                    record.type === "Subcontractor"
+            )
+            .reduce(
+                (sum,record) =>
+                    sum + Number(record.manpower || 0),
+                0
+            );
+
+
+    const stages =
+        new Set(
+            activeRecords
+                .map(
+                    record =>
+                        String(
+                            record.workStage || ""
+                        ).trim()
+                )
+                .filter(Boolean)
+        );
+
+
+    const trades =
+        new Set(
+            activeRecords
+                .map(
+                    record =>
+                        String(
+                            record.trade || ""
+                        ).trim()
+                )
+                .filter(Boolean)
+        );
+
+
+    return {
+
+        total,
+
+        direct,
+
+        subcontractor,
+
+        activeDeployments:
+            activeRecords.length,
+
+        activeStages:
+            stages.size,
+
+        activeTrades:
+            trades.size,
+
+        activeRecords
+
+    };
+
+}
+
+
+/* =====================================================
+   RENDER MANPOWER
+===================================================== */
 
 window.renderManpowerSection = function(project){
 
     const records =
         almEnsureManpower(project);
 
-    const totalManpower =
+
+    /* ---------------------------------------------
+       SELECTED DATE
+    --------------------------------------------- */
+
+    let selectedDate =
+        project.manpowerAsOfDate ||
+        almMP2Today();
+
+
+    if(
+        !/^\d{4}-\d{2}-\d{2}$/.test(
+            selectedDate
+        )
+    ){
+
+        selectedDate =
+            almMP2Today();
+
+    }
+
+
+    project.manpowerAsOfDate =
+        selectedDate;
+
+
+    /* ---------------------------------------------
+       CURRENT POSITION
+    --------------------------------------------- */
+
+    const stats =
+        almMP2GetCurrentStats(
+            project,
+            selectedDate
+        );
+
+
+    /* ---------------------------------------------
+       REGISTER TOTALS
+    --------------------------------------------- */
+
+    const registerTotal =
         records.reduce(
-            (sum, record) =>
+            (sum,record) =>
                 sum + Number(record.manpower || 0),
             0
         );
 
-    const directManpower =
+
+    const registerDirect =
         records
-            .filter(record => record.type === "Direct")
+            .filter(
+                record =>
+                    record.type === "Direct"
+            )
             .reduce(
-                (sum, record) =>
+                (sum,record) =>
                     sum + Number(record.manpower || 0),
                 0
             );
 
-    const subcontractorManpower =
+
+    const registerSubcontractor =
         records
-            .filter(record => record.type === "Subcontractor")
+            .filter(
+                record =>
+                    record.type === "Subcontractor"
+            )
             .reduce(
-                (sum, record) =>
+                (sum,record) =>
                     sum + Number(record.manpower || 0),
                 0
             );
 
+
+    /* ---------------------------------------------
+       REGISTER ROWS
+    --------------------------------------------- */
 
     let rows = "";
+
 
     if(records.length === 0){
 
         rows = `
             <tr>
-                <td colspan="10"
+
+                <td
+                    colspan="10"
                     style="
                         text-align:center;
                         padding:40px;
                         color:#6b7280;
-                    ">
+                    "
+                >
                     No manpower deployment records.
-                    Click <strong>+ Add Deployment</strong>
+                    Click
+                    <strong>+ Add Deployment</strong>
                     to add the first record.
                 </td>
+
             </tr>
         `;
 
     }else{
 
-        rows = records.map(
-            (record,index) => {
+        rows =
+            records.map(
+                (record,index) => {
 
-                return `
-                    <tr>
-
-                        <td>
-                            <input
-                                type="date"
-                                value="${almManpowerEscape(record.startDate)}"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'startDate',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                    const active =
+                        almMP2IsActive(
+                            record,
+                            selectedDate
+                        );
 
 
-                        <td>
-                            <input
-                                type="date"
-                                value="${almManpowerEscape(record.endDate)}"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'endDate',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                    return `
+                        <tr
+                            style="
+                                background:
+                                ${
+                                    active
+                                    ? "#f8fbff"
+                                    : "white"
+                                };
+                            "
+                        >
+
+                            <td>
+                                <input
+                                    type="date"
+                                    value="${almManpowerEscape(record.startDate)}"
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'startDate',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
 
-                        <td>
-                            <input
-                                type="text"
-                                value="${almManpowerEscape(record.workStage)}"
-                                placeholder="Work Stage"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'workStage',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                            <td>
+                                <input
+                                    type="date"
+                                    value="${almManpowerEscape(record.endDate)}"
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'endDate',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
 
-                        <td>
-                            <input
-                                type="text"
-                                value="${almManpowerEscape(record.scope)}"
-                                placeholder="Scope / Activity"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'scope',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    value="${almManpowerEscape(record.workStage)}"
+                                    placeholder="Work Stage"
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'workStage',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
 
-                        <td>
-                            <select
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'type',
-                                        this.value
-                                    )
-                                "
-                            >
-
-                                <option value="Direct"
-                                    ${record.type === "Direct" ? "selected" : ""}>
-                                    Direct
-                                </option>
-
-                                <option value="Subcontractor"
-                                    ${record.type === "Subcontractor" ? "selected" : ""}>
-                                    Subcontractor
-                                </option>
-
-                            </select>
-                        </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    value="${almManpowerEscape(record.scope)}"
+                                    placeholder="Scope / Activity"
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'scope',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
 
-                        <td>
-                            <input
-                                type="text"
-                                value="${almManpowerEscape(record.trade)}"
-                                placeholder="Trade"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'trade',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                            <td>
+                                <select
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'type',
+                                            this.value
+                                        )
+                                    "
+                                >
+
+                                    <option
+                                        value="Direct"
+                                        ${
+                                            record.type === "Direct"
+                                            ? "selected"
+                                            : ""
+                                        }
+                                    >
+                                        Direct
+                                    </option>
+
+                                    <option
+                                        value="Subcontractor"
+                                        ${
+                                            record.type === "Subcontractor"
+                                            ? "selected"
+                                            : ""
+                                        }
+                                    >
+                                        Subcontractor
+                                    </option>
+
+                                </select>
+                            </td>
 
 
-                        <td>
-                            <input
-                                type="text"
-                                value="${almManpowerEscape(record.company)}"
-                                placeholder="Company / Subcontractor"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'company',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    value="${almManpowerEscape(record.trade)}"
+                                    placeholder="Trade"
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'trade',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
 
-                        <td>
-                            <input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value="${Number(record.manpower || 0)}"
-                                style="text-align:right;"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'manpower',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    value="${almManpowerEscape(record.company)}"
+                                    placeholder="Company / Subcontractor"
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'company',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
 
-                        <td>
-                            <input
-                                type="text"
-                                value="${almManpowerEscape(record.remarks)}"
-                                placeholder="Remarks"
-                                onchange="
-                                    almUpdateManpowerField(
-                                        '${project.id}',
-                                        ${index},
-                                        'remarks',
-                                        this.value
-                                    )
-                                "
-                            >
-                        </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value="${Number(record.manpower || 0)}"
+                                    style="
+                                        text-align:right;
+                                    "
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'manpower',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
 
-                        <td style="text-align:center;">
+                            <td>
+                                <input
+                                    type="text"
+                                    value="${almManpowerEscape(record.remarks)}"
+                                    placeholder="Remarks"
+                                    onchange="
+                                        almUpdateManpowerField(
+                                            '${project.id}',
+                                            ${index},
+                                            'remarks',
+                                            this.value
+                                        )
+                                    "
+                                >
+                            </td>
 
-                            <button
-                                onclick="
-                                    almDeleteManpower(
-                                        '${project.id}',
-                                        ${index}
-                                    )
-                                "
+
+                            <td
                                 style="
-                                    border:none;
-                                    background:#fee2e2;
-                                    color:#b91c1c;
-                                    border-radius:6px;
-                                    padding:7px 10px;
-                                    cursor:pointer;
+                                    text-align:center;
+                                    white-space:nowrap;
                                 "
-                                title="Delete"
                             >
-                                🗑
-                            </button>
 
-                        </td>
+                                ${
+                                    active
+                                    ? `
+                                        <span
+                                            style="
+                                                display:inline-block;
+                                                background:#dcfce7;
+                                                color:#166534;
+                                                border-radius:20px;
+                                                padding:4px 8px;
+                                                font-size:11px;
+                                                font-weight:600;
+                                                margin-right:5px;
+                                            "
+                                        >
+                                            ACTIVE
+                                        </span>
+                                    `
+                                    : `
+                                        <span
+                                            style="
+                                                display:inline-block;
+                                                background:#f1f5f9;
+                                                color:#64748b;
+                                                border-radius:20px;
+                                                padding:4px 8px;
+                                                font-size:11px;
+                                                font-weight:600;
+                                                margin-right:5px;
+                                            "
+                                        >
+                                            INACTIVE
+                                        </span>
+                                    `
+                                }
 
-                    </tr>
-                `;
 
-            }
-        ).join("");
+                                <button
+                                    onclick="
+                                        almDeleteManpower(
+                                            '${project.id}',
+                                            ${index}
+                                        )
+                                    "
+                                    style="
+                                        border:none;
+                                        background:#fee2e2;
+                                        color:#b91c1c;
+                                        border-radius:6px;
+                                        padding:6px 9px;
+                                        cursor:pointer;
+                                    "
+                                    title="Delete"
+                                >
+                                    🗑
+                                </button>
+
+                            </td>
+
+                        </tr>
+                    `;
+
+                }
+            ).join("");
 
     }
 
+
+    /* ---------------------------------------------
+       SAVE SELECTED DATE
+    --------------------------------------------- */
+
+    persist();
+
+
+    /* ---------------------------------------------
+       PAGE
+    --------------------------------------------- */
 
     document.getElementById(
         "projectSectionContent"
@@ -11548,185 +11847,414 @@ window.renderManpowerSection = function(project){
 
             <!-- HEADER -->
 
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                margin-bottom:20px;
-                gap:15px;
-                flex-wrap:wrap;
-            ">
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-end;
+                    gap:20px;
+                    margin-bottom:20px;
+                    flex-wrap:wrap;
+                "
+            >
 
                 <div>
 
-                    <h2 style="
-                        margin:0 0 5px 0;
-                        color:#17243a;
-                    ">
+                    <h2
+                        style="
+                            margin:0 0 5px 0;
+                            color:#17243a;
+                        "
+                    >
                         Manpower
                     </h2>
 
-                    <div style="
-                        color:#6b7280;
-                        font-size:13px;
-                    ">
-                        Manpower Deployment Register
+                    <div
+                        style="
+                            color:#6b7280;
+                            font-size:13px;
+                        "
+                    >
+                        Project Manpower Deployment & Position
                     </div>
 
                 </div>
 
 
-                <button
-                    onclick="
-                        almAddManpowerDeployment(
-                            '${project.id}'
-                        )
-                    "
+                <div
                     style="
-                        background:#17243a;
-                        color:white;
-                        border:none;
-                        border-radius:7px;
-                        padding:10px 16px;
-                        font-weight:600;
-                        cursor:pointer;
+                        display:flex;
+                        align-items:end;
+                        gap:12px;
                     "
                 >
-                    + Add Deployment
-                </button>
+
+                    <div>
+
+                        <div
+                            style="
+                                font-size:11px;
+                                font-weight:600;
+                                color:#64748b;
+                                margin-bottom:5px;
+                            "
+                        >
+                            MANPOWER AS OF DATE
+                        </div>
+
+                        <input
+                            type="date"
+                            value="${selectedDate}"
+                            onchange="
+                                almChangeManpowerAsOfDate(
+                                    '${project.id}',
+                                    this.value
+                                )
+                            "
+                            style="
+                                padding:9px 11px;
+                                border:1px solid #cbd5e1;
+                                border-radius:7px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </div>
+
+
+                    <button
+                        onclick="
+                            almAddManpowerDeployment(
+                                '${project.id}'
+                            )
+                        "
+                        style="
+                            background:#17243a;
+                            color:white;
+                            border:none;
+                            border-radius:7px;
+                            padding:10px 16px;
+                            font-weight:600;
+                            cursor:pointer;
+                        "
+                    >
+                        + Add Deployment
+                    </button>
+
+                </div>
 
             </div>
 
 
-            <!-- SUMMARY -->
+            <!-- CURRENT POSITION -->
 
-            <div style="
-                display:grid;
-                grid-template-columns:
-                    repeat(3,minmax(180px,1fr));
-                gap:15px;
-                margin-bottom:20px;
-            ">
-
-
-                <div style="
-                    background:white;
-                    border:1px solid #e5e7eb;
-                    border-radius:10px;
+            <div
+                style="
+                    background:#17243a;
+                    border-radius:11px;
                     padding:18px;
-                ">
+                    margin-bottom:18px;
+                    color:white;
+                "
+            >
 
-                    <div style="
-                        color:#6b7280;
+                <div
+                    style="
                         font-size:13px;
-                        margin-bottom:7px;
-                    ">
-                        Total Deployment Manpower
+                        font-weight:600;
+                        margin-bottom:14px;
+                        opacity:.9;
+                    "
+                >
+                    CURRENT MANPOWER POSITION
+                </div>
+
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:
+                            repeat(6,minmax(120px,1fr));
+                        gap:12px;
+                    "
+                >
+
+                    <div
+                        style="
+                            background:rgba(255,255,255,.10);
+                            border-radius:8px;
+                            padding:14px;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size:11px;
+                                opacity:.75;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Current Manpower
+                        </div>
+
+                        <div
+                            style="
+                                font-size:27px;
+                                font-weight:700;
+                            "
+                        >
+                            ${stats.total}
+                        </div>
+
                     </div>
 
-                    <div style="
-                        font-size:28px;
-                        font-weight:700;
-                        color:#17243a;
-                    ">
-                        ${totalManpower}
+
+                    <div
+                        style="
+                            background:rgba(255,255,255,.10);
+                            border-radius:8px;
+                            padding:14px;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size:11px;
+                                opacity:.75;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Direct
+                        </div>
+
+                        <div
+                            style="
+                                font-size:27px;
+                                font-weight:700;
+                            "
+                        >
+                            ${stats.direct}
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            background:rgba(255,255,255,.10);
+                            border-radius:8px;
+                            padding:14px;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size:11px;
+                                opacity:.75;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Subcontractor
+                        </div>
+
+                        <div
+                            style="
+                                font-size:27px;
+                                font-weight:700;
+                            "
+                        >
+                            ${stats.subcontractor}
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            background:rgba(255,255,255,.10);
+                            border-radius:8px;
+                            padding:14px;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size:11px;
+                                opacity:.75;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Active Deployments
+                        </div>
+
+                        <div
+                            style="
+                                font-size:27px;
+                                font-weight:700;
+                            "
+                        >
+                            ${stats.activeDeployments}
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            background:rgba(255,255,255,.10);
+                            border-radius:8px;
+                            padding:14px;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size:11px;
+                                opacity:.75;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Active Work Stages
+                        </div>
+
+                        <div
+                            style="
+                                font-size:27px;
+                                font-weight:700;
+                            "
+                        >
+                            ${stats.activeStages}
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            background:rgba(255,255,255,.10);
+                            border-radius:8px;
+                            padding:14px;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size:11px;
+                                opacity:.75;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Active Trades
+                        </div>
+
+                        <div
+                            style="
+                                font-size:27px;
+                                font-weight:700;
+                            "
+                        >
+                            ${stats.activeTrades}
+                        </div>
+
                     </div>
 
                 </div>
 
+            </div>
 
-                <div style="
-                    background:white;
-                    border:1px solid #e5e7eb;
-                    border-radius:10px;
-                    padding:18px;
-                ">
 
-                    <div style="
-                        color:#6b7280;
-                        font-size:13px;
-                        margin-bottom:7px;
-                    ">
-                        Direct
-                    </div>
+            <!-- REGISTER TOTALS -->
 
-                    <div style="
-                        font-size:28px;
-                        font-weight:700;
-                        color:#17243a;
-                    ">
-                        ${directManpower}
-                    </div>
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    margin-bottom:10px;
+                    gap:15px;
+                    flex-wrap:wrap;
+                "
+            >
 
+                <div
+                    style="
+                        color:#64748b;
+                        font-size:12px;
+                    "
+                >
+                    Register deployment total:
+                    <strong>${registerTotal}</strong>
+                    &nbsp; | &nbsp;
+                    Direct:
+                    <strong>${registerDirect}</strong>
+                    &nbsp; | &nbsp;
+                    Subcontractor:
+                    <strong>${registerSubcontractor}</strong>
                 </div>
-
-
-                <div style="
-                    background:white;
-                    border:1px solid #e5e7eb;
-                    border-radius:10px;
-                    padding:18px;
-                ">
-
-                    <div style="
-                        color:#6b7280;
-                        font-size:13px;
-                        margin-bottom:7px;
-                    ">
-                        Subcontractors
-                    </div>
-
-                    <div style="
-                        font-size:28px;
-                        font-weight:700;
-                        color:#17243a;
-                    ">
-                        ${subcontractorManpower}
-                    </div>
-
-                </div>
-
 
             </div>
 
 
             <!-- REGISTER -->
 
-            <div style="
-                background:white;
-                border:1px solid #e5e7eb;
-                border-radius:10px;
-                overflow:hidden;
-            ">
+            <div
+                style="
+                    background:white;
+                    border:1px solid #e5e7eb;
+                    border-radius:10px;
+                    overflow:hidden;
+                "
+            >
 
-                <div style="
-                    padding:16px 18px;
-                    border-bottom:1px solid #e5e7eb;
-                    font-weight:700;
-                    color:#17243a;
-                ">
+                <div
+                    style="
+                        padding:16px 18px;
+                        border-bottom:1px solid #e5e7eb;
+                        font-weight:700;
+                        color:#17243a;
+                    "
+                >
                     Manpower Deployment Register
+
+                    <span
+                        style="
+                            float:right;
+                            font-size:12px;
+                            font-weight:400;
+                            color:#64748b;
+                        "
+                    >
+                        Active records highlighted for
+                        ${selectedDate}
+                    </span>
+
                 </div>
 
 
-                <div style="
-                    overflow-x:auto;
-                    width:100%;
-                ">
-
-                    <table style="
+                <div
+                    style="
+                        overflow-x:auto;
                         width:100%;
-                        min-width:1250px;
-                        border-collapse:collapse;
-                        font-size:13px;
-                    ">
+                    "
+                >
+
+                    <table
+                        style="
+                            width:100%;
+                            min-width:1250px;
+                            border-collapse:collapse;
+                            font-size:13px;
+                        "
+                    >
 
                         <thead>
 
-                            <tr style="
-                                background:#f3f6fa;
-                                color:#374151;
-                            ">
+                            <tr
+                                style="
+                                    background:#f3f6fa;
+                                    color:#374151;
+                                "
+                            >
 
                                 <th style="padding:12px;text-align:left;">
                                     Starting Date
@@ -11765,7 +12293,7 @@ window.renderManpowerSection = function(project){
                                 </th>
 
                                 <th style="padding:12px;text-align:center;">
-                                    Action
+                                    Status / Action
                                 </th>
 
                             </tr>
@@ -11792,6 +12320,42 @@ window.renderManpowerSection = function(project){
 };
 
 
+/* =====================================================
+   CHANGE AS-OF DATE
+===================================================== */
+
+window.almChangeManpowerAsOfDate = function(
+    projectId,
+    selectedDate
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project){
+        return;
+    }
+
+
+    project.manpowerAsOfDate =
+        selectedDate || almMP2Today();
+
+
+    persist();
+
+    renderManpowerSection(project);
+
+};
+
+
+/* =====================================================
+   END MANPOWER STEP 2
+===================================================== */
 /* =====================================================
    ADD DEPLOYMENT
 ===================================================== */
