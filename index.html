@@ -12882,18 +12882,22 @@ function buildVariationStageRow(
                             stage.invoiceValue || ""
                         )
                     }"
-                    oninput="
-                        updateVariationStageAmount(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'invoiceValue',
-                            this.value
-                        )
-                    "
-                    onblur="
-                        formatVariationInput(this)
-                    "
+                   oninput="
+    updateVariationStageAmount(
+        ${project.id},
+        ${variationIndex},
+        ${stageIndex},
+        'invoiceValue',
+        this.value
+    )
+"
+onblur="
+    formatVariationInput(this);
+    refreshVariationStageAfterEdit(
+        ${project.id},
+        ${variationIndex}
+    )
+"
                     style="
                         width:125px;
                         padding:6px;
@@ -12917,18 +12921,64 @@ function buildVariationStageRow(
                             stage.receivedValue || ""
                         )
                     }"
-                    oninput="
-                        updateVariationStageAmount(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'receivedValue',
-                            this.value
-                        )
-                    "
-                    onblur="
-                        formatVariationInput(this)
-                    "
+                   oninput="
+    updateVariationStageAmount(
+        ${project.id},
+        ${variationIndex},
+        ${stageIndex},
+        'receivedValue',
+        this.value
+    )
+"
+onblur="
+    formatVariationInput(this);
+    refreshVariationStageAfterEdit(
+        ${project.id},
+        ${variationIndex}
+    )
+"
+function refreshVariationStageAfterEdit(
+    projectId,
+    variationIndex
+){
+
+    const project =
+        getVariationsProject(projectId);
+
+
+    if(!project){
+
+        return;
+
+    }
+
+
+    renderVariationsSection(
+        project
+    );
+
+
+    setTimeout(
+        function(){
+
+            const row =
+                document.getElementById(
+                    `variation-stages-${variationIndex}`
+                );
+
+
+            if(row){
+
+                row.style.display =
+                    "table-row";
+
+            }
+
+        },
+        50
+    );
+
+}
                     style="
                         width:125px;
                         padding:6px;
@@ -13221,15 +13271,15 @@ function(
             value;
 
 
+    /*
+       IMPORTANT:
+       Do NOT re-render the whole Variations section
+       while the user is typing.
+    */
+
     persist();
 
-
-    renderVariationsSection(
-        project
-    );
-
 };
-
 
 /* =====================================================
    FORMAT INPUT
