@@ -2166,6 +2166,17 @@ if(section === "payments"){
     return;
 
 }
+    /* =========================
+   VARIATIONS
+========================= */
+
+if(section === "variations"){
+
+    renderVariationsSection(project);
+
+    return;
+
+}
 /* =========================
    BOQ
 ========================= */
@@ -11246,6 +11257,1963 @@ window.downloadPaymentsExcel = function(
     XLSX.writeFile(
         workbook,
         `${projectName}-Payments.xlsx`
+    );
+
+};
+    /* =====================================================
+   VARIATIONS - EDITABLE REGISTER
+===================================================== */
+
+function getVariationsProject(projectId){
+
+    return projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+}
+
+
+/* =====================================================
+   MONEY HELPERS
+===================================================== */
+
+function parseVariationMoney(value){
+
+    if(
+        value === null ||
+        value === undefined ||
+        value === ""
+    ){
+        return 0;
+    }
+
+    const cleaned =
+        String(value)
+        .replace(/,/g,"")
+        .replace(/[^\d.-]/g,"");
+
+    return Number(cleaned) || 0;
+
+}
+
+
+function formatVariationMoney(value){
+
+    return Number(value || 0)
+        .toLocaleString("en-US",{
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+        });
+
+}
+
+
+/* =====================================================
+   CONTRACT VALUE
+===================================================== */
+
+function getVariationContractValue(project){
+
+    return parseVariationMoney(
+        project.contractValue ||
+        project.contractAmount ||
+        project.value ||
+        0
+    );
+
+}
+
+
+/* =====================================================
+   RENDER VARIATIONS
+===================================================== */
+
+window.renderVariationsSection = function(project){
+
+    if(!project.variations){
+
+        project.variations = [];
+
+    }
+
+
+    const contractValue =
+        getVariationContractValue(project);
+
+
+    let totalSubmitted = 0;
+    let totalApproved = 0;
+    let totalPending = 0;
+
+
+    project.variations.forEach(
+        variation => {
+
+            const submitted =
+                parseVariationMoney(
+                    variation.submittedValue
+                );
+
+            const approved =
+                parseVariationMoney(
+                    variation.approvedValue
+                );
+
+            totalSubmitted += submitted;
+            totalApproved += approved;
+
+
+            const status =
+                variation.status || "Draft";
+
+
+            if(
+                status === "Draft" ||
+                status === "Submitted" ||
+                status === "Under Review"
+            ){
+
+                totalPending += submitted;
+
+            }
+
+        }
+    );
+
+
+    const revisedContractValue =
+        contractValue + totalApproved;
+
+
+    const approvedPercent =
+        contractValue !== 0
+        ? (totalApproved / contractValue) * 100
+        : 0;
+
+
+    document.getElementById(
+        "projectSectionContent"
+    ).innerHTML = `
+
+        <div style="
+            width:100%;
+        ">
+
+
+            <!-- HEADER -->
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:18px;
+                gap:10px;
+                flex-wrap:wrap;
+            ">
+
+                <h2 style="
+                    margin:0;
+                    font-size:22px;
+                    color:#333;
+                ">
+                    Variations
+                </h2>
+
+
+                <div style="
+                    display:flex;
+                    gap:8px;
+                    flex-wrap:wrap;
+                ">
+
+                    <button
+                        onclick="addVariationRow(${project.id})"
+                        style="
+                            padding:9px 15px;
+                            border:none;
+                            border-radius:6px;
+                            background:#198754;
+                            color:white;
+                            cursor:pointer;
+                            font-weight:600;
+                        "
+                    >
+                        + Add Variation
+                    </button>
+
+
+                    <button
+                        onclick="downloadVariationsExcel(${project.id})"
+                        style="
+                            padding:9px 15px;
+                            border:none;
+                            border-radius:6px;
+                            background:#217346;
+                            color:white;
+                            cursor:pointer;
+                            font-weight:600;
+                        "
+                    >
+                        ⬇ Download Excel
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- SUMMARY -->
+
+            <div style="
+                display:grid;
+                grid-template-columns:
+                    repeat(auto-fit,minmax(170px,1fr));
+                gap:12px;
+                margin-bottom:20px;
+            ">
+
+
+                <!-- ORIGINAL CONTRACT -->
+
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #ddd;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        font-size:12px;
+                        color:#777;
+                    ">
+                        Original Contract Value
+                    </div>
+
+                    <div
+                        id="variations-contract-value"
+                        style="
+                            font-size:18px;
+                            font-weight:700;
+                            margin-top:5px;
+                        "
+                    >
+                        ${formatVariationMoney(
+                            contractValue
+                        )}
+                    </div>
+
+                </div>
+
+
+                <!-- SUBMITTED -->
+
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #ddd;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        font-size:12px;
+                        color:#777;
+                    ">
+                        Total Submitted
+                    </div>
+
+                    <div
+                        id="variations-total-submitted"
+                        style="
+                            font-size:18px;
+                            font-weight:700;
+                            margin-top:5px;
+                        "
+                    >
+                        ${formatVariationMoney(
+                            totalSubmitted
+                        )}
+                    </div>
+
+                </div>
+
+
+                <!-- APPROVED -->
+
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #ddd;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        font-size:12px;
+                        color:#777;
+                    ">
+                        Total Approved
+                    </div>
+
+                    <div
+                        id="variations-total-approved"
+                        style="
+                            font-size:18px;
+                            font-weight:700;
+                            margin-top:5px;
+                        "
+                    >
+                        ${formatVariationMoney(
+                            totalApproved
+                        )}
+                    </div>
+
+                    <div
+                        id="variations-approved-percent"
+                        style="
+                            font-size:12px;
+                            color:#777;
+                            margin-top:3px;
+                        "
+                    >
+                        ${approvedPercent.toFixed(2)}
+                        % of Contract
+                    </div>
+
+                </div>
+
+
+                <!-- PENDING -->
+
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #ddd;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        font-size:12px;
+                        color:#777;
+                    ">
+                        Pending Variations
+                    </div>
+
+                    <div
+                        id="variations-total-pending"
+                        style="
+                            font-size:18px;
+                            font-weight:700;
+                            margin-top:5px;
+                        "
+                    >
+                        ${formatVariationMoney(
+                            totalPending
+                        )}
+                    </div>
+
+                </div>
+
+
+                <!-- REVISED CONTRACT -->
+
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #ddd;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        font-size:12px;
+                        color:#777;
+                    ">
+                        Revised Contract Value
+                    </div>
+
+                    <div
+                        id="variations-revised-value"
+                        style="
+                            font-size:18px;
+                            font-weight:700;
+                            margin-top:5px;
+                        "
+                    >
+                        ${formatVariationMoney(
+                            revisedContractValue
+                        )}
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- TABLE -->
+
+            <div style="
+                width:100%;
+                overflow-x:auto;
+                border:1px solid #ddd;
+                border-radius:8px;
+            ">
+
+                <table style="
+                    width:100%;
+                    min-width:1700px;
+                    border-collapse:collapse;
+                    background:white;
+                ">
+
+                    <thead>
+
+                        <tr style="
+                            background:#f1f3f5;
+                            border-bottom:2px solid #ddd;
+                        ">
+
+                            <th style="
+                                padding:10px;
+                                text-align:center;
+                            ">
+                                Variation No.
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:left;
+                            ">
+                                Variation Type
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:left;
+                            ">
+                                Description
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:left;
+                            ">
+                                Contractor / Submitted By
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:right;
+                            ">
+                                Submitted Value
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:right;
+                            ">
+                                Approved Value
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:center;
+                            ">
+                                Date Submitted
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:center;
+                            ">
+                                Date Approved
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:center;
+                            ">
+                                Status
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:center;
+                            ">
+                                Variation PDF
+                            </th>
+
+
+                            <th style="
+                                padding:10px;
+                                text-align:center;
+                            ">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="variations-table-body"
+                    >
+
+                        ${
+                            project.variations
+                            .map(
+                                (variation,index) =>
+                                    buildVariationRow(
+                                        project,
+                                        index,
+                                        variation
+                                    )
+                            )
+                            .join("")
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    `;
+
+};
+
+
+/* =====================================================
+   BUILD VARIATION ROW
+===================================================== */
+
+function buildVariationRow(
+    project,
+    index,
+    variation
+){
+
+    let fileCell = "";
+
+
+    if(
+        variation.fileData
+    ){
+
+        fileCell = `
+
+            <div style="
+                display:flex;
+                flex-direction:column;
+                gap:4px;
+                align-items:center;
+            ">
+
+                <span style="
+                    font-size:11px;
+                    max-width:130px;
+                    overflow:hidden;
+                    text-overflow:ellipsis;
+                    white-space:nowrap;
+                ">
+                    ${
+                        escapeHTML(
+                            variation.fileName ||
+                            "Variation PDF"
+                        )
+                    }
+                </span>
+
+
+                <div style="
+                    display:flex;
+                    gap:4px;
+                ">
+
+                    <button
+                        onclick="
+                            viewVariationFile(
+                                ${project.id},
+                                ${index}
+                            )
+                        "
+                        style="
+                            border:none;
+                            background:#0d6efd;
+                            color:white;
+                            border-radius:4px;
+                            padding:4px 7px;
+                            cursor:pointer;
+                        "
+                    >
+                        View
+                    </button>
+
+
+                    <button
+                        onclick="
+                            downloadVariationFile(
+                                ${project.id},
+                                ${index}
+                            )
+                        "
+                        style="
+                            border:none;
+                            background:#6c757d;
+                            color:white;
+                            border-radius:4px;
+                            padding:4px 7px;
+                            cursor:pointer;
+                        "
+                    >
+                        Download
+                    </button>
+
+
+                    <button
+                        onclick="
+                            replaceVariationFile(
+                                ${project.id},
+                                ${index}
+                            )
+                        "
+                        style="
+                            border:none;
+                            background:#198754;
+                            color:white;
+                            border-radius:4px;
+                            padding:4px 7px;
+                            cursor:pointer;
+                        "
+                    >
+                        Replace
+                    </button>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }else{
+
+        fileCell = `
+
+            <input
+                type="file"
+                accept="application/pdf,.pdf"
+                onchange="
+                    uploadVariationFile(
+                        ${project.id},
+                        ${index},
+                        this.files[0]
+                    )
+                "
+                style="
+                    width:150px;
+                    font-size:11px;
+                "
+            />
+
+        `;
+
+    }
+
+
+    return `
+
+        <tr
+            id="variation-row-${index}"
+            style="
+                border-bottom:1px solid #eee;
+            "
+        >
+
+
+            <!-- NUMBER -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                <input
+                    type="text"
+                    value="${
+                        escapeHTML(
+                            variation.variationNumber || ""
+                        )
+                    }"
+                    onchange="
+                        updateVariationField(
+                            ${project.id},
+                            ${index},
+                            'variationNumber',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:90px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:center;
+                    "
+                >
+
+            </td>
+
+
+            <!-- TYPE -->
+
+            <td style="padding:7px;">
+
+                <select
+                    onchange="
+                        updateVariationField(
+                            ${project.id},
+                            ${index},
+                            'variationType',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:160px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+                    <option value="">
+                        Select Type
+                    </option>
+
+                    <option value="Addition"
+                        ${
+                            variation.variationType ===
+                            "Addition"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Addition
+                    </option>
+
+                    <option value="Omission"
+                        ${
+                            variation.variationType ===
+                            "Omission"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Omission
+                    </option>
+
+                    <option value="Design Change"
+                        ${
+                            variation.variationType ===
+                            "Design Change"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Design Change
+                    </option>
+
+                    <option value="Client Instruction"
+                        ${
+                            variation.variationType ===
+                            "Client Instruction"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Client Instruction
+                    </option>
+
+                    <option value="Other"
+                        ${
+                            variation.variationType ===
+                            "Other"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Other
+                    </option>
+
+                </select>
+
+            </td>
+
+
+            <!-- DESCRIPTION -->
+
+            <td style="padding:7px;">
+
+                <input
+                    type="text"
+                    value="${
+                        escapeHTML(
+                            variation.description || ""
+                        )
+                    }"
+                    onchange="
+                        updateVariationField(
+                            ${project.id},
+                            ${index},
+                            'description',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:260px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- CONTRACTOR -->
+
+            <td style="padding:7px;">
+
+                <input
+                    type="text"
+                    value="${
+                        escapeHTML(
+                            variation.contractor || ""
+                        )
+                    }"
+                    onchange="
+                        updateVariationField(
+                            ${project.id},
+                            ${index},
+                            'contractor',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:190px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- SUBMITTED VALUE -->
+
+            <td style="
+                padding:7px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${
+                        escapeHTML(
+                            variation.submittedValue || ""
+                        )
+                    }"
+                    oninput="
+                        updateVariationAmount(
+                            ${project.id},
+                            ${index},
+                            'submittedValue',
+                            this.value
+                        )
+                    "
+                    onblur="
+                        formatVariationInput(
+                            this
+                        )
+                    "
+                    style="
+                        width:130px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- APPROVED VALUE -->
+
+            <td style="
+                padding:7px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${
+                        escapeHTML(
+                            variation.approvedValue || ""
+                        )
+                    }"
+                    oninput="
+                        updateVariationAmount(
+                            ${project.id},
+                            ${index},
+                            'approvedValue',
+                            this.value
+                        )
+                    "
+                    onblur="
+                        formatVariationInput(
+                            this
+                        )
+                    "
+                    style="
+                        width:130px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- DATE SUBMITTED -->
+
+            <td style="padding:7px;">
+
+                <input
+                    type="date"
+                    value="${
+                        escapeHTML(
+                            variation.dateSubmitted || ""
+                        )
+                    }"
+                    onchange="
+                        updateVariationField(
+                            ${project.id},
+                            ${index},
+                            'dateSubmitted',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:135px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- DATE APPROVED -->
+
+            <td style="padding:7px;">
+
+                <input
+                    type="date"
+                    value="${
+                        escapeHTML(
+                            variation.dateApproved || ""
+                        )
+                    }"
+                    onchange="
+                        updateVariationField(
+                            ${project.id},
+                            ${index},
+                            'dateApproved',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:135px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- STATUS -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                <select
+                    onchange="
+                        updateVariationField(
+                            ${project.id},
+                            ${index},
+                            'status',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:140px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+                    <option value="Draft"
+                        ${
+                            (variation.status || "Draft")
+                            === "Draft"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Draft
+                    </option>
+
+                    <option value="Submitted"
+                        ${
+                            variation.status ===
+                            "Submitted"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Submitted
+                    </option>
+
+                    <option value="Under Review"
+                        ${
+                            variation.status ===
+                            "Under Review"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Under Review
+                    </option>
+
+                    <option value="Approved"
+                        ${
+                            variation.status ===
+                            "Approved"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Approved
+                    </option>
+
+                    <option value="Rejected"
+                        ${
+                            variation.status ===
+                            "Rejected"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Rejected
+                    </option>
+
+                    <option value="Closed"
+                        ${
+                            variation.status ===
+                            "Closed"
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        Closed
+                    </option>
+
+                </select>
+
+            </td>
+
+
+            <!-- FILE -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                ${fileCell}
+
+            </td>
+
+
+            <!-- ACTION -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                <button
+                    onclick="
+                        deleteVariation(
+                            ${project.id},
+                            ${index}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#dc3545;
+                        color:white;
+                        border-radius:4px;
+                        padding:6px 9px;
+                        cursor:pointer;
+                    "
+                >
+                    Delete
+                </button>
+
+            </td>
+
+
+        </tr>
+
+    `;
+
+}
+
+
+/* =====================================================
+   UPDATE NORMAL FIELD
+===================================================== */
+
+window.updateVariationField =
+function(
+    projectId,
+    index,
+    field,
+    value
+){
+
+    const project =
+        getVariationsProject(projectId);
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index]
+    ){
+        return;
+    }
+
+
+    project.variations[index][field] =
+        value;
+
+
+    persist();
+
+
+    updateVariationSummary(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   UPDATE AMOUNT
+===================================================== */
+
+window.updateVariationAmount =
+function(
+    projectId,
+    index,
+    field,
+    value
+){
+
+    const project =
+        getVariationsProject(projectId);
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index]
+    ){
+        return;
+    }
+
+
+    project.variations[index][field] =
+        value;
+
+
+    persist();
+
+
+    updateVariationSummary(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   UPDATE SUMMARY
+===================================================== */
+
+function updateVariationSummary(project){
+
+    let totalSubmitted = 0;
+    let totalApproved = 0;
+    let totalPending = 0;
+
+
+    (project.variations || [])
+        .forEach(
+            variation => {
+
+                const submitted =
+                    parseVariationMoney(
+                        variation.submittedValue
+                    );
+
+                const approved =
+                    parseVariationMoney(
+                        variation.approvedValue
+                    );
+
+
+                totalSubmitted +=
+                    submitted;
+
+                totalApproved +=
+                    approved;
+
+
+                const status =
+                    variation.status ||
+                    "Draft";
+
+
+                if(
+                    status === "Draft" ||
+                    status === "Submitted" ||
+                    status === "Under Review"
+                ){
+
+                    totalPending +=
+                        submitted;
+
+                }
+
+            }
+        );
+
+
+    const contractValue =
+        getVariationContractValue(project);
+
+
+    const revisedValue =
+        contractValue +
+        totalApproved;
+
+
+    const approvedPercent =
+        contractValue !== 0
+        ? (totalApproved / contractValue) * 100
+        : 0;
+
+
+    const submittedEl =
+        document.getElementById(
+            "variations-total-submitted"
+        );
+
+    const approvedEl =
+        document.getElementById(
+            "variations-total-approved"
+        );
+
+    const pendingEl =
+        document.getElementById(
+            "variations-total-pending"
+        );
+
+    const revisedEl =
+        document.getElementById(
+            "variations-revised-value"
+        );
+
+    const percentEl =
+        document.getElementById(
+            "variations-approved-percent"
+        );
+
+
+    if(submittedEl){
+
+        submittedEl.innerText =
+            formatVariationMoney(
+                totalSubmitted
+            );
+
+    }
+
+
+    if(approvedEl){
+
+        approvedEl.innerText =
+            formatVariationMoney(
+                totalApproved
+            );
+
+    }
+
+
+    if(pendingEl){
+
+        pendingEl.innerText =
+            formatVariationMoney(
+                totalPending
+            );
+
+    }
+
+
+    if(revisedEl){
+
+        revisedEl.innerText =
+            formatVariationMoney(
+                revisedValue
+            );
+
+    }
+
+
+    if(percentEl){
+
+        percentEl.innerText =
+            approvedPercent.toFixed(2) +
+            "% of Contract";
+
+    }
+
+}
+
+
+/* =====================================================
+   FORMAT MONEY INPUT
+===================================================== */
+
+window.formatVariationInput =
+function(input){
+
+    const value =
+        parseVariationMoney(
+            input.value
+        );
+
+    input.value =
+        value
+        ? formatVariationMoney(value)
+        : "";
+
+};
+
+
+/* =====================================================
+   ADD VARIATION
+===================================================== */
+
+window.addVariationRow =
+function(projectId){
+
+    const project =
+        getVariationsProject(projectId);
+
+
+    if(!project){
+        return;
+    }
+
+
+    if(!project.variations){
+
+        project.variations = [];
+
+    }
+
+
+    const nextNumber =
+        project.variations.length + 1;
+
+
+    const variationNumber =
+        "V-" +
+        String(nextNumber)
+        .padStart(3,"0");
+
+
+    const today =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+
+    project.variations.push({
+
+        variationNumber:
+            variationNumber,
+
+        variationType:
+            "",
+
+        description:
+            "",
+
+        contractor:
+            "",
+
+        submittedValue:
+            "",
+
+        approvedValue:
+            "",
+
+        dateSubmitted:
+            today,
+
+        dateApproved:
+            "",
+
+        status:
+            "Draft",
+
+        fileName:
+            "",
+
+        fileType:
+            "",
+
+        fileData:
+            ""
+
+    });
+
+
+    persist();
+
+
+    renderVariationsSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   UPLOAD VARIATION PDF
+===================================================== */
+
+window.uploadVariationFile =
+function(
+    projectId,
+    index,
+    file
+){
+
+    const project =
+        getVariationsProject(projectId);
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index] ||
+        !file
+    ){
+        return;
+    }
+
+
+    if(
+        file.type !==
+        "application/pdf"
+    ){
+
+        alert(
+            "Please select a PDF file."
+        );
+
+        return;
+
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+    function(e){
+
+        const variation =
+            project.variations[index];
+
+
+        variation.fileName =
+            file.name;
+
+        variation.fileType =
+            file.type;
+
+        variation.fileData =
+            e.target.result;
+
+
+        persist();
+
+
+        renderVariationsSection(
+            project
+        );
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+};
+
+
+/* =====================================================
+   REPLACE VARIATION PDF
+===================================================== */
+
+window.replaceVariationFile =
+function(
+    projectId,
+    index
+){
+
+    const input =
+        document.createElement("input");
+
+
+    input.type =
+        "file";
+
+    input.accept =
+        "application/pdf,.pdf";
+
+
+    input.onchange =
+    function(){
+
+        const file =
+            input.files[0];
+
+
+        if(file){
+
+            uploadVariationFile(
+                projectId,
+                index,
+                file
+            );
+
+        }
+
+    };
+
+
+    input.click();
+
+};
+
+
+/* =====================================================
+   VIEW VARIATION PDF
+===================================================== */
+
+window.viewVariationFile =
+function(
+    projectId,
+    index
+){
+
+    const project =
+        getVariationsProject(projectId);
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index]
+    ){
+        return;
+    }
+
+
+    const variation =
+        project.variations[index];
+
+
+    if(!variation.fileData){
+
+        alert(
+            "No Variation PDF is attached."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const base64 =
+            variation.fileData
+            .split(",")[1];
+
+
+        if(!base64){
+
+            alert(
+                "Invalid Variation PDF data."
+            );
+
+            return;
+
+        }
+
+
+        const byteCharacters =
+            atob(base64);
+
+
+        const byteNumbers =
+            new Array(
+                byteCharacters.length
+            );
+
+
+        for(
+            let i = 0;
+            i < byteCharacters.length;
+            i++
+        ){
+
+            byteNumbers[i] =
+                byteCharacters
+                .charCodeAt(i);
+
+        }
+
+
+        const byteArray =
+            new Uint8Array(
+                byteNumbers
+            );
+
+
+        const blob =
+            new Blob(
+                [byteArray],
+                {
+                    type:
+                        "application/pdf"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        window.open(
+            url,
+            "_blank"
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Variation PDF error:",
+            error
+        );
+
+
+        alert(
+            "Unable to open the Variation PDF."
+        );
+
+    }
+
+};
+
+
+/* =====================================================
+   DOWNLOAD VARIATION PDF
+===================================================== */
+
+window.downloadVariationFile =
+function(
+    projectId,
+    index
+){
+
+    const project =
+        getVariationsProject(projectId);
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index]
+    ){
+        return;
+    }
+
+
+    const variation =
+        project.variations[index];
+
+
+    if(!variation.fileData){
+
+        alert(
+            "No Variation PDF attached."
+        );
+
+        return;
+
+    }
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href =
+        variation.fileData;
+
+
+    link.download =
+        variation.fileName ||
+        `Variation-${index + 1}.pdf`;
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+};
+
+
+/* =====================================================
+   DELETE VARIATION
+===================================================== */
+
+window.deleteVariation =
+function(
+    projectId,
+    index
+){
+
+    const project =
+        getVariationsProject(projectId);
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index]
+    ){
+        return;
+    }
+
+
+    const variation =
+        project.variations[index];
+
+
+    const confirmed =
+        confirm(
+            `Delete Variation ${
+                variation.variationNumber ||
+                index + 1
+            }?`
+        );
+
+
+    if(!confirmed){
+        return;
+    }
+
+
+    project.variations.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    renderVariationsSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   EXCEL EXPORT
+===================================================== */
+
+window.downloadVariationsExcel =
+function(projectId){
+
+    const project =
+        getVariationsProject(projectId);
+
+
+    if(!project){
+        return;
+    }
+
+
+    if(
+        typeof XLSX ===
+        "undefined"
+    ){
+
+        alert(
+            "Excel library is not loaded."
+        );
+
+        return;
+
+    }
+
+
+    const rows =
+        (project.variations || [])
+        .map(
+            variation => ({
+
+                "Variation Number":
+                    variation.variationNumber || "",
+
+                "Variation Type":
+                    variation.variationType || "",
+
+                "Description":
+                    variation.description || "",
+
+                "Contractor / Submitted By":
+                    variation.contractor || "",
+
+                "Submitted Value":
+                    parseVariationMoney(
+                        variation.submittedValue
+                    ),
+
+                "Approved Value":
+                    parseVariationMoney(
+                        variation.approvedValue
+                    ),
+
+                "Date Submitted":
+                    variation.dateSubmitted || "",
+
+                "Date Approved":
+                    variation.dateApproved || "",
+
+                "Status":
+                    variation.status || "",
+
+                "Variation PDF":
+                    variation.fileName || ""
+
+            })
+        );
+
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            rows
+        );
+
+
+    worksheet["!cols"] = [
+
+        {wch:18},
+        {wch:22},
+        {wch:40},
+        {wch:30},
+        {wch:20},
+        {wch:20},
+        {wch:20},
+        {wch:20},
+        {wch:20},
+        {wch:35}
+
+    ];
+
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Variations"
+    );
+
+
+    const projectName =
+        project.name ||
+        project.projectName ||
+        "Project";
+
+
+    XLSX.writeFile(
+        workbook,
+        `${projectName}-Variations.xlsx`
     );
 
 };
