@@ -12544,7 +12544,6 @@ function getVariationPaymentTotals(variation){
 /* =====================================================
    FINANCIAL STATUS
 ===================================================== */
-
 function getVariationFinancialStatus(variation){
 
     const approved =
@@ -12553,10 +12552,37 @@ function getVariationFinancialStatus(variation){
         );
 
 
-    const totals =
-        getVariationPaymentTotals(
-            variation
-        );
+    let totalInvoiced = 0;
+    let totalReceived = 0;
+
+
+    const stages =
+        variation.paymentStages || [];
+
+
+    stages.forEach(
+        stage => {
+
+            totalInvoiced +=
+                parseVariationMoney(
+                    stage.invoiceValue
+                );
+
+
+            totalReceived +=
+                parseVariationMoney(
+                    stage.receivedValue
+                );
+
+        }
+    );
+
+
+    /*
+       Payment Status is based on the TOTAL
+       of all payment stages compared with
+       the Approved Variation Value.
+    */
 
 
     if(approved <= 0){
@@ -12566,27 +12592,21 @@ function getVariationFinancialStatus(variation){
     }
 
 
-    if(
-        totals.received >= approved
-    ){
+    if(totalReceived >= approved){
 
         return "Fully Paid";
 
     }
 
 
-    if(
-        totals.received > 0
-    ){
+    if(totalReceived > 0){
 
         return "Partially Paid";
 
     }
 
 
-    if(
-        totals.invoiced > 0
-    ){
+    if(totalInvoiced > 0){
 
         return "Invoiced";
 
@@ -12596,8 +12616,6 @@ function getVariationFinancialStatus(variation){
     return "Not Invoiced";
 
 }
-
-
 /* =====================================================
    STATUS BADGE
 ===================================================== */
