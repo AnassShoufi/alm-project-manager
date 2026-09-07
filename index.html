@@ -14402,10 +14402,10 @@ function getManpowerMonthlySummary(
                     )
             );
 
-        const monthEnd =
-            getManpowerTotal(
-                monthEndActive
-            );
+       const monthEndTotal =
+    getManpowerTotal(
+        monthEndActive
+    );
 
         const directAverage =
             directTotals.length
@@ -14451,7 +14451,7 @@ function getManpowerMonthlySummary(
 
             average,
             peak,
-            monthEnd,
+           monthEnd: monthEndTotal,
 
             directAverage,
 
