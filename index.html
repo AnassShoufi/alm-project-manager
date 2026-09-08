@@ -11319,6 +11319,7 @@ window.downloadPaymentsExcel = function(
    - Excel Export
    - One Excel Sheet
    - Payment Stages shown directly under each Variation
+   - CONTRACT VALUE IS NOT INCLUDED
 ===================================================== */
 
 
@@ -11426,22 +11427,6 @@ function variationEscape(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
-
-}
-
-
-/* =====================================================
-   CONTRACT VALUE
-===================================================== */
-
-function getVariationContractValue(project){
-
-    return parseVariationMoney(
-        project.contractValue ||
-        project.contractAmount ||
-        project.value ||
-        0
-    );
 
 }
 
@@ -12091,17 +12076,13 @@ function(project){
     persist();
 
 
-    const contractValue =
-        getVariationContractValue(
-            project
-        );
-
-
     let totalSubmitted = 0;
 
     let totalApproved = 0;
 
     let totalPayable = 0;
+
+    let totalInvoiced = 0;
 
     let totalReceived = 0;
 
@@ -12127,29 +12108,21 @@ function(project){
                 );
 
 
-            totalReceived +=
+            const totals =
                 getVariationPaymentTotals(
                     variation
-                ).received;
+                );
+
+
+            totalInvoiced +=
+                totals.invoiced;
+
+
+            totalReceived +=
+                totals.received;
 
         }
     );
-
-
-    const revisedContract =
-        contractValue +
-        totalApproved;
-
-
-    const approvedPercentage =
-        contractValue > 0
-        ?
-        (
-            totalApproved /
-            contractValue
-        ) * 100
-        :
-        0;
 
 
     const outstandingPayable =
@@ -12270,7 +12243,7 @@ function(project){
             ">
 
 
-                <!-- ORIGINAL CONTRACT -->
+                <!-- TOTAL SUBMITTED -->
 
                 <div style="
                     background:#f8f9fa;
@@ -12283,36 +12256,7 @@ function(project){
                         color:#6c757d;
                         font-size:12px;
                     ">
-                        Original Contract Value
-                    </div>
-
-                    <div style="
-                        margin-top:6px;
-                        font-size:18px;
-                        font-weight:700;
-                    ">
-                        ${formatVariationMoney(
-                            contractValue
-                        )}
-                    </div>
-
-                </div>
-
-
-                <!-- SUBMITTED -->
-
-                <div style="
-                    background:#f8f9fa;
-                    border:1px solid #dee2e6;
-                    border-radius:8px;
-                    padding:14px;
-                ">
-
-                    <div style="
-                        color:#6c757d;
-                        font-size:12px;
-                    ">
-                        Total Submitted
+                        Total Submitted Variations
                     </div>
 
                     <div
@@ -12331,7 +12275,7 @@ function(project){
                 </div>
 
 
-                <!-- APPROVED -->
+                <!-- TOTAL APPROVED -->
 
                 <div style="
                     background:#f8f9fa;
@@ -12344,7 +12288,7 @@ function(project){
                         color:#6c757d;
                         font-size:12px;
                     ">
-                        Total Approved
+                        Total Approved Variations
                     </div>
 
                     <div
@@ -12363,7 +12307,7 @@ function(project){
                 </div>
 
 
-                <!-- PAYABLE -->
+                <!-- TOTAL PAYABLE -->
 
                 <div style="
                     background:#f8f9fa;
@@ -12376,7 +12320,7 @@ function(project){
                         color:#6c757d;
                         font-size:12px;
                     ">
-                        Total Payable
+                        Total Payable Variations
                     </div>
 
                     <div
@@ -12395,7 +12339,39 @@ function(project){
                 </div>
 
 
-                <!-- RECEIVED -->
+                <!-- TOTAL INVOICED -->
+
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #dee2e6;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        color:#6c757d;
+                        font-size:12px;
+                    ">
+                        Total Invoiced
+                    </div>
+
+                    <div
+                        id="variation-summary-invoiced"
+                        style="
+                            margin-top:6px;
+                            font-size:18px;
+                            font-weight:700;
+                        "
+                    >
+                        ${formatVariationMoney(
+                            totalInvoiced
+                        )}
+                    </div>
+
+                </div>
+
+
+                <!-- TOTAL RECEIVED -->
 
                 <div style="
                     background:#f8f9fa;
@@ -12440,7 +12416,7 @@ function(project){
                         color:#6c757d;
                         font-size:12px;
                     ">
-                        Outstanding Payable
+                        Outstanding Variation Payable
                     </div>
 
                     <div
@@ -12454,68 +12430,6 @@ function(project){
                         ${formatVariationMoney(
                             outstandingPayable
                         )}
-                    </div>
-
-                </div>
-
-
-                <!-- REVISED CONTRACT -->
-
-                <div style="
-                    background:#f8f9fa;
-                    border:1px solid #dee2e6;
-                    border-radius:8px;
-                    padding:14px;
-                ">
-
-                    <div style="
-                        color:#6c757d;
-                        font-size:12px;
-                    ">
-                        Revised Contract Value
-                    </div>
-
-                    <div
-                        id="variation-summary-revised"
-                        style="
-                            margin-top:6px;
-                            font-size:18px;
-                            font-weight:700;
-                        "
-                    >
-                        ${formatVariationMoney(
-                            revisedContract
-                        )}
-                    </div>
-
-                </div>
-
-
-                <!-- APPROVED % -->
-
-                <div style="
-                    background:#f8f9fa;
-                    border:1px solid #dee2e6;
-                    border-radius:8px;
-                    padding:14px;
-                ">
-
-                    <div style="
-                        color:#6c757d;
-                        font-size:12px;
-                    ">
-                        Approved Variations
-                    </div>
-
-                    <div
-                        id="variation-summary-approved-percent"
-                        style="
-                            margin-top:6px;
-                            font-size:18px;
-                            font-weight:700;
-                        "
-                    >
-                        ${approvedPercentage.toFixed(2)}%
                     </div>
 
                 </div>
@@ -14064,6 +13978,7 @@ function refreshVariationFinancialDisplays(
 
 /* =====================================================
    UPDATE SUMMARY
+   VARIATIONS ONLY
 ===================================================== */
 
 function updateVariationSummary(
@@ -14075,6 +13990,8 @@ function updateVariationSummary(
     let totalApproved = 0;
 
     let totalPayable = 0;
+
+    let totalInvoiced = 0;
 
     let totalReceived = 0;
 
@@ -14104,35 +14021,21 @@ function updateVariationSummary(
                 );
 
 
-            totalReceived +=
+            const totals =
                 getVariationPaymentTotals(
                     variation
-                ).received;
+                );
+
+
+            totalInvoiced +=
+                totals.invoiced;
+
+
+            totalReceived +=
+                totals.received;
 
         }
     );
-
-
-    const contractValue =
-        getVariationContractValue(
-            project
-        );
-
-
-    const revised =
-        contractValue +
-        totalApproved;
-
-
-    const percentage =
-        contractValue > 0
-        ?
-        (
-            totalApproved /
-            contractValue
-        ) * 100
-        :
-        0;
 
 
     const outstanding =
@@ -14158,6 +14061,12 @@ function updateVariationSummary(
         );
 
 
+    const invoicedEl =
+        document.getElementById(
+            "variation-summary-invoiced"
+        );
+
+
     const receivedEl =
         document.getElementById(
             "variation-summary-received"
@@ -14167,18 +14076,6 @@ function updateVariationSummary(
     const outstandingEl =
         document.getElementById(
             "variation-summary-outstanding-payable"
-        );
-
-
-    const revisedEl =
-        document.getElementById(
-            "variation-summary-revised"
-        );
-
-
-    const percentEl =
-        document.getElementById(
-            "variation-summary-approved-percent"
         );
 
 
@@ -14212,6 +14109,16 @@ function updateVariationSummary(
     }
 
 
+    if(invoicedEl){
+
+        invoicedEl.innerText =
+            formatVariationMoney(
+                totalInvoiced
+            );
+
+    }
+
+
     if(receivedEl){
 
         receivedEl.innerText =
@@ -14228,25 +14135,6 @@ function updateVariationSummary(
             formatVariationMoney(
                 outstanding
             );
-
-    }
-
-
-    if(revisedEl){
-
-        revisedEl.innerText =
-            formatVariationMoney(
-                revised
-            );
-
-    }
-
-
-    if(percentEl){
-
-        percentEl.innerText =
-            percentage.toFixed(2) +
-            "%";
 
     }
 
@@ -15303,6 +15191,7 @@ async function(
    =====================================================
    EXCEL EXPORT
    ONE SHEET ONLY
+   VARIATIONS ONLY
    =====================================================
 ===================================================== */
 
@@ -15360,12 +15249,6 @@ function(projectId){
 
     try{
 
-        const contractValue =
-            getVariationContractValue(
-                project
-            );
-
-
         let totalSubmitted = 0;
 
         let totalApproved = 0;
@@ -15420,28 +15303,11 @@ function(projectId){
             totalReceived;
 
 
-        const revisedContract =
-            contractValue +
-            totalApproved;
-
-
-        const approvedPercentage =
-            contractValue > 0
-            ?
-            (
-                totalApproved /
-                contractValue
-            ) * 100
-            :
-            0;
-
-
         /*
            =================================================
            EXCEL DATA
            =================================================
         */
-
 
         const rows = [];
 
@@ -15455,6 +15321,10 @@ function(projectId){
         ]);
 
 
+        /*
+           PROJECT
+        */
+
         rows.push([
             "Project",
             project.name ||
@@ -15463,26 +15333,24 @@ function(projectId){
         ]);
 
 
-        rows.push([
-            "Original Contract Value",
-            contractValue
-        ]);
-
+        /*
+           VARIATION SUMMARY ONLY
+        */
 
         rows.push([
-            "Total Submitted",
+            "Total Submitted Variations",
             totalSubmitted
         ]);
 
 
         rows.push([
-            "Total Approved",
+            "Total Approved Variations",
             totalApproved
         ]);
 
 
         rows.push([
-            "Total Payable",
+            "Total Payable Variations",
             totalPayable
         ]);
 
@@ -15500,20 +15368,8 @@ function(projectId){
 
 
         rows.push([
-            "Outstanding Payable",
+            "Outstanding Variation Payable",
             outstandingPayable
-        ]);
-
-
-        rows.push([
-            "Revised Contract Value",
-            revisedContract
-        ]);
-
-
-        rows.push([
-            "Approved Variations %",
-            approvedPercentage / 100
         ]);
 
 
@@ -15575,7 +15431,6 @@ function(projectId){
            Each Variation is followed immediately
            by its Payment Stages.
         */
-
 
         project.variations.forEach(
             function(
@@ -15773,8 +15628,8 @@ function(projectId){
 
 
                 /*
-                   Add a blank row after each variation
-                   only when it has payment stages.
+                   Blank separator after each variation
+                   when payment stages exist.
                 */
 
                 if(
@@ -15856,7 +15711,8 @@ function(projectId){
         /*
            =================================================
            FREEZE PANES
-           Keep the main table header visible.
+           Main table header is row 11 in Excel.
+           Zero-based row index = 10.
            =================================================
         */
 
@@ -15864,7 +15720,7 @@ function(projectId){
 
             xSplit:0,
 
-            ySplit:13
+            ySplit:10
 
         };
 
@@ -15872,12 +15728,18 @@ function(projectId){
         /*
            =================================================
            NUMBER FORMATTING
+           Correct monetary columns:
+           5 Submitted
+           6 Approved
+           7 Payable
+           11 Invoice
+           13 Received
+           15 Balance
            =================================================
         */
 
         const moneyColumns = [
 
-            1,
             5,
             6,
             7,
@@ -15890,11 +15752,13 @@ function(projectId){
 
         /*
            Format summary money cells.
+           Summary starts at Excel row 3
+           through Excel row 8.
         */
 
         for(
             let rowIndex = 2;
-            rowIndex <= 9;
+            rowIndex <= 7;
             rowIndex++
         ){
 
@@ -15920,31 +15784,15 @@ function(projectId){
 
 
         /*
-           Approved percentage
-        */
-
-        const percentageCell =
-            worksheet["B10"];
-
-
-        if(percentageCell){
-
-            percentageCell.t =
-                "n";
-
-            percentageCell.z =
-                "0.00%";
-
-        }
-
-
-        /*
            Format all monetary columns
            from the main table onward.
+
+           Main header is zero-based row 9.
+           Data starts at zero-based row 10.
         */
 
         for(
-            let rowIndex = 13;
+            let rowIndex = 10;
             rowIndex < rows.length;
             rowIndex++
         ){
@@ -15983,8 +15831,9 @@ function(projectId){
            =================================================
         */
 
+
         /*
-           Title
+           TITLE
         */
 
         if(
@@ -16018,7 +15867,7 @@ function(projectId){
 
 
         /*
-           Project row
+           PROJECT ROW
         */
 
         if(
@@ -16037,12 +15886,14 @@ function(projectId){
 
 
         /*
-           Summary labels
+           SUMMARY LABELS
+
+           Zero-based rows 2 through 7.
         */
 
         for(
             let rowIndex = 2;
-            rowIndex <= 10;
+            rowIndex <= 7;
             rowIndex++
         ){
 
@@ -16077,8 +15928,9 @@ function(projectId){
 
 
         /*
-           Main table header
-           Row 13 = Excel row 14
+           MAIN TABLE HEADER
+
+           Zero-based row 9.
         */
 
         for(
@@ -16090,7 +15942,7 @@ function(projectId){
             const cell =
                 worksheet[
                     XLSX.utils.encode_cell({
-                        r:13,
+                        r:9,
                         c:columnIndex
                     })
                 ];
@@ -16165,7 +16017,7 @@ function(projectId){
         */
 
         for(
-            let rowIndex = 14;
+            let rowIndex = 10;
             rowIndex < rows.length;
             rowIndex++
         ){
@@ -16191,7 +16043,7 @@ function(projectId){
 
 
             /*
-               Variation rows
+               VARIATION ROWS
             */
 
             if(
@@ -16261,7 +16113,7 @@ function(projectId){
 
 
             /*
-               Payment stage rows
+               PAYMENT STAGE ROWS
             */
 
             if(
@@ -16318,8 +16170,7 @@ function(projectId){
 
 
                 /*
-                   Make Stage row visually indented
-                   through the description cell.
+                   Make stage description visually indented.
                 */
 
                 const descriptionCell =
@@ -16380,19 +16231,6 @@ function(projectId){
 
             }
 
-
-            /*
-               Blank separator rows
-            */
-
-            if(
-                rows[rowIndex].length === 0
-            ){
-
-                continue;
-
-            }
-
         }
 
 
@@ -16403,13 +16241,13 @@ function(projectId){
         */
 
         for(
-            let rowIndex = 14;
+            let rowIndex = 10;
             rowIndex < rows.length;
             rowIndex++
         ){
 
             /*
-               Money columns right aligned.
+               MONEY COLUMNS RIGHT ALIGNED
             */
 
             moneyColumns.forEach(
@@ -16448,7 +16286,7 @@ function(projectId){
 
 
             /*
-               Stage / status columns centered.
+               STATUS / STAGE / DATE COLUMNS CENTERED
             */
 
             [
@@ -16514,7 +16352,7 @@ function(projectId){
         };
 
 
-        worksheet["!rows"][13] = {
+        worksheet["!rows"][9] = {
 
             hpt:35
 
