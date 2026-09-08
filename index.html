@@ -13931,71 +13931,72 @@ function(
 ){
 
     const project =
-        getVariationsProject(
-            projectId
-        );
-
+        getVariationsProject(projectId);
 
     if(
         !project ||
         !project.variations ||
-        !project.variations[variationIndex] ||
-        !project.variations[variationIndex].paymentStages ||
-        !project.variations[variationIndex].paymentStages[stageIndex] ||
-        !file
+        !project.variations[variationIndex]
     ){
-
+        alert("Variation not found.");
         return;
-
     }
 
+    const variation =
+        project.variations[variationIndex];
 
     if(
-        file.type !==
-        "application/pdf"
+        !variation.paymentStages ||
+        !variation.paymentStages[stageIndex]
     ){
-
-        alert(
-            "Please select a PDF file."
-        );
-
+        alert("Payment Stage not found.");
         return;
-
     }
 
+    if(!file){
+        return;
+    }
+
+    if(
+        file.type !== "application/pdf" &&
+        !file.name.toLowerCase().endsWith(".pdf")
+    ){
+        alert("Please select a PDF file.");
+        return;
+    }
 
     const reader =
         new FileReader();
-
 
     reader.onload =
     function(e){
 
         const stage =
-            project
-            .variations[variationIndex]
-            .paymentStages[stageIndex];
-
+            variation.paymentStages[stageIndex];
 
         stage.fileName =
             file.name;
 
-
         stage.fileType =
-            file.type;
-
+            "application/pdf";
 
         stage.fileData =
             e.target.result;
 
-
         persist();
 
+        /*
+           Rebuild the Variations section
+           so View / Download appear immediately.
+        */
 
         renderVariationsSection(
             project
         );
 
+        /*
+           Re-open the same Payment Stages row
+        */
 
         setTimeout(
             function(){
@@ -14005,7 +14006,6 @@ function(
                         `variation-stages-${variationIndex}`
                     );
 
-
                 if(row){
 
                     row.style.display =
@@ -14014,17 +14014,23 @@ function(
                 }
 
             },
-            50
+            100
         );
 
     };
 
+    reader.onerror =
+    function(){
+
+        alert(
+            "Unable to read the PDF file."
+        );
+
+    };
 
     reader.readAsDataURL(file);
 
 };
-
-
 /* =====================================================
    VIEW INVOICE PDF
 ===================================================== */
