@@ -12533,6 +12533,1156 @@ function(
     );
 
 };
+    /* =====================================================
+   VARIATIONS MODULE - STEP 2
+   PAYMENT / INVOICE STAGES
+===================================================== */
+
+
+/* =====================================================
+   PAYMENT TOTALS
+===================================================== */
+
+function getVariationPaymentTotals(variation){
+
+    let totalInvoiced = 0;
+    let totalReceived = 0;
+
+
+    const stages =
+        variation.paymentStages || [];
+
+
+    stages.forEach(
+        stage => {
+
+            totalInvoiced +=
+                parseVariationMoney(
+                    stage.invoiceValue
+                );
+
+
+            totalReceived +=
+                parseVariationMoney(
+                    stage.receivedValue
+                );
+
+        }
+    );
+
+
+    return {
+
+        invoiced:
+            totalInvoiced,
+
+        received:
+            totalReceived,
+
+        balance:
+            totalInvoiced -
+            totalReceived
+
+    };
+
+}
+
+
+/* =====================================================
+   FINANCIAL STATUS
+===================================================== */
+
+function getVariationFinancialStatus(
+    variation
+){
+
+    const approved =
+        parseVariationMoney(
+            variation.approvedValue
+        );
+
+
+    const totals =
+        getVariationPaymentTotals(
+            variation
+        );
+
+
+    if(approved <= 0){
+
+        return "Not Approved";
+
+    }
+
+
+    if(
+        totals.received >= approved
+    ){
+
+        return "Fully Paid";
+
+    }
+
+
+    if(
+        totals.received > 0
+    ){
+
+        return "Partially Paid";
+
+    }
+
+
+    if(
+        totals.invoiced > 0
+    ){
+
+        return "Invoiced";
+
+    }
+
+
+    return "Not Invoiced";
+
+}
+
+
+/* =====================================================
+   FINANCIAL STATUS BADGE
+===================================================== */
+
+function variationFinancialBadge(
+    status
+){
+
+    let background =
+        "#6c757d";
+
+
+    if(
+        status === "Fully Paid"
+    ){
+
+        background =
+            "#198754";
+
+    }
+    else if(
+        status === "Partially Paid"
+    ){
+
+        background =
+            "#fd7e14";
+
+    }
+    else if(
+        status === "Invoiced"
+    ){
+
+        background =
+            "#0d6efd";
+
+    }
+    else if(
+        status === "Not Approved"
+    ){
+
+        background =
+            "#6c757d";
+
+    }
+
+
+    return `
+
+        <span style="
+            display:inline-block;
+            padding:5px 9px;
+            border-radius:12px;
+            background:${background};
+            color:white;
+            font-size:11px;
+            font-weight:600;
+            white-space:nowrap;
+        ">
+            ${status}
+        </span>
+
+    `;
+
+}
+
+
+/* =====================================================
+   TOGGLE PAYMENT STAGES
+===================================================== */
+
+window.toggleVariationStages =
+function(
+    projectId,
+    variationIndex
+){
+
+    const row =
+        document.getElementById(
+            `variation-stages-${variationIndex}`
+        );
+
+
+    if(!row){
+
+        return;
+
+    }
+
+
+    if(
+        row.style.display === "none" ||
+        row.style.display === ""
+    ){
+
+        row.style.display =
+            "table-row";
+
+    }
+    else{
+
+        row.style.display =
+            "none";
+
+    }
+
+};
+
+
+/* =====================================================
+   ADD PAYMENT STAGE
+===================================================== */
+
+window.addVariationPaymentStage =
+function(
+    projectId,
+    variationIndex
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[variationIndex]
+    ){
+
+        return;
+
+    }
+
+
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    if(
+        !variation.paymentStages
+    ){
+
+        variation.paymentStages =
+            [];
+
+    }
+
+
+    variation.paymentStages.push({
+
+        invoiceValue:
+            "",
+
+        receivedValue:
+            "",
+
+        invoiceDate:
+            "",
+
+        receivedDate:
+            ""
+
+    });
+
+
+    persist();
+
+
+    renderVariationsSection(
+        project
+    );
+
+
+    setTimeout(
+        function(){
+
+            const row =
+                document.getElementById(
+                    `variation-stages-${variationIndex}`
+                );
+
+
+            if(row){
+
+                row.style.display =
+                    "table-row";
+
+            }
+
+        },
+        50
+    );
+
+};
+
+
+/* =====================================================
+   DELETE PAYMENT STAGE
+===================================================== */
+
+window.deleteVariationPaymentStage =
+function(
+    projectId,
+    variationIndex,
+    stageIndex
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[variationIndex] ||
+        !project.variations[variationIndex].paymentStages
+    ){
+
+        return;
+
+    }
+
+
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    if(
+        !confirm(
+            `Delete Payment Stage ${
+                stageIndex + 1
+            }?`
+        )
+    ){
+
+        return;
+
+    }
+
+
+    variation.paymentStages.splice(
+        stageIndex,
+        1
+    );
+
+
+    persist();
+
+
+    renderVariationsSection(
+        project
+    );
+
+
+    setTimeout(
+        function(){
+
+            const row =
+                document.getElementById(
+                    `variation-stages-${variationIndex}`
+                );
+
+
+            if(row){
+
+                row.style.display =
+                    "table-row";
+
+            }
+
+        },
+        50
+    );
+
+};
+
+
+/* =====================================================
+   UPDATE PAYMENT STAGE FIELD
+===================================================== */
+
+window.updateVariationStageField =
+function(
+    projectId,
+    variationIndex,
+    stageIndex,
+    field,
+    value
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[variationIndex] ||
+        !project.variations[variationIndex].paymentStages ||
+        !project.variations[variationIndex].paymentStages[stageIndex]
+    ){
+
+        return;
+
+    }
+
+
+    project
+        .variations[variationIndex]
+        .paymentStages[stageIndex][field] =
+            value;
+
+
+    persist();
+
+};
+
+
+/* =====================================================
+   UPDATE PAYMENT STAGE AMOUNT
+===================================================== */
+
+window.updateVariationStageAmount =
+function(
+    projectId,
+    variationIndex,
+    stageIndex,
+    field,
+    value
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[variationIndex] ||
+        !project.variations[variationIndex].paymentStages ||
+        !project.variations[variationIndex].paymentStages[stageIndex]
+    ){
+
+        return;
+
+    }
+
+
+    project
+        .variations[variationIndex]
+        .paymentStages[stageIndex][field] =
+            value;
+
+
+    persist();
+
+};
+
+
+/* =====================================================
+   BUILD PAYMENT STAGES
+===================================================== */
+
+function buildVariationPaymentStages(
+    project,
+    variationIndex,
+    variation
+){
+
+    const stages =
+        variation.paymentStages || [];
+
+
+    const totals =
+        getVariationPaymentTotals(
+            variation
+        );
+
+
+    return `
+
+        <div style="
+            background:#ffffff;
+            border:1px solid #d9d9d9;
+            border-radius:8px;
+            padding:15px;
+        ">
+
+
+            <!-- HEADER -->
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                flex-wrap:wrap;
+                gap:10px;
+                margin-bottom:14px;
+            ">
+
+                <strong style="
+                    font-size:15px;
+                    color:#333;
+                ">
+                    Payment / Invoice Stages
+                </strong>
+
+
+                <button
+                    onclick="
+                        addVariationPaymentStage(
+                            ${project.id},
+                            ${variationIndex}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#198754;
+                        color:white;
+                        border-radius:5px;
+                        padding:7px 12px;
+                        cursor:pointer;
+                        font-weight:600;
+                    "
+                >
+                    + Add Payment Stage
+                </button>
+
+            </div>
+
+
+            <!-- TOTALS -->
+
+            <div style="
+                display:flex;
+                gap:30px;
+                flex-wrap:wrap;
+                margin-bottom:14px;
+                font-size:13px;
+            ">
+
+                <div>
+                    <strong>
+                        Total Invoiced:
+                    </strong>
+
+                    ${formatVariationMoney(
+                        totals.invoiced
+                    )}
+                </div>
+
+
+                <div>
+                    <strong>
+                        Total Received:
+                    </strong>
+
+                    ${formatVariationMoney(
+                        totals.received
+                    )}
+                </div>
+
+
+                <div>
+                    <strong>
+                        Outstanding:
+                    </strong>
+
+                    ${formatVariationMoney(
+                        totals.balance
+                    )}
+                </div>
+
+            </div>
+
+
+            ${
+                stages.length === 0
+
+                ?
+
+                `
+
+                    <div style="
+                        padding:18px;
+                        text-align:center;
+                        color:#777;
+                        border:1px dashed #ccc;
+                        border-radius:6px;
+                    ">
+                        No payment stages added yet.
+                    </div>
+
+                `
+
+                :
+
+                `
+
+                    <div style="
+                        width:100%;
+                        overflow-x:auto;
+                    ">
+
+                        <table style="
+                            width:100%;
+                            min-width:950px;
+                            border-collapse:collapse;
+                        ">
+
+                            <thead>
+
+                                <tr style="
+                                    background:#f1f3f5;
+                                ">
+
+
+                                    <th style="
+                                        padding:9px;
+                                        text-align:center;
+                                    ">
+                                        Stage
+                                    </th>
+
+
+                                    <th style="
+                                        padding:9px;
+                                        text-align:right;
+                                    ">
+                                        Invoice Value
+                                    </th>
+
+
+                                    <th style="
+                                        padding:9px;
+                                        text-align:right;
+                                    ">
+                                        Received Value
+                                    </th>
+
+
+                                    <th style="
+                                        padding:9px;
+                                        text-align:right;
+                                    ">
+                                        Balance
+                                    </th>
+
+
+                                    <th style="
+                                        padding:9px;
+                                        text-align:center;
+                                    ">
+                                        Invoice Date
+                                    </th>
+
+
+                                    <th style="
+                                        padding:9px;
+                                        text-align:center;
+                                    ">
+                                        Payment Received Date
+                                    </th>
+
+
+                                    <th style="
+                                        padding:9px;
+                                        text-align:center;
+                                    ">
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                ${
+                                    stages
+                                        .map(
+                                            (
+                                                stage,
+                                                stageIndex
+                                            ) =>
+                                                buildVariationPaymentStageRow(
+                                                    project,
+                                                    variationIndex,
+                                                    stageIndex,
+                                                    stage
+                                                )
+                                        )
+                                        .join("")
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                `
+
+            }
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   BUILD PAYMENT STAGE ROW
+===================================================== */
+
+function buildVariationPaymentStageRow(
+    project,
+    variationIndex,
+    stageIndex,
+    stage
+){
+
+    const invoice =
+        parseVariationMoney(
+            stage.invoiceValue
+        );
+
+
+    const received =
+        parseVariationMoney(
+            stage.receivedValue
+        );
+
+
+    const balance =
+        invoice -
+        received;
+
+
+    return `
+
+        <tr style="
+            border-bottom:1px solid #eee;
+        ">
+
+
+            <!-- STAGE -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+                font-weight:600;
+            ">
+                ${stageIndex + 1}
+            </td>
+
+
+            <!-- INVOICE VALUE -->
+
+            <td style="
+                padding:7px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${
+                        escapeHTML(
+                            stage.invoiceValue || ""
+                        )
+                    }"
+                    oninput="
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'invoiceValue',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:130px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- RECEIVED VALUE -->
+
+            <td style="
+                padding:7px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${
+                        escapeHTML(
+                            stage.receivedValue || ""
+                        )
+                    }"
+                    oninput="
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'receivedValue',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:130px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- BALANCE -->
+
+            <td style="
+                padding:7px;
+                text-align:right;
+                font-weight:600;
+            ">
+
+                ${formatVariationMoney(
+                    balance
+                )}
+
+            </td>
+
+
+            <!-- INVOICE DATE -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                <input
+                    type="date"
+                    value="${
+                        escapeHTML(
+                            stage.invoiceDate || ""
+                        )
+                    }"
+                    onchange="
+                        updateVariationStageField(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'invoiceDate',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:135px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- PAYMENT RECEIVED DATE -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                <input
+                    type="date"
+                    value="${
+                        escapeHTML(
+                            stage.receivedDate || ""
+                        )
+                    }"
+                    onchange="
+                        updateVariationStageField(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'receivedDate',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:150px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- ACTION -->
+
+            <td style="
+                padding:7px;
+                text-align:center;
+            ">
+
+                <button
+                    onclick="
+                        deleteVariationPaymentStage(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#dc3545;
+                        color:white;
+                        border-radius:4px;
+                        padding:6px 9px;
+                        cursor:pointer;
+                    "
+                >
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
+
+
+/* =====================================================
+   UPDATE MAIN ROW FOR PAYMENT STAGES
+===================================================== */
+
+const originalBuildVariationRow =
+    buildVariationRow;
+
+
+buildVariationRow =
+function(
+    project,
+    index,
+    variation
+){
+
+    const originalHTML =
+        originalBuildVariationRow(
+            project,
+            index,
+            variation
+        );
+
+
+    const status =
+        getVariationFinancialStatus(
+            variation
+        );
+
+
+    const stageCount =
+        (
+            variation.paymentStages || []
+        ).length;
+
+
+    const parser =
+        document.createElement(
+            "template"
+        );
+
+
+    parser.innerHTML =
+        originalHTML;
+
+
+    const mainRow =
+        parser.content
+            .querySelector(
+                `#variation-row-${index}`
+            );
+
+
+    const stagesRow =
+        document.createElement(
+            "tr"
+        );
+
+
+    stagesRow.id =
+        `variation-stages-${index}`;
+
+
+    stagesRow.style.display =
+        "none";
+
+
+    stagesRow.style.background =
+        "#fafafa";
+
+
+    const stagesCell =
+        document.createElement(
+            "td"
+        );
+
+
+    stagesCell.colSpan =
+        8;
+
+
+    stagesCell.style.padding =
+        "15px";
+
+
+    stagesCell.innerHTML =
+        buildVariationPaymentStages(
+            project,
+            index,
+            variation
+        );
+
+
+    stagesRow.appendChild(
+        stagesCell
+    );
+
+
+    if(mainRow){
+
+        const statusCell =
+            mainRow.cells[6];
+
+
+        if(statusCell){
+
+            statusCell.innerHTML =
+                variationFinancialBadge(
+                    status
+                );
+
+        }
+
+
+        const actionCell =
+            mainRow.cells[7];
+
+
+        if(actionCell){
+
+            actionCell.innerHTML = `
+
+                <button
+                    onclick="
+                        toggleVariationStages(
+                            ${project.id},
+                            ${index}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#0d6efd;
+                        color:white;
+                        border-radius:5px;
+                        padding:6px 10px;
+                        cursor:pointer;
+                        font-weight:600;
+                    "
+                >
+                    ${stageCount} Stage(s)
+                </button>
+
+
+                <button
+                    onclick="
+                        deleteVariation(
+                            ${project.id},
+                            ${index}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#dc3545;
+                        color:white;
+                        border-radius:4px;
+                        padding:6px 10px;
+                        cursor:pointer;
+                        margin-left:4px;
+                    "
+                >
+                    Delete
+                </button>
+
+            `;
+
+        }
+
+
+        mainRow.parentNode.appendChild(
+            stagesRow
+        );
+
+    }
+
+
+    return parser.innerHTML;
+
+};
 /* =====================================================
    MANPOWER MODULE - STEP 1
    MANPOWER DEPLOYMENT REGISTER
