@@ -11303,14 +11303,27 @@ window.downloadPaymentsExcel = function(
 
 };
 /* =====================================================
-   VARIATIONS MODULE - STEP 1
-   MAIN VARIATION REGISTER
+   VARIATIONS MODULE
+   COMPLETE VERSION
+   - Variation Register
+   - Payment Stages
+   - Financial Status
+   - PDF Upload / View / Download / Replace
+   - PDF files stored in IndexedDB
+   - Variation data stored in localStorage
+===================================================== */
+
+
+/* =====================================================
+   PROJECT
 ===================================================== */
 
 function getVariationsProject(projectId){
 
     return projects.find(
-        p => String(p.id) === String(projectId)
+        p =>
+            String(p.id) ===
+            String(projectId)
     );
 
 }
@@ -11327,9 +11340,7 @@ function parseVariationMoney(value){
         value === undefined ||
         value === ""
     ){
-
         return 0;
-
     }
 
     return Number(
@@ -11344,12 +11355,34 @@ function parseVariationMoney(value){
 function formatVariationMoney(value){
 
     return Number(value || 0)
-        .toLocaleString("en-US",{
+        .toLocaleString(
+            "en-US",
+            {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+            }
+        );
 
-            minimumFractionDigits:2,
-            maximumFractionDigits:2
+}
 
-        });
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function variationEscape(value){
+
+    return String(
+        value === null ||
+        value === undefined
+            ? ""
+            : value
+    )
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 
 }
 
@@ -11371,7 +11404,524 @@ function getVariationContractValue(project){
 
 
 /* =====================================================
-   RENDER VARIATIONS
+   INDEXEDDB - PDF STORAGE
+===================================================== */
+
+let variationFileDBPromise = null;
+
+
+function getVariationFileDB(){
+
+    if(variationFileDBPromise){
+        return variationFileDBPromise;
+    }
+
+    variationFileDBPromise =
+        new Promise(
+            function(resolve,reject){
+
+                if(!window.indexedDB){
+
+                    reject(
+                        new Error(
+                            "IndexedDB is not available in this browser."
+                        )
+                    );
+
+                    return;
+                }
+
+                const request =
+                    indexedDB.open(
+                        "ALM_Variation_Files",
+                        1
+                    );
+
+
+                request.onupgradeneeded =
+                function(event){
+
+                    const db =
+                        event.target.result;
+
+                    if(
+                        !db.objectStoreNames.contains(
+                            "files"
+                        )
+                    ){
+
+                        db.createObjectStore(
+                            "files",
+                            {
+                                keyPath:"id"
+                            }
+                        );
+
+                    }
+
+                };
+
+
+                request.onsuccess =
+                function(){
+
+                    resolve(
+                        request.result
+                    );
+
+                };
+
+
+                request.onerror =
+                function(){
+
+                    reject(
+                        request.error
+                    );
+
+                };
+
+            }
+        );
+
+    return variationFileDBPromise;
+
+}
+
+
+/* =====================================================
+   SAVE PDF TO INDEXEDDB
+===================================================== */
+
+async function saveVariationPDF(
+    fileId,
+    file
+){
+
+    const db =
+        await getVariationFileDB();
+
+    return new Promise(
+        function(resolve,reject){
+
+            const transaction =
+                db.transaction(
+                    "files",
+                    "readwrite"
+                );
+
+            const store =
+                transaction.objectStore(
+                    "files"
+                );
+
+            store.put({
+                id:fileId,
+                name:file.name,
+                type:file.type,
+                blob:file
+            });
+
+
+            transaction.oncomplete =
+            function(){
+
+                resolve();
+
+            };
+
+
+            transaction.onerror =
+            function(){
+
+                reject(
+                    transaction.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   GET PDF FROM INDEXEDDB
+===================================================== */
+
+async function getVariationPDF(
+    fileId
+){
+
+    if(!fileId){
+        return null;
+    }
+
+    const db =
+        await getVariationFileDB();
+
+    return new Promise(
+        function(resolve,reject){
+
+            const transaction =
+                db.transaction(
+                    "files",
+                    "readonly"
+                );
+
+            const store =
+                transaction.objectStore(
+                    "files"
+                );
+
+            const request =
+                store.get(fileId);
+
+
+            request.onsuccess =
+            function(){
+
+                resolve(
+                    request.result || null
+                );
+
+            };
+
+
+            request.onerror =
+            function(){
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   DELETE PDF FROM INDEXEDDB
+===================================================== */
+
+async function deleteVariationPDF(
+    fileId
+){
+
+    if(!fileId){
+        return;
+    }
+
+    try{
+
+        const db =
+            await getVariationFileDB();
+
+        await new Promise(
+            function(resolve,reject){
+
+                const transaction =
+                    db.transaction(
+                        "files",
+                        "readwrite"
+                    );
+
+                const store =
+                    transaction.objectStore(
+                        "files"
+                    );
+
+                store.delete(
+                    fileId
+                );
+
+
+                transaction.oncomplete =
+                function(){
+
+                    resolve();
+
+                };
+
+
+                transaction.onerror =
+                function(){
+
+                    reject(
+                        transaction.error
+                    );
+
+                };
+
+            }
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "PDF delete error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   CREATE UNIQUE FILE ID
+===================================================== */
+
+function createVariationFileId(){
+
+    return (
+        "variation-pdf-" +
+        Date.now() +
+        "-" +
+        Math.random()
+            .toString(36)
+            .substring(2,10)
+    );
+
+}
+
+
+/* =====================================================
+   VARIATION WORKFLOW STATUS
+===================================================== */
+
+function variationWorkflowBadge(
+    status
+){
+
+    const colors = {
+
+        "Draft":{
+            bg:"#f1f3f5",
+            color:"#495057"
+        },
+
+        "Submitted":{
+            bg:"#fff3cd",
+            color:"#856404"
+        },
+
+        "Under Review":{
+            bg:"#cff4fc",
+            color:"#055160"
+        },
+
+        "Approved":{
+            bg:"#d1e7dd",
+            color:"#0f5132"
+        },
+
+        "Rejected":{
+            bg:"#f8d7da",
+            color:"#842029"
+        }
+
+    };
+
+
+    const c =
+        colors[status] ||
+        colors["Draft"];
+
+
+    return `
+        <span style="
+            display:inline-block;
+            padding:5px 9px;
+            border-radius:14px;
+            background:${c.bg};
+            color:${c.color};
+            font-size:12px;
+            font-weight:700;
+        ">
+            ${variationEscape(status || "Draft")}
+        </span>
+    `;
+
+}
+
+
+/* =====================================================
+   PAYMENT TOTALS
+===================================================== */
+
+function getVariationPaymentTotals(
+    variation
+){
+
+    let invoiced = 0;
+    let received = 0;
+
+
+    (
+        variation.paymentStages ||
+        []
+    )
+    .forEach(
+        stage => {
+
+            invoiced +=
+                parseVariationMoney(
+                    stage.invoiceValue
+                );
+
+            received +=
+                parseVariationMoney(
+                    stage.receivedValue
+                );
+
+        }
+    );
+
+
+    return {
+
+        invoiced:invoiced,
+
+        received:received,
+
+        outstanding:
+            invoiced -
+            received
+
+    };
+
+}
+
+
+/* =====================================================
+   FINANCIAL STATUS
+===================================================== */
+
+function getVariationFinancialStatus(
+    variation
+){
+
+    const approved =
+        parseVariationMoney(
+            variation.approvedValue
+        );
+
+
+    const totals =
+        getVariationPaymentTotals(
+            variation
+        );
+
+
+    if(approved <= 0){
+
+        return "Not Approved";
+
+    }
+
+
+    if(
+        totals.received >=
+        approved
+    ){
+
+        return "Fully Paid";
+
+    }
+
+
+    if(
+        totals.received > 0
+    ){
+
+        return "Partially Paid";
+
+    }
+
+
+    if(
+        totals.invoiced > 0
+    ){
+
+        return "Invoiced";
+
+    }
+
+
+    return "Not Invoiced";
+
+}
+
+
+/* =====================================================
+   FINANCIAL BADGE
+===================================================== */
+
+function variationFinancialBadge(
+    status
+){
+
+    const colors = {
+
+        "Not Approved":{
+            bg:"#f1f3f5",
+            color:"#495057"
+        },
+
+        "Not Invoiced":{
+            bg:"#f8f9fa",
+            color:"#6c757d"
+        },
+
+        "Invoiced":{
+            bg:"#fff3cd",
+            color:"#856404"
+        },
+
+        "Partially Paid":{
+            bg:"#cff4fc",
+            color:"#055160"
+        },
+
+        "Fully Paid":{
+            bg:"#d1e7dd",
+            color:"#0f5132"
+        }
+
+    };
+
+
+    const c =
+        colors[status] ||
+        colors["Not Invoiced"];
+
+
+    return `
+        <span style="
+            display:inline-block;
+            padding:5px 9px;
+            border-radius:14px;
+            background:${c.bg};
+            color:${c.color};
+            font-size:12px;
+            font-weight:700;
+            white-space:nowrap;
+        ">
+            ${variationEscape(status)}
+        </span>
+    `;
+
+}
+
+
+/* =====================================================
+   RENDER MAIN SECTION
 ===================================================== */
 
 window.renderVariationsSection =
@@ -11384,12 +11934,58 @@ function(project){
     }
 
 
+    project.variations.forEach(
+        function(variation){
+
+            if(
+                !variation.paymentStages
+            ){
+
+                variation.paymentStages = [];
+
+            }
+
+
+            variation.paymentStages.forEach(
+                function(stage){
+
+                    if(
+                        !stage.stageId
+                    ){
+
+                        stage.stageId =
+                            "stage-" +
+                            Date.now() +
+                            "-" +
+                            Math.random()
+                                .toString(36)
+                                .substring(2,8);
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+    persist();
+
+
+    const contractValue =
+        getVariationContractValue(
+            project
+        );
+
+
     let totalSubmitted = 0;
     let totalApproved = 0;
+    let totalReceived = 0;
 
 
     project.variations.forEach(
-        variation => {
+        function(variation){
 
             totalSubmitted +=
                 parseVariationMoney(
@@ -11401,31 +11997,44 @@ function(project){
                     variation.approvedValue
                 );
 
+
+            totalReceived +=
+                getVariationPaymentTotals(
+                    variation
+                ).received;
+
         }
     );
 
 
-    const contractValue =
-        getVariationContractValue(project);
-
-
-    const revisedContractValue =
+    const revisedContract =
         contractValue +
         totalApproved;
 
 
     const approvedPercentage =
         contractValue > 0
-        ? (
+        ?
+        (
             totalApproved /
             contractValue
         ) * 100
-        : 0;
+        :
+        0;
 
 
-    document.getElementById(
-        "projectSectionContent"
-    ).innerHTML = `
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+
+    if(!content){
+        return;
+    }
+
+
+    content.innerHTML = `
 
         <div style="
             width:100%;
@@ -11438,18 +12047,30 @@ function(project){
                 display:flex;
                 justify-content:space-between;
                 align-items:center;
+                gap:12px;
                 flex-wrap:wrap;
-                gap:10px;
-                margin-bottom:18px;
+                margin-bottom:20px;
             ">
 
-                <h2 style="
-                    margin:0;
-                    font-size:22px;
-                    color:#333;
-                ">
-                    Variations
-                </h2>
+                <div>
+
+                    <h2 style="
+                        margin:0;
+                        font-size:23px;
+                        color:#212529;
+                    ">
+                        Variations
+                    </h2>
+
+                    <div style="
+                        margin-top:5px;
+                        color:#6c757d;
+                        font-size:13px;
+                    ">
+                        Variation Register & Payment Tracking
+                    </div>
+
+                </div>
 
 
                 <button
@@ -11459,13 +12080,13 @@ function(project){
                         )
                     "
                     style="
-                        padding:9px 16px;
                         border:none;
-                        border-radius:6px;
                         background:#198754;
                         color:white;
+                        padding:10px 16px;
+                        border-radius:6px;
                         cursor:pointer;
-                        font-weight:600;
+                        font-weight:700;
                     "
                 >
                     + Add Variation
@@ -11479,32 +12100,30 @@ function(project){
             <div style="
                 display:grid;
                 grid-template-columns:
-                    repeat(auto-fit,minmax(190px,1fr));
+                    repeat(auto-fit,minmax(180px,1fr));
                 gap:12px;
-                margin-bottom:20px;
+                margin-bottom:22px;
             ">
 
 
-                <!-- ORIGINAL CONTRACT -->
-
                 <div style="
                     background:#f8f9fa;
-                    border:1px solid #ddd;
+                    border:1px solid #dee2e6;
                     border-radius:8px;
                     padding:14px;
                 ">
 
                     <div style="
+                        color:#6c757d;
                         font-size:12px;
-                        color:#777;
                     ">
                         Original Contract Value
                     </div>
 
                     <div style="
+                        margin-top:6px;
                         font-size:18px;
                         font-weight:700;
-                        margin-top:5px;
                     ">
                         ${formatVariationMoney(
                             contractValue
@@ -11514,18 +12133,16 @@ function(project){
                 </div>
 
 
-                <!-- SUBMITTED -->
-
                 <div style="
                     background:#f8f9fa;
-                    border:1px solid #ddd;
+                    border:1px solid #dee2e6;
                     border-radius:8px;
                     padding:14px;
                 ">
 
                     <div style="
+                        color:#6c757d;
                         font-size:12px;
-                        color:#777;
                     ">
                         Total Submitted
                     </div>
@@ -11533,9 +12150,9 @@ function(project){
                     <div
                         id="variation-summary-submitted"
                         style="
+                            margin-top:6px;
                             font-size:18px;
                             font-weight:700;
-                            margin-top:5px;
                         "
                     >
                         ${formatVariationMoney(
@@ -11546,18 +12163,16 @@ function(project){
                 </div>
 
 
-                <!-- APPROVED -->
-
                 <div style="
                     background:#f8f9fa;
-                    border:1px solid #ddd;
+                    border:1px solid #dee2e6;
                     border-radius:8px;
                     padding:14px;
                 ">
 
                     <div style="
+                        color:#6c757d;
                         font-size:12px;
-                        color:#777;
                     ">
                         Total Approved
                     </div>
@@ -11565,9 +12180,9 @@ function(project){
                     <div
                         id="variation-summary-approved"
                         style="
+                            margin-top:6px;
                             font-size:18px;
                             font-weight:700;
-                            margin-top:5px;
                         "
                     >
                         ${formatVariationMoney(
@@ -11575,33 +12190,19 @@ function(project){
                         )}
                     </div>
 
-                    <div
-                        id="variation-summary-approved-percent"
-                        style="
-                            font-size:12px;
-                            color:#777;
-                            margin-top:3px;
-                        "
-                    >
-                        ${approvedPercentage.toFixed(2)}
-                        % of Contract
-                    </div>
-
                 </div>
 
 
-                <!-- REVISED CONTRACT -->
-
                 <div style="
                     background:#f8f9fa;
-                    border:1px solid #ddd;
+                    border:1px solid #dee2e6;
                     border-radius:8px;
                     padding:14px;
                 ">
 
                     <div style="
+                        color:#6c757d;
                         font-size:12px;
-                        color:#777;
                     ">
                         Revised Contract Value
                     </div>
@@ -11609,106 +12210,137 @@ function(project){
                     <div
                         id="variation-summary-revised"
                         style="
+                            margin-top:6px;
                             font-size:18px;
                             font-weight:700;
-                            margin-top:5px;
                         "
                     >
                         ${formatVariationMoney(
-                            revisedContractValue
+                            revisedContract
                         )}
                     </div>
 
                 </div>
 
 
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #dee2e6;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        color:#6c757d;
+                        font-size:12px;
+                    ">
+                        Approved Variations
+                    </div>
+
+                    <div
+                        id="variation-summary-approved-percent"
+                        style="
+                            margin-top:6px;
+                            font-size:18px;
+                            font-weight:700;
+                        "
+                    >
+                        ${approvedPercentage.toFixed(2)}%
+                    </div>
+
+                </div>
+
+
+                <div style="
+                    background:#f8f9fa;
+                    border:1px solid #dee2e6;
+                    border-radius:8px;
+                    padding:14px;
+                ">
+
+                    <div style="
+                        color:#6c757d;
+                        font-size:12px;
+                    ">
+                        Variation Payments Received
+                    </div>
+
+                    <div style="
+                        margin-top:6px;
+                        font-size:18px;
+                        font-weight:700;
+                    ">
+                        ${formatVariationMoney(
+                            totalReceived
+                        )}
+                    </div>
+
+                </div>
+
             </div>
 
 
-            <!-- TABLE -->
+            <!-- REGISTER -->
 
             <div style="
-                width:100%;
-                overflow-x:auto;
-                border:1px solid #ddd;
+                background:white;
+                border:1px solid #dee2e6;
                 border-radius:8px;
+                overflow:auto;
             ">
 
-                <table style="
-                    width:100%;
-                    min-width:1150px;
-                    border-collapse:collapse;
-                    background:white;
-                ">
+                <table
+                    style="
+                        width:100%;
+                        border-collapse:collapse;
+                        min-width:1250px;
+                    "
+                >
 
                     <thead>
 
                         <tr style="
                             background:#f1f3f5;
-                            border-bottom:2px solid #ddd;
+                            border-bottom:2px solid #dee2e6;
                         ">
 
-
-                            <th style="
-                                padding:10px;
-                                text-align:center;
-                            ">
+                            <th style="padding:10px;text-align:left;">
                                 Variation No.
                             </th>
 
-
-                            <th style="
-                                padding:10px;
-                                text-align:left;
-                            ">
+                            <th style="padding:10px;text-align:left;">
                                 Type
                             </th>
 
-
-                            <th style="
-                                padding:10px;
-                                text-align:left;
-                            ">
+                            <th style="padding:10px;text-align:left;">
                                 Description
                             </th>
 
-
-                            <th style="
-                                padding:10px;
-                                text-align:left;
-                            ">
+                            <th style="padding:10px;text-align:left;">
                                 Contractor / Submitted By
                             </th>
 
-
-                            <th style="
-                                padding:10px;
-                                text-align:right;
-                            ">
+                            <th style="padding:10px;text-align:right;">
                                 Submitted Value
                             </th>
 
-
-                            <th style="
-                                padding:10px;
-                                text-align:right;
-                            ">
+                            <th style="padding:10px;text-align:right;">
                                 Approved Value
                             </th>
 
-
-                            <th style="
-                                padding:10px;
-                                text-align:center;
-                            ">
+                            <th style="padding:10px;text-align:center;">
                                 Status
                             </th>
 
+                            <th style="padding:10px;text-align:center;">
+                                Financial Status
+                            </th>
 
-                            <th style="
-                                padding:10px;
-                                text-align:center;
-                            ">
+                            <th style="padding:10px;text-align:center;">
+                                Payment Stages
+                            </th>
+
+                            <th style="padding:10px;text-align:center;">
                                 Action
                             </th>
 
@@ -11717,22 +12349,42 @@ function(project){
                     </thead>
 
 
-                    <tbody
-                        id="variations-table-body"
-                    >
+                    <tbody>
 
                         ${
+                            project.variations.length === 0
+                            ?
+                            `
+                                <tr>
+
+                                    <td
+                                        colspan="10"
+                                        style="
+                                            padding:30px;
+                                            text-align:center;
+                                            color:#6c757d;
+                                        "
+                                    >
+                                        No variations recorded yet.
+                                    </td>
+
+                                </tr>
+                            `
+                            :
                             project.variations
                                 .map(
-                                    (
+                                    function(
                                         variation,
                                         index
-                                    ) =>
-                                        buildVariationRow(
+                                    ){
+
+                                        return buildVariationRow(
                                             project,
                                             index,
                                             variation
-                                        )
+                                        );
+
+                                    }
                                 )
                                 .join("")
                         }
@@ -11743,7 +12395,6 @@ function(project){
 
             </div>
 
-
         </div>
 
     `;
@@ -11752,69 +12403,7 @@ function(project){
 
 
 /* =====================================================
-   STATUS BADGE
-===================================================== */
-
-function variationStatusBadge(status){
-
-    let background =
-        "#6c757d";
-
-
-    if(status === "Submitted"){
-
-        background =
-            "#0d6efd";
-
-    }
-    else if(status === "Under Review"){
-
-        background =
-            "#fd7e14";
-
-    }
-    else if(status === "Approved"){
-
-        background =
-            "#198754";
-
-    }
-    else if(status === "Rejected"){
-
-        background =
-            "#dc3545";
-
-    }
-    else if(status === "Closed"){
-
-        background =
-            "#343a40";
-
-    }
-
-
-    return `
-
-        <span style="
-            display:inline-block;
-            padding:5px 9px;
-            border-radius:12px;
-            background:${background};
-            color:white;
-            font-size:11px;
-            font-weight:600;
-            white-space:nowrap;
-        ">
-            ${status}
-        </span>
-
-    `;
-
-}
-
-
-/* =====================================================
-   BUILD VARIATION ROW
+   MAIN VARIATION ROW
 ===================================================== */
 
 function buildVariationRow(
@@ -11822,6 +12411,19 @@ function buildVariationRow(
     index,
     variation
 ){
+
+    const financialStatus =
+        getVariationFinancialStatus(
+            variation
+        );
+
+
+    const stageCount =
+        (
+            variation.paymentStages ||
+            []
+        ).length;
+
 
     return `
 
@@ -11835,18 +12437,13 @@ function buildVariationRow(
 
             <!-- NUMBER -->
 
-            <td style="
-                padding:7px;
-                text-align:center;
-            ">
+            <td style="padding:8px;">
 
                 <input
                     type="text"
-                    value="${
-                        escapeHTML(
-                            variation.variationNumber || ""
-                        )
-                    }"
+                    value="${variationEscape(
+                        variation.variationNumber || ""
+                    )}"
                     onchange="
                         updateVariationField(
                             ${project.id},
@@ -11856,11 +12453,10 @@ function buildVariationRow(
                         )
                     "
                     style="
-                        width:85px;
+                        width:95px;
                         padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
-                        text-align:center;
                     "
                 >
 
@@ -11869,9 +12465,7 @@ function buildVariationRow(
 
             <!-- TYPE -->
 
-            <td style="
-                padding:7px;
-            ">
+            <td style="padding:8px;">
 
                 <select
                     onchange="
@@ -11883,7 +12477,7 @@ function buildVariationRow(
                         )
                     "
                     style="
-                        width:150px;
+                        width:130px;
                         padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
@@ -11891,60 +12485,33 @@ function buildVariationRow(
                 >
 
                     <option value="">
-                        Select Type
+                        Select
                     </option>
 
                     <option
                         value="Addition"
-                        ${
-                            variation.variationType === "Addition"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.variationType === "Addition" ? "selected" : ""}
                     >
                         Addition
                     </option>
 
                     <option
                         value="Omission"
-                        ${
-                            variation.variationType === "Omission"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.variationType === "Omission" ? "selected" : ""}
                     >
                         Omission
                     </option>
 
                     <option
-                        value="Design Change"
-                        ${
-                            variation.variationType === "Design Change"
-                            ? "selected"
-                            : ""
-                        }
+                        value="Substitution"
+                        ${variation.variationType === "Substitution" ? "selected" : ""}
                     >
-                        Design Change
-                    </option>
-
-                    <option
-                        value="Client Instruction"
-                        ${
-                            variation.variationType === "Client Instruction"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Client Instruction
+                        Substitution
                     </option>
 
                     <option
                         value="Other"
-                        ${
-                            variation.variationType === "Other"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.variationType === "Other" ? "selected" : ""}
                     >
                         Other
                     </option>
@@ -11956,17 +12523,13 @@ function buildVariationRow(
 
             <!-- DESCRIPTION -->
 
-            <td style="
-                padding:7px;
-            ">
+            <td style="padding:8px;">
 
                 <input
                     type="text"
-                    value="${
-                        escapeHTML(
-                            variation.description || ""
-                        )
-                    }"
+                    value="${variationEscape(
+                        variation.description || ""
+                    )}"
                     onchange="
                         updateVariationField(
                             ${project.id},
@@ -11976,7 +12539,7 @@ function buildVariationRow(
                         )
                     "
                     style="
-                        width:240px;
+                        width:190px;
                         padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
@@ -11988,17 +12551,13 @@ function buildVariationRow(
 
             <!-- CONTRACTOR -->
 
-            <td style="
-                padding:7px;
-            ">
+            <td style="padding:8px;">
 
                 <input
                     type="text"
-                    value="${
-                        escapeHTML(
-                            variation.contractor || ""
-                        )
-                    }"
+                    value="${variationEscape(
+                        variation.contractor || ""
+                    )}"
                     onchange="
                         updateVariationField(
                             ${project.id},
@@ -12008,7 +12567,7 @@ function buildVariationRow(
                         )
                     "
                     style="
-                        width:180px;
+                        width:170px;
                         padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
@@ -12018,20 +12577,18 @@ function buildVariationRow(
             </td>
 
 
-            <!-- SUBMITTED VALUE -->
+            <!-- SUBMITTED -->
 
             <td style="
-                padding:7px;
+                padding:8px;
                 text-align:right;
             ">
 
                 <input
                     type="text"
-                    value="${
-                        escapeHTML(
-                            variation.submittedValue || ""
-                        )
-                    }"
+                    value="${variationEscape(
+                        variation.submittedValue || ""
+                    )}"
                     oninput="
                         updateVariationAmount(
                             ${project.id},
@@ -12041,7 +12598,7 @@ function buildVariationRow(
                         )
                     "
                     style="
-                        width:130px;
+                        width:125px;
                         padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
@@ -12052,20 +12609,18 @@ function buildVariationRow(
             </td>
 
 
-            <!-- APPROVED VALUE -->
+            <!-- APPROVED -->
 
             <td style="
-                padding:7px;
+                padding:8px;
                 text-align:right;
             ">
 
                 <input
                     type="text"
-                    value="${
-                        escapeHTML(
-                            variation.approvedValue || ""
-                        )
-                    }"
+                    value="${variationEscape(
+                        variation.approvedValue || ""
+                    )}"
                     oninput="
                         updateVariationAmount(
                             ${project.id},
@@ -12075,7 +12630,7 @@ function buildVariationRow(
                         )
                     "
                     style="
-                        width:130px;
+                        width:125px;
                         padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
@@ -12086,10 +12641,10 @@ function buildVariationRow(
             </td>
 
 
-            <!-- STATUS -->
+            <!-- WORKFLOW STATUS -->
 
             <td style="
-                padding:7px;
+                padding:8px;
                 text-align:center;
             ">
 
@@ -12104,7 +12659,7 @@ function buildVariationRow(
                     "
                     style="
                         width:125px;
-                        padding:6px;
+                        padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
                     "
@@ -12112,68 +12667,37 @@ function buildVariationRow(
 
                     <option
                         value="Draft"
-                        ${
-                            variation.status === "Draft"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.status === "Draft" ? "selected" : ""}
                     >
                         Draft
                     </option>
 
                     <option
                         value="Submitted"
-                        ${
-                            variation.status === "Submitted"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.status === "Submitted" ? "selected" : ""}
                     >
                         Submitted
                     </option>
 
                     <option
                         value="Under Review"
-                        ${
-                            variation.status === "Under Review"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.status === "Under Review" ? "selected" : ""}
                     >
                         Under Review
                     </option>
 
                     <option
                         value="Approved"
-                        ${
-                            variation.status === "Approved"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.status === "Approved" ? "selected" : ""}
                     >
                         Approved
                     </option>
 
                     <option
                         value="Rejected"
-                        ${
-                            variation.status === "Rejected"
-                            ? "selected"
-                            : ""
-                        }
+                        ${variation.status === "Rejected" ? "selected" : ""}
                     >
                         Rejected
-                    </option>
-
-                    <option
-                        value="Closed"
-                        ${
-                            variation.status === "Closed"
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        Closed
                     </option>
 
                 </select>
@@ -12181,10 +12705,55 @@ function buildVariationRow(
             </td>
 
 
+            <!-- FINANCIAL STATUS -->
+
+            <td style="
+                padding:8px;
+                text-align:center;
+            ">
+
+                ${variationFinancialBadge(
+                    financialStatus
+                )}
+
+            </td>
+
+
+            <!-- PAYMENT STAGES -->
+
+            <td style="
+                padding:8px;
+                text-align:center;
+            ">
+
+                <button
+                    onclick="
+                        toggleVariationStages(
+                            ${project.id},
+                            ${index}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#0d6efd;
+                        color:white;
+                        border-radius:5px;
+                        padding:7px 10px;
+                        cursor:pointer;
+                        font-weight:700;
+                        white-space:nowrap;
+                    "
+                >
+                    ${stageCount} Stage(s)
+                </button>
+
+            </td>
+
+
             <!-- ACTION -->
 
             <td style="
-                padding:7px;
+                padding:8px;
                 text-align:center;
             ">
 
@@ -12200,7 +12769,646 @@ function buildVariationRow(
                         background:#dc3545;
                         color:white;
                         border-radius:4px;
-                        padding:6px 10px;
+                        padding:7px 10px;
+                        cursor:pointer;
+                    "
+                >
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+
+
+        <!-- PAYMENT STAGES -->
+
+        <tr
+            id="variation-stages-${index}"
+            style="
+                display:none;
+                background:#fafafa;
+            "
+        >
+
+            <td
+                colspan="10"
+                style="
+                    padding:16px;
+                "
+            >
+
+                ${buildVariationPaymentStages(
+                    project,
+                    index,
+                    variation
+                )}
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
+
+
+/* =====================================================
+   PAYMENT STAGES SECTION
+===================================================== */
+
+function buildVariationPaymentStages(
+    project,
+    variationIndex,
+    variation
+){
+
+    const totals =
+        getVariationPaymentTotals(
+            variation
+        );
+
+
+    return `
+
+        <div style="
+            border:1px solid #dee2e6;
+            border-radius:7px;
+            background:white;
+            overflow:auto;
+        ">
+
+
+            <!-- STAGE HEADER -->
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:12px;
+                flex-wrap:wrap;
+                padding:12px 14px;
+                border-bottom:1px solid #dee2e6;
+                background:#f8f9fa;
+            ">
+
+                <div>
+
+                    <strong>
+                        Payment Stages
+                    </strong>
+
+                    <div style="
+                        font-size:12px;
+                        color:#6c757d;
+                        margin-top:3px;
+                    ">
+                        Payment tracking against approved variation value
+                    </div>
+
+                </div>
+
+
+                <button
+                    onclick="
+                        addVariationPaymentStage(
+                            ${project.id},
+                            ${variationIndex}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#198754;
+                        color:white;
+                        padding:8px 12px;
+                        border-radius:5px;
+                        cursor:pointer;
+                        font-weight:700;
+                    "
+                >
+                    + Add Payment Stage
+                </button>
+
+            </div>
+
+
+            <!-- STAGE SUMMARY -->
+
+            <div style="
+                display:flex;
+                gap:25px;
+                flex-wrap:wrap;
+                padding:12px 14px;
+                border-bottom:1px solid #eee;
+                font-size:13px;
+            ">
+
+                <div>
+                    <span style="color:#6c757d;">
+                        Total Invoiced:
+                    </span>
+
+                    <strong>
+                        ${formatVariationMoney(
+                            totals.invoiced
+                        )}
+                    </strong>
+                </div>
+
+
+                <div>
+                    <span style="color:#6c757d;">
+                        Total Received:
+                    </span>
+
+                    <strong>
+                        ${formatVariationMoney(
+                            totals.received
+                        )}
+                    </strong>
+                </div>
+
+
+                <div>
+                    <span style="color:#6c757d;">
+                        Outstanding:
+                    </span>
+
+                    <strong>
+                        ${formatVariationMoney(
+                            totals.outstanding
+                        )}
+                    </strong>
+                </div>
+
+            </div>
+
+
+            ${
+                variation.paymentStages.length === 0
+                ?
+                `
+                    <div style="
+                        padding:25px;
+                        text-align:center;
+                        color:#6c757d;
+                    ">
+                        No payment stages recorded.
+                    </div>
+                `
+                :
+                `
+                    <table style="
+                        width:100%;
+                        border-collapse:collapse;
+                        min-width:1050px;
+                    ">
+
+                        <thead>
+
+                            <tr style="
+                                background:#f8f9fa;
+                                border-bottom:1px solid #dee2e6;
+                            ">
+
+                                <th style="padding:9px;">
+                                    Stage
+                                </th>
+
+                                <th style="
+                                    padding:9px;
+                                    text-align:right;
+                                ">
+                                    Invoice Value
+                                </th>
+
+                                <th style="
+                                    padding:9px;
+                                    text-align:right;
+                                ">
+                                    Payment Received
+                                </th>
+
+                                <th style="
+                                    padding:9px;
+                                    text-align:right;
+                                ">
+                                    Balance
+                                </th>
+
+                                <th style="padding:9px;">
+                                    Invoice Date
+                                </th>
+
+                                <th style="padding:9px;">
+                                    Payment Received Date
+                                </th>
+
+                                <th style="padding:9px;">
+                                    Invoice PDF
+                                </th>
+
+                                <th style="padding:9px;">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            ${
+                                variation.paymentStages
+                                    .map(
+                                        function(
+                                            stage,
+                                            stageIndex
+                                        ){
+
+                                            return buildVariationPaymentStageRow(
+                                                project,
+                                                variationIndex,
+                                                stageIndex,
+                                                stage
+                                            );
+
+                                        }
+                                    )
+                                    .join("")
+                            }
+
+                        </tbody>
+
+                    </table>
+                `
+            }
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   PAYMENT STAGE ROW
+===================================================== */
+
+function buildVariationPaymentStageRow(
+    project,
+    variationIndex,
+    stageIndex,
+    stage
+){
+
+    const invoice =
+        parseVariationMoney(
+            stage.invoiceValue
+        );
+
+
+    const received =
+        parseVariationMoney(
+            stage.receivedValue
+        );
+
+
+    const balance =
+        invoice -
+        received;
+
+
+    const hasPDF =
+        !!stage.fileId;
+
+
+    return `
+
+        <tr style="
+            border-bottom:1px solid #eee;
+        ">
+
+
+            <!-- STAGE -->
+
+            <td style="
+                padding:8px;
+                text-align:center;
+                font-weight:700;
+            ">
+                ${stageIndex + 1}
+            </td>
+
+
+            <!-- INVOICE -->
+
+            <td style="
+                padding:8px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${variationEscape(
+                        stage.invoiceValue || ""
+                    )}"
+                    oninput="
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'invoiceValue',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:125px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- RECEIVED -->
+
+            <td style="
+                padding:8px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${variationEscape(
+                        stage.receivedValue || ""
+                    )}"
+                    oninput="
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'receivedValue',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:125px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- BALANCE -->
+
+            <td style="
+                padding:8px;
+                text-align:right;
+                font-weight:700;
+            ">
+
+                ${formatVariationMoney(
+                    balance
+                )}
+
+            </td>
+
+
+            <!-- INVOICE DATE -->
+
+            <td style="
+                padding:8px;
+                text-align:center;
+            ">
+
+                <input
+                    type="date"
+                    value="${variationEscape(
+                        stage.invoiceDate || ""
+                    )}"
+                    onchange="
+                        updateVariationStageField(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'invoiceDate',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:135px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- RECEIVED DATE -->
+
+            <td style="
+                padding:8px;
+                text-align:center;
+            ">
+
+                <input
+                    type="date"
+                    value="${variationEscape(
+                        stage.receivedDate || ""
+                    )}"
+                    onchange="
+                        updateVariationStageField(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'receivedDate',
+                            this.value
+                        )
+                    "
+                    style="
+                        width:145px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- PDF -->
+
+            <td style="
+                padding:8px;
+                text-align:center;
+            ">
+
+
+                ${
+                    hasPDF
+                    ?
+                    `
+                        <div style="
+                            font-size:12px;
+                            color:#495057;
+                            margin-bottom:6px;
+                            max-width:180px;
+                            overflow:hidden;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
+                        ">
+                            📄 ${variationEscape(
+                                stage.fileName || "Invoice PDF"
+                            )}
+                        </div>
+
+
+                        <button
+                            onclick="
+                                viewVariationStagePDF(
+                                    ${project.id},
+                                    ${variationIndex},
+                                    ${stageIndex}
+                                )
+                            "
+                            style="
+                                border:none;
+                                background:#0d6efd;
+                                color:white;
+                                border-radius:4px;
+                                padding:5px 8px;
+                                cursor:pointer;
+                                margin:2px;
+                            "
+                        >
+                            View
+                        </button>
+
+
+                        <button
+                            onclick="
+                                downloadVariationStagePDF(
+                                    ${project.id},
+                                    ${variationIndex},
+                                    ${stageIndex}
+                                )
+                            "
+                            style="
+                                border:none;
+                                background:#6c757d;
+                                color:white;
+                                border-radius:4px;
+                                padding:5px 8px;
+                                cursor:pointer;
+                                margin:2px;
+                            "
+                        >
+                            Download
+                        </button>
+
+
+                        <label style="
+                            display:inline-block;
+                            border:none;
+                            background:#fd7e14;
+                            color:white;
+                            border-radius:4px;
+                            padding:5px 8px;
+                            cursor:pointer;
+                            margin:2px;
+                        ">
+
+                            Replace
+
+                            <input
+                                type="file"
+                                accept=".pdf,application/pdf"
+                                onchange="
+                                    replaceVariationStagePDF(
+                                        ${project.id},
+                                        ${variationIndex},
+                                        ${stageIndex},
+                                        this.files[0]
+                                    )
+                                "
+                                style="
+                                    display:none;
+                                "
+                            >
+
+                        </label>
+
+                    `
+                    :
+                    `
+                        <label style="
+                            display:inline-block;
+                            border:none;
+                            background:#198754;
+                            color:white;
+                            border-radius:4px;
+                            padding:6px 10px;
+                            cursor:pointer;
+                            font-weight:600;
+                        ">
+
+                            📎 Upload PDF
+
+                            <input
+                                type="file"
+                                accept=".pdf,application/pdf"
+                                onchange="
+                                    uploadVariationStagePDF(
+                                        ${project.id},
+                                        ${variationIndex},
+                                        ${stageIndex},
+                                        this.files[0]
+                                    )
+                                "
+                                style="
+                                    display:none;
+                                "
+                            >
+
+                        </label>
+                    `
+                }
+
+            </td>
+
+
+            <!-- DELETE STAGE -->
+
+            <td style="
+                padding:8px;
+                text-align:center;
+            ">
+
+                <button
+                    onclick="
+                        deleteVariationPaymentStage(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex}
+                        )
+                    "
+                    style="
+                        border:none;
+                        background:#dc3545;
+                        color:white;
+                        border-radius:4px;
+                        padding:6px 9px;
                         cursor:pointer;
                     "
                 >
@@ -12217,199 +13425,6 @@ function buildVariationRow(
 
 
 /* =====================================================
-   UPDATE NORMAL FIELD
-===================================================== */
-
-window.updateVariationField =
-function(
-    projectId,
-    index,
-    field,
-    value
-){
-
-    const project =
-        getVariationsProject(projectId);
-
-
-    if(
-        !project ||
-        !project.variations ||
-        !project.variations[index]
-    ){
-
-        return;
-
-    }
-
-
-    project.variations[index][field] =
-        value;
-
-
-    persist();
-
-
-    updateVariationSummary(
-        project
-    );
-
-};
-
-
-/* =====================================================
-   UPDATE AMOUNT
-===================================================== */
-
-window.updateVariationAmount =
-function(
-    projectId,
-    index,
-    field,
-    value
-){
-
-    const project =
-        getVariationsProject(projectId);
-
-
-    if(
-        !project ||
-        !project.variations ||
-        !project.variations[index]
-    ){
-
-        return;
-
-    }
-
-
-    project.variations[index][field] =
-        value;
-
-
-    persist();
-
-
-    updateVariationSummary(
-        project
-    );
-
-};
-
-
-/* =====================================================
-   UPDATE SUMMARY
-===================================================== */
-
-function updateVariationSummary(project){
-
-    let totalSubmitted = 0;
-    let totalApproved = 0;
-
-
-    (project.variations || [])
-        .forEach(
-            variation => {
-
-                totalSubmitted +=
-                    parseVariationMoney(
-                        variation.submittedValue
-                    );
-
-                totalApproved +=
-                    parseVariationMoney(
-                        variation.approvedValue
-                    );
-
-            }
-        );
-
-
-    const contractValue =
-        getVariationContractValue(project);
-
-
-    const revisedValue =
-        contractValue +
-        totalApproved;
-
-
-    const percentage =
-        contractValue > 0
-        ? (
-            totalApproved /
-            contractValue
-        ) * 100
-        : 0;
-
-
-    const submittedEl =
-        document.getElementById(
-            "variation-summary-submitted"
-        );
-
-
-    const approvedEl =
-        document.getElementById(
-            "variation-summary-approved"
-        );
-
-
-    const percentEl =
-        document.getElementById(
-            "variation-summary-approved-percent"
-        );
-
-
-    const revisedEl =
-        document.getElementById(
-            "variation-summary-revised"
-        );
-
-
-    if(submittedEl){
-
-        submittedEl.innerText =
-            formatVariationMoney(
-                totalSubmitted
-            );
-
-    }
-
-
-    if(approvedEl){
-
-        approvedEl.innerText =
-            formatVariationMoney(
-                totalApproved
-            );
-
-    }
-
-
-    if(percentEl){
-
-        percentEl.innerText =
-            percentage.toFixed(2) +
-            "% of Contract";
-
-    }
-
-
-    if(revisedEl){
-
-        revisedEl.innerText =
-            formatVariationMoney(
-                revisedValue
-            );
-
-    }
-
-}
-
-
-/* =====================================================
    ADD VARIATION
 ===================================================== */
 
@@ -12417,13 +13432,13 @@ window.addVariationRow =
 function(projectId){
 
     const project =
-        getVariationsProject(projectId);
+        getVariationsProject(
+            projectId
+        );
 
 
     if(!project){
-
         return;
-
     }
 
 
@@ -12461,7 +13476,10 @@ function(projectId){
             "",
 
         status:
-            "Draft"
+            "Draft",
+
+        paymentStages:
+            []
 
     });
 
@@ -12477,17 +13495,21 @@ function(projectId){
 
 
 /* =====================================================
-   DELETE VARIATION
+   UPDATE NORMAL FIELD
 ===================================================== */
 
-window.deleteVariation =
+window.updateVariationField =
 function(
     projectId,
-    index
+    index,
+    field,
+    value
 ){
 
     const project =
-        getVariationsProject(projectId);
+        getVariationsProject(
+            projectId
+        );
 
 
     if(
@@ -12501,17 +13523,43 @@ function(
     }
 
 
-    const variation =
-        project.variations[index];
+    project.variations[index][field] =
+        value;
+
+
+    persist();
+
+
+    refreshVariationFinancialDisplays(
+        project,
+        index
+    );
+
+};
+
+
+/* =====================================================
+   UPDATE MAIN AMOUNT
+===================================================== */
+
+window.updateVariationAmount =
+function(
+    projectId,
+    index,
+    field,
+    value
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
 
 
     if(
-        !confirm(
-            `Delete Variation ${
-                variation.variationNumber ||
-                index + 1
-            }?`
-        )
+        !project ||
+        !project.variations ||
+        !project.variations[index]
     ){
 
         return;
@@ -12519,196 +13567,199 @@ function(
     }
 
 
-    project.variations.splice(
-        index,
-        1
-    );
+    project.variations[index][field] =
+        value;
 
 
     persist();
 
 
-    renderVariationsSection(
+    updateVariationSummary(
         project
     );
 
+
+    refreshVariationFinancialDisplays(
+        project,
+        index
+    );
+
 };
-    /* =====================================================
-   VARIATIONS MODULE - STEP 2
-   PAYMENT / INVOICE STAGES
-===================================================== */
 
 
 /* =====================================================
-   PAYMENT TOTALS
+   REFRESH FINANCIAL DISPLAY
 ===================================================== */
 
-function getVariationPaymentTotals(variation){
+function refreshVariationFinancialDisplays(
+    project,
+    index
+){
 
-    let totalInvoiced = 0;
+    const variation =
+        project.variations[index];
+
+
+    if(!variation){
+        return;
+    }
+
+
+    const status =
+        getVariationFinancialStatus(
+            variation
+        );
+
+
+    const row =
+        document.getElementById(
+            `variation-row-${index}`
+        );
+
+
+    if(!row){
+        return;
+    }
+
+
+    const financialCell =
+        row.cells[7];
+
+
+    if(financialCell){
+
+        financialCell.innerHTML =
+            variationFinancialBadge(
+                status
+            );
+
+    }
+
+}
+
+
+/* =====================================================
+   UPDATE SUMMARY
+===================================================== */
+
+function updateVariationSummary(
+    project
+){
+
+    let totalSubmitted = 0;
+    let totalApproved = 0;
     let totalReceived = 0;
 
 
-    const stages =
-        variation.paymentStages || [];
+    (
+        project.variations ||
+        []
+    )
+    .forEach(
+        function(variation){
 
-
-    stages.forEach(
-        stage => {
-
-            totalInvoiced +=
+            totalSubmitted +=
                 parseVariationMoney(
-                    stage.invoiceValue
+                    variation.submittedValue
                 );
 
+            totalApproved +=
+                parseVariationMoney(
+                    variation.approvedValue
+                );
 
             totalReceived +=
-                parseVariationMoney(
-                    stage.receivedValue
-                );
+                getVariationPaymentTotals(
+                    variation
+                ).received;
 
         }
     );
 
 
-    return {
-
-        invoiced:
-            totalInvoiced,
-
-        received:
-            totalReceived,
-
-        balance:
-            totalInvoiced -
-            totalReceived
-
-    };
-
-}
-
-
-/* =====================================================
-   FINANCIAL STATUS
-===================================================== */
-
-function getVariationFinancialStatus(
-    variation
-){
-
-    const approved =
-        parseVariationMoney(
-            variation.approvedValue
+    const contractValue =
+        getVariationContractValue(
+            project
         );
 
 
-    const totals =
-        getVariationPaymentTotals(
-            variation
+    const revised =
+        contractValue +
+        totalApproved;
+
+
+    const percentage =
+        contractValue > 0
+        ?
+        (
+            totalApproved /
+            contractValue
+        ) * 100
+        :
+        0;
+
+
+    const submittedEl =
+        document.getElementById(
+            "variation-summary-submitted"
         );
 
 
-    if(approved <= 0){
-
-        return "Not Approved";
-
-    }
-
-
-    if(
-        totals.received >= approved
-    ){
-
-        return "Fully Paid";
-
-    }
+    const approvedEl =
+        document.getElementById(
+            "variation-summary-approved"
+        );
 
 
-    if(
-        totals.received > 0
-    ){
-
-        return "Partially Paid";
-
-    }
+    const revisedEl =
+        document.getElementById(
+            "variation-summary-revised"
+        );
 
 
-    if(
-        totals.invoiced > 0
-    ){
+    const percentEl =
+        document.getElementById(
+            "variation-summary-approved-percent"
+        );
 
-        return "Invoiced";
+
+    if(submittedEl){
+
+        submittedEl.innerText =
+            formatVariationMoney(
+                totalSubmitted
+            );
 
     }
 
 
-    return "Not Invoiced";
+    if(approvedEl){
 
-}
-
-
-/* =====================================================
-   FINANCIAL STATUS BADGE
-===================================================== */
-
-function variationFinancialBadge(
-    status
-){
-
-    let background =
-        "#6c757d";
-
-
-    if(
-        status === "Fully Paid"
-    ){
-
-        background =
-            "#198754";
-
-    }
-    else if(
-        status === "Partially Paid"
-    ){
-
-        background =
-            "#fd7e14";
-
-    }
-    else if(
-        status === "Invoiced"
-    ){
-
-        background =
-            "#0d6efd";
-
-    }
-    else if(
-        status === "Not Approved"
-    ){
-
-        background =
-            "#6c757d";
+        approvedEl.innerText =
+            formatVariationMoney(
+                totalApproved
+            );
 
     }
 
 
-    return `
+    if(revisedEl){
 
-        <span style="
-            display:inline-block;
-            padding:5px 9px;
-            border-radius:12px;
-            background:${background};
-            color:white;
-            font-size:11px;
-            font-weight:600;
-            white-space:nowrap;
-        ">
-            ${status}
-        </span>
+        revisedEl.innerText =
+            formatVariationMoney(
+                revised
+            );
 
-    `;
+    }
+
+
+    if(percentEl){
+
+        percentEl.innerText =
+            percentage.toFixed(2) +
+            "%";
+
+    }
 
 }
 
@@ -12730,27 +13781,16 @@ function(
 
 
     if(!row){
-
         return;
-
     }
 
 
-    if(
-        row.style.display === "none" ||
-        row.style.display === ""
-    ){
-
-        row.style.display =
-            "table-row";
-
-    }
-    else{
-
-        row.style.display =
-            "none";
-
-    }
+    row.style.display =
+        row.style.display === "none"
+        ?
+        "table-row"
+        :
+        "none";
 
 };
 
@@ -12771,14 +13811,8 @@ function(
         );
 
 
-    if(
-        !project ||
-        !project.variations ||
-        !project.variations[variationIndex]
-    ){
-
+    if(!project){
         return;
-
     }
 
 
@@ -12788,17 +13822,27 @@ function(
         ];
 
 
-    if(
-        !variation.paymentStages
-    ){
+    if(!variation){
+        return;
+    }
 
-        variation.paymentStages =
-            [];
+
+    if(!variation.paymentStages){
+
+        variation.paymentStages = [];
 
     }
 
 
     variation.paymentStages.push({
+
+        stageId:
+            "stage-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8),
 
         invoiceValue:
             "",
@@ -12810,6 +13854,15 @@ function(
             "",
 
         receivedDate:
+            "",
+
+        fileId:
+            "",
+
+        fileName:
+            "",
+
+        fileType:
             ""
 
     });
@@ -12820,112 +13873,6 @@ function(
 
     renderVariationsSection(
         project
-    );
-
-
-    setTimeout(
-        function(){
-
-            const row =
-                document.getElementById(
-                    `variation-stages-${variationIndex}`
-                );
-
-
-            if(row){
-
-                row.style.display =
-                    "table-row";
-
-            }
-
-        },
-        50
-    );
-
-};
-
-
-/* =====================================================
-   DELETE PAYMENT STAGE
-===================================================== */
-
-window.deleteVariationPaymentStage =
-function(
-    projectId,
-    variationIndex,
-    stageIndex
-){
-
-    const project =
-        getVariationsProject(
-            projectId
-        );
-
-
-    if(
-        !project ||
-        !project.variations ||
-        !project.variations[variationIndex] ||
-        !project.variations[variationIndex].paymentStages
-    ){
-
-        return;
-
-    }
-
-
-    const variation =
-        project.variations[
-            variationIndex
-        ];
-
-
-    if(
-        !confirm(
-            `Delete Payment Stage ${
-                stageIndex + 1
-            }?`
-        )
-    ){
-
-        return;
-
-    }
-
-
-    variation.paymentStages.splice(
-        stageIndex,
-        1
-    );
-
-
-    persist();
-
-
-    renderVariationsSection(
-        project
-    );
-
-
-    setTimeout(
-        function(){
-
-            const row =
-                document.getElementById(
-                    `variation-stages-${variationIndex}`
-                );
-
-
-            if(row){
-
-                row.style.display =
-                    "table-row";
-
-            }
-
-        },
-        50
     );
 
 };
@@ -12953,9 +13900,7 @@ function(
     if(
         !project ||
         !project.variations ||
-        !project.variations[variationIndex] ||
-        !project.variations[variationIndex].paymentStages ||
-        !project.variations[variationIndex].paymentStages[stageIndex]
+        !project.variations[variationIndex]
     ){
 
         return;
@@ -12963,13 +13908,34 @@ function(
     }
 
 
-    project
-        .variations[variationIndex]
-        .paymentStages[stageIndex][field] =
-            value;
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    const stage =
+        variation.paymentStages[
+            stageIndex
+        ];
+
+
+    if(!stage){
+        return;
+    }
+
+
+    stage[field] =
+        value;
 
 
     persist();
+
+
+    updateVariationStageSummaryInPlace(
+        project,
+        variationIndex
+    );
 
 };
 
@@ -12996,9 +13962,7 @@ function(
     if(
         !project ||
         !project.variations ||
-        !project.variations[variationIndex] ||
-        !project.variations[variationIndex].paymentStages ||
-        !project.variations[variationIndex].paymentStages[stageIndex]
+        !project.variations[variationIndex]
     ){
 
         return;
@@ -13006,29 +13970,105 @@ function(
     }
 
 
-    project
-        .variations[variationIndex]
-        .paymentStages[stageIndex][field] =
-            value;
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    const stage =
+        variation.paymentStages[
+            stageIndex
+        ];
+
+
+    if(!stage){
+        return;
+    }
+
+
+    stage[field] =
+        value;
 
 
     persist();
+
+
+    const invoice =
+        parseVariationMoney(
+            stage.invoiceValue
+        );
+
+
+    const received =
+        parseVariationMoney(
+            stage.receivedValue
+        );
+
+
+    const balance =
+        invoice -
+        received;
+
+
+    const stageRow =
+        document.querySelector(
+            `#variation-stages-${variationIndex} tbody`
+        );
+
+
+    if(stageRow){
+
+        const row =
+            stageRow.rows[
+                stageIndex
+            ];
+
+
+        if(row && row.cells[3]){
+
+            row.cells[3].innerText =
+                formatVariationMoney(
+                    balance
+                );
+
+        }
+
+    }
+
+
+    updateVariationStageSummaryInPlace(
+        project,
+        variationIndex
+    );
+
+
+    refreshVariationFinancialDisplays(
+        project,
+        variationIndex
+    );
 
 };
 
 
 /* =====================================================
-   BUILD PAYMENT STAGES
+   UPDATE STAGE SUMMARY WITHOUT FULL RENDER
 ===================================================== */
 
-function buildVariationPaymentStages(
+function updateVariationStageSummaryInPlace(
     project,
-    variationIndex,
-    variation
+    variationIndex
 ){
 
-    const stages =
-        variation.paymentStages || [];
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    if(!variation){
+        return;
+    }
 
 
     const totals =
@@ -13037,509 +14077,155 @@ function buildVariationPaymentStages(
         );
 
 
-    return `
-
-        <div style="
-            background:#ffffff;
-            border:1px solid #d9d9d9;
-            border-radius:8px;
-            padding:15px;
-        ">
+    const stageContainer =
+        document.getElementById(
+            `variation-stages-${variationIndex}`
+        );
 
 
-            <!-- HEADER -->
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                flex-wrap:wrap;
-                gap:10px;
-                margin-bottom:14px;
-            ">
-
-                <strong style="
-                    font-size:15px;
-                    color:#333;
-                ">
-                    Payment / Invoice Stages
-                </strong>
+    if(!stageContainer){
+        return;
+    }
 
 
-                <button
-                    onclick="
-                        addVariationPaymentStage(
-                            ${project.id},
-                            ${variationIndex}
-                        )
-                    "
-                    style="
-                        border:none;
-                        background:#198754;
-                        color:white;
-                        border-radius:5px;
-                        padding:7px 12px;
-                        cursor:pointer;
-                        font-weight:600;
-                    "
-                >
-                    + Add Payment Stage
-                </button>
-
-            </div>
+    const divs =
+        stageContainer.querySelectorAll(
+            "div"
+        );
 
 
-            <!-- TOTALS -->
+    /*
+       Find the payment summary values
+       by their text labels.
+    */
 
-            <div style="
-                display:flex;
-                gap:30px;
-                flex-wrap:wrap;
-                margin-bottom:14px;
-                font-size:13px;
-            ">
-
-                <div>
-                    <strong>
-                        Total Invoiced:
-                    </strong>
-
-                    ${formatVariationMoney(
-                        totals.invoiced
-                    )}
-                </div>
+    const summaryTexts =
+        stageContainer.querySelectorAll(
+            "strong"
+        );
 
 
-                <div>
-                    <strong>
-                        Total Received:
-                    </strong>
+    if(summaryTexts.length >= 3){
 
-                    ${formatVariationMoney(
-                        totals.received
-                    )}
-                </div>
-
-
-                <div>
-                    <strong>
-                        Outstanding:
-                    </strong>
-
-                    ${formatVariationMoney(
-                        totals.balance
-                    )}
-                </div>
-
-            </div>
+        summaryTexts[
+            summaryTexts.length - 3
+        ].innerText =
+            formatVariationMoney(
+                totals.invoiced
+            );
 
 
-            ${
-                stages.length === 0
-
-                ?
-
-                `
-
-                    <div style="
-                        padding:18px;
-                        text-align:center;
-                        color:#777;
-                        border:1px dashed #ccc;
-                        border-radius:6px;
-                    ">
-                        No payment stages added yet.
-                    </div>
-
-                `
-
-                :
-
-                `
-
-                    <div style="
-                        width:100%;
-                        overflow-x:auto;
-                    ">
-
-                        <table style="
-                            width:100%;
-                            min-width:950px;
-                            border-collapse:collapse;
-                        ">
-
-                            <thead>
-
-                                <tr style="
-                                    background:#f1f3f5;
-                                ">
+        summaryTexts[
+            summaryTexts.length - 2
+        ].innerText =
+            formatVariationMoney(
+                totals.received
+            );
 
 
-                                    <th style="
-                                        padding:9px;
-                                        text-align:center;
-                                    ">
-                                        Stage
-                                    </th>
+        summaryTexts[
+            summaryTexts.length - 1
+        ].innerText =
+            formatVariationMoney(
+                totals.outstanding
+            );
+
+    }
 
 
-                                    <th style="
-                                        padding:9px;
-                                        text-align:right;
-                                    ">
-                                        Invoice Value
-                                    </th>
-
-
-                                    <th style="
-                                        padding:9px;
-                                        text-align:right;
-                                    ">
-                                        Received Value
-                                    </th>
-
-
-                                    <th style="
-                                        padding:9px;
-                                        text-align:right;
-                                    ">
-                                        Balance
-                                    </th>
-
-
-                                    <th style="
-                                        padding:9px;
-                                        text-align:center;
-                                    ">
-                                        Invoice Date
-                                    </th>
-
-
-                                    <th style="
-                                        padding:9px;
-                                        text-align:center;
-                                    ">
-                                        Payment Received Date
-                                    </th>
-
-
-                                    <th style="
-                                        padding:9px;
-                                        text-align:center;
-                                    ">
-                                        Action
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-
-                            <tbody>
-
-                                ${
-                                    stages
-                                        .map(
-                                            (
-                                                stage,
-                                                stageIndex
-                                            ) =>
-                                                buildVariationPaymentStageRow(
-                                                    project,
-                                                    variationIndex,
-                                                    stageIndex,
-                                                    stage
-                                                )
-                                        )
-                                        .join("")
-                                }
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                `
-
-            }
-
-        </div>
-
-    `;
+    updateVariationSummary(
+        project
+    );
 
 }
 
 
 /* =====================================================
-   BUILD PAYMENT STAGE ROW
+   DELETE PAYMENT STAGE
 ===================================================== */
 
-function buildVariationPaymentStageRow(
-    project,
+window.deleteVariationPaymentStage =
+async function(
+    projectId,
     variationIndex,
-    stageIndex,
-    stage
+    stageIndex
 ){
 
-    const invoice =
-        parseVariationMoney(
-            stage.invoiceValue
+    const project =
+        getVariationsProject(
+            projectId
         );
 
-    const received =
-        parseVariationMoney(
-            stage.receivedValue
+
+    if(!project){
+        return;
+    }
+
+
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    if(!variation){
+        return;
+    }
+
+
+    const stage =
+        variation.paymentStages[
+            stageIndex
+        ];
+
+
+    if(!stage){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "Delete this payment stage?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    if(stage.fileId){
+
+        await deleteVariationPDF(
+            stage.fileId
         );
 
-    const balance =
-        invoice - received;
-
-    const fileName =
-        stage.invoiceFileName || "";
-
-    return `
-
-        <tr style="
-            border-bottom:1px solid #eee;
-        ">
-
-            <!-- STAGE -->
-
-            <td style="
-                padding:7px;
-                text-align:center;
-                font-weight:600;
-            ">
-                ${stageIndex + 1}
-            </td>
+    }
 
 
-            <!-- INVOICE VALUE -->
-
-            <td style="
-                padding:7px;
-                text-align:right;
-            ">
-
-                <input
-                    type="text"
-                    value="${
-                        escapeHTML(
-                            stage.invoiceValue || ""
-                        )
-                    }"
-                    oninput="
-                        updateVariationStageAmount(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'invoiceValue',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:130px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                        text-align:right;
-                    "
-                >
-
-            </td>
+    variation.paymentStages.splice(
+        stageIndex,
+        1
+    );
 
 
-            <!-- RECEIVED VALUE -->
-
-            <td style="
-                padding:7px;
-                text-align:right;
-            ">
-
-                <input
-                    type="text"
-                    value="${
-                        escapeHTML(
-                            stage.receivedValue || ""
-                        )
-                    }"
-                    oninput="
-                        updateVariationStageAmount(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'receivedValue',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:130px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                        text-align:right;
-                    "
-                >
-
-            </td>
+    persist();
 
 
-            <!-- BALANCE -->
+    renderVariationsSection(
+        project
+    );
 
-            <td style="
-                padding:7px;
-                text-align:right;
-                font-weight:600;
-            ">
-
-                ${formatVariationMoney(
-                    balance
-                )}
-
-            </td>
+};
 
 
-            <!-- INVOICE DATE -->
+/* =====================================================
+   UPLOAD PDF
+===================================================== */
 
-            <td style="
-                padding:7px;
-                text-align:center;
-            ">
-
-                <input
-                    type="date"
-                    value="${
-                        escapeHTML(
-                            stage.invoiceDate || ""
-                        )
-                    }"
-                    onchange="
-                        updateVariationStageField(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'invoiceDate',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:135px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                    "
-                >
-
-            </td>
-
-
-            <!-- PAYMENT RECEIVED DATE -->
-
-            <td style="
-                padding:7px;
-                text-align:center;
-            ">
-
-                <input
-                    type="date"
-                    value="${
-                        escapeHTML(
-                            stage.receivedDate || ""
-                        )
-                    }"
-                    onchange="
-                        updateVariationStageField(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'receivedDate',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:150px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                    "
-                >
-
-            </td>
-
-
-            <!-- ACTION + PDF -->
-
-            <td style="
-                padding:7px;
-                text-align:center;
-            ">
-
-                <input
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    onchange="
-                        uploadVariationStageFile(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            this.files[0]
-                        )
-                    "
-                    style="
-                        width:170px;
-                        margin-bottom:6px;
-                    "
-                >
-
-                ${
-                    fileName
-                    ? `
-                        <div style="
-                            font-size:12px;
-                            color:#555;
-                            margin-bottom:6px;
-                            max-width:180px;
-                            overflow:hidden;
-                            text-overflow:ellipsis;
-                            white-space:nowrap;
-                        ">
-                            📄 ${escapeHTML(fileName)}
-                        </div>
-                    `
-                    : ""
-                }
-
-                <button
-                    onclick="
-                        deleteVariationPaymentStage(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex}
-                        )
-                    "
-                    style="
-                        border:none;
-                        background:#dc3545;
-                        color:white;
-                        border-radius:4px;
-                        padding:6px 9px;
-                        cursor:pointer;
-                    "
-                >
-                    Delete
-                </button>
-
-            </td>
-
-        </tr>
-
-    `;
-
-}
-
-
-function uploadVariationStageFile(
+window.uploadVariationStagePDF =
+async function(
     projectId,
     variationIndex,
     stageIndex,
@@ -13550,277 +14236,556 @@ function uploadVariationStageFile(
         return;
     }
 
-    if(file.type !== "application/pdf"){
-        alert("Please select a PDF file only.");
+
+    if(
+        file.type !==
+            "application/pdf"
+        &&
+        !file.name
+            .toLowerCase()
+            .endsWith(".pdf")
+    ){
+
+        alert(
+            "Please select a PDF file only."
+        );
+
         return;
+
     }
+
 
     const project =
-        getVariationsProject(projectId);
+        getVariationsProject(
+            projectId
+        );
+
 
     if(!project){
-        alert("Project not found.");
+        alert(
+            "Project not found."
+        );
         return;
     }
+
 
     const variation =
-        project.variations[variationIndex];
+        project.variations[
+            variationIndex
+        ];
+
 
     if(!variation){
-        alert("Variation not found.");
+        alert(
+            "Variation not found."
+        );
         return;
     }
 
-    if(!variation.paymentStages){
-        variation.paymentStages = [];
-    }
 
     const stage =
-        variation.paymentStages[stageIndex];
+        variation.paymentStages[
+            stageIndex
+        ];
+
 
     if(!stage){
-        alert("Payment stage not found.");
+        alert(
+            "Payment stage not found."
+        );
         return;
     }
 
-    const reader =
-        new FileReader();
 
-    reader.onload =
-    function(e){
+    try{
 
-        stage.invoiceFileName =
+        const fileId =
+            createVariationFileId();
+
+
+        await saveVariationPDF(
+            fileId,
+            file
+        );
+
+
+        stage.fileId =
+            fileId;
+
+        stage.fileName =
             file.name;
 
-        stage.invoiceFileType =
-            file.type;
+        stage.fileType =
+            file.type ||
+            "application/pdf";
 
-        stage.invoiceFileData =
-            e.target.result;
 
-        try{
+        persist();
 
-            persist();
 
-            const savedProjects =
-                localStorage.getItem(
-                    "alm_projects"
-                );
+        renderVariationsSection(
+            project
+        );
 
-            if(
-                !savedProjects ||
-                !savedProjects.includes(
-                    file.name
-                )
-            ){
 
-                alert(
-                    "PDF was not saved to local storage."
-                );
+    }
+    catch(error){
 
-                return;
-            }
+        console.error(
+            "Variation PDF upload error:",
+            error
+        );
 
-            alert(
-                "PDF saved successfully."
-            );
 
-            renderVariationsSection(
-                project
-            );
+        alert(
+            "The PDF could not be saved.\n\n" +
+            error.message
+        );
 
-        }
-        catch(error){
+    }
 
-            console.error(error);
+};
 
-            alert(
-                "Could not save PDF.\n\n" +
-                error.message
-            );
 
-        }
-
-    };
-
-    reader.readAsDataURL(file);
-
-}
 /* =====================================================
-   UPDATE MAIN ROW FOR PAYMENT STAGES
+   REPLACE PDF
 ===================================================== */
 
-const originalBuildVariationRow =
-    buildVariationRow;
-
-
-buildVariationRow =
-function(
-    project,
-    index,
-    variation
+window.replaceVariationStagePDF =
+async function(
+    projectId,
+    variationIndex,
+    stageIndex,
+    file
 ){
 
-    const originalHTML =
-        originalBuildVariationRow(
-            project,
-            index,
-            variation
+    if(!file){
+        return;
+    }
+
+
+    if(
+        file.type !==
+            "application/pdf"
+        &&
+        !file.name
+            .toLowerCase()
+            .endsWith(".pdf")
+    ){
+
+        alert(
+            "Please select a PDF file only."
+        );
+
+        return;
+
+    }
+
+
+    const project =
+        getVariationsProject(
+            projectId
         );
 
 
-    const status =
-        getVariationFinancialStatus(
-            variation
+    if(!project){
+        return;
+    }
+
+
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    if(!variation){
+        return;
+    }
+
+
+    const stage =
+        variation.paymentStages[
+            stageIndex
+        ];
+
+
+    if(!stage){
+        return;
+    }
+
+
+    try{
+
+        if(stage.fileId){
+
+            await deleteVariationPDF(
+                stage.fileId
+            );
+
+        }
+
+
+        const fileId =
+            createVariationFileId();
+
+
+        await saveVariationPDF(
+            fileId,
+            file
         );
 
 
-    const stageCount =
-        (
-            variation.paymentStages || []
-        ).length;
+        stage.fileId =
+            fileId;
+
+        stage.fileName =
+            file.name;
+
+        stage.fileType =
+            file.type ||
+            "application/pdf";
 
 
-    const parser =
-        document.createElement(
-            "template"
+        persist();
+
+
+        renderVariationsSection(
+            project
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Variation PDF replace error:",
+            error
         );
 
 
-    parser.innerHTML =
-        originalHTML;
+        alert(
+            "The PDF could not be replaced.\n\n" +
+            error.message
+        );
+
+    }
+
+};
 
 
-    const mainRow =
-        parser.content
-            .querySelector(
-                `#variation-row-${index}`
+/* =====================================================
+   VIEW PDF
+===================================================== */
+
+window.viewVariationStagePDF =
+async function(
+    projectId,
+    variationIndex,
+    stageIndex
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(!project){
+        return;
+    }
+
+
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+
+    if(!variation){
+        return;
+    }
+
+
+    const stage =
+        variation.paymentStages[
+            stageIndex
+        ];
+
+
+    if(
+        !stage ||
+        !stage.fileId
+    ){
+
+        alert(
+            "No PDF attached to this payment stage."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const record =
+            await getVariationPDF(
+                stage.fileId
             );
 
 
-    const stagesRow =
-        document.createElement(
-            "tr"
+        if(!record){
+
+            alert(
+                "PDF file was not found."
+            );
+
+            return;
+
+        }
+
+
+        const url =
+            URL.createObjectURL(
+                record.blob
+            );
+
+
+        window.open(
+            url,
+            "_blank"
         );
 
 
-    stagesRow.id =
-        `variation-stages-${index}`;
+        setTimeout(
+            function(){
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            60000
+        );
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        alert(
+            "Unable to open the PDF."
+        );
+
+    }
+
+};
 
 
-    stagesRow.style.display =
-        "none";
+/* =====================================================
+   DOWNLOAD PDF
+===================================================== */
 
+window.downloadVariationStagePDF =
+async function(
+    projectId,
+    variationIndex,
+    stageIndex
+){
 
-    stagesRow.style.background =
-        "#fafafa";
-
-
-    const stagesCell =
-        document.createElement(
-            "td"
+    const project =
+        getVariationsProject(
+            projectId
         );
 
 
-    stagesCell.colSpan =
-        8;
+    if(!project){
+        return;
+    }
 
 
-    stagesCell.style.padding =
-        "15px";
+    const variation =
+        project.variations[
+            variationIndex
+        ];
 
 
-    stagesCell.innerHTML =
-        buildVariationPaymentStages(
-            project,
-            index,
-            variation
+    if(!variation){
+        return;
+    }
+
+
+    const stage =
+        variation.paymentStages[
+            stageIndex
+        ];
+
+
+    if(
+        !stage ||
+        !stage.fileId
+    ){
+
+        alert(
+            "No PDF attached to this payment stage."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const record =
+            await getVariationPDF(
+                stage.fileId
+            );
+
+
+        if(!record){
+
+            alert(
+                "PDF file was not found."
+            );
+
+            return;
+
+        }
+
+
+        const url =
+            URL.createObjectURL(
+                record.blob
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            stage.fileName ||
+            record.name ||
+            "Variation-Invoice.pdf";
+
+
+        document.body.appendChild(
+            link
         );
 
 
-    stagesRow.appendChild(
-        stagesCell
+        link.click();
+
+
+        link.remove();
+
+
+        setTimeout(
+            function(){
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            1000
+        );
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        alert(
+            "Unable to download the PDF."
+        );
+
+    }
+
+};
+
+
+/* =====================================================
+   DELETE VARIATION
+===================================================== */
+
+window.deleteVariation =
+async function(
+    projectId,
+    index
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(!project){
+        return;
+    }
+
+
+    const variation =
+        project.variations[
+            index
+        ];
+
+
+    if(!variation){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "Delete this variation and all its payment stages?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    for(
+        const stage
+        of (
+            variation.paymentStages ||
+            []
+        )
+    ){
+
+        if(stage.fileId){
+
+            await deleteVariationPDF(
+                stage.fileId
+            );
+
+        }
+
+    }
+
+
+    project.variations.splice(
+        index,
+        1
     );
 
 
-    if(mainRow){
-
-        const statusCell =
-            mainRow.cells[6];
+    persist();
 
 
-        if(statusCell){
-
-            statusCell.innerHTML =
-                variationFinancialBadge(
-                    status
-                );
-
-        }
-
-
-        const actionCell =
-            mainRow.cells[7];
-
-
-        if(actionCell){
-
-            actionCell.innerHTML = `
-
-                <button
-                    onclick="
-                        toggleVariationStages(
-                            ${project.id},
-                            ${index}
-                        )
-                    "
-                    style="
-                        border:none;
-                        background:#0d6efd;
-                        color:white;
-                        border-radius:5px;
-                        padding:6px 10px;
-                        cursor:pointer;
-                        font-weight:600;
-                    "
-                >
-                    ${stageCount} Stage(s)
-                </button>
-
-
-                <button
-                    onclick="
-                        deleteVariation(
-                            ${project.id},
-                            ${index}
-                        )
-                    "
-                    style="
-                        border:none;
-                        background:#dc3545;
-                        color:white;
-                        border-radius:4px;
-                        padding:6px 10px;
-                        cursor:pointer;
-                        margin-left:4px;
-                    "
-                >
-                    Delete
-                </button>
-
-            `;
-
-        }
-
-
-        mainRow.parentNode.appendChild(
-            stagesRow
-        );
-
-    }
-
-
-    return parser.innerHTML;
+    renderVariationsSection(
+        project
+    );
 
 };
 /* =====================================================
