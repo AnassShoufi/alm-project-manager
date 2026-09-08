@@ -13556,9 +13556,7 @@ function uploadVariationStageFile(
     }
 
     const project =
-        getVariationsProject(
-            projectId
-        );
+        getVariationsProject(projectId);
 
     if(!project){
         alert("Project not found.");
@@ -13566,9 +13564,7 @@ function uploadVariationStageFile(
     }
 
     const variation =
-        project.variations[
-            variationIndex
-        ];
+        project.variations[variationIndex];
 
     if(!variation){
         alert("Variation not found.");
@@ -13580,9 +13576,7 @@ function uploadVariationStageFile(
     }
 
     const stage =
-        variation.paymentStages[
-            stageIndex
-        ];
+        variation.paymentStages[stageIndex];
 
     if(!stage){
         alert("Payment stage not found.");
@@ -13604,17 +13598,52 @@ function uploadVariationStageFile(
         stage.invoiceFileData =
             e.target.result;
 
-        persist();
+        try{
 
-        renderVariationsSection(
-            project
-        );
+            persist();
+
+            const savedProjects =
+                localStorage.getItem(
+                    "alm_projects"
+                );
+
+            if(
+                !savedProjects ||
+                !savedProjects.includes(
+                    file.name
+                )
+            ){
+
+                alert(
+                    "PDF was not saved to local storage."
+                );
+
+                return;
+            }
+
+            alert(
+                "PDF saved successfully."
+            );
+
+            renderVariationsSection(
+                project
+            );
+
+        }
+        catch(error){
+
+            console.error(error);
+
+            alert(
+                "Could not save PDF.\n\n" +
+                error.message
+            );
+
+        }
 
     };
 
-    reader.readAsDataURL(
-        file
-    );
+    reader.readAsDataURL(file);
 
 }
 /* =====================================================
