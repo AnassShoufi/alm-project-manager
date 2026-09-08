@@ -11316,6 +11316,9 @@ window.downloadPaymentsExcel = function(
    - PDF files stored in IndexedDB
    - Variation data stored in localStorage
    - Number formatting with commas
+   - Excel Export
+   - One Excel Sheet
+   - Payment Stages shown directly under each Variation
 ===================================================== */
 
 
@@ -12206,24 +12209,52 @@ function(project){
                 </div>
 
 
-                <button
-                    onclick="
-                        addVariationRow(
-                            ${project.id}
-                        )
-                    "
-                    style="
-                        border:none;
-                        background:#198754;
-                        color:white;
-                        padding:10px 16px;
-                        border-radius:6px;
-                        cursor:pointer;
-                        font-weight:700;
-                    "
-                >
-                    + Add Variation
-                </button>
+                <div style="
+                    display:flex;
+                    gap:8px;
+                    flex-wrap:wrap;
+                ">
+
+                    <button
+                        onclick="
+                            exportVariationsToExcel(
+                                ${project.id}
+                            )
+                        "
+                        style="
+                            border:none;
+                            background:#198754;
+                            color:white;
+                            padding:10px 16px;
+                            border-radius:6px;
+                            cursor:pointer;
+                            font-weight:700;
+                        "
+                    >
+                        📊 Export to Excel
+                    </button>
+
+
+                    <button
+                        onclick="
+                            addVariationRow(
+                                ${project.id}
+                            )
+                        "
+                        style="
+                            border:none;
+                            background:#0d6efd;
+                            color:white;
+                            padding:10px 16px;
+                            border-radius:6px;
+                            cursor:pointer;
+                            font-weight:700;
+                        "
+                    >
+                        + Add Variation
+                    </button>
+
+                </div>
 
             </div>
 
@@ -15261,6 +15292,1300 @@ async function(
 
         alert(
             "Unable to download the PDF."
+        );
+
+    }
+
+};
+
+
+/* =====================================================
+   =====================================================
+   EXCEL EXPORT
+   ONE SHEET ONLY
+   =====================================================
+===================================================== */
+
+window.exportVariationsToExcel =
+function(projectId){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+
+    if(!project){
+
+        alert(
+            "Project not found."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !project.variations ||
+        project.variations.length === 0
+    ){
+
+        alert(
+            "There are no variations to export."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Make sure SheetJS is available.
+    */
+
+    if(
+        typeof XLSX === "undefined"
+    ){
+
+        alert(
+            "Excel export library is not available.\n\n" +
+            "Please make sure SheetJS / XLSX is loaded in the project."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const contractValue =
+            getVariationContractValue(
+                project
+            );
+
+
+        let totalSubmitted = 0;
+
+        let totalApproved = 0;
+
+        let totalPayable = 0;
+
+        let totalInvoiced = 0;
+
+        let totalReceived = 0;
+
+
+        project.variations.forEach(
+            function(variation){
+
+                totalSubmitted +=
+                    parseVariationMoney(
+                        variation.submittedValue
+                    );
+
+
+                totalApproved +=
+                    parseVariationMoney(
+                        variation.approvedValue
+                    );
+
+
+                totalPayable +=
+                    parseVariationMoney(
+                        variation.payableAmount
+                    );
+
+
+                const totals =
+                    getVariationPaymentTotals(
+                        variation
+                    );
+
+
+                totalInvoiced +=
+                    totals.invoiced;
+
+
+                totalReceived +=
+                    totals.received;
+
+            }
+        );
+
+
+        const outstandingPayable =
+            totalPayable -
+            totalReceived;
+
+
+        const revisedContract =
+            contractValue +
+            totalApproved;
+
+
+        const approvedPercentage =
+            contractValue > 0
+            ?
+            (
+                totalApproved /
+                contractValue
+            ) * 100
+            :
+            0;
+
+
+        /*
+           =================================================
+           EXCEL DATA
+           =================================================
+        */
+
+
+        const rows = [];
+
+
+        /*
+           TITLE
+        */
+
+        rows.push([
+            "VARIATION REGISTER & PAYMENT TRACKING"
+        ]);
+
+
+        rows.push([
+            "Project",
+            project.name ||
+            project.projectName ||
+            ""
+        ]);
+
+
+        rows.push([
+            "Original Contract Value",
+            contractValue
+        ]);
+
+
+        rows.push([
+            "Total Submitted",
+            totalSubmitted
+        ]);
+
+
+        rows.push([
+            "Total Approved",
+            totalApproved
+        ]);
+
+
+        rows.push([
+            "Total Payable",
+            totalPayable
+        ]);
+
+
+        rows.push([
+            "Total Invoiced",
+            totalInvoiced
+        ]);
+
+
+        rows.push([
+            "Total Payment Received",
+            totalReceived
+        ]);
+
+
+        rows.push([
+            "Outstanding Payable",
+            outstandingPayable
+        ]);
+
+
+        rows.push([
+            "Revised Contract Value",
+            revisedContract
+        ]);
+
+
+        rows.push([
+            "Approved Variations %",
+            approvedPercentage / 100
+        ]);
+
+
+        /*
+           BLANK ROW
+        */
+
+        rows.push([]);
+
+
+        /*
+           MAIN TABLE HEADER
+        */
+
+        rows.push([
+
+            "ROW TYPE",
+
+            "VARIATION NO.",
+
+            "TYPE",
+
+            "DESCRIPTION",
+
+            "CONTRACTOR / SUBMITTED BY",
+
+            "SUBMITTED VALUE",
+
+            "APPROVED VALUE",
+
+            "PAYABLE AMOUNT",
+
+            "WORKFLOW STATUS",
+
+            "FINANCIAL STATUS",
+
+            "STAGE",
+
+            "INVOICE VALUE",
+
+            "INVOICE DATE",
+
+            "PAYMENT RECEIVED",
+
+            "PAYMENT RECEIVED DATE",
+
+            "STAGE BALANCE",
+
+            "INVOICE PDF"
+
+        ]);
+
+
+        /*
+           =================================================
+           VARIATIONS + PAYMENT STAGES
+           =================================================
+
+           Each Variation is followed immediately
+           by its Payment Stages.
+        */
+
+
+        project.variations.forEach(
+            function(
+                variation,
+                variationIndex
+            ){
+
+                const totals =
+                    getVariationPaymentTotals(
+                        variation
+                    );
+
+
+                const payable =
+                    parseVariationMoney(
+                        variation.payableAmount
+                    );
+
+
+                const financialStatus =
+                    getVariationFinancialStatus(
+                        variation
+                    );
+
+
+                /*
+                   MAIN VARIATION ROW
+                */
+
+                rows.push([
+
+                    "VARIATION",
+
+                    variation.variationNumber ||
+                    "",
+
+                    variation.variationType ||
+                    "",
+
+                    variation.description ||
+                    "",
+
+                    variation.contractor ||
+                    "",
+
+                    parseVariationMoney(
+                        variation.submittedValue
+                    ),
+
+                    parseVariationMoney(
+                        variation.approvedValue
+                    ),
+
+                    payable,
+
+                    variation.status ||
+                    "Draft",
+
+                    financialStatus,
+
+                    "",
+
+                    totals.invoiced,
+
+                    "",
+
+                    totals.received,
+
+                    "",
+
+                    payable -
+                    totals.received,
+
+                    ""
+
+                ]);
+
+
+                /*
+                   PAYMENT STAGE ROWS
+                */
+
+                (
+                    variation.paymentStages ||
+                    []
+                )
+                .forEach(
+                    function(
+                        stage,
+                        stageIndex
+                    ){
+
+                        const invoice =
+                            parseVariationMoney(
+                                stage.invoiceValue
+                            );
+
+
+                        const received =
+                            parseVariationMoney(
+                                stage.receivedValue
+                            );
+
+
+                        const balance =
+                            invoice -
+                            received;
+
+
+                        let stageStatus =
+                            "Not Paid";
+
+
+                        if(
+                            received > invoice &&
+                            invoice > 0
+                        ){
+
+                            stageStatus =
+                                "Overpaid";
+
+                        }
+                        else if(
+                            received >= invoice &&
+                            invoice > 0
+                        ){
+
+                            stageStatus =
+                                "Fully Paid";
+
+                        }
+                        else if(
+                            received > 0
+                        ){
+
+                            stageStatus =
+                                "Partially Paid";
+
+                        }
+                        else if(
+                            invoice > 0
+                        ){
+
+                            stageStatus =
+                                "Invoiced";
+
+                        }
+
+
+                        rows.push([
+
+                            "PAYMENT STAGE",
+
+                            variation.variationNumber ||
+                            "",
+
+                            "",
+
+                            "Payment Stage " +
+                            (stageIndex + 1),
+
+                            "",
+
+                            "",
+
+                            "",
+
+                            "",
+
+                            "",
+
+                            stageStatus,
+
+                            stageIndex + 1,
+
+                            invoice,
+
+                            stage.invoiceDate ||
+                            "",
+
+                            received,
+
+                            stage.receivedDate ||
+                            "",
+
+                            balance,
+
+                            stage.fileName ||
+                            ""
+
+                        ]);
+
+                    }
+                );
+
+
+                /*
+                   Add a blank row after each variation
+                   only when it has payment stages.
+                */
+
+                if(
+                    variation.paymentStages &&
+                    variation.paymentStages.length > 0
+                ){
+
+                    rows.push([]);
+
+                }
+
+            }
+        );
+
+
+        /*
+           =================================================
+           CREATE WORKSHEET
+           =================================================
+        */
+
+        const worksheet =
+            XLSX.utils.aoa_to_sheet(
+                rows
+            );
+
+
+        /*
+           =================================================
+           COLUMN WIDTHS
+           =================================================
+        */
+
+        worksheet["!cols"] = [
+
+            { wch:16 },  // Row Type
+            { wch:16 },  // Variation No
+            { wch:18 },  // Type
+            { wch:34 },  // Description
+            { wch:28 },  // Contractor
+            { wch:18 },  // Submitted
+            { wch:18 },  // Approved
+            { wch:18 },  // Payable
+            { wch:20 },  // Workflow
+            { wch:20 },  // Financial
+            { wch:10 },  // Stage
+            { wch:18 },  // Invoice
+            { wch:16 },  // Invoice Date
+            { wch:20 },  // Received
+            { wch:24 },  // Received Date
+            { wch:18 },  // Balance
+            { wch:35 }   // PDF
+        ];
+
+
+        /*
+           =================================================
+           MERGE TITLE
+           =================================================
+        */
+
+        worksheet["!merges"] = [
+
+            {
+                s:{
+                    r:0,
+                    c:0
+                },
+
+                e:{
+                    r:0,
+                    c:16
+                }
+            }
+
+        ];
+
+
+        /*
+           =================================================
+           FREEZE PANES
+           Keep the main table header visible.
+           =================================================
+        */
+
+        worksheet["!freeze"] = {
+
+            xSplit:0,
+
+            ySplit:13
+
+        };
+
+
+        /*
+           =================================================
+           NUMBER FORMATTING
+           =================================================
+        */
+
+        const moneyColumns = [
+
+            1,
+            5,
+            6,
+            7,
+            11,
+            13,
+            15
+
+        ];
+
+
+        /*
+           Format summary money cells.
+        */
+
+        for(
+            let rowIndex = 2;
+            rowIndex <= 9;
+            rowIndex++
+        ){
+
+            const cell =
+                worksheet[
+                    XLSX.utils.encode_cell({
+                        r:rowIndex,
+                        c:1
+                    })
+                ];
+
+
+            if(cell){
+
+                cell.t = "n";
+
+                cell.z =
+                    '#,##0.00';
+
+            }
+
+        }
+
+
+        /*
+           Approved percentage
+        */
+
+        const percentageCell =
+            worksheet["B10"];
+
+
+        if(percentageCell){
+
+            percentageCell.t =
+                "n";
+
+            percentageCell.z =
+                "0.00%";
+
+        }
+
+
+        /*
+           Format all monetary columns
+           from the main table onward.
+        */
+
+        for(
+            let rowIndex = 13;
+            rowIndex < rows.length;
+            rowIndex++
+        ){
+
+            moneyColumns.forEach(
+                function(columnIndex){
+
+                    const cell =
+                        worksheet[
+                            XLSX.utils.encode_cell({
+                                r:rowIndex,
+                                c:columnIndex
+                            })
+                        ];
+
+
+                    if(cell){
+
+                        cell.t =
+                            "n";
+
+                        cell.z =
+                            '#,##0.00';
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /*
+           =================================================
+           STYLING
+           =================================================
+        */
+
+        /*
+           Title
+        */
+
+        if(
+            worksheet["A1"]
+        ){
+
+            worksheet["A1"].s = {
+
+                font:{
+                    bold:true,
+                    sz:16,
+                    color:{
+                        rgb:"FFFFFF"
+                    }
+                },
+
+                fill:{
+                    fgColor:{
+                        rgb:"1F4E78"
+                    }
+                },
+
+                alignment:{
+                    horizontal:"center",
+                    vertical:"center"
+                }
+
+            };
+
+        }
+
+
+        /*
+           Project row
+        */
+
+        if(
+            worksheet["A2"]
+        ){
+
+            worksheet["A2"].s = {
+
+                font:{
+                    bold:true
+                }
+
+            };
+
+        }
+
+
+        /*
+           Summary labels
+        */
+
+        for(
+            let rowIndex = 2;
+            rowIndex <= 10;
+            rowIndex++
+        ){
+
+            const labelCell =
+                worksheet[
+                    XLSX.utils.encode_cell({
+                        r:rowIndex,
+                        c:0
+                    })
+                ];
+
+
+            if(labelCell){
+
+                labelCell.s = {
+
+                    font:{
+                        bold:true
+                    },
+
+                    fill:{
+                        fgColor:{
+                            rgb:"EAF2F8"
+                        }
+                    }
+
+                };
+
+            }
+
+        }
+
+
+        /*
+           Main table header
+           Row 13 = Excel row 14
+        */
+
+        for(
+            let columnIndex = 0;
+            columnIndex <= 16;
+            columnIndex++
+        ){
+
+            const cell =
+                worksheet[
+                    XLSX.utils.encode_cell({
+                        r:13,
+                        c:columnIndex
+                    })
+                ];
+
+
+            if(cell){
+
+                cell.s = {
+
+                    font:{
+                        bold:true,
+                        color:{
+                            rgb:"FFFFFF"
+                        }
+                    },
+
+                    fill:{
+                        fgColor:{
+                            rgb:"4472C4"
+                        }
+                    },
+
+                    alignment:{
+                        horizontal:"center",
+                        vertical:"center",
+                        wrapText:true
+                    },
+
+                    border:{
+
+                        top:{
+                            style:"thin",
+                            color:{
+                                rgb:"B7C9E2"
+                            }
+                        },
+
+                        bottom:{
+                            style:"thin",
+                            color:{
+                                rgb:"B7C9E2"
+                            }
+                        },
+
+                        left:{
+                            style:"thin",
+                            color:{
+                                rgb:"B7C9E2"
+                            }
+                        },
+
+                        right:{
+                            style:"thin",
+                            color:{
+                                rgb:"B7C9E2"
+                            }
+                        }
+
+                    }
+
+                };
+
+            }
+
+        }
+
+
+        /*
+           =================================================
+           STYLE VARIATION AND STAGE ROWS
+           =================================================
+        */
+
+        for(
+            let rowIndex = 14;
+            rowIndex < rows.length;
+            rowIndex++
+        ){
+
+            const rowTypeCell =
+                worksheet[
+                    XLSX.utils.encode_cell({
+                        r:rowIndex,
+                        c:0
+                    })
+                ];
+
+
+            if(!rowTypeCell){
+
+                continue;
+
+            }
+
+
+            const rowType =
+                rowTypeCell.v;
+
+
+            /*
+               Variation rows
+            */
+
+            if(
+                rowType ===
+                "VARIATION"
+            ){
+
+                for(
+                    let columnIndex = 0;
+                    columnIndex <= 16;
+                    columnIndex++
+                ){
+
+                    const cell =
+                        worksheet[
+                            XLSX.utils.encode_cell({
+                                r:rowIndex,
+                                c:columnIndex
+                            })
+                        ];
+
+
+                    if(cell){
+
+                        cell.s = {
+
+                            font:{
+                                bold:true
+                            },
+
+                            fill:{
+                                fgColor:{
+                                    rgb:"D9EAF7"
+                                }
+                            },
+
+                            alignment:{
+                                vertical:"center",
+                                wrapText:true
+                            },
+
+                            border:{
+
+                                top:{
+                                    style:"thin",
+                                    color:{
+                                        rgb:"9FBAD0"
+                                    }
+                                },
+
+                                bottom:{
+                                    style:"thin",
+                                    color:{
+                                        rgb:"9FBAD0"
+                                    }
+                                }
+
+                            }
+
+                        };
+
+                    }
+
+                }
+
+            }
+
+
+            /*
+               Payment stage rows
+            */
+
+            if(
+                rowType ===
+                "PAYMENT STAGE"
+            ){
+
+                for(
+                    let columnIndex = 0;
+                    columnIndex <= 16;
+                    columnIndex++
+                ){
+
+                    const cell =
+                        worksheet[
+                            XLSX.utils.encode_cell({
+                                r:rowIndex,
+                                c:columnIndex
+                            })
+                        ];
+
+
+                    if(cell){
+
+                        cell.s = {
+
+                            fill:{
+                                fgColor:{
+                                    rgb:"F8F9FA"
+                                }
+                            },
+
+                            alignment:{
+                                vertical:"center",
+                                wrapText:true
+                            },
+
+                            border:{
+
+                                bottom:{
+                                    style:"hair",
+                                    color:{
+                                        rgb:"D9D9D9"
+                                    }
+                                }
+
+                            }
+
+                        };
+
+                    }
+
+                }
+
+
+                /*
+                   Make Stage row visually indented
+                   through the description cell.
+                */
+
+                const descriptionCell =
+                    worksheet[
+                        XLSX.utils.encode_cell({
+                            r:rowIndex,
+                            c:3
+                        })
+                    ];
+
+
+                if(descriptionCell){
+
+                    descriptionCell.s = {
+
+                        font:{
+                            italic:true
+                        },
+
+                        alignment:{
+                            indent:1,
+                            vertical:"center"
+                        }
+
+                    };
+
+                }
+
+
+                /*
+                   Stage number
+                */
+
+                const stageCell =
+                    worksheet[
+                        XLSX.utils.encode_cell({
+                            r:rowIndex,
+                            c:10
+                        })
+                    ];
+
+
+                if(stageCell){
+
+                    stageCell.s = {
+
+                        font:{
+                            bold:true
+                        },
+
+                        alignment:{
+                            horizontal:"center"
+                        }
+
+                    };
+
+                }
+
+            }
+
+
+            /*
+               Blank separator rows
+            */
+
+            if(
+                rows[rowIndex].length === 0
+            ){
+
+                continue;
+
+            }
+
+        }
+
+
+        /*
+           =================================================
+           ALIGNMENT
+           =================================================
+        */
+
+        for(
+            let rowIndex = 14;
+            rowIndex < rows.length;
+            rowIndex++
+        ){
+
+            /*
+               Money columns right aligned.
+            */
+
+            moneyColumns.forEach(
+                function(columnIndex){
+
+                    const cell =
+                        worksheet[
+                            XLSX.utils.encode_cell({
+                                r:rowIndex,
+                                c:columnIndex
+                            })
+                        ];
+
+
+                    if(cell){
+
+                        if(!cell.s){
+
+                            cell.s = {};
+
+                        }
+
+
+                        cell.s.alignment = {
+
+                            horizontal:"right",
+
+                            vertical:"center"
+
+                        };
+
+                    }
+
+                }
+            );
+
+
+            /*
+               Stage / status columns centered.
+            */
+
+            [
+                0,
+                8,
+                9,
+                10,
+                12,
+                14
+            ]
+            .forEach(
+                function(columnIndex){
+
+                    const cell =
+                        worksheet[
+                            XLSX.utils.encode_cell({
+                                r:rowIndex,
+                                c:columnIndex
+                            })
+                        ];
+
+
+                    if(cell){
+
+                        if(!cell.s){
+
+                            cell.s = {};
+
+                        }
+
+
+                        cell.s.alignment = {
+
+                            horizontal:"center",
+
+                            vertical:"center",
+
+                            wrapText:true
+
+                        };
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /*
+           =================================================
+           ROW HEIGHTS
+           =================================================
+        */
+
+        worksheet["!rows"] = [];
+
+
+        worksheet["!rows"][0] = {
+
+            hpt:28
+
+        };
+
+
+        worksheet["!rows"][13] = {
+
+            hpt:35
+
+        };
+
+
+        /*
+           =================================================
+           CREATE WORKBOOK
+           =================================================
+        */
+
+        const workbook =
+            XLSX.utils.book_new();
+
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "Variations"
+        );
+
+
+        /*
+           =================================================
+           FILE NAME
+           =================================================
+        */
+
+        const projectName =
+            (
+                project.name ||
+                project.projectName ||
+                "Project"
+            )
+            .toString()
+            .replace(
+                /[\\/:*?"<>|]/g,
+                ""
+            )
+            .trim();
+
+
+        const fileName =
+            projectName +
+            " - Variations Register.xlsx";
+
+
+        /*
+           =================================================
+           DOWNLOAD
+           =================================================
+        */
+
+        XLSX.writeFile(
+            workbook,
+            fileName
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Variation Excel export error:",
+            error
+        );
+
+
+        alert(
+            "Unable to export the Variations to Excel.\n\n" +
+            error.message
         );
 
     }
