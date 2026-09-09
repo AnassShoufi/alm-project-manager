@@ -1852,6 +1852,11 @@ function openProject(id){
     onclick="showProjectSection('reports', ${project.id}, this)">
     📝 Reports
 </button>
+<button
+    class="project-menu-btn"
+    onclick="showProjectSection('weeklyReports', ${project.id}, this)">
+    📅 Weekly Reports
+</button>
 
                     <button
                         class="project-menu-btn"
@@ -2517,7 +2522,17 @@ const currentFolder =
 
     return;
 }
+/* =========================
+   WEEKLY REPORTS
+========================= */
 
+if(section === "weeklyReports"){
+
+    renderWeeklyReportsSection(project);
+
+    return;
+
+}
 /* =========================
    REPORTS
 ========================= */
@@ -7407,7 +7422,1733 @@ function ensureReportsFolders(project){
 
 }
 
+/* =====================================================
+   WEEKLY REPORTS MODULE - STEP 1
+===================================================== */
 
+
+/* =====================================================
+   ENSURE WEEKLY REPORTS
+===================================================== */
+
+function ensureWeeklyReports(project){
+
+    if(!project.weeklyReports){
+
+        project.weeklyReports = [];
+
+        persist();
+
+    }
+
+    return project.weeklyReports;
+
+}
+
+
+/* =====================================================
+   WEEKLY REPORT ESCAPE
+===================================================== */
+
+function weeklyReportEscape(value){
+
+    return String(value ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================================
+   WEEKLY REPORT DATE FORMAT
+===================================================== */
+
+function weeklyReportDate(value){
+
+    if(!value){
+        return "-";
+    }
+
+    const parts =
+        String(value).split("-");
+
+    if(parts.length !== 3){
+        return value;
+    }
+
+    return (
+        parts[2] +
+        "/" +
+        parts[1] +
+        "/" +
+        parts[0]
+    );
+
+}
+
+
+/* =====================================================
+   GET SATURDAY OF WEEK
+===================================================== */
+
+function getWeeklyReportSaturday(dateValue){
+
+    const date =
+        new Date(
+            dateValue + "T00:00:00"
+        );
+
+    const day =
+        date.getDay();
+
+    /*
+       JavaScript:
+       Sunday = 0
+       Monday = 1
+       ...
+       Saturday = 6
+    */
+
+    const difference =
+        day === 6
+            ? 0
+            : day + 1;
+
+    date.setDate(
+        date.getDate() - difference
+    );
+
+    return weeklyReportDateISO(date);
+
+}
+
+
+/* =====================================================
+   GET FRIDAY OF WEEK
+===================================================== */
+
+function getWeeklyReportFriday(dateValue){
+
+    const saturday =
+        new Date(
+            dateValue + "T00:00:00"
+        );
+
+    saturday.setDate(
+        saturday.getDate() + 6
+    );
+
+    return weeklyReportDateISO(
+        saturday
+    );
+
+}
+
+
+/* =====================================================
+   DATE TO ISO
+===================================================== */
+
+function weeklyReportDateISO(date){
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+    return (
+        year +
+        "-" +
+        month +
+        "-" +
+        day
+    );
+
+}
+
+
+/* =====================================================
+   NEXT WEEK NUMBER
+===================================================== */
+
+function getNextWeeklyReportNumber(project){
+
+    const reports =
+        project.weeklyReports || [];
+
+    if(!reports.length){
+
+        return 1;
+
+    }
+
+    const numbers =
+        reports
+            .map(report =>
+                Number(
+                    report.weekNumber || 0
+                )
+            )
+            .filter(number =>
+                Number.isFinite(number)
+            );
+
+    if(!numbers.length){
+
+        return 1;
+
+    }
+
+    return Math.max(...numbers) + 1;
+
+}
+
+
+/* =====================================================
+   WEATHER OPTIONS
+===================================================== */
+
+function weeklyWeatherOptions(selected){
+
+    const options = [
+        "Sunny",
+        "Cloudy",
+        "Rainy",
+        "Windy",
+        "Stormy"
+    ];
+
+    return options.map(
+        option => `
+            <option
+                value="${option}"
+                ${selected === option ? "selected" : ""}
+            >
+                ${option}
+            </option>
+        `
+    ).join("");
+
+}
+
+
+/* =====================================================
+   WEATHER ROW
+===================================================== */
+
+function weeklyWeatherRow(
+    dayName,
+    date,
+    weather
+){
+
+    return `
+
+        <tr>
+
+            <td>
+                <strong>
+                    ${dayName}
+                </strong>
+
+                <div style="
+                    margin-top:4px;
+                    color:#708096;
+                    font-size:12px;
+                ">
+                    ${weeklyReportDate(date)}
+                </div>
+            </td>
+
+            <td>
+
+                <select
+                    id="weeklyWeather_${dayName}"
+                    style="
+                        width:100%;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
+
+                    ${weeklyWeatherOptions(
+                        weather || "Sunny"
+                    )}
+
+                </select>
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
+
+
+/* =====================================================
+   WEATHER DAYS
+===================================================== */
+
+function getWeeklyWeatherDays(startDate){
+
+    const saturday =
+        new Date(
+            startDate + "T00:00:00"
+        );
+
+    const days = [
+
+        {
+            name:"Saturday",
+            offset:0
+        },
+
+        {
+            name:"Sunday",
+            offset:1
+        },
+
+        {
+            name:"Monday",
+            offset:2
+        },
+
+        {
+            name:"Tuesday",
+            offset:3
+        },
+
+        {
+            name:"Wednesday",
+            offset:4
+        },
+
+        {
+            name:"Thursday",
+            offset:5
+        },
+
+        {
+            name:"Friday",
+            offset:6
+        }
+
+    ];
+
+    return days.map(day => {
+
+        const date =
+            new Date(saturday);
+
+        date.setDate(
+            saturday.getDate() +
+            day.offset
+        );
+
+        return {
+
+            name:day.name,
+
+            date:
+                weeklyReportDateISO(
+                    date
+                )
+
+        };
+
+    });
+
+}
+
+
+/* =====================================================
+   RENDER WEEKLY REPORTS
+===================================================== */
+
+function renderWeeklyReportsSection(project){
+
+    ensureWeeklyReports(project);
+
+    const reports =
+        project.weeklyReports || [];
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!content){
+
+        console.error(
+            "projectSectionContent not found."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Sort newest week first
+    */
+
+    const sortedReports =
+        reports
+            .map(
+                (report,index) => ({
+                    report,
+                    index
+                })
+            )
+            .sort(
+                (a,b) =>
+                    Number(
+                        b.report.weekNumber || 0
+                    ) -
+                    Number(
+                        a.report.weekNumber || 0
+                    )
+            );
+
+
+    const draftCount =
+        reports.filter(
+            report =>
+                report.status === "Draft"
+        ).length;
+
+
+    const totalReports =
+        reports.length;
+
+
+    content.innerHTML = `
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    Weekly Reports
+                </h2>
+
+                <p>
+                    Weekly site reports and project progress records
+                </p>
+
+            </div>
+
+
+            <button
+                class="btn btn-primary"
+                onclick="
+                    window.createWeeklyReport(
+                        '${project.id}'
+                    );
+                "
+            >
+
+                + New Weekly Report
+
+            </button>
+
+        </div>
+
+
+        <!-- SUMMARY -->
+
+        <div style="
+            display:grid;
+            grid-template-columns:
+                repeat(3,1fr);
+            gap:15px;
+            margin-bottom:25px;
+        ">
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Total Weekly Reports
+                </div>
+
+                <div class="number">
+                    ${totalReports}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Draft Reports
+                </div>
+
+                <div class="number">
+                    ${draftCount}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Latest Week
+                </div>
+
+                <div class="number">
+
+                    ${
+                        sortedReports.length
+                        ?
+                        "W" +
+                        (
+                            sortedReports[0]
+                                .report
+                                .weekNumber
+                        )
+                        :
+                        "-"
+                    }
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        ${
+            sortedReports.length === 0
+
+            ?
+
+            `
+
+            <div class="empty">
+
+                <div style="
+                    font-size:50px;
+                    margin-bottom:12px;
+                ">
+                    📅
+                </div>
+
+                <h3>
+                    No Weekly Reports Yet
+                </h3>
+
+                <p style="
+                    margin-top:8px;
+                ">
+                    Create the first weekly report
+                    for this project.
+                </p>
+
+            </div>
+
+            `
+
+            :
+
+            `
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Weekly Report Register
+                        </h2>
+
+                        <div style="
+                            margin-top:4px;
+                            color:#708096;
+                            font-size:12px;
+                        ">
+                            Historical weekly project records
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div style="
+                    overflow-x:auto;
+                ">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Week
+                                </th>
+
+                                <th>
+                                    Reporting Period
+                                </th>
+
+                                <th>
+                                    Report Date
+                                </th>
+
+                                <th>
+                                    Project Manager
+                                </th>
+
+                                <th>
+                                    Weather
+                                </th>
+
+                                <th>
+                                    Rain Stoppage
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            ${
+
+                                sortedReports
+                                    .map(item => {
+
+                                        const report =
+                                            item.report;
+
+                                        const index =
+                                            item.index;
+
+
+                                        return `
+
+                                            <tr>
+
+                                                <td>
+
+                                                    <strong
+                                                        style="
+                                                            color:#17243a;
+                                                        "
+                                                    >
+                                                        Week
+                                                        ${weeklyReportEscape(
+                                                            report.weekNumber
+                                                        )}
+                                                    </strong>
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    ${weeklyReportDate(
+                                                        report.startDate
+                                                    )}
+
+                                                    -
+
+                                                    ${weeklyReportDate(
+                                                        report.endDate
+                                                    )}
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    ${weeklyReportDate(
+                                                        report.reportDate
+                                                    )}
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    ${weeklyReportEscape(
+                                                        report.projectManager ||
+                                                        project.manager ||
+                                                        "-"
+                                                    )}
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    ${weeklyReportEscape(
+                                                        report.overallWeather ||
+                                                        "-"
+                                                    )}
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    ${
+                                                        Number(
+                                                            report.rainStoppageHours ||
+                                                            0
+                                                        )
+                                                    }
+                                                    hrs
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    <span
+                                                        class="badge badge-onhold"
+                                                    >
+                                                        ${weeklyReportEscape(
+                                                            report.status ||
+                                                            "Draft"
+                                                        )}
+                                                    </span>
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    <div
+                                                        class="actions"
+                                                    >
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                window.editWeeklyReport(
+                                                                    '${project.id}',
+                                                                    ${index}
+                                                                );
+                                                            "
+                                                        >
+                                                            Edit
+                                                        </button>
+
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                window.deleteWeeklyReport(
+                                                                    '${project.id}',
+                                                                    ${index}
+                                                                );
+                                                            "
+                                                        >
+                                                            Delete
+                                                        </button>
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+
+                                        `;
+
+                                    })
+                                    .join("")
+
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            `
+
+        }
+
+    `;
+
+}
+
+
+/* =====================================================
+   CREATE WEEKLY REPORT
+===================================================== */
+
+window.createWeeklyReport =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+
+        return;
+
+    }
+
+
+    const reports =
+        ensureWeeklyReports(project);
+
+
+    const weekNumber =
+        getNextWeeklyReportNumber(
+            project
+        );
+
+
+    const today =
+        weeklyReportDateISO(
+            new Date()
+        );
+
+
+    const saturday =
+        getWeeklyReportSaturday(
+            today
+        );
+
+
+    const friday =
+        getWeeklyReportFriday(
+            saturday
+        );
+
+
+    openWeeklyReportForm(
+        project,
+        null,
+        {
+            weekNumber,
+            reportDate:today,
+            startDate:saturday,
+            endDate:friday,
+            projectManager:
+                project.manager || "",
+            projectStartDate:
+                project.startDate || "",
+            rainStoppageHours:0,
+            overallWeather:"",
+            weather:{}
+        }
+    );
+
+};
+
+
+/* =====================================================
+   EDIT WEEKLY REPORT
+===================================================== */
+
+window.editWeeklyReport =
+function(
+    projectId,
+    index
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+
+        return;
+
+    }
+
+
+    ensureWeeklyReports(project);
+
+
+    const report =
+        project.weeklyReports[index];
+
+
+    if(!report){
+
+        return;
+
+    }
+
+
+    openWeeklyReportForm(
+        project,
+        index,
+        report
+    );
+
+};
+
+
+/* =====================================================
+   OPEN WEEKLY REPORT FORM
+===================================================== */
+
+function openWeeklyReportForm(
+    project,
+    editIndex,
+    report
+){
+
+    const existing =
+        document.getElementById(
+            "weeklyReportModal"
+        );
+
+    if(existing){
+
+        existing.remove();
+
+    }
+
+
+    const weather =
+        report.weather || {};
+
+
+    const days =
+        getWeeklyWeatherDays(
+            report.startDate
+        );
+
+
+    const modal =
+        document.createElement(
+            "div"
+        );
+
+
+    modal.id =
+        "weeklyReportModal";
+
+    modal.className =
+        "modal-overlay";
+
+    modal.style.display =
+        "flex";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                width:900px;
+                max-width:95%;
+                max-height:92vh;
+            "
+        >
+
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+
+                        ${
+                            editIndex === null
+                            ? "New Weekly Report"
+                            : "Edit Weekly Report"
+                        }
+
+                    </h2>
+
+                    <div style="
+                        margin-top:5px;
+                        color:#708096;
+                        font-size:12px;
+                    ">
+
+                        ${weeklyReportEscape(
+                            project.name
+                        )}
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="close"
+                    onclick="
+                        closeWeeklyReportModal();
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                onsubmit="
+                    saveWeeklyReport(
+                        event,
+                        '${project.id}',
+                        ${
+                            editIndex === null
+                            ? "null"
+                            : editIndex
+                        }
+                    );
+                "
+            >
+
+
+                <div
+                    class="modal-body"
+                    style="
+                        max-height:72vh;
+                        overflow-y:auto;
+                    "
+                >
+
+
+                    <!-- REPORT INFORMATION -->
+
+                    <div style="
+                        margin-bottom:25px;
+                    ">
+
+                        <h3 style="
+                            margin-bottom:15px;
+                            color:#17243a;
+                        ">
+                            Report Information
+                        </h3>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Week Number *
+                                </label>
+
+                                <input
+                                    id="weeklyReportWeekNumber"
+                                    type="number"
+                                    min="1"
+                                    required
+                                    value="${weeklyReportEscape(
+                                        report.weekNumber
+                                    )}"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Report Date *
+                                </label>
+
+                                <input
+                                    id="weeklyReportDate"
+                                    type="date"
+                                    required
+                                    value="${weeklyReportEscape(
+                                        report.reportDate
+                                    )}"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Reporting Start *
+                                </label>
+
+                                <input
+                                    id="weeklyReportStartDate"
+                                    type="date"
+                                    required
+                                    value="${weeklyReportEscape(
+                                        report.startDate
+                                    )}"
+                                    onchange="
+                                        updateWeeklyReportDates();
+                                    "
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Reporting End *
+                                </label>
+
+                                <input
+                                    id="weeklyReportEndDate"
+                                    type="date"
+                                    required
+                                    value="${weeklyReportEscape(
+                                        report.endDate
+                                    )}"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Project Manager
+                                </label>
+
+                                <input
+                                    id="weeklyReportProjectManager"
+                                    value="${weeklyReportEscape(
+                                        report.projectManager ||
+                                        project.manager ||
+                                        ""
+                                    )}"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Project Starting Date
+                                </label>
+
+                                <input
+                                    id="weeklyReportProjectStartDate"
+                                    type="date"
+                                    value="${weeklyReportEscape(
+                                        report.projectStartDate ||
+                                        project.startDate ||
+                                        ""
+                                    )}"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- WEATHER -->
+
+                    <div style="
+                        margin-bottom:25px;
+                    ">
+
+                        <h3 style="
+                            margin-bottom:6px;
+                            color:#17243a;
+                        ">
+                            Weather
+                        </h3>
+
+                        <p style="
+                            color:#708096;
+                            font-size:13px;
+                            margin-bottom:15px;
+                        ">
+                            Daily weather conditions during
+                            the reporting period.
+                        </p>
+
+
+                        <div style="
+                            border:1px solid #e1e5ea;
+                            border-radius:8px;
+                            overflow:hidden;
+                        ">
+
+                            <table>
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Day
+                                        </th>
+
+                                        <th>
+                                            Weather
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    ${
+                                        days
+                                            .map(day =>
+
+                                                weeklyWeatherRow(
+                                                    day.name,
+                                                    day.date,
+                                                    weather[
+                                                        day.name
+                                                    ] || ""
+                                                )
+
+                                            )
+                                            .join("")
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SITE WEATHER SUMMARY -->
+
+                    <div>
+
+                        <h3 style="
+                            margin-bottom:15px;
+                            color:#17243a;
+                        ">
+                            Weather Summary
+                        </h3>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Stoppage Hours Due to Rain
+                                </label>
+
+                                <input
+                                    id="weeklyReportRainHours"
+                                    type="number"
+                                    min="0"
+                                    step="0.5"
+                                    value="${weeklyReportEscape(
+                                        report.rainStoppageHours || 0
+                                    )}"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Overall Weather
+                                </label>
+
+                                <select
+                                    id="weeklyReportOverallWeather"
+                                >
+
+                                    <option value="">
+                                        Select Overall Weather
+                                    </option>
+
+                                    ${weeklyWeatherOptions(
+                                        report.overallWeather || ""
+                                    )}
+
+                                </select>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="
+                            closeWeeklyReportModal();
+                        "
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Save Weekly Report
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+
+    modal.addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target === modal
+            ){
+
+                closeWeeklyReportModal();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   UPDATE REPORTING DATES
+===================================================== */
+
+window.updateWeeklyReportDates =
+function(){
+
+    const startInput =
+        document.getElementById(
+            "weeklyReportStartDate"
+        );
+
+    const endInput =
+        document.getElementById(
+            "weeklyReportEndDate"
+        );
+
+
+    if(
+        !startInput ||
+        !endInput ||
+        !startInput.value
+    ){
+
+        return;
+
+    }
+
+
+    endInput.value =
+        getWeeklyReportFriday(
+            startInput.value
+        );
+
+};
+
+
+/* =====================================================
+   SAVE WEEKLY REPORT
+===================================================== */
+
+window.saveWeeklyReport =
+function(
+    event,
+    projectId,
+    editIndex
+){
+
+    event.preventDefault();
+
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project){
+
+        return;
+
+    }
+
+
+    ensureWeeklyReports(project);
+
+
+    const weekNumber =
+        Number(
+            document.getElementById(
+                "weeklyReportWeekNumber"
+            ).value || 0
+        );
+
+
+    const reportDate =
+        document.getElementById(
+            "weeklyReportDate"
+        ).value;
+
+
+    const startDate =
+        document.getElementById(
+            "weeklyReportStartDate"
+        ).value;
+
+
+    const endDate =
+        document.getElementById(
+            "weeklyReportEndDate"
+        ).value;
+
+
+    if(!weekNumber){
+
+        alert(
+            "Please enter the Week Number."
+        );
+
+        return;
+
+    }
+
+
+    if(!startDate || !endDate){
+
+        alert(
+            "Please enter the reporting period."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Prevent duplicate week numbers
+    */
+
+    const duplicate =
+        project.weeklyReports.some(
+            (item,index) =>
+                Number(item.weekNumber) ===
+                weekNumber &&
+                index !== editIndex
+        );
+
+
+    if(duplicate){
+
+        alert(
+            "This Week Number already exists."
+        );
+
+        return;
+
+    }
+
+
+    const weather = {};
+
+
+    [
+        "Saturday",
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+    ]
+    .forEach(day => {
+
+        const input =
+            document.getElementById(
+                "weeklyWeather_" + day
+            );
+
+        weather[day] =
+            input
+                ? input.value
+                : "";
+
+    });
+
+
+    const report = {
+
+        id:
+            editIndex === null
+            ?
+            "WR-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,8)
+            :
+            project
+                .weeklyReports[
+                    editIndex
+                ]
+                .id,
+
+        weekNumber,
+
+        reportDate,
+
+        startDate,
+
+        endDate,
+
+        projectManager:
+            document.getElementById(
+                "weeklyReportProjectManager"
+            ).value.trim(),
+
+        projectStartDate:
+            document.getElementById(
+                "weeklyReportProjectStartDate"
+            ).value,
+
+        weather,
+
+        rainStoppageHours:
+            Number(
+                document.getElementById(
+                    "weeklyReportRainHours"
+                ).value || 0
+            ),
+
+        overallWeather:
+            document.getElementById(
+                "weeklyReportOverallWeather"
+            ).value,
+
+        status:
+            editIndex === null
+            ?
+            "Draft"
+            :
+            (
+                project
+                    .weeklyReports[
+                        editIndex
+                    ]
+                    .status ||
+                "Draft"
+            ),
+
+        createdAt:
+            editIndex === null
+            ?
+            new Date().toISOString()
+            :
+            (
+                project
+                    .weeklyReports[
+                        editIndex
+                    ]
+                    .createdAt ||
+                new Date().toISOString()
+            ),
+
+        updatedAt:
+            new Date().toISOString()
+
+    };
+
+
+    if(editIndex === null){
+
+        project.weeklyReports.push(
+            report
+        );
+
+    }else{
+
+        project.weeklyReports[
+            editIndex
+        ] = report;
+
+    }
+
+
+    persist();
+
+
+    closeWeeklyReportModal();
+
+
+    renderWeeklyReportsSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   CLOSE WEEKLY REPORT MODAL
+===================================================== */
+
+window.closeWeeklyReportModal =
+function(){
+
+    const modal =
+        document.getElementById(
+            "weeklyReportModal"
+        );
+
+    if(modal){
+
+        modal.remove();
+
+    }
+
+};
+
+
+/* =====================================================
+   DELETE WEEKLY REPORT
+===================================================== */
+
+window.deleteWeeklyReport =
+function(
+    projectId,
+    index
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project){
+
+        return;
+
+    }
+
+
+    ensureWeeklyReports(project);
+
+
+    const report =
+        project.weeklyReports[index];
+
+
+    if(!report){
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `Are you sure you want to delete Week ${report.weekNumber}?`
+        );
+
+
+    if(!confirmed){
+
+        return;
+
+    }
+
+
+    project.weeklyReports.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    renderWeeklyReportsSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   END WEEKLY REPORTS MODULE - STEP 1
+===================================================== */
 /* =====================================================
    RENDER REPORTS
 ===================================================== */
