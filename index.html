@@ -8843,25 +8843,45 @@ function openWeeklyReportForm(
         overflow:hidden;
     ">
 
-        <table>
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            table-layout:fixed;
+        ">
 
             <thead>
 
                 <tr>
 
-                    <th style="width:28%;">
+                    <th style="
+                        width:28%;
+                        text-align:left;
+                        padding:12px;
+                    ">
                         Activity / Work Item
                     </th>
 
-                    <th style="width:22%;">
+                    <th style="
+                        width:22%;
+                        text-align:left;
+                        padding:12px;
+                    ">
                         Location
                     </th>
 
-                    <th style="width:18%;">
+                    <th style="
+                        width:18%;
+                        text-align:left;
+                        padding:12px;
+                    ">
                         Progress This Week
                     </th>
 
-                    <th>
+                    <th style="
+                        width:32%;
+                        text-align:left;
+                        padding:12px;
+                    ">
                         Remarks
                     </th>
 
@@ -8882,27 +8902,52 @@ function openWeeklyReportForm(
 
                     <tr>
 
-                        <td>
+                        <td style="
+                            padding:10px;
+                        ">
+
                             <input
                                 id="weeklyWorkActivity_${i}"
                                 type="text"
                                 placeholder="Activity / Work Item"
-                                style="width:100%;"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
                             >
+
                         </td>
 
 
-                        <td>
+                        <td style="
+                            padding:10px;
+                        ">
+
                             <input
                                 id="weeklyWorkLocation_${i}"
                                 type="text"
                                 placeholder="Location"
-                                style="width:100%;"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
                             >
+
                         </td>
 
 
-                        <td>
+                        <td style="
+                            padding:10px;
+                        ">
+
                             <input
                                 id="weeklyWorkProgress_${i}"
                                 type="number"
@@ -8910,18 +8955,37 @@ function openWeeklyReportForm(
                                 max="100"
                                 step="1"
                                 placeholder="%"
-                                style="width:100%;"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
                             >
+
                         </td>
 
 
-                        <td>
+                        <td style="
+                            padding:10px;
+                        ">
+
                             <input
                                 id="weeklyWorkRemarks_${i}"
                                 type="text"
                                 placeholder="Remarks"
-                                style="width:100%;"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
                             >
+
                         </td>
 
                     </tr>
@@ -8935,7 +8999,6 @@ function openWeeklyReportForm(
     </div>
 
 </div>
-
                 <div class="modal-footer">
 
                     <button
