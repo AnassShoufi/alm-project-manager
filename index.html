@@ -8790,23 +8790,21 @@ function openWeeklyReportForm(
 
                             <div class="form-group">
 
-                                <label>
-                                    Overall Weather
-                                </label>
+                               <label>
+    Overall Weather
+</label>
 
-                                <select
-                                    id="weeklyReportOverallWeather"
-                                >
-
-                                    <option value="">
-                                        Select Overall Weather
-                                    </option>
-
-                                    ${weeklyWeatherOptions(
-                                        report.overallWeather || ""
-                                    )}
-
-                                </select>
+<input
+    type="text"
+    id="weeklyReportOverallWeather"
+    value="${report.overallWeather || ""}"
+    readonly
+    style="
+        background:#f5f7fa;
+        cursor:not-allowed;
+        font-weight:600;
+    "
+>
 
                             </div>
 
