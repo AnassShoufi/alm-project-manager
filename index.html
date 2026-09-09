@@ -3460,14 +3460,19 @@ function openProject(id){
     onclick="showProjectSection('drawings', ${project.id}, this)">
     📐 Drawings
 </button>
-
-                       <button
+<button
     class="btn btn-secondary"
     onclick="showProjectSection('reports', ${project.id}, this)">
     📊 Reports
 </button>
 
-                        <button
+<button
+    class="btn btn-secondary"
+    onclick="showProjectSection('weeklyReports', ${project.id}, this)">
+    📅 Weekly Reports
+</button>
+
+<button
     class="btn btn-secondary"
     onclick="showProjectSection('tasks', ${project.id}, this)">
     ☑ Tasks
