@@ -7650,6 +7650,89 @@ function weeklyWeatherOptions(selected){
 
 
 /* =====================================================
+   CALCULATE OVERALL WEATHER
+===================================================== */
+
+function updateWeeklyOverallWeather(){
+
+    const days = [
+        "Saturday",
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+    ];
+
+    const weatherCounts = {};
+    const weatherOrder = [];
+
+    days.forEach(day => {
+
+        const input =
+            document.getElementById(
+                "weeklyWeather_" + day
+            );
+
+        if(!input || !input.value){
+            return;
+        }
+
+        const weather =
+            input.value;
+
+        if(!weatherCounts[weather]){
+
+            weatherCounts[weather] = 0;
+
+            weatherOrder.push(
+                weather
+            );
+        }
+
+        weatherCounts[weather]++;
+    });
+
+
+    let overallWeather = "";
+
+    let highestCount = 0;
+
+
+    weatherOrder.forEach(weather => {
+
+        if(
+            weatherCounts[weather] >
+            highestCount
+        ){
+
+            highestCount =
+                weatherCounts[weather];
+
+            overallWeather =
+                weather;
+        }
+
+    });
+
+
+    const overallInput =
+        document.getElementById(
+            "weeklyReportOverallWeather"
+        );
+
+    if(overallInput){
+
+        overallInput.value =
+            overallWeather;
+
+    }
+
+}
+
+
+/* =====================================================
    WEATHER ROW
 ===================================================== */
 
@@ -7664,6 +7747,7 @@ function weeklyWeatherRow(
         <tr>
 
             <td>
+
                 <strong>
                     ${dayName}
                 </strong>
@@ -7673,14 +7757,21 @@ function weeklyWeatherRow(
                     color:#708096;
                     font-size:12px;
                 ">
+
                     ${weeklyReportDate(date)}
+
                 </div>
+
             </td>
+
 
             <td>
 
                 <select
                     id="weeklyWeather_${dayName}"
+                    onchange="
+                        updateWeeklyOverallWeather();
+                    "
                     style="
                         width:100%;
                         padding:9px 10px;
@@ -7701,9 +7792,7 @@ function weeklyWeatherRow(
         </tr>
 
     `;
-
 }
-
 
 /* =====================================================
    WEATHER DAYS
