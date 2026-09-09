@@ -8815,7 +8815,126 @@ function openWeeklyReportForm(
 
 
                 </div>
+<!-- WORK PROGRESS -->
 
+<div style="
+    margin-top:25px;
+">
+
+    <h3 style="
+        margin-bottom:6px;
+        color:#17243a;
+    ">
+        Work Progress
+    </h3>
+
+    <p style="
+        color:#708096;
+        font-size:13px;
+        margin-bottom:15px;
+    ">
+        Record the main activities and progress achieved during the reporting period.
+    </p>
+
+
+    <div style="
+        border:1px solid #e1e5ea;
+        border-radius:8px;
+        overflow:hidden;
+    ">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th style="width:28%;">
+                        Activity / Work Item
+                    </th>
+
+                    <th style="width:22%;">
+                        Location
+                    </th>
+
+                    <th style="width:18%;">
+                        Progress This Week
+                    </th>
+
+                    <th>
+                        Remarks
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                ${[
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ].map(i => `
+
+                    <tr>
+
+                        <td>
+                            <input
+                                id="weeklyWorkActivity_${i}"
+                                type="text"
+                                placeholder="Activity / Work Item"
+                                style="width:100%;"
+                            >
+                        </td>
+
+
+                        <td>
+                            <input
+                                id="weeklyWorkLocation_${i}"
+                                type="text"
+                                placeholder="Location"
+                                style="width:100%;"
+                            >
+                        </td>
+
+
+                        <td>
+                            <input
+                                id="weeklyWorkProgress_${i}"
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="1"
+                                placeholder="%"
+                                style="width:100%;"
+                            >
+                        </td>
+
+
+                        <td>
+                            <input
+                                id="weeklyWorkRemarks_${i}"
+                                type="text"
+                                placeholder="Remarks"
+                                style="width:100%;"
+                            >
+                        </td>
+
+                    </tr>
+
+                `).join("")}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
                 <div class="modal-footer">
 
