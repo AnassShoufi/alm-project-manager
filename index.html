@@ -9040,26 +9040,52 @@ function openWeeklyReportForm(
     margin-top:25px;
 ">
 
-    <h3 style="
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
         margin-bottom:6px;
-        color:#17243a;
     ">
-        Manpower on Site
-    </h3>
 
-    <p style="
-        color:#708096;
-        font-size:13px;
-        margin-bottom:15px;
-    ">
-        Record the manpower deployed on site during the reporting period.
-    </p>
+        <div>
+
+            <h3 style="
+                margin:0 0 6px 0;
+                color:#17243a;
+            ">
+                Manpower on Site
+            </h3>
+
+            <p style="
+                color:#708096;
+                font-size:13px;
+                margin:0;
+            ">
+                Record the manpower deployed on site during the reporting period.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="window.addWeeklyManpowerRow()"
+            style="
+                white-space:nowrap;
+            "
+        >
+            + Add Personnel
+        </button>
+
+    </div>
 
 
     <div style="
         border:1px solid #e1e5ea;
         border-radius:8px;
         overflow:hidden;
+        margin-top:15px;
     ">
 
         <table style="
@@ -9073,7 +9099,7 @@ function openWeeklyReportForm(
                 <tr>
 
                     <th style="
-                        width:40%;
+                        width:32%;
                         text-align:left;
                         padding:12px;
                     ">
@@ -9081,7 +9107,7 @@ function openWeeklyReportForm(
                     </th>
 
                     <th style="
-                        width:18%;
+                        width:17%;
                         text-align:left;
                         padding:12px;
                     ">
@@ -9089,7 +9115,7 @@ function openWeeklyReportForm(
                     </th>
 
                     <th style="
-                        width:18%;
+                        width:17%;
                         text-align:left;
                         padding:12px;
                     ">
@@ -9097,11 +9123,19 @@ function openWeeklyReportForm(
                     </th>
 
                     <th style="
-                        width:24%;
+                        width:25%;
                         text-align:left;
                         padding:12px;
                     ">
                         Remarks
+                    </th>
+
+                    <th style="
+                        width:9%;
+                        text-align:center;
+                        padding:12px;
+                    ">
+                        Action
                     </th>
 
                 </tr>
@@ -9109,7 +9143,7 @@ function openWeeklyReportForm(
             </thead>
 
 
-            <tbody>
+            <tbody id="weeklyManpowerRows">
 
                 ${[
                     "Site Management",
@@ -9117,16 +9151,30 @@ function openWeeklyReportForm(
                     "Supervisors",
                     "Skilled Workers",
                     "Unskilled Workers",
-                    "Others"
+                    "Subcontractors"
                 ].map((trade, i) => `
 
                     <tr>
 
                         <td style="
                             padding:10px;
-                            font-weight:500;
                         ">
-                            ${trade}
+
+                            <input
+                                id="weeklyManpowerTrade_${i}"
+                                type="text"
+                                value="${trade}"
+                                placeholder="Trade / Personnel"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
                         </td>
 
 
@@ -9196,6 +9244,30 @@ function openWeeklyReportForm(
 
                         </td>
 
+
+                        <td style="
+                            padding:10px;
+                            text-align:center;
+                        ">
+
+                            <button
+                                type="button"
+                                onclick="this.closest('tr').remove()"
+                                style="
+                                    border:none;
+                                    background:#f3f4f6;
+                                    color:#b42318;
+                                    border-radius:6px;
+                                    padding:7px 10px;
+                                    cursor:pointer;
+                                    font-size:12px;
+                                "
+                            >
+                                Remove
+                            </button>
+
+                        </td>
+
                     </tr>
 
                 `).join("")}
@@ -9207,6 +9279,150 @@ function openWeeklyReportForm(
     </div>
 
 </div>
+/* =====================================================
+   ADD WEEKLY MANPOWER ROW
+===================================================== */
+
+window.addWeeklyManpowerRow =
+function(){
+
+    const tbody =
+        document.getElementById(
+            "weeklyManpowerRows"
+        );
+
+    if(!tbody){
+        return;
+    }
+
+
+    const index =
+        tbody.querySelectorAll("tr").length;
+
+
+    const row =
+        document.createElement("tr");
+
+
+    row.innerHTML = `
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyManpowerTrade_${index}"
+                type="text"
+                placeholder="Trade / Personnel"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyManpowerPlanned_${index}"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyManpowerActual_${index}"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyManpowerRemarks_${index}"
+                type="text"
+                placeholder="Remarks"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+            text-align:center;
+        ">
+
+            <button
+                type="button"
+                onclick="this.closest('tr').remove()"
+                style="
+                    border:none;
+                    background:#f3f4f6;
+                    color:#b42318;
+                    border-radius:6px;
+                    padding:7px 10px;
+                    cursor:pointer;
+                    font-size:12px;
+                "
+            >
+                Remove
+            </button>
+
+        </td>
+
+    `;
+
+
+    tbody.appendChild(row);
+
+};
                 <div class="modal-footer">
 
                     <button
