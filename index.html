@@ -9279,6 +9279,58 @@ function openWeeklyReportForm(
     </div>
 
 </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="
+                            closeWeeklyReportModal();
+                        "
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Save Weekly Report
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+
+    modal.addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target === modal
+            ){
+
+                closeWeeklyReportModal();
+
+            }
+
+        }
+    );
+
+}
 /* =====================================================
    ADD WEEKLY MANPOWER ROW
 ===================================================== */
@@ -9423,58 +9475,6 @@ function(){
     tbody.appendChild(row);
 
 };
-                <div class="modal-footer">
-
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        onclick="
-                            closeWeeklyReportModal();
-                        "
-                    >
-                        Cancel
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-                        Save Weekly Report
-                    </button>
-
-                </div>
-
-
-            </form>
-
-        </div>
-
-    `;
-
-
-    document.body.appendChild(
-        modal
-    );
-
-
-    modal.addEventListener(
-        "click",
-        function(event){
-
-            if(
-                event.target === modal
-            ){
-
-                closeWeeklyReportModal();
-
-            }
-
-        }
-    );
-
-}
-
 
 /* =====================================================
    UPDATE REPORTING DATES
