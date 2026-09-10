@@ -9220,89 +9220,149 @@ function(
     });
 
 
-    const report = {
+   const workProgress = [];
 
-        id:
-            editIndex === null
-            ?
-            "WR-" +
-            Date.now() +
-            "-" +
-            Math.random()
-                .toString(36)
-                .substring(2,8)
-            :
+[
+    1,
+    2,
+    3,
+    4,
+    5
+]
+.forEach(i => {
+
+    const activity =
+        document.getElementById(
+            "weeklyWorkActivity_" + i
+        )?.value.trim() || "";
+
+    const location =
+        document.getElementById(
+            "weeklyWorkLocation_" + i
+        )?.value.trim() || "";
+
+    const progress =
+        document.getElementById(
+            "weeklyWorkProgress_" + i
+        )?.value || "";
+
+    const remarks =
+        document.getElementById(
+            "weeklyWorkRemarks_" + i
+        )?.value.trim() || "";
+
+
+    if(
+        activity ||
+        location ||
+        progress !== "" ||
+        remarks
+    ){
+
+        workProgress.push({
+
+            activity,
+
+            location,
+
+            progress:
+                progress === ""
+                ? ""
+                : Number(progress),
+
+            remarks
+
+        });
+
+    }
+
+});
+
+
+const report = {
+
+    id:
+        editIndex === null
+        ?
+        "WR-" +
+        Date.now() +
+        "-" +
+        Math.random()
+            .toString(36)
+            .substring(2,8)
+        :
+        project
+            .weeklyReports[
+                editIndex
+            ]
+            .id,
+
+    weekNumber,
+
+    reportDate,
+
+    startDate,
+
+    endDate,
+
+    projectManager:
+        document.getElementById(
+            "weeklyReportProjectManager"
+        ).value.trim(),
+
+    projectStartDate:
+        document.getElementById(
+            "weeklyReportProjectStartDate"
+        ).value,
+
+    weather,
+
+    rainStoppageHours:
+        Number(
+            document.getElementById(
+                "weeklyReportRainHours"
+            ).value || 0
+        ),
+
+    overallWeather:
+        document.getElementById(
+            "weeklyReportOverallWeather"
+        ).value,
+
+    workProgress,
+
+    status:
+        editIndex === null
+        ?
+        "Draft"
+        :
+        (
             project
                 .weeklyReports[
                     editIndex
                 ]
-                .id,
-
-        weekNumber,
-
-        reportDate,
-
-        startDate,
-
-        endDate,
-
-        projectManager:
-            document.getElementById(
-                "weeklyReportProjectManager"
-            ).value.trim(),
-
-        projectStartDate:
-            document.getElementById(
-                "weeklyReportProjectStartDate"
-            ).value,
-
-        weather,
-
-        rainStoppageHours:
-            Number(
-                document.getElementById(
-                    "weeklyReportRainHours"
-                ).value || 0
-            ),
-
-        overallWeather:
-            document.getElementById(
-                "weeklyReportOverallWeather"
-            ).value,
-
-        status:
-            editIndex === null
-            ?
+                .status ||
             "Draft"
-            :
-            (
-                project
-                    .weeklyReports[
-                        editIndex
-                    ]
-                    .status ||
-                "Draft"
-            ),
+        ),
 
-        createdAt:
-            editIndex === null
-            ?
+    createdAt:
+        editIndex === null
+        ?
+        new Date().toISOString()
+        :
+        (
+            project
+                .weeklyReports[
+                    editIndex
+                ]
+                .createdAt ||
             new Date().toISOString()
-            :
-            (
-                project
-                    .weeklyReports[
-                        editIndex
-                    ]
-                    .createdAt ||
-                new Date().toISOString()
-            ),
+        ),
 
-        updatedAt:
-            new Date().toISOString()
+    updatedAt:
+        new Date().toISOString()
 
-    };
-
+};
 
     if(editIndex === null){
 
