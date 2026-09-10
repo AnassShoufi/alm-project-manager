@@ -9033,6 +9033,180 @@ function openWeeklyReportForm(
     </div>
 
 </div>
+
+<!-- MANPOWER ON SITE -->
+
+<div style="
+    margin-top:25px;
+">
+
+    <h3 style="
+        margin-bottom:6px;
+        color:#17243a;
+    ">
+        Manpower on Site
+    </h3>
+
+    <p style="
+        color:#708096;
+        font-size:13px;
+        margin-bottom:15px;
+    ">
+        Record the manpower deployed on site during the reporting period.
+    </p>
+
+
+    <div style="
+        border:1px solid #e1e5ea;
+        border-radius:8px;
+        overflow:hidden;
+    ">
+
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            table-layout:fixed;
+        ">
+
+            <thead>
+
+                <tr>
+
+                    <th style="
+                        width:40%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Trade / Personnel
+                    </th>
+
+                    <th style="
+                        width:18%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Planned
+                    </th>
+
+                    <th style="
+                        width:18%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Actual
+                    </th>
+
+                    <th style="
+                        width:24%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Remarks
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                ${[
+                    "Site Management",
+                    "Engineers",
+                    "Supervisors",
+                    "Skilled Workers",
+                    "Unskilled Workers",
+                    "Others"
+                ].map((trade, i) => `
+
+                    <tr>
+
+                        <td style="
+                            padding:10px;
+                            font-weight:500;
+                        ">
+                            ${trade}
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyManpowerPlanned_${i}"
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="0"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyManpowerActual_${i}"
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="0"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyManpowerRemarks_${i}"
+                                type="text"
+                                placeholder="Remarks"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+                    </tr>
+
+                `).join("")}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
                 <div class="modal-footer">
 
                     <button
