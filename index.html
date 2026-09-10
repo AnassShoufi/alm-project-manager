@@ -8898,99 +8898,133 @@ function openWeeklyReportForm(
                     3,
                     4,
                     5
-                ].map(i => `
+                ].map(i => {
 
-                    <tr>
-
-                        <td style="
-                            padding:10px;
-                        ">
-
-                            <input
-                                id="weeklyWorkActivity_${i}"
-                                type="text"
-                                placeholder="Activity / Work Item"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
-
-                        </td>
+                    const savedWork =
+                        Array.isArray(
+                            report.workProgress
+                        )
+                        ?
+                        report.workProgress[i - 1] || {}
+                        :
+                        {};
 
 
-                        <td style="
-                            padding:10px;
-                        ">
+                    return `
 
-                            <input
-                                id="weeklyWorkLocation_${i}"
-                                type="text"
-                                placeholder="Location"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                        <tr>
 
-                        </td>
+                            <td style="
+                                padding:10px;
+                            ">
 
+                                <input
+                                    id="weeklyWorkActivity_${i}"
+                                    type="text"
+                                    placeholder="Activity / Work Item"
+                                    value="${weeklyReportEscape(
+                                        savedWork.activity || ""
+                                    )}"
+                                    style="
+                                        width:100%;
+                                        box-sizing:border-box;
+                                        padding:9px 10px;
+                                        border:1px solid #d4dae2;
+                                        border-radius:6px;
+                                        font-size:13px;
+                                    "
+                                >
 
-                        <td style="
-                            padding:10px;
-                        ">
-
-                            <input
-                                id="weeklyWorkProgress_${i}"
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="1"
-                                placeholder="%"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
-
-                        </td>
+                            </td>
 
 
-                        <td style="
-                            padding:10px;
-                        ">
+                            <td style="
+                                padding:10px;
+                            ">
 
-                            <input
-                                id="weeklyWorkRemarks_${i}"
-                                type="text"
-                                placeholder="Remarks"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                                <input
+                                    id="weeklyWorkLocation_${i}"
+                                    type="text"
+                                    placeholder="Location"
+                                    value="${weeklyReportEscape(
+                                        savedWork.location || ""
+                                    )}"
+                                    style="
+                                        width:100%;
+                                        box-sizing:border-box;
+                                        padding:9px 10px;
+                                        border:1px solid #d4dae2;
+                                        border-radius:6px;
+                                        font-size:13px;
+                                    "
+                                >
 
-                        </td>
+                            </td>
 
-                    </tr>
 
-                `).join("")}
+                            <td style="
+                                padding:10px;
+                            ">
+
+                                <input
+                                    id="weeklyWorkProgress_${i}"
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    placeholder="%"
+                                    value="${
+                                        savedWork.progress !== undefined &&
+                                        savedWork.progress !== null &&
+                                        savedWork.progress !== ""
+                                        ?
+                                        weeklyReportEscape(
+                                            savedWork.progress
+                                        )
+                                        :
+                                        ""
+                                    }"
+                                    style="
+                                        width:100%;
+                                        box-sizing:border-box;
+                                        padding:9px 10px;
+                                        border:1px solid #d4dae2;
+                                        border-radius:6px;
+                                        font-size:13px;
+                                    "
+                                >
+
+                            </td>
+
+
+                            <td style="
+                                padding:10px;
+                            ">
+
+                                <input
+                                    id="weeklyWorkRemarks_${i}"
+                                    type="text"
+                                    placeholder="Remarks"
+                                    value="${weeklyReportEscape(
+                                        savedWork.remarks || ""
+                                    )}"
+                                    style="
+                                        width:100%;
+                                        box-sizing:border-box;
+                                        padding:9px 10px;
+                                        border:1px solid #d4dae2;
+                                        border-radius:6px;
+                                        font-size:13px;
+                                    "
+                                >
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }).join("")}
 
             </tbody>
 
