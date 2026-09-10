@@ -9702,7 +9702,187 @@ function(
 
 });
 
+/* =====================================================
+   COLLECT WEEKLY MANPOWER
+===================================================== */
 
+const manpower = [];
+
+const manpowerRows =
+    document.querySelectorAll(
+        "#weeklyManpowerRows tr"
+    );
+
+
+manpowerRows.forEach(row => {
+
+    const tradeInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerTrade_"]'
+        );
+
+    const plannedInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerPlanned_"]'
+        );
+
+    const actualInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerActual_"]'
+        );
+
+    const remarksInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerRemarks_"]'
+        );
+
+
+    const trade =
+        tradeInput
+        ?
+        tradeInput.value.trim()
+        :
+        "";
+
+
+    const planned =
+        plannedInput
+        ?
+        plannedInput.value
+        :
+        "";
+
+
+    const actual =
+        actualInput
+        ?
+        actualInput.value
+        :
+        "";
+
+
+    const remarks =
+        remarksInput
+        ?
+        remarksInput.value.trim()
+        :
+        "";
+
+
+    /*
+       Only save rows that contain
+       at least some information.
+    */
+
+    if(
+        trade ||
+        planned !== "" ||
+        actual !== "" ||
+        remarks
+    ){
+
+        manpower.push({
+
+            trade,
+
+            planned:
+                planned === ""
+                ? ""
+                : Number(planned),
+
+            actual:
+                actual === ""
+                ? ""
+                : Number(actual),
+
+            remarks
+
+        });
+
+    }
+
+});
+    /* =====================================================
+   COLLECT WEEKLY MANPOWER
+===================================================== */
+
+const manpower = [];
+
+const manpowerRows =
+    document.querySelectorAll(
+        "#weeklyManpowerRows tr"
+    );
+
+manpowerRows.forEach(row => {
+
+    const tradeInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerTrade_"]'
+        );
+
+    const plannedInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerPlanned_"]'
+        );
+
+    const actualInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerActual_"]'
+        );
+
+    const remarksInput =
+        row.querySelector(
+            'input[id^="weeklyManpowerRemarks_"]'
+        );
+
+    const trade =
+        tradeInput
+        ? tradeInput.value.trim()
+        : "";
+
+    const planned =
+        plannedInput
+        ? plannedInput.value
+        : "";
+
+    const actual =
+        actualInput
+        ? actualInput.value
+        : "";
+
+    const remarks =
+        remarksInput
+        ? remarksInput.value.trim()
+        : "";
+
+    if(
+        trade ||
+        planned !== "" ||
+        actual !== "" ||
+        remarks
+    ){
+
+        manpower.push({
+
+            trade,
+
+            planned:
+                planned === ""
+                ? ""
+                : Number(planned),
+
+            actual:
+                actual === ""
+                ? ""
+                : Number(actual),
+
+            remarks
+
+        });
+
+    }
+
+});
 const report = {
 
     id:
@@ -9748,14 +9928,14 @@ const report = {
             ).value || 0
         ),
 
-    overallWeather:
-        document.getElementById(
-            "weeklyReportOverallWeather"
-        ).value,
+   overallWeather:
+    document.getElementById(
+        "weeklyReportOverallWeather"
+    ).value,
 
-    workProgress,
+manpower,
 
-    status:
+status:
         editIndex === null
         ?
         "Draft"
