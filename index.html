@@ -10432,7 +10432,263 @@ function(){
 
 };
 
+/* =====================================================
+   ADD WEEKLY MATERIAL ROW
+===================================================== */
 
+window.addWeeklyMaterialRow =
+function(){
+
+    const tbody =
+        document.getElementById(
+            "weeklyMaterialRows"
+        );
+
+    if(!tbody){
+        return;
+    }
+
+    const index =
+        tbody.querySelectorAll("tr").length;
+
+    const row =
+        document.createElement("tr");
+
+    row.innerHTML = `
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyMaterialName_${index}"
+                type="text"
+                placeholder="Material"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <select
+                id="weeklyMaterialUnit_${index}"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                    background:#fff;
+                "
+            >
+
+                <option value="Bag">Bag</option>
+                <option value="Ton">Ton</option>
+                <option value="kg">kg</option>
+                <option value="m³">m³</option>
+                <option value="m²">m²</option>
+                <option value="m">m</option>
+                <option value="pcs">pcs</option>
+                <option value="No.">No.</option>
+                <option value="L">L</option>
+
+            </select>
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyMaterialPlanned_${index}"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="0"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyMaterialDelivered_${index}"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="0"
+                oninput="
+                    const row = this.closest('tr');
+
+                    const used =
+                        Number(
+                            row.querySelector(
+                                'input[id^=weeklyMaterialUsed_]'
+                            ).value || 0
+                        );
+
+                    row.querySelector(
+                        'input[id^=weeklyMaterialBalance_]'
+                    ).value =
+                        Math.max(
+                            0,
+                            Number(this.value || 0) - used
+                        );
+                "
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyMaterialUsed_${index}"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="0"
+                oninput="
+                    const row = this.closest('tr');
+
+                    const delivered =
+                        Number(
+                            row.querySelector(
+                                'input[id^=weeklyMaterialDelivered_]'
+                            ).value || 0
+                        );
+
+                    row.querySelector(
+                        'input[id^=weeklyMaterialBalance_]'
+                    ).value =
+                        Math.max(
+                            0,
+                            delivered - Number(this.value || 0)
+                        );
+                "
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyMaterialBalance_${index}"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="0"
+                readonly
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                    background:#f5f7fa;
+                    cursor:not-allowed;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyMaterialRemarks_${index}"
+                type="text"
+                placeholder="Remarks"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+            text-align:center;
+        ">
+
+            <button
+                type="button"
+                onclick="this.closest('tr').remove()"
+                style="
+                    border:none;
+                    background:#f3f4f6;
+                    color:#b42318;
+                    border-radius:6px;
+                    padding:7px 10px;
+                    cursor:pointer;
+                    font-size:12px;
+                "
+            >
+                Remove
+            </button>
+
+        </td>
+
+    `;
+
+    tbody.appendChild(row);
+
+};
 /* =====================================================
    SAVE WEEKLY REPORT
 ===================================================== */
