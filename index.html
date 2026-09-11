@@ -10632,7 +10632,6 @@ function(){
         );
 
 };
-
 /* =====================================================
    ADD WEEKLY MATERIAL ROW
 ===================================================== */
@@ -10657,6 +10656,8 @@ function(){
 
     row.innerHTML = `
 
+        <!-- MATERIAL -->
+
         <td style="
             padding:10px;
         ">
@@ -10677,6 +10678,8 @@ function(){
 
         </td>
 
+
+        <!-- UNIT -->
 
         <td style="
             padding:10px;
@@ -10710,6 +10713,36 @@ function(){
         </td>
 
 
+        <!-- AVAILABLE FROM PREVIOUS WEEK -->
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyMaterialAvailable_${index}"
+                type="number"
+                value="0"
+                readonly
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                    background:#f5f7fa;
+                    color:#17243a;
+                    font-weight:600;
+                    cursor:not-allowed;
+                "
+            >
+
+        </td>
+
+
+        <!-- REQUIRED / PLANNED -->
+
         <td style="
             padding:10px;
         ">
@@ -10733,6 +10766,8 @@ function(){
         </td>
 
 
+        <!-- DELIVERED THIS WEEK -->
+
         <td style="
             padding:10px;
         ">
@@ -10746,6 +10781,13 @@ function(){
                 oninput="
                     const row = this.closest('tr');
 
+                    const available =
+                        Number(
+                            row.querySelector(
+                                'input[id^=weeklyMaterialAvailable_]'
+                            ).value || 0
+                        );
+
                     const used =
                         Number(
                             row.querySelector(
@@ -10756,10 +10798,9 @@ function(){
                     row.querySelector(
                         'input[id^=weeklyMaterialBalance_]'
                     ).value =
-                        Math.max(
-                            0,
-                            Number(this.value || 0) - used
-                        );
+                        available +
+                        Number(this.value || 0) -
+                        used;
                 "
                 style="
                     width:100%;
@@ -10773,6 +10814,8 @@ function(){
 
         </td>
 
+
+        <!-- USED THIS WEEK -->
 
         <td style="
             padding:10px;
@@ -10787,6 +10830,13 @@ function(){
                 oninput="
                     const row = this.closest('tr');
 
+                    const available =
+                        Number(
+                            row.querySelector(
+                                'input[id^=weeklyMaterialAvailable_]'
+                            ).value || 0
+                        );
+
                     const delivered =
                         Number(
                             row.querySelector(
@@ -10797,10 +10847,9 @@ function(){
                     row.querySelector(
                         'input[id^=weeklyMaterialBalance_]'
                     ).value =
-                        Math.max(
-                            0,
-                            delivered - Number(this.value || 0)
-                        );
+                        available +
+                        delivered -
+                        Number(this.value || 0);
                 "
                 style="
                     width:100%;
@@ -10815,6 +10864,8 @@ function(){
         </td>
 
 
+        <!-- BALANCE -->
+
         <td style="
             padding:10px;
         ">
@@ -10822,9 +10873,7 @@ function(){
             <input
                 id="weeklyMaterialBalance_${index}"
                 type="number"
-                min="0"
-                step="any"
-                placeholder="0"
+                value="0"
                 readonly
                 style="
                     width:100%;
@@ -10834,12 +10883,16 @@ function(){
                     border-radius:6px;
                     font-size:13px;
                     background:#f5f7fa;
+                    color:#17243a;
+                    font-weight:600;
                     cursor:not-allowed;
                 "
             >
 
         </td>
 
+
+        <!-- REMARKS -->
 
         <td style="
             padding:10px;
@@ -10861,6 +10914,8 @@ function(){
 
         </td>
 
+
+        <!-- ACTION -->
 
         <td style="
             padding:10px;
