@@ -9828,7 +9828,7 @@ function openWeeklyReportForm(
 </thead>
 
 
-         <tbody id="weeklyMaterialRows">
+       <tbody id="weeklyMaterialRows">
 
     ${(
         Array.isArray(report.materials) &&
@@ -9840,6 +9840,7 @@ function openWeeklyReportForm(
             {
                 name:"Cement",
                 unit:"Bag",
+                availableFromPreviousWeek:0,
                 planned:"",
                 delivered:"",
                 used:"",
@@ -9849,6 +9850,7 @@ function openWeeklyReportForm(
             {
                 name:"Reinforcement Steel",
                 unit:"Ton",
+                availableFromPreviousWeek:0,
                 planned:"",
                 delivered:"",
                 used:"",
@@ -9858,6 +9860,7 @@ function openWeeklyReportForm(
             {
                 name:"Concrete",
                 unit:"m³",
+                availableFromPreviousWeek:0,
                 planned:"",
                 delivered:"",
                 used:"",
@@ -9867,6 +9870,7 @@ function openWeeklyReportForm(
             {
                 name:"Blocks",
                 unit:"pcs",
+                availableFromPreviousWeek:0,
                 planned:"",
                 delivered:"",
                 used:"",
@@ -9876,6 +9880,7 @@ function openWeeklyReportForm(
             {
                 name:"Sand",
                 unit:"m³",
+                availableFromPreviousWeek:0,
                 planned:"",
                 delivered:"",
                 used:"",
@@ -9885,6 +9890,7 @@ function openWeeklyReportForm(
             {
                 name:"Aggregate",
                 unit:"m³",
+                availableFromPreviousWeek:0,
                 planned:"",
                 delivered:"",
                 used:"",
@@ -9895,6 +9901,8 @@ function openWeeklyReportForm(
     ).map((material, i) => `
 
         <tr>
+
+            <!-- MATERIAL -->
 
             <td style="
                 padding:10px;
@@ -9919,6 +9927,8 @@ function openWeeklyReportForm(
 
             </td>
 
+
+            <!-- UNIT -->
 
             <td style="
                 padding:10px;
@@ -10005,6 +10015,38 @@ function openWeeklyReportForm(
             </td>
 
 
+            <!-- AVAILABLE FROM PREVIOUS WEEK -->
+
+            <td style="
+                padding:10px;
+            ">
+
+                <input
+                    id="weeklyMaterialAvailable_${i}"
+                    type="number"
+                    value="${Number(
+                        material.availableFromPreviousWeek || 0
+                    )}"
+                    readonly
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                        background:#f5f7fa;
+                        color:#17243a;
+                        font-weight:600;
+                        cursor:not-allowed;
+                    "
+                >
+
+            </td>
+
+
+            <!-- REQUIRED / PLANNED -->
+
             <td style="
                 padding:10px;
             ">
@@ -10029,6 +10071,8 @@ function openWeeklyReportForm(
             </td>
 
 
+            <!-- DELIVERED THIS WEEK -->
+
             <td style="
                 padding:10px;
             ">
@@ -10043,6 +10087,13 @@ function openWeeklyReportForm(
                     oninput="
                         const row = this.closest('tr');
 
+                        const available =
+                            Number(
+                                row.querySelector(
+                                    'input[id^=weeklyMaterialAvailable_]'
+                                ).value || 0
+                            );
+
                         const used =
                             Number(
                                 row.querySelector(
@@ -10053,10 +10104,9 @@ function openWeeklyReportForm(
                         row.querySelector(
                             'input[id^=weeklyMaterialBalance_]'
                         ).value =
-                            Math.max(
-                                0,
-                                Number(this.value || 0) - used
-                            );
+                            available +
+                            Number(this.value || 0) -
+                            used;
                     "
                     style="
                         width:100%;
@@ -10070,6 +10120,8 @@ function openWeeklyReportForm(
 
             </td>
 
+
+            <!-- USED THIS WEEK -->
 
             <td style="
                 padding:10px;
@@ -10085,6 +10137,13 @@ function openWeeklyReportForm(
                     oninput="
                         const row = this.closest('tr');
 
+                        const available =
+                            Number(
+                                row.querySelector(
+                                    'input[id^=weeklyMaterialAvailable_]'
+                                ).value || 0
+                            );
+
                         const delivered =
                             Number(
                                 row.querySelector(
@@ -10095,10 +10154,9 @@ function openWeeklyReportForm(
                         row.querySelector(
                             'input[id^=weeklyMaterialBalance_]'
                         ).value =
-                            Math.max(
-                                0,
-                                delivered - Number(this.value || 0)
-                            );
+                            available +
+                            delivered -
+                            Number(this.value || 0);
                     "
                     style="
                         width:100%;
@@ -10113,6 +10171,8 @@ function openWeeklyReportForm(
             </td>
 
 
+            <!-- BALANCE -->
+
             <td style="
                 padding:10px;
             ">
@@ -10120,10 +10180,7 @@ function openWeeklyReportForm(
                 <input
                     id="weeklyMaterialBalance_${i}"
                     type="number"
-                    min="0"
-                    step="any"
                     value="${material.balance ?? ""}"
-                    placeholder="0"
                     readonly
                     style="
                         width:100%;
@@ -10133,12 +10190,16 @@ function openWeeklyReportForm(
                         border-radius:6px;
                         font-size:13px;
                         background:#f5f7fa;
+                        color:#17243a;
+                        font-weight:600;
                         cursor:not-allowed;
                     "
                 >
 
             </td>
 
+
+            <!-- REMARKS -->
 
             <td style="
                 padding:10px;
@@ -10163,6 +10224,8 @@ function openWeeklyReportForm(
 
             </td>
 
+
+            <!-- ACTION -->
 
             <td style="
                 padding:10px;
