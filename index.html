@@ -10262,6 +10262,319 @@ function openWeeklyReportForm(
     </div>
 
 </div>
+<!-- SITE ACTIVITIES / KEY ISSUES & DELAYS -->
+
+<div style="
+    margin-top:25px;
+">
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:6px;
+    ">
+
+        <div>
+
+            <h3 style="
+                margin:0 0 6px 0;
+                color:#17243a;
+            ">
+                Site Activities / Key Issues & Delays
+            </h3>
+
+            <p style="
+                color:#708096;
+                font-size:13px;
+                margin:0;
+            ">
+                Record major site activities, issues, constraints and delays affecting the works.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="window.addWeeklySiteIssueRow()"
+            style="
+                white-space:nowrap;
+            "
+        >
+            + Add Activity / Issue
+        </button>
+
+    </div>
+
+
+    <div style="
+        border:1px solid #e1e5ea;
+        border-radius:8px;
+        overflow-x:auto;
+        overflow-y:hidden;
+        margin-top:15px;
+    ">
+
+        <table style="
+            width:100%;
+            min-width:1250px;
+            border-collapse:collapse;
+            table-layout:fixed;
+        ">
+
+            <thead>
+
+                <tr>
+
+                    <th style="
+                        width:18%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Activity / Issue
+                    </th>
+
+
+                    <th style="
+                        width:22%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Description
+                    </th>
+
+
+                    <th style="
+                        width:12%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Impact
+                    </th>
+
+
+                    <th style="
+                        width:14%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Responsible Party
+                    </th>
+
+
+                    <th style="
+                        width:17%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Required Action
+                    </th>
+
+
+                    <th style="
+                        width:9%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Target Date
+                    </th>
+
+
+                    <th style="
+                        width:8%;
+                        text-align:center;
+                        padding:12px;
+                    ">
+                        Status
+                    </th>
+
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="weeklySiteIssueRows">
+
+                <tr>
+
+                    <td style="
+                        padding:10px;
+                    ">
+
+                        <input
+                            id="weeklySiteIssueActivity_0"
+                            type="text"
+                            placeholder="Activity / Issue"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="
+                        padding:10px;
+                    ">
+
+                        <input
+                            id="weeklySiteIssueDescription_0"
+                            type="text"
+                            placeholder="Description"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="
+                        padding:10px;
+                    ">
+
+                        <select
+                            id="weeklySiteIssueImpact_0"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                                background:#fff;
+                            "
+                        >
+
+                            <option value="">Select</option>
+                            <option value="None">None</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+
+                        </select>
+
+                    </td>
+
+
+                    <td style="
+                        padding:10px;
+                    ">
+
+                        <input
+                            id="weeklySiteIssueResponsible_0"
+                            type="text"
+                            placeholder="Responsible Party"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="
+                        padding:10px;
+                    ">
+
+                        <input
+                            id="weeklySiteIssueAction_0"
+                            type="text"
+                            placeholder="Required Action"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="
+                        padding:10px;
+                    ">
+
+                        <input
+                            id="weeklySiteIssueTargetDate_0"
+                            type="date"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="
+                        padding:10px;
+                    ">
+
+                        <select
+                            id="weeklySiteIssueStatus_0"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                                background:#fff;
+                            "
+                        >
+
+                            <option value="Open">
+                                Open
+                            </option>
+
+                            <option value="In Progress">
+                                In Progress
+                            </option>
+
+                            <option value="Closed">
+                                Closed
+                            </option>
+
+                        </select>
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
                 <div class="modal-footer">
 
                     <button
