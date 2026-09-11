@@ -10086,7 +10086,87 @@ manpowerRows.forEach(row => {
     }
 
 });
-   
+/* =====================================================
+   COLLECT WEEKLY EQUIPMENT
+===================================================== */
+
+const equipment = [];
+
+const equipmentRows =
+    document.querySelectorAll(
+        "#weeklyEquipmentRows tr"
+    );
+
+equipmentRows.forEach(row => {
+
+    const nameInput =
+        row.querySelector(
+            'input[id^="weeklyEquipmentName_"]'
+        );
+
+    const plannedInput =
+        row.querySelector(
+            'input[id^="weeklyEquipmentPlanned_"]'
+        );
+
+    const actualInput =
+        row.querySelector(
+            'input[id^="weeklyEquipmentActual_"]'
+        );
+
+    const remarksInput =
+        row.querySelector(
+            'input[id^="weeklyEquipmentRemarks_"]'
+        );
+
+    const name =
+        nameInput
+        ? nameInput.value.trim()
+        : "";
+
+    const planned =
+        plannedInput
+        ? plannedInput.value
+        : "";
+
+    const actual =
+        actualInput
+        ? actualInput.value
+        : "";
+
+    const remarks =
+        remarksInput
+        ? remarksInput.value.trim()
+        : "";
+
+    if(
+        name ||
+        planned !== "" ||
+        actual !== "" ||
+        remarks
+    ){
+
+        equipment.push({
+
+            name,
+
+            planned:
+                planned === ""
+                ? ""
+                : Number(planned),
+
+            actual:
+                actual === ""
+                ? ""
+                : Number(actual),
+
+            remarks
+
+        });
+
+    }
+
+});   
 const report = {
 
     id:
@@ -10138,7 +10218,7 @@ const report = {
     ).value,
 
 manpower,
-
+equipment,
 status:
         editIndex === null
         ?
