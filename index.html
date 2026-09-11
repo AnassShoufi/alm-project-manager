@@ -9145,14 +9145,51 @@ function openWeeklyReportForm(
 
             <tbody id="weeklyManpowerRows">
 
-                ${[
-                    "Site Management",
-                    "Engineers",
-                    "Supervisors",
-                    "Skilled Workers",
-                    "Unskilled Workers",
-                    "Subcontractors"
-                ].map((trade, i) => `
+                ${(
+                    Array.isArray(report.manpower) &&
+                    report.manpower.length > 0
+                    ?
+                    report.manpower
+                    :
+                    [
+                        {
+                            trade:"Site Management",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            trade:"Engineers",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            trade:"Supervisors",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            trade:"Skilled Workers",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            trade:"Unskilled Workers",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            trade:"Subcontractors",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        }
+                    ]
+                ).map((person, i) => `
 
                     <tr>
 
@@ -9163,7 +9200,7 @@ function openWeeklyReportForm(
                             <input
                                 id="weeklyManpowerTrade_${i}"
                                 type="text"
-                                value="${trade}"
+                                value="${weeklyReportEscape(person.trade || "")}"
                                 placeholder="Trade / Personnel"
                                 style="
                                     width:100%;
@@ -9187,6 +9224,7 @@ function openWeeklyReportForm(
                                 type="number"
                                 min="0"
                                 step="1"
+                                value="${person.planned ?? ""}"
                                 placeholder="0"
                                 style="
                                     width:100%;
@@ -9210,6 +9248,7 @@ function openWeeklyReportForm(
                                 type="number"
                                 min="0"
                                 step="1"
+                                value="${person.actual ?? ""}"
                                 placeholder="0"
                                 style="
                                     width:100%;
@@ -9231,6 +9270,7 @@ function openWeeklyReportForm(
                             <input
                                 id="weeklyManpowerRemarks_${i}"
                                 type="text"
+                                value="${weeklyReportEscape(person.remarks || "")}"
                                 placeholder="Remarks"
                                 style="
                                     width:100%;
