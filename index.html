@@ -11059,6 +11059,132 @@ equipmentRows.forEach(row => {
     }
 
 });   
+  /* =====================================================
+   COLLECT WEEKLY MATERIALS
+===================================================== */
+
+const materials = [];
+
+const materialRows =
+    document.querySelectorAll(
+        "#weeklyMaterialRows tr"
+    );
+
+materialRows.forEach(row => {
+
+    const nameInput =
+        row.querySelector(
+            'input[id^="weeklyMaterialName_"]'
+        );
+
+    const unitInput =
+        row.querySelector(
+            'select[id^="weeklyMaterialUnit_"]'
+        );
+
+    const plannedInput =
+        row.querySelector(
+            'input[id^="weeklyMaterialPlanned_"]'
+        );
+
+    const deliveredInput =
+        row.querySelector(
+            'input[id^="weeklyMaterialDelivered_"]'
+        );
+
+    const usedInput =
+        row.querySelector(
+            'input[id^="weeklyMaterialUsed_"]'
+        );
+
+    const balanceInput =
+        row.querySelector(
+            'input[id^="weeklyMaterialBalance_"]'
+        );
+
+    const remarksInput =
+        row.querySelector(
+            'input[id^="weeklyMaterialRemarks_"]'
+        );
+
+
+    const name =
+        nameInput
+        ? nameInput.value.trim()
+        : "";
+
+    const unit =
+        unitInput
+        ? unitInput.value
+        : "";
+
+    const planned =
+        plannedInput
+        ? plannedInput.value
+        : "";
+
+    const delivered =
+        deliveredInput
+        ? deliveredInput.value
+        : "";
+
+    const used =
+        usedInput
+        ? usedInput.value
+        : "";
+
+    const balance =
+        balanceInput
+        ? balanceInput.value
+        : "";
+
+    const remarks =
+        remarksInput
+        ? remarksInput.value.trim()
+        : "";
+
+
+    if(
+        name ||
+        planned !== "" ||
+        delivered !== "" ||
+        used !== "" ||
+        remarks
+    ){
+
+        materials.push({
+
+            name,
+
+            unit,
+
+            planned:
+                planned === ""
+                ? ""
+                : Number(planned),
+
+            delivered:
+                delivered === ""
+                ? ""
+                : Number(delivered),
+
+            used:
+                used === ""
+                ? ""
+                : Number(used),
+
+            balance:
+                balance === ""
+                ? ""
+                : Number(balance),
+
+            remarks
+
+        });
+
+    }
+
+});  
 const report = {
 
     id:
@@ -11111,6 +11237,7 @@ const report = {
 
 manpower,
 equipment,
+  materials,  
 status:
         editIndex === null
         ?
