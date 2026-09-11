@@ -9604,6 +9604,318 @@ function openWeeklyReportForm(
     </div>
 
 </div>
+<!-- MATERIALS ON SITE / MATERIAL DELIVERIES -->
+
+<div style="
+    margin-top:25px;
+">
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:6px;
+    ">
+
+        <div>
+
+            <h3 style="
+                margin:0 0 6px 0;
+                color:#17243a;
+            ">
+                Materials on Site / Material Deliveries
+            </h3>
+
+            <p style="
+                color:#708096;
+                font-size:13px;
+                margin:0;
+            ">
+                Record material deliveries, usage and available balance during the reporting period.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="window.addWeeklyMaterialRow()"
+            style="
+                white-space:nowrap;
+            "
+        >
+            + Add Material
+        </button>
+
+    </div>
+
+
+    <div style="
+        border:1px solid #e1e5ea;
+        border-radius:8px;
+        overflow:hidden;
+        margin-top:15px;
+    ">
+
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            table-layout:fixed;
+        ">
+
+            <thead>
+
+                <tr>
+
+                    <th style="
+                        width:25%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Material
+                    </th>
+
+                    <th style="
+                        width:15%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Required / Planned
+                    </th>
+
+                    <th style="
+                        width:17%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Delivered This Week
+                    </th>
+
+                    <th style="
+                        width:15%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Used This Week
+                    </th>
+
+                    <th style="
+                        width:12%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Balance
+                    </th>
+
+                    <th style="
+                        width:10%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Remarks
+                    </th>
+
+                    <th style="
+                        width:6%;
+                        text-align:center;
+                        padding:12px;
+                    ">
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="weeklyMaterialRows">
+
+                ${[
+                    "Cement",
+                    "Reinforcement Steel",
+                    "Concrete",
+                    "Blocks",
+                    "Sand",
+                    "Aggregate"
+                ].map((material, i) => `
+
+                    <tr>
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyMaterialName_${i}"
+                                type="text"
+                                value="${weeklyReportEscape(material)}"
+                                placeholder="Material"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyMaterialPlanned_${i}"
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder="0"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyMaterialDelivered_${i}"
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder="0"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyMaterialUsed_${i}"
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder="0"
+                                oninput="this.closest('tr').querySelector('input[id^=weeklyMaterialBalance_]').value = Math.max(0, Number(this.closest('tr').querySelector('input[id^=weeklyMaterialDelivered_]').value || 0) - Number(this.value || 0))"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyMaterialBalance_${i}"
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder="0"
+                                readonly
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                    background:#f5f7fa;
+                                    cursor:not-allowed;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyMaterialRemarks_${i}"
+                                type="text"
+                                placeholder="Remarks"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                            text-align:center;
+                        ">
+
+                            <button
+                                type="button"
+                                onclick="this.closest('tr').remove()"
+                                style="
+                                    border:none;
+                                    background:#f3f4f6;
+                                    color:#b42318;
+                                    border-radius:6px;
+                                    padding:7px 10px;
+                                    cursor:pointer;
+                                    font-size:12px;
+                                "
+                            >
+                                Remove
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                `).join("")}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
                 <div class="modal-footer">
 
                     <button
