@@ -9319,7 +9319,251 @@ function openWeeklyReportForm(
     </div>
 
 </div>
+<!-- EQUIPMENT / PLANT & MACHINERY ON SITE -->
 
+<div style="
+    margin-top:25px;
+">
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:6px;
+    ">
+
+        <div>
+
+            <h3 style="
+                margin:0 0 6px 0;
+                color:#17243a;
+            ">
+                Equipment / Plant & Machinery on Site
+            </h3>
+
+            <p style="
+                color:#708096;
+                font-size:13px;
+                margin:0;
+            ">
+                Record the equipment and plant deployed on site during the reporting period.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="window.addWeeklyEquipmentRow()"
+            style="
+                white-space:nowrap;
+            "
+        >
+            + Add Equipment
+        </button>
+
+    </div>
+
+
+    <div style="
+        border:1px solid #e1e5ea;
+        border-radius:8px;
+        overflow:hidden;
+        margin-top:15px;
+    ">
+
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            table-layout:fixed;
+        ">
+
+            <thead>
+
+                <tr>
+
+                    <th style="
+                        width:32%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Equipment / Plant
+                    </th>
+
+                    <th style="
+                        width:17%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Planned
+                    </th>
+
+                    <th style="
+                        width:17%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Actual
+                    </th>
+
+                    <th style="
+                        width:25%;
+                        text-align:left;
+                        padding:12px;
+                    ">
+                        Remarks
+                    </th>
+
+                    <th style="
+                        width:9%;
+                        text-align:center;
+                        padding:12px;
+                    ">
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="weeklyEquipmentRows">
+
+                ${[
+                    "Crane",
+                    "Excavator",
+                    "Dump Truck",
+                    "Loader",
+                    "Generator",
+                    "Other"
+                ].map((equipment, i) => `
+
+                    <tr>
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyEquipmentName_${i}"
+                                type="text"
+                                value="${weeklyReportEscape(equipment)}"
+                                placeholder="Equipment / Plant"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyEquipmentPlanned_${i}"
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="0"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyEquipmentActual_${i}"
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="0"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                        ">
+
+                            <input
+                                id="weeklyEquipmentRemarks_${i}"
+                                type="text"
+                                placeholder="Remarks"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:9px 10px;
+                                    border:1px solid #d4dae2;
+                                    border-radius:6px;
+                                    font-size:13px;
+                                "
+                            >
+
+                        </td>
+
+
+                        <td style="
+                            padding:10px;
+                            text-align:center;
+                        ">
+
+                            <button
+                                type="button"
+                                onclick="this.closest('tr').remove()"
+                                style="
+                                    border:none;
+                                    background:#f3f4f6;
+                                    color:#b42318;
+                                    border-radius:6px;
+                                    padding:7px 10px;
+                                    cursor:pointer;
+                                    font-size:12px;
+                                "
+                            >
+                                Remove
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                `).join("")}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
                 <div class="modal-footer">
 
                     <button
