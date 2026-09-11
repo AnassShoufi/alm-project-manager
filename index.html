@@ -9430,14 +9430,51 @@ function openWeeklyReportForm(
 
             <tbody id="weeklyEquipmentRows">
 
-                ${[
-                    "Crane",
-                    "Excavator",
-                    "Dump Truck",
-                    "Loader",
-                    "Generator",
-                    "Other"
-                ].map((equipment, i) => `
+                ${(
+                    Array.isArray(report.equipment) &&
+                    report.equipment.length > 0
+                    ?
+                    report.equipment
+                    :
+                    [
+                        {
+                            name:"Crane",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            name:"Excavator",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            name:"Dump Truck",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            name:"Loader",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            name:"Generator",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        },
+                        {
+                            name:"Other",
+                            planned:"",
+                            actual:"",
+                            remarks:""
+                        }
+                    ]
+                ).map((item, i) => `
 
                     <tr>
 
@@ -9448,7 +9485,7 @@ function openWeeklyReportForm(
                             <input
                                 id="weeklyEquipmentName_${i}"
                                 type="text"
-                                value="${weeklyReportEscape(equipment)}"
+                                value="${weeklyReportEscape(item.name || "")}"
                                 placeholder="Equipment / Plant"
                                 style="
                                     width:100%;
@@ -9472,6 +9509,7 @@ function openWeeklyReportForm(
                                 type="number"
                                 min="0"
                                 step="1"
+                                value="${item.planned ?? ""}"
                                 placeholder="0"
                                 style="
                                     width:100%;
@@ -9495,6 +9533,7 @@ function openWeeklyReportForm(
                                 type="number"
                                 min="0"
                                 step="1"
+                                value="${item.actual ?? ""}"
                                 placeholder="0"
                                 style="
                                     width:100%;
@@ -9516,6 +9555,7 @@ function openWeeklyReportForm(
                             <input
                                 id="weeklyEquipmentRemarks_${i}"
                                 type="text"
+                                value="${weeklyReportEscape(item.remarks || "")}"
                                 placeholder="Remarks"
                                 style="
                                     width:100%;
