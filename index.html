@@ -9737,325 +9737,370 @@ function openWeeklyReportForm(
             </thead>
 
 
-            <tbody id="weeklyMaterialRows">
+         <tbody id="weeklyMaterialRows">
 
-                ${[
-                    {
-                        name:"Cement",
-                        unit:"Bag"
-                    },
-                    {
-                        name:"Reinforcement Steel",
-                        unit:"Ton"
-                    },
-                    {
-                        name:"Concrete",
-                        unit:"m³"
-                    },
-                    {
-                        name:"Blocks",
-                        unit:"pcs"
-                    },
-                    {
-                        name:"Sand",
-                        unit:"m³"
-                    },
-                    {
-                        name:"Aggregate",
-                        unit:"m³"
-                    }
-                ].map((material, i) => `
+    ${(
+        Array.isArray(report.materials) &&
+        report.materials.length > 0
+        ?
+        report.materials
+        :
+        [
+            {
+                name:"Cement",
+                unit:"Bag",
+                planned:"",
+                delivered:"",
+                used:"",
+                balance:"",
+                remarks:""
+            },
+            {
+                name:"Reinforcement Steel",
+                unit:"Ton",
+                planned:"",
+                delivered:"",
+                used:"",
+                balance:"",
+                remarks:""
+            },
+            {
+                name:"Concrete",
+                unit:"m³",
+                planned:"",
+                delivered:"",
+                used:"",
+                balance:"",
+                remarks:""
+            },
+            {
+                name:"Blocks",
+                unit:"pcs",
+                planned:"",
+                delivered:"",
+                used:"",
+                balance:"",
+                remarks:""
+            },
+            {
+                name:"Sand",
+                unit:"m³",
+                planned:"",
+                delivered:"",
+                used:"",
+                balance:"",
+                remarks:""
+            },
+            {
+                name:"Aggregate",
+                unit:"m³",
+                planned:"",
+                delivered:"",
+                used:"",
+                balance:"",
+                remarks:""
+            }
+        ]
+    ).map((material, i) => `
 
-                    <tr>
+        <tr>
 
-                        <td style="
-                            padding:10px;
-                        ">
+            <td style="
+                padding:10px;
+            ">
 
-                            <input
-                                id="weeklyMaterialName_${i}"
-                                type="text"
-                                value="${weeklyReportEscape(material.name)}"
-                                placeholder="Material"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                <input
+                    id="weeklyMaterialName_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        material.name || ""
+                    )}"
+                    placeholder="Material"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                        </td>
-
-
-                        <td style="
-                            padding:10px;
-                        ">
-
-                            <select
-                                id="weeklyMaterialUnit_${i}"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                    background:#fff;
-                                "
-                            >
-
-                                <option
-                                    value="Bag"
-                                    ${material.unit === "Bag" ? "selected" : ""}
-                                >
-                                    Bag
-                                </option>
-
-                                <option
-                                    value="Ton"
-                                    ${material.unit === "Ton" ? "selected" : ""}
-                                >
-                                    Ton
-                                </option>
-
-                                <option
-                                    value="kg"
-                                    ${material.unit === "kg" ? "selected" : ""}
-                                >
-                                    kg
-                                </option>
-
-                                <option
-                                    value="m³"
-                                    ${material.unit === "m³" ? "selected" : ""}
-                                >
-                                    m³
-                                </option>
-
-                                <option
-                                    value="m²"
-                                    ${material.unit === "m²" ? "selected" : ""}
-                                >
-                                    m²
-                                </option>
-
-                                <option
-                                    value="m"
-                                    ${material.unit === "m" ? "selected" : ""}
-                                >
-                                    m
-                                </option>
-
-                                <option
-                                    value="pcs"
-                                    ${material.unit === "pcs" ? "selected" : ""}
-                                >
-                                    pcs
-                                </option>
-
-                                <option
-                                    value="No."
-                                    ${material.unit === "No." ? "selected" : ""}
-                                >
-                                    No.
-                                </option>
-
-                                <option
-                                    value="L"
-                                    ${material.unit === "L" ? "selected" : ""}
-                                >
-                                    L
-                                </option>
-
-                            </select>
-
-                        </td>
+            </td>
 
 
-                        <td style="
-                            padding:10px;
-                        ">
+            <td style="
+                padding:10px;
+            ">
 
-                            <input
-                                id="weeklyMaterialPlanned_${i}"
-                                type="number"
-                                min="0"
-                                step="any"
-                                placeholder="0"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                <select
+                    id="weeklyMaterialUnit_${i}"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                        background:#fff;
+                    "
+                >
 
-                        </td>
+                    <option
+                        value="Bag"
+                        ${material.unit === "Bag" ? "selected" : ""}
+                    >
+                        Bag
+                    </option>
 
+                    <option
+                        value="Ton"
+                        ${material.unit === "Ton" ? "selected" : ""}
+                    >
+                        Ton
+                    </option>
 
-                        <td style="
-                            padding:10px;
-                        ">
+                    <option
+                        value="kg"
+                        ${material.unit === "kg" ? "selected" : ""}
+                    >
+                        kg
+                    </option>
 
-                            <input
-                                id="weeklyMaterialDelivered_${i}"
-                                type="number"
-                                min="0"
-                                step="any"
-                                placeholder="0"
-                                oninput="
-                                    const row = this.closest('tr');
+                    <option
+                        value="m³"
+                        ${material.unit === "m³" ? "selected" : ""}
+                    >
+                        m³
+                    </option>
 
-                                    const used =
-                                        Number(
-                                            row.querySelector(
-                                                'input[id^=weeklyMaterialUsed_]'
-                                            ).value || 0
-                                        );
+                    <option
+                        value="m²"
+                        ${material.unit === "m²" ? "selected" : ""}
+                    >
+                        m²
+                    </option>
 
-                                    row.querySelector(
-                                        'input[id^=weeklyMaterialBalance_]'
-                                    ).value =
-                                        Math.max(
-                                            0,
-                                            Number(this.value || 0) - used
-                                        );
-                                "
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                    <option
+                        value="m"
+                        ${material.unit === "m" ? "selected" : ""}
+                    >
+                        m
+                    </option>
 
-                        </td>
+                    <option
+                        value="pcs"
+                        ${material.unit === "pcs" ? "selected" : ""}
+                    >
+                        pcs
+                    </option>
 
+                    <option
+                        value="No."
+                        ${material.unit === "No." ? "selected" : ""}
+                    >
+                        No.
+                    </option>
 
-                        <td style="
-                            padding:10px;
-                        ">
+                    <option
+                        value="L"
+                        ${material.unit === "L" ? "selected" : ""}
+                    >
+                        L
+                    </option>
 
-                            <input
-                                id="weeklyMaterialUsed_${i}"
-                                type="number"
-                                min="0"
-                                step="any"
-                                placeholder="0"
-                                oninput="
-                                    const row = this.closest('tr');
+                </select>
 
-                                    const delivered =
-                                        Number(
-                                            row.querySelector(
-                                                'input[id^=weeklyMaterialDelivered_]'
-                                            ).value || 0
-                                        );
-
-                                    row.querySelector(
-                                        'input[id^=weeklyMaterialBalance_]'
-                                    ).value =
-                                        Math.max(
-                                            0,
-                                            delivered - Number(this.value || 0)
-                                        );
-                                "
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
-
-                        </td>
+            </td>
 
 
-                        <td style="
-                            padding:10px;
-                        ">
+            <td style="
+                padding:10px;
+            ">
 
-                            <input
-                                id="weeklyMaterialBalance_${i}"
-                                type="number"
-                                min="0"
-                                step="any"
-                                placeholder="0"
-                                readonly
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                    background:#f5f7fa;
-                                    cursor:not-allowed;
-                                "
-                            >
+                <input
+                    id="weeklyMaterialPlanned_${i}"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value="${material.planned ?? ""}"
+                    placeholder="0"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                        </td>
+            </td>
 
 
-                        <td style="
-                            padding:10px;
-                        ">
+            <td style="
+                padding:10px;
+            ">
 
-                            <input
-                                id="weeklyMaterialRemarks_${i}"
-                                type="text"
-                                placeholder="Remarks"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                <input
+                    id="weeklyMaterialDelivered_${i}"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value="${material.delivered ?? ""}"
+                    placeholder="0"
+                    oninput="
+                        const row = this.closest('tr');
 
-                        </td>
+                        const used =
+                            Number(
+                                row.querySelector(
+                                    'input[id^=weeklyMaterialUsed_]'
+                                ).value || 0
+                            );
+
+                        row.querySelector(
+                            'input[id^=weeklyMaterialBalance_]'
+                        ).value =
+                            Math.max(
+                                0,
+                                Number(this.value || 0) - used
+                            );
+                    "
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
+
+            </td>
 
 
-                        <td style="
-                            padding:10px;
-                            text-align:center;
-                        ">
+            <td style="
+                padding:10px;
+            ">
 
-                            <button
-                                type="button"
-                                onclick="this.closest('tr').remove()"
-                                style="
-                                    border:none;
-                                    background:#f3f4f6;
-                                    color:#b42318;
-                                    border-radius:6px;
-                                    padding:7px 10px;
-                                    cursor:pointer;
-                                    font-size:12px;
-                                "
-                            >
-                                Remove
-                            </button>
+                <input
+                    id="weeklyMaterialUsed_${i}"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value="${material.used ?? ""}"
+                    placeholder="0"
+                    oninput="
+                        const row = this.closest('tr');
 
-                        </td>
+                        const delivered =
+                            Number(
+                                row.querySelector(
+                                    'input[id^=weeklyMaterialDelivered_]'
+                                ).value || 0
+                            );
 
-                    </tr>
+                        row.querySelector(
+                            'input[id^=weeklyMaterialBalance_]'
+                        ).value =
+                            Math.max(
+                                0,
+                                delivered - Number(this.value || 0)
+                            );
+                    "
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                `).join("")}
+            </td>
 
-            </tbody>
 
+            <td style="
+                padding:10px;
+            ">
+
+                <input
+                    id="weeklyMaterialBalance_${i}"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value="${material.balance ?? ""}"
+                    placeholder="0"
+                    readonly
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                        background:#f5f7fa;
+                        cursor:not-allowed;
+                    "
+                >
+
+            </td>
+
+
+            <td style="
+                padding:10px;
+            ">
+
+                <input
+                    id="weeklyMaterialRemarks_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        material.remarks || ""
+                    )}"
+                    placeholder="Remarks"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
+
+            </td>
+
+
+            <td style="
+                padding:10px;
+                text-align:center;
+            ">
+
+                <button
+                    type="button"
+                    onclick="this.closest('tr').remove()"
+                    style="
+                        border:none;
+                        background:#f3f4f6;
+                        color:#b42318;
+                        border-radius:6px;
+                        padding:7px 10px;
+                        cursor:pointer;
+                        font-size:12px;
+                    "
+                >
+                    Remove
+                </button>
+
+            </td>
+
+        </tr>
+
+    `).join("")}
+
+</tbody>
         </table>
 
     </div>
