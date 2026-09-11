@@ -9799,7 +9799,146 @@ function(){
     tbody.appendChild(row);
 
 };
+/* =====================================================
+   ADD WEEKLY EQUIPMENT ROW
+===================================================== */
 
+window.addWeeklyEquipmentRow =
+function(){
+
+    const tbody =
+        document.getElementById(
+            "weeklyEquipmentRows"
+        );
+
+    if(!tbody){
+        return;
+    }
+
+    const index =
+        tbody.querySelectorAll("tr").length;
+
+    const row =
+        document.createElement("tr");
+
+    row.innerHTML = `
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyEquipmentName_${index}"
+                type="text"
+                placeholder="Equipment / Plant"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyEquipmentPlanned_${index}"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyEquipmentActual_${index}"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+        ">
+
+            <input
+                id="weeklyEquipmentRemarks_${index}"
+                type="text"
+                placeholder="Remarks"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+            text-align:center;
+        ">
+
+            <button
+                type="button"
+                onclick="this.closest('tr').remove()"
+                style="
+                    border:none;
+                    background:#f3f4f6;
+                    color:#b42318;
+                    border-radius:6px;
+                    padding:7px 10px;
+                    cursor:pointer;
+                    font-size:12px;
+                "
+            >
+                Remove
+            </button>
+
+        </td>
+
+    `;
+
+    tbody.appendChild(row);
+
+};
 /* =====================================================
    UPDATE REPORTING DATES
 ===================================================== */
