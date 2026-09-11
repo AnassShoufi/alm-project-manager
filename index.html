@@ -11264,6 +11264,210 @@ function(){
     tbody.appendChild(row);
 
 };
+    /* =====================================================
+   ADD WEEKLY SITE ACTIVITY / ISSUE ROW
+===================================================== */
+
+window.addWeeklySiteIssueRow =
+function(){
+
+    const tbody =
+        document.getElementById(
+            "weeklySiteIssueRows"
+        );
+
+    if(!tbody){
+        return;
+    }
+
+    const index =
+        tbody.querySelectorAll("tr").length;
+
+    const row =
+        document.createElement("tr");
+
+    row.innerHTML = `
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklySiteIssueActivity_${index}"
+                type="text"
+                placeholder="Activity / Issue"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklySiteIssueDescription_${index}"
+                type="text"
+                placeholder="Description"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <select
+                id="weeklySiteIssueImpact_${index}"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                    background:#fff;
+                "
+            >
+
+                <option value="">Select</option>
+                <option value="None">None</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+
+            </select>
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklySiteIssueResponsible_${index}"
+                type="text"
+                placeholder="Responsible Party"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklySiteIssueAction_${index}"
+                type="text"
+                placeholder="Required Action"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklySiteIssueTargetDate_${index}"
+                type="date"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <select
+                id="weeklySiteIssueStatus_${index}"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                    background:#fff;
+                "
+            >
+
+                <option value="Open">
+                    Open
+                </option>
+
+                <option value="In Progress">
+                    In Progress
+                </option>
+
+                <option value="Closed">
+                    Closed
+                </option>
+
+            </select>
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+            text-align:center;
+        ">
+
+            <button
+                type="button"
+                onclick="this.closest('tr').remove()"
+                style="
+                    border:none;
+                    background:#f3f4f6;
+                    color:#b42318;
+                    border-radius:6px;
+                    padding:7px 10px;
+                    cursor:pointer;
+                    font-size:12px;
+                "
+            >
+                Remove
+            </button>
+
+        </td>
+
+    `;
+
+    tbody.appendChild(row);
+
+};
 /* =====================================================
    SAVE WEEKLY REPORT
 ===================================================== */
