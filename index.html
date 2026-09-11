@@ -8305,7 +8305,6 @@ function renderWeeklyReportsSection(project){
 /* =====================================================
    CREATE WEEKLY REPORT
 ===================================================== */
-
 window.createWeeklyReport =
 function(projectId){
 
@@ -8351,27 +8350,104 @@ function(projectId){
         );
 
 
+    /*
+       GET PREVIOUS WEEK REPORT
+    */
+
+    const previousReport =
+        reports
+            .filter(
+                report =>
+                    Number(
+                        report.weekNumber || 0
+                    ) < weekNumber
+            )
+            .sort(
+                (a,b) =>
+                    Number(
+                        b.weekNumber || 0
+                    ) -
+                    Number(
+                        a.weekNumber || 0
+                    )
+            )[0];
+
+
+    /*
+       CARRY FORWARD MATERIAL BALANCES
+    */
+
+    const previousMaterials =
+        previousReport &&
+        Array.isArray(
+            previousReport.materials
+        )
+        ?
+        previousReport.materials.map(
+            material => ({
+
+                name:
+                    material.name || "",
+
+                unit:
+                    material.unit || "",
+
+                availableFromPreviousWeek:
+                    Number(
+                        material.balance || 0
+                    ),
+
+                planned:"",
+
+                delivered:"",
+
+                used:"",
+
+                balance:
+                    Number(
+                        material.balance || 0
+                    ),
+
+                remarks:""
+
+            })
+        )
+        :
+        [];
+
+
     openWeeklyReportForm(
         project,
         null,
         {
+
             weekNumber,
+
             reportDate:today,
+
             startDate:saturday,
+
             endDate:friday,
+
             projectManager:
                 project.manager || "",
+
             projectStartDate:
                 project.startDate || "",
+
             rainStoppageHours:0,
+
             overallWeather:"",
-            weather:{}
+
+            weather:{},
+
+            materials:
+                previousMaterials
+
         }
     );
 
 };
-
-
 /* =====================================================
    EDIT WEEKLY REPORT
 ===================================================== */
