@@ -7428,7 +7428,8 @@ function ensureReportsFolders(project){
 
 }
 
-/* =====================================================
+
+
    WEEKLY REPORTS MODULE - STEP 1
 ===================================================== */
 
@@ -8526,6 +8527,59 @@ function openWeeklyReportForm(
             report.startDate
         );
 
+
+    /* =====================================================
+       PREPARE WEEKLY HSE DATA
+       Supports both old text fields and new array fields.
+    ===================================================== */
+
+    const hseData = report.hse || {};
+
+    const savedHSEIncidents =
+        Array.isArray(hseData.incidents)
+        ? hseData.incidents
+        : [];
+
+    const savedHSEObservations =
+        Array.isArray(hseData.observations)
+        ? hseData.observations
+        : (hseData.observations
+            ? [{
+                observation: hseData.observations,
+                date: "",
+                location: "",
+                riskFinding: "",
+                recommendedAction: "",
+                status: "Open"
+            }]
+            : []);
+
+    const savedHSECorrectiveActions =
+        Array.isArray(hseData.correctiveActions)
+        ? hseData.correctiveActions
+        : (hseData.correctiveActions
+            ? [{
+                relatedTo: "",
+                correctiveAction: hseData.correctiveActions,
+                responsibleParty: "",
+                targetDate: "",
+                status: "Open"
+            }]
+            : []);
+
+    const hseReferenceOptions = [
+
+        ...savedHSEIncidents.map((item, index) => ({
+            value: `incident:${index}`,
+            label: `Incident ${index + 1}${item.incident ? " - " + item.incident : ""}`
+        })),
+
+        ...savedHSEObservations.map((item, index) => ({
+            value: `observation:${index}`,
+            label: `Observation ${index + 1}${item.observation ? " - " + item.observation : ""}`
+        }))
+
+    ];
 
     const modal =
         document.createElement(
@@ -10693,517 +10747,271 @@ function openWeeklyReportForm(
 </div>
 <!-- SAFETY / HSE -->
 
-<div style="
-    margin-top:25px;
-">
+<div style="margin-top:25px;">
 
-    <div style="
-        margin-bottom:6px;
-    ">
+    <div style="margin-bottom:6px;">
 
-        <h3 style="
-            margin:0 0 6px 0;
-            color:#17243a;
-        ">
+        <h3 style="margin:0 0 6px 0;color:#17243a;">
             Safety / HSE
         </h3>
 
-        <p style="
-            color:#708096;
-            font-size:13px;
-            margin:0;
-        ">
-            Record the overall safety status and any significant safety matters during the reporting period.
+        <p style="color:#708096;font-size:13px;margin:0;">
+            Record the overall safety status, incidents, safety observations and corrective actions during the reporting period.
         </p>
 
     </div>
 
+    <div style="border:1px solid #e1e5ea;border-radius:8px;padding:18px;margin-top:15px;">
 
-    <div style="
-        border:1px solid #e1e5ea;
-        border-radius:8px;
-        padding:18px;
-        margin-top:15px;
-    ">
+        <!-- OVERALL STATUS -->
+        <div style="margin-bottom:22px;">
 
-        <div style="margin-bottom:16px;">
-
-            <label style="
-                display:block;
-                margin-bottom:6px;
-                font-weight:600;
-                color:#17243a;
-                font-size:13px;
-            ">
+            <label style="display:block;margin-bottom:6px;font-weight:600;color:#17243a;font-size:13px;">
                 Overall Safety Status
             </label>
 
             <select
                 id="weeklyHSEStatus"
-                style="
-                    width:100%;
-                    max-width:350px;
-                    box-sizing:border-box;
-                    padding:10px 12px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                    background:#fff;
-                "
+                style="width:100%;max-width:350px;box-sizing:border-box;padding:10px 12px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;"
             >
-
-                <option
-                    value="Good"
-                    ${(
-                        (report.hse?.status || "Good")
-                        === "Good"
-                    )
-                    ? "selected"
-                    : ""}
-                >
-                    Good
-                </option>
-
-                <option
-                    value="Acceptable"
-                    ${(
-                        report.hse?.status
-                        === "Acceptable"
-                    )
-                    ? "selected"
-                    : ""}
-                >
-                    Acceptable
-                </option>
-
-                <option
-                    value="Needs Attention"
-                    ${(
-                        report.hse?.status
-                        === "Needs Attention"
-                    )
-                    ? "selected"
-                    : ""}
-                >
-                    Needs Attention
-                </option>
-
+                <option value="Good" ${(hseData.status || "Good") === "Good" ? "selected" : ""}>Good</option>
+                <option value="Acceptable" ${hseData.status === "Acceptable" ? "selected" : ""}>Acceptable</option>
+                <option value="Needs Attention" ${hseData.status === "Needs Attention" ? "selected" : ""}>Needs Attention</option>
             </select>
 
         </div>
 
+        <!-- INCIDENTS / ACCIDENTS -->
+        <div style="margin-bottom:25px;">
 
-      <!-- INCIDENTS / ACCIDENTS -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;">
 
-<div style="
-    margin-bottom:20px;
-">
-
-    <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:10px;
-        gap:10px;
-    ">
-
-        <label style="
-            display:block;
-            font-weight:600;
-            color:#17243a;
-            font-size:13px;
-            margin:0;
-        ">
-            Incidents / Accidents
-        </label>
-
-        <button
-            type="button"
-            class="btn btn-secondary"
-            onclick="window.addWeeklyHSEIncidentRow()"
-            style="
-                white-space:nowrap;
-            "
-        >
-            + Add Incident
-        </button>
-
-    </div>
-
-
-    <div style="
-        border:1px solid #e1e5ea;
-        border-radius:8px;
-        overflow-x:auto;
-        overflow-y:hidden;
-    ">
-
-        <table style="
-            width:100%;
-            min-width:1050px;
-            border-collapse:collapse;
-            table-layout:fixed;
-        ">
-
-            <thead>
-
-                <tr style="
-                    background:#f5f7fa;
-                ">
-
-                    <th style="
-                        width:18%;
-                        text-align:left;
-                        padding:12px;
-                        color:#17243a;
-                        font-size:12px;
-                        border-bottom:1px solid #e1e5ea;
-                    ">
-                        Incident / Accident
-                    </th>
-
-                    <th style="
-                        width:10%;
-                        text-align:left;
-                        padding:12px;
-                        color:#17243a;
-                        font-size:12px;
-                        border-bottom:1px solid #e1e5ea;
-                    ">
-                        Date
-                    </th>
-
-                    <th style="
-                        width:15%;
-                        text-align:left;
-                        padding:12px;
-                        color:#17243a;
-                        font-size:12px;
-                        border-bottom:1px solid #e1e5ea;
-                    ">
-                        Location
-                    </th>
-
-                    <th style="
-                        width:20%;
-                        text-align:left;
-                        padding:12px;
-                        color:#17243a;
-                        font-size:12px;
-                        border-bottom:1px solid #e1e5ea;
-                    ">
-                        Description
-                    </th>
-
-                    <th style="
-                        width:18%;
-                        text-align:left;
-                        padding:12px;
-                        color:#17243a;
-                        font-size:12px;
-                        border-bottom:1px solid #e1e5ea;
-                    ">
-                        Immediate Action
-                    </th>
-
-                    <th style="
-                        width:11%;
-                        text-align:left;
-                        padding:12px;
-                        color:#17243a;
-                        font-size:12px;
-                        border-bottom:1px solid #e1e5ea;
-                    ">
-                        Status
-                    </th>
-
-                    <th style="
-                        width:8%;
-                        text-align:center;
-                        padding:12px;
-                        color:#17243a;
-                        font-size:12px;
-                        border-bottom:1px solid #e1e5ea;
-                    ">
-                        Action
-                    </th>
-
-                </tr>
-
-            </thead>
-
-<tbody id="weeklyHSEIncidentRows">
-
-    ${(
-        Array.isArray(report.hse?.incidents) &&
-        report.hse.incidents.length > 0
-        ?
-        report.hse.incidents
-        :
-        [
-            {
-                incident:"",
-                date:"",
-                location:"",
-                description:"",
-                immediateAction:"",
-                status:"Open"
-            }
-        ]
-    ).map((incident, i) => `
-
-        <tr>
-
-            <td style="padding:10px;">
-
-                <input
-                    id="weeklyHSEIncidentName_${i}"
-                    type="text"
-                    value="${weeklyReportEscape(
-                        incident.incident || ""
-                    )}"
-                    placeholder="Incident / Accident"
-                    style="
-                        width:100%;
-                        box-sizing:border-box;
-                        padding:9px 10px;
-                        border:1px solid #d4dae2;
-                        border-radius:6px;
-                        font-size:13px;
-                    "
-                >
-
-            </td>
-
-
-            <td style="padding:10px;">
-
-                <input
-                    id="weeklyHSEIncidentDate_${i}"
-                    type="date"
-                    value="${incident.date || ""}"
-                    style="
-                        width:100%;
-                        box-sizing:border-box;
-                        padding:9px 10px;
-                        border:1px solid #d4dae2;
-                        border-radius:6px;
-                        font-size:13px;
-                    "
-                >
-
-            </td>
-
-
-            <td style="padding:10px;">
-
-                <input
-                    id="weeklyHSEIncidentLocation_${i}"
-                    type="text"
-                    value="${weeklyReportEscape(
-                        incident.location || ""
-                    )}"
-                    placeholder="Location"
-                    style="
-                        width:100%;
-                        box-sizing:border-box;
-                        padding:9px 10px;
-                        border:1px solid #d4dae2;
-                        border-radius:6px;
-                        font-size:13px;
-                    "
-                >
-
-            </td>
-
-
-            <td style="padding:10px;">
-
-                <input
-                    id="weeklyHSEIncidentDescription_${i}"
-                    type="text"
-                    value="${weeklyReportEscape(
-                        incident.description || ""
-                    )}"
-                    placeholder="Description"
-                    style="
-                        width:100%;
-                        box-sizing:border-box;
-                        padding:9px 10px;
-                        border:1px solid #d4dae2;
-                        border-radius:6px;
-                        font-size:13px;
-                    "
-                >
-
-            </td>
-
-
-            <td style="padding:10px;">
-
-                <input
-                    id="weeklyHSEIncidentAction_${i}"
-                    type="text"
-                    value="${weeklyReportEscape(
-                        incident.immediateAction || ""
-                    )}"
-                    placeholder="Immediate Action"
-                    style="
-                        width:100%;
-                        box-sizing:border-box;
-                        padding:9px 10px;
-                        border:1px solid #d4dae2;
-                        border-radius:6px;
-                        font-size:13px;
-                    "
-                >
-
-            </td>
-
-
-            <td style="padding:10px;">
-
-                <select
-                    id="weeklyHSEIncidentStatus_${i}"
-                    style="
-                        width:100%;
-                        box-sizing:border-box;
-                        padding:9px 10px;
-                        border:1px solid #d4dae2;
-                        border-radius:6px;
-                        font-size:13px;
-                        background:#fff;
-                    "
-                >
-
-                    <option
-                        value="Open"
-                        ${incident.status === "Open" ? "selected" : ""}
-                    >
-                        Open
-                    </option>
-
-                    <option
-                        value="In Progress"
-                        ${incident.status === "In Progress" ? "selected" : ""}
-                    >
-                        In Progress
-                    </option>
-
-                    <option
-                        value="Closed"
-                        ${incident.status === "Closed" ? "selected" : ""}
-                    >
-                        Closed
-                    </option>
-
-                </select>
-
-            </td>
-
-
-            <td style="
-                padding:10px;
-                text-align:center;
-            ">
+                <div>
+                    <label style="display:block;font-weight:600;color:#17243a;font-size:13px;margin:0;">
+                        Incidents / Accidents
+                    </label>
+                    <div style="font-size:12px;color:#708096;margin-top:3px;">
+                        Record each incident or accident separately.
+                    </div>
+                </div>
 
                 <button
                     type="button"
-                    onclick="this.closest('tr').remove()"
-                    style="
-                        border:none;
-                        background:#f3f4f6;
-                        color:#b42318;
-                        border-radius:6px;
-                        padding:7px 10px;
-                        cursor:pointer;
-                        font-size:12px;
-                    "
+                    class="btn btn-secondary"
+                    onclick="window.addWeeklyHSEIncidentRow()"
+                    style="white-space:nowrap;"
                 >
-                    Remove
+                    + Add Incident
                 </button>
 
-            </td>
+            </div>
 
-        </tr>
+            <div style="border:1px solid #e1e5ea;border-radius:8px;overflow-x:auto;overflow-y:hidden;">
 
-    `).join("")}
+                <table style="width:100%;min-width:1100px;border-collapse:collapse;table-layout:fixed;">
 
-</tbody>
+                    <thead>
+                        <tr style="background:#f5f7fa;">
+                            <th style="width:17%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Incident / Accident</th>
+                            <th style="width:10%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Date</th>
+                            <th style="width:14%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Location</th>
+                            <th style="width:19%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Description</th>
+                            <th style="width:17%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Immediate Action</th>
+                            <th style="width:11%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Status</th>
+                            <th style="width:8%;text-align:center;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Action</th>
+                        </tr>
+                    </thead>
 
-        </table>
+                    <tbody id="weeklyHSEIncidentRows">
 
-    </div>
+                        ${(
+                            savedHSEIncidents.length > 0
+                            ? savedHSEIncidents
+                            : [{
+                                incident:"",
+                                date:"",
+                                location:"",
+                                description:"",
+                                immediateAction:"",
+                                status:"Open"
+                            }]
+                        ).map((incident, i) => `
 
-</div>
+                            <tr data-hse-ref="incident:${i}">
 
-        <div style="margin-bottom:16px;">
+                                <td style="padding:10px;">
+                                    <input id="weeklyHSEIncidentName_${i}" type="text" value="${weeklyReportEscape(incident.incident || "")}" placeholder="Incident / Accident" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                                </td>
 
-            <label style="
-                display:block;
-                margin-bottom:6px;
-                font-weight:600;
-                color:#17243a;
-                font-size:13px;
-            ">
-                Safety Observations
-            </label>
+                                <td style="padding:10px;">
+                                    <input id="weeklyHSEIncidentDate_${i}" type="date" value="${incident.date || ""}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                                </td>
 
-            <textarea
-                id="weeklyHSEObservations"
-                rows="3"
-                placeholder="Brief safety observations..."
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:10px 12px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                    resize:vertical;
-                "
-            >${weeklyReportEscape(
-                report.hse?.observations || ""
-            )}</textarea>
+                                <td style="padding:10px;">
+                                    <input id="weeklyHSEIncidentLocation_${i}" type="text" value="${weeklyReportEscape(incident.location || "")}" placeholder="Location" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                                </td>
 
+                                <td style="padding:10px;">
+                                    <input id="weeklyHSEIncidentDescription_${i}" type="text" value="${weeklyReportEscape(incident.description || "")}" placeholder="Description" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                                </td>
+
+                                <td style="padding:10px;">
+                                    <input id="weeklyHSEIncidentAction_${i}" type="text" value="${weeklyReportEscape(incident.immediateAction || "")}" placeholder="Immediate Action" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                                </td>
+
+                                <td style="padding:10px;">
+                                    <select id="weeklyHSEIncidentStatus_${i}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;">
+                                        <option value="Open" ${incident.status === "Open" ? "selected" : ""}>Open</option>
+                                        <option value="In Progress" ${incident.status === "In Progress" ? "selected" : ""}>In Progress</option>
+                                        <option value="Closed" ${incident.status === "Closed" ? "selected" : ""}>Closed</option>
+                                    </select>
+                                </td>
+
+                                <td style="padding:10px;text-align:center;">
+                                    <button type="button" onclick="this.closest('tr').remove();window.refreshWeeklyHSEReferences();" style="border:none;background:#f3f4f6;color:#b42318;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:12px;">Remove</button>
+                                </td>
+
+                            </tr>
+
+                        `).join("")}
+
+                    </tbody>
+                </table>
+            </div>
         </div>
 
+        <!-- SAFETY OBSERVATIONS -->
+        <div style="margin-bottom:25px;">
 
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;">
+                <div>
+                    <label style="display:block;font-weight:600;color:#17243a;font-size:13px;margin:0;">
+                        Safety Observations
+                    </label>
+                    <div style="font-size:12px;color:#708096;margin-top:3px;">
+                        Record safety observations or unsafe conditions separately.
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="window.addWeeklyHSEObservationRow()" style="white-space:nowrap;">
+                    + Add Observation
+                </button>
+            </div>
+
+            <div style="border:1px solid #e1e5ea;border-radius:8px;overflow-x:auto;overflow-y:hidden;">
+                <table style="width:100%;min-width:1100px;border-collapse:collapse;table-layout:fixed;">
+                    <thead>
+                        <tr style="background:#f5f7fa;">
+                            <th style="width:20%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Safety Observation</th>
+                            <th style="width:10%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Date</th>
+                            <th style="width:14%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Location</th>
+                            <th style="width:20%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Risk / Finding</th>
+                            <th style="width:20%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Recommended Action</th>
+                            <th style="width:9%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Status</th>
+                            <th style="width:7%;text-align:center;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="weeklyHSEObservationRows">
+
+                        ${(
+                            savedHSEObservations.length > 0
+                            ? savedHSEObservations
+                            : [{
+                                observation:"",
+                                date:"",
+                                location:"",
+                                riskFinding:"",
+                                recommendedAction:"",
+                                status:"Open"
+                            }]
+                        ).map((observation, i) => `
+                            <tr data-hse-ref="observation:${i}">
+                                <td style="padding:10px;"><input id="weeklyHSEObservationName_${i}" type="text" value="${weeklyReportEscape(observation.observation || "")}" placeholder="Safety Observation" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><input id="weeklyHSEObservationDate_${i}" type="date" value="${observation.date || ""}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><input id="weeklyHSEObservationLocation_${i}" type="text" value="${weeklyReportEscape(observation.location || "")}" placeholder="Location" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><input id="weeklyHSEObservationRisk_${i}" type="text" value="${weeklyReportEscape(observation.riskFinding || "")}" placeholder="Risk / Finding" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><input id="weeklyHSEObservationAction_${i}" type="text" value="${weeklyReportEscape(observation.recommendedAction || "")}" placeholder="Recommended Action" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><select id="weeklyHSEObservationStatus_${i}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;"><option value="Open" ${observation.status === "Open" ? "selected" : ""}>Open</option><option value="In Progress" ${observation.status === "In Progress" ? "selected" : ""}>In Progress</option><option value="Closed" ${observation.status === "Closed" ? "selected" : ""}>Closed</option></select></td>
+                                <td style="padding:10px;text-align:center;"><button type="button" onclick="this.closest('tr').remove();window.refreshWeeklyHSEReferences();" style="border:none;background:#f3f4f6;color:#b42318;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:12px;">Remove</button></td>
+                            </tr>
+                        `).join("")}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CORRECTIVE ACTIONS -->
         <div>
 
-            <label style="
-                display:block;
-                margin-bottom:6px;
-                font-weight:600;
-                color:#17243a;
-                font-size:13px;
-            ">
-                Corrective Actions
-            </label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;">
+                <div>
+                    <label style="display:block;font-weight:600;color:#17243a;font-size:13px;margin:0;">
+                        Corrective Actions
+                    </label>
+                    <div style="font-size:12px;color:#708096;margin-top:3px;">
+                        Track actions arising from incidents or safety observations.
+                    </div>
+                </div>
 
-            <textarea
-                id="weeklyHSEActions"
-                rows="3"
-                placeholder="Brief corrective actions, if any..."
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:10px 12px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                    resize:vertical;
-                "
-            >${weeklyReportEscape(
-                report.hse?.correctiveActions || ""
-            )}</textarea>
+                <button type="button" class="btn btn-secondary" onclick="window.addWeeklyHSECorrectiveActionRow()" style="white-space:nowrap;">
+                    + Add Corrective Action
+                </button>
+            </div>
 
+            <div style="border:1px solid #e1e5ea;border-radius:8px;overflow-x:auto;overflow-y:hidden;">
+                <table style="width:100%;min-width:1050px;border-collapse:collapse;table-layout:fixed;">
+                    <thead>
+                        <tr style="background:#f5f7fa;">
+                            <th style="width:22%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Related To</th>
+                            <th style="width:27%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Corrective Action</th>
+                            <th style="width:18%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Responsible Party</th>
+                            <th style="width:12%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Target Date</th>
+                            <th style="width:12%;text-align:left;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Status</th>
+                            <th style="width:9%;text-align:center;padding:12px;color:#17243a;font-size:12px;border-bottom:1px solid #e1e5ea;">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="weeklyHSECorrectiveActionRows">
+
+                        ${(
+                            savedHSECorrectiveActions.length > 0
+                            ? savedHSECorrectiveActions
+                            : [{
+                                relatedTo:"",
+                                correctiveAction:"",
+                                responsibleParty:"",
+                                targetDate:"",
+                                status:"Open"
+                            }]
+                        ).map((action, i) => `
+                            <tr>
+                                <td style="padding:10px;">
+                                    <select id="weeklyHSECorrectiveRelated_${i}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;">
+                                        <option value="">Select Incident / Observation</option>
+                                        ${hseReferenceOptions.map(ref => `
+                                            <option value="${ref.value}" ${action.relatedTo === ref.value ? "selected" : ""}>${weeklyReportEscape(ref.label)}</option>
+                                        `).join("")}
+                                    </select>
+                                </td>
+                                <td style="padding:10px;"><input id="weeklyHSECorrectiveAction_${i}" type="text" value="${weeklyReportEscape(action.correctiveAction || "")}" placeholder="Corrective Action" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><input id="weeklyHSECorrectiveResponsible_${i}" type="text" value="${weeklyReportEscape(action.responsibleParty || "")}" placeholder="Responsible Party" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><input id="weeklyHSECorrectiveTargetDate_${i}" type="date" value="${action.targetDate || ""}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+                                <td style="padding:10px;"><select id="weeklyHSECorrectiveStatus_${i}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;"><option value="Open" ${action.status === "Open" ? "selected" : ""}>Open</option><option value="In Progress" ${action.status === "In Progress" ? "selected" : ""}>In Progress</option><option value="Closed" ${action.status === "Closed" ? "selected" : ""}>Closed</option></select></td>
+                                <td style="padding:10px;text-align:center;"><button type="button" onclick="this.closest('tr').remove();" style="border:none;background:#f3f4f6;color:#b42318;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:12px;">Remove</button></td>
+                            </tr>
+                        `).join("")}
+
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
-
 </div>
-                <div class="modal-footer">
+
+<div class="modal-footer">
 
                     <button
                         type="button"
@@ -12090,7 +11898,11 @@ function(){
     tbody.appendChild(row);
 
 };
-    window.addWeeklyHSEIncidentRow =
+    /* =====================================================
+   WEEKLY HSE DYNAMIC ROWS
+===================================================== */
+
+window.addWeeklyHSEIncidentRow =
 function(){
 
     const tbody =
@@ -12108,162 +11920,208 @@ function(){
     const row =
         document.createElement("tr");
 
+    row.setAttribute(
+        "data-hse-ref",
+        "incident:" + Date.now() + ":" + index
+    );
+
     row.innerHTML = `
 
-        <td style="padding:10px;">
+        <td style="padding:10px;"><input id="weeklyHSEIncidentName_${index}" type="text" placeholder="Incident / Accident" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
 
-            <input
-                id="weeklyHSEIncidentName_${index}"
-                type="text"
-                placeholder="Incident / Accident"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
-            >
+        <td style="padding:10px;"><input id="weeklyHSEIncidentDate_${index}" type="date" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
 
-        </td>
+        <td style="padding:10px;"><input id="weeklyHSEIncidentLocation_${index}" type="text" placeholder="Location" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
 
+        <td style="padding:10px;"><input id="weeklyHSEIncidentDescription_${index}" type="text" placeholder="Description" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
 
-        <td style="padding:10px;">
+        <td style="padding:10px;"><input id="weeklyHSEIncidentAction_${index}" type="text" placeholder="Immediate Action" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
 
-            <input
-                id="weeklyHSEIncidentDate_${index}"
-                type="date"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
-            >
+        <td style="padding:10px;"><select id="weeklyHSEIncidentStatus_${index}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;"><option value="Open">Open</option><option value="In Progress">In Progress</option><option value="Closed">Closed</option></select></td>
 
-        </td>
-
-
-        <td style="padding:10px;">
-
-            <input
-                id="weeklyHSEIncidentLocation_${index}"
-                type="text"
-                placeholder="Location"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
-            >
-
-        </td>
-
-
-        <td style="padding:10px;">
-
-            <input
-                id="weeklyHSEIncidentDescription_${index}"
-                type="text"
-                placeholder="Description"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
-            >
-
-        </td>
-
-
-        <td style="padding:10px;">
-
-            <input
-                id="weeklyHSEIncidentAction_${index}"
-                type="text"
-                placeholder="Immediate Action"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
-            >
-
-        </td>
-
-
-        <td style="padding:10px;">
-
-            <select
-                id="weeklyHSEIncidentStatus_${index}"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                    background:#fff;
-                "
-            >
-
-                <option value="Open">
-                    Open
-                </option>
-
-                <option value="In Progress">
-                    In Progress
-                </option>
-
-                <option value="Closed">
-                    Closed
-                </option>
-
-            </select>
-
-        </td>
-
-
-        <td style="
-            padding:10px;
-            text-align:center;
-        ">
-
-            <button
-                type="button"
-                onclick="this.closest('tr').remove()"
-                style="
-                    border:none;
-                    background:#f3f4f6;
-                    color:#b42318;
-                    border-radius:6px;
-                    padding:7px 10px;
-                    cursor:pointer;
-                    font-size:12px;
-                "
-            >
-                Remove
-            </button>
-
-        </td>
+        <td style="padding:10px;text-align:center;"><button type="button" onclick="this.closest('tr').remove();window.refreshWeeklyHSEReferences();" style="border:none;background:#f3f4f6;color:#b42318;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:12px;">Remove</button></td>
 
     `;
 
     tbody.appendChild(row);
 
+    window.refreshWeeklyHSEReferences();
+
 };
+
+
+window.addWeeklyHSEObservationRow =
+function(){
+
+    const tbody =
+        document.getElementById(
+            "weeklyHSEObservationRows"
+        );
+
+    if(!tbody){
+        return;
+    }
+
+    const index =
+        tbody.querySelectorAll("tr").length;
+
+    const row =
+        document.createElement("tr");
+
+    row.setAttribute(
+        "data-hse-ref",
+        "observation:" + Date.now() + ":" + index
+    );
+
+    row.innerHTML = `
+
+        <td style="padding:10px;"><input id="weeklyHSEObservationName_${index}" type="text" placeholder="Safety Observation" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><input id="weeklyHSEObservationDate_${index}" type="date" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><input id="weeklyHSEObservationLocation_${index}" type="text" placeholder="Location" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><input id="weeklyHSEObservationRisk_${index}" type="text" placeholder="Risk / Finding" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><input id="weeklyHSEObservationAction_${index}" type="text" placeholder="Recommended Action" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><select id="weeklyHSEObservationStatus_${index}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;"><option value="Open">Open</option><option value="In Progress">In Progress</option><option value="Closed">Closed</option></select></td>
+
+        <td style="padding:10px;text-align:center;"><button type="button" onclick="this.closest('tr').remove();window.refreshWeeklyHSEReferences();" style="border:none;background:#f3f4f6;color:#b42318;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:12px;">Remove</button></td>
+
+    `;
+
+    tbody.appendChild(row);
+
+    window.refreshWeeklyHSEReferences();
+
+};
+
+
+window.addWeeklyHSECorrectiveActionRow =
+function(){
+
+    const tbody =
+        document.getElementById(
+            "weeklyHSECorrectiveActionRows"
+        );
+
+    if(!tbody){
+        return;
+    }
+
+    const index =
+        tbody.querySelectorAll("tr").length;
+
+    const row =
+        document.createElement("tr");
+
+    row.innerHTML = `
+
+        <td style="padding:10px;">
+            <select id="weeklyHSECorrectiveRelated_${index}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;">
+                <option value="">Select Incident / Observation</option>
+            </select>
+        </td>
+
+        <td style="padding:10px;"><input id="weeklyHSECorrectiveAction_${index}" type="text" placeholder="Corrective Action" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><input id="weeklyHSECorrectiveResponsible_${index}" type="text" placeholder="Responsible Party" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><input id="weeklyHSECorrectiveTargetDate_${index}" type="date" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;"></td>
+
+        <td style="padding:10px;"><select id="weeklyHSECorrectiveStatus_${index}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;background:#fff;"><option value="Open">Open</option><option value="In Progress">In Progress</option><option value="Closed">Closed</option></select></td>
+
+        <td style="padding:10px;text-align:center;"><button type="button" onclick="this.closest('tr').remove();" style="border:none;background:#f3f4f6;color:#b42318;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:12px;">Remove</button></td>
+
+    `;
+
+    tbody.appendChild(row);
+
+    window.refreshWeeklyHSEReferences();
+
+};
+
+
+window.refreshWeeklyHSEReferences =
+function(){
+
+    const selects =
+        document.querySelectorAll(
+            '#weeklyHSECorrectiveActionRows select[id^="weeklyHSECorrectiveRelated_"]'
+        );
+
+    if(!selects.length){
+        return;
+    }
+
+    const references = [];
+
+    document
+        .querySelectorAll(
+            "#weeklyHSEIncidentRows tr"
+        )
+        .forEach((row, index) => {
+
+            const name =
+                row.querySelector(
+                    'input[id^="weeklyHSEIncidentName_"]'
+                )?.value.trim() || "";
+
+            references.push({
+                value: "incident:" + index,
+                label:
+                    "Incident " +
+                    (index + 1) +
+                    (name ? " - " + name : "")
+            });
+
+        });
+
+    document
+        .querySelectorAll(
+            "#weeklyHSEObservationRows tr"
+        )
+        .forEach((row, index) => {
+
+            const name =
+                row.querySelector(
+                    'input[id^="weeklyHSEObservationName_"]'
+                )?.value.trim() || "";
+
+            references.push({
+                value: "observation:" + index,
+                label:
+                    "Observation " +
+                    (index + 1) +
+                    (name ? " - " + name : "")
+            });
+
+        });
+
+    selects.forEach(select => {
+
+        const currentValue = select.value;
+
+        select.innerHTML =
+            '<option value="">Select Incident / Observation</option>' +
+            references.map(ref =>
+                `<option value="${ref.value}">${weeklyReportEscape(ref.label)}</option>`
+            ).join("");
+
+        if(
+            references.some(
+                ref => ref.value === currentValue
+            )
+        ){
+            select.value = currentValue;
+        }
+
+    });
+
+};
+
+
 /* =====================================================
    SAVE WEEKLY REPORT
 ===================================================== */
@@ -12881,7 +12739,6 @@ siteIssueRows.forEach(row => {
     }
 
 });
-    console.log("WEEKLY SITE ISSUES:", siteIssues);
     /* =====================================================
    COLLECT WEEKLY HSE
 ===================================================== */
@@ -12898,97 +12755,38 @@ const hseIncidentRows =
     document.querySelectorAll(
         "#weeklyHSEIncidentRows tr"
     );
-    console.log(
-    "HSE INCIDENT ROW COUNT:",
-    hseIncidentRows.length
-);
 
 hseIncidentRows.forEach(row => {
-    console.log(
-    "HSE INCIDENT ROW DATA:",
-    {
-        incident: row.querySelector(
-            'input[id^="weeklyHSEIncidentName_"]'
-        )?.value,
-        date: row.querySelector(
-            'input[id^="weeklyHSEIncidentDate_"]'
-        )?.value,
-        location: row.querySelector(
-            'input[id^="weeklyHSEIncidentLocation_"]'
-        )?.value,
-        description: row.querySelector(
-            'input[id^="weeklyHSEIncidentDescription_"]'
-        )?.value,
-        action: row.querySelector(
-            'input[id^="weeklyHSEIncidentAction_"]'
-        )?.value,
-        status: row.querySelector(
-            'select[id^="weeklyHSEIncidentStatus_"]'
-        )?.value
-    }
-);
-
-    const nameInput =
-        row.querySelector(
-            'input[id^="weeklyHSEIncidentName_"]'
-        );
-
-    const dateInput =
-        row.querySelector(
-            'input[id^="weeklyHSEIncidentDate_"]'
-        );
-
-    const locationInput =
-        row.querySelector(
-            'input[id^="weeklyHSEIncidentLocation_"]'
-        );
-
-    const descriptionInput =
-        row.querySelector(
-            'input[id^="weeklyHSEIncidentDescription_"]'
-        );
-
-    const actionInput =
-        row.querySelector(
-            'input[id^="weeklyHSEIncidentAction_"]'
-        );
-
-    const statusInput =
-        row.querySelector(
-            'select[id^="weeklyHSEIncidentStatus_"]'
-        );
-
 
     const incident =
-        nameInput
-        ? nameInput.value.trim()
-        : "";
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentName_"]'
+        )?.value.trim() || "";
 
     const date =
-        dateInput
-        ? dateInput.value
-        : "";
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentDate_"]'
+        )?.value || "";
 
     const location =
-        locationInput
-        ? locationInput.value.trim()
-        : "";
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentLocation_"]'
+        )?.value.trim() || "";
 
     const description =
-        descriptionInput
-        ? descriptionInput.value.trim()
-        : "";
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentDescription_"]'
+        )?.value.trim() || "";
 
     const immediateAction =
-        actionInput
-        ? actionInput.value.trim()
-        : "";
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentAction_"]'
+        )?.value.trim() || "";
 
     const status =
-        statusInput
-        ? statusInput.value
-        : "Open";
-
+        row.querySelector(
+            'select[id^="weeklyHSEIncidentStatus_"]'
+        )?.value || "Open";
 
     if(
         incident ||
@@ -12999,19 +12797,12 @@ hseIncidentRows.forEach(row => {
     ){
 
         hseIncidents.push({
-
             incident,
-
             date,
-
             location,
-
             description,
-
             immediateAction,
-
             status
-
         });
 
     }
@@ -13019,34 +12810,133 @@ hseIncidentRows.forEach(row => {
 });
 
 
-const hseObservations =
-    document.getElementById(
-        "weeklyHSEObservations"
-    )?.value.trim() || "";
+const hseObservations = [];
+
+const hseObservationRows =
+    document.querySelectorAll(
+        "#weeklyHSEObservationRows tr"
+    );
+
+hseObservationRows.forEach(row => {
+
+    const observation =
+        row.querySelector(
+            'input[id^="weeklyHSEObservationName_"]'
+        )?.value.trim() || "";
+
+    const date =
+        row.querySelector(
+            'input[id^="weeklyHSEObservationDate_"]'
+        )?.value || "";
+
+    const location =
+        row.querySelector(
+            'input[id^="weeklyHSEObservationLocation_"]'
+        )?.value.trim() || "";
+
+    const riskFinding =
+        row.querySelector(
+            'input[id^="weeklyHSEObservationRisk_"]'
+        )?.value.trim() || "";
+
+    const recommendedAction =
+        row.querySelector(
+            'input[id^="weeklyHSEObservationAction_"]'
+        )?.value.trim() || "";
+
+    const status =
+        row.querySelector(
+            'select[id^="weeklyHSEObservationStatus_"]'
+        )?.value || "Open";
+
+    if(
+        observation ||
+        date ||
+        location ||
+        riskFinding ||
+        recommendedAction
+    ){
+
+        hseObservations.push({
+            observation,
+            date,
+            location,
+            riskFinding,
+            recommendedAction,
+            status
+        });
+
+    }
+
+});
 
 
-const hseActions =
-    document.getElementById(
-        "weeklyHSEActions"
-    )?.value.trim() || "";
+const hseCorrectiveActions = [];
+
+const hseCorrectiveRows =
+    document.querySelectorAll(
+        "#weeklyHSECorrectiveActionRows tr"
+    );
+
+hseCorrectiveRows.forEach(row => {
+
+    const relatedTo =
+        row.querySelector(
+            'select[id^="weeklyHSECorrectiveRelated_"]'
+        )?.value || "";
+
+    const correctiveAction =
+        row.querySelector(
+            'input[id^="weeklyHSECorrectiveAction_"]'
+        )?.value.trim() || "";
+
+    const responsibleParty =
+        row.querySelector(
+            'input[id^="weeklyHSECorrectiveResponsible_"]'
+        )?.value.trim() || "";
+
+    const targetDate =
+        row.querySelector(
+            'input[id^="weeklyHSECorrectiveTargetDate_"]'
+        )?.value || "";
+
+    const status =
+        row.querySelector(
+            'select[id^="weeklyHSECorrectiveStatus_"]'
+        )?.value || "Open";
+
+    if(
+        relatedTo ||
+        correctiveAction ||
+        responsibleParty ||
+        targetDate
+    ){
+
+        hseCorrectiveActions.push({
+            relatedTo,
+            correctiveAction,
+            responsibleParty,
+            targetDate,
+            status
+        });
+
+    }
+
+});
 
 
 const hse = {
 
-    status:
-        hseStatus,
+    status: hseStatus,
 
-    incidents:
-        hseIncidents,
+    incidents: hseIncidents,
 
-    observations:
-        hseObservations,
+    observations: hseObservations,
 
-    correctiveActions:
-        hseActions
+    correctiveActions: hseCorrectiveActions
 
 };
-    console.log("WEEKLY HSE:", hse);
+
 const report = {
 
     id:
@@ -13254,7 +13144,7 @@ function(
 
 /* =====================================================
    END WEEKLY REPORTS MODULE - STEP 1
-===================================================== */
+
 /* =====================================================
    RENDER REPORTS
 ===================================================== */
