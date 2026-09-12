@@ -10726,12 +10726,7 @@ function openWeeklyReportForm(
         margin-top:15px;
     ">
 
-
-        <!-- OVERALL SAFETY STATUS -->
-
-        <div style="
-            margin-bottom:16px;
-        ">
+        <div style="margin-bottom:16px;">
 
             <label style="
                 display:block;
@@ -10757,15 +10752,39 @@ function openWeeklyReportForm(
                 "
             >
 
-                <option value="Good">
+                <option
+                    value="Good"
+                    ${(
+                        (report.hse?.status || "Good")
+                        === "Good"
+                    )
+                    ? "selected"
+                    : ""}
+                >
                     Good
                 </option>
 
-                <option value="Acceptable">
+                <option
+                    value="Acceptable"
+                    ${(
+                        report.hse?.status
+                        === "Acceptable"
+                    )
+                    ? "selected"
+                    : ""}
+                >
                     Acceptable
                 </option>
 
-                <option value="Needs Attention">
+                <option
+                    value="Needs Attention"
+                    ${(
+                        report.hse?.status
+                        === "Needs Attention"
+                    )
+                    ? "selected"
+                    : ""}
+                >
                     Needs Attention
                 </option>
 
@@ -10774,11 +10793,7 @@ function openWeeklyReportForm(
         </div>
 
 
-        <!-- INCIDENTS / ACCIDENTS -->
-
-        <div style="
-            margin-bottom:16px;
-        ">
+        <div style="margin-bottom:16px;">
 
             <label style="
                 display:block;
@@ -10793,6 +10808,9 @@ function openWeeklyReportForm(
             <input
                 id="weeklyHSEIncidents"
                 type="text"
+                value="${weeklyReportEscape(
+                    report.hse?.incidents || ""
+                )}"
                 placeholder="None or provide brief details"
                 style="
                     width:100%;
@@ -10807,11 +10825,7 @@ function openWeeklyReportForm(
         </div>
 
 
-        <!-- SAFETY OBSERVATIONS -->
-
-        <div style="
-            margin-bottom:16px;
-        ">
+        <div style="margin-bottom:16px;">
 
             <label style="
                 display:block;
@@ -10836,12 +10850,12 @@ function openWeeklyReportForm(
                     font-size:13px;
                     resize:vertical;
                 "
-            ></textarea>
+            >${weeklyReportEscape(
+                report.hse?.observations || ""
+            )}</textarea>
 
         </div>
 
-
-        <!-- CORRECTIVE ACTIONS -->
 
         <div>
 
@@ -10868,15 +10882,15 @@ function openWeeklyReportForm(
                     font-size:13px;
                     resize:vertical;
                 "
-            ></textarea>
+            >${weeklyReportEscape(
+                report.hse?.correctiveActions || ""
+            )}</textarea>
 
         </div>
-
 
     </div>
 
 </div>
-
                 <div class="modal-footer">
 
                     <button
