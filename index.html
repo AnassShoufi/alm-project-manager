@@ -10793,37 +10793,308 @@ function openWeeklyReportForm(
         </div>
 
 
-        <div style="margin-bottom:16px;">
+      <!-- INCIDENTS / ACCIDENTS -->
 
-            <label style="
-                display:block;
-                margin-bottom:6px;
-                font-weight:600;
-                color:#17243a;
-                font-size:13px;
-            ">
-                Incidents / Accidents
-            </label>
+<div style="
+    margin-bottom:20px;
+">
 
-            <input
-                id="weeklyHSEIncidents"
-                type="text"
-                value="${weeklyReportEscape(
-                    report.hse?.incidents || ""
-                )}"
-                placeholder="None or provide brief details"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:10px 12px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
-            >
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:10px;
+        gap:10px;
+    ">
 
-        </div>
+        <label style="
+            display:block;
+            font-weight:600;
+            color:#17243a;
+            font-size:13px;
+            margin:0;
+        ">
+            Incidents / Accidents
+        </label>
 
+        <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="window.addWeeklyHSEIncidentRow()"
+            style="
+                white-space:nowrap;
+            "
+        >
+            + Add Incident
+        </button>
+
+    </div>
+
+
+    <div style="
+        border:1px solid #e1e5ea;
+        border-radius:8px;
+        overflow-x:auto;
+        overflow-y:hidden;
+    ">
+
+        <table style="
+            width:100%;
+            min-width:1050px;
+            border-collapse:collapse;
+            table-layout:fixed;
+        ">
+
+            <thead>
+
+                <tr style="
+                    background:#f5f7fa;
+                ">
+
+                    <th style="
+                        width:18%;
+                        text-align:left;
+                        padding:12px;
+                        color:#17243a;
+                        font-size:12px;
+                        border-bottom:1px solid #e1e5ea;
+                    ">
+                        Incident / Accident
+                    </th>
+
+                    <th style="
+                        width:10%;
+                        text-align:left;
+                        padding:12px;
+                        color:#17243a;
+                        font-size:12px;
+                        border-bottom:1px solid #e1e5ea;
+                    ">
+                        Date
+                    </th>
+
+                    <th style="
+                        width:15%;
+                        text-align:left;
+                        padding:12px;
+                        color:#17243a;
+                        font-size:12px;
+                        border-bottom:1px solid #e1e5ea;
+                    ">
+                        Location
+                    </th>
+
+                    <th style="
+                        width:20%;
+                        text-align:left;
+                        padding:12px;
+                        color:#17243a;
+                        font-size:12px;
+                        border-bottom:1px solid #e1e5ea;
+                    ">
+                        Description
+                    </th>
+
+                    <th style="
+                        width:18%;
+                        text-align:left;
+                        padding:12px;
+                        color:#17243a;
+                        font-size:12px;
+                        border-bottom:1px solid #e1e5ea;
+                    ">
+                        Immediate Action
+                    </th>
+
+                    <th style="
+                        width:11%;
+                        text-align:left;
+                        padding:12px;
+                        color:#17243a;
+                        font-size:12px;
+                        border-bottom:1px solid #e1e5ea;
+                    ">
+                        Status
+                    </th>
+
+                    <th style="
+                        width:8%;
+                        text-align:center;
+                        padding:12px;
+                        color:#17243a;
+                        font-size:12px;
+                        border-bottom:1px solid #e1e5ea;
+                    ">
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="weeklyHSEIncidentRows">
+
+                <tr>
+
+                    <td style="padding:10px;">
+
+                        <input
+                            id="weeklyHSEIncidentName_0"
+                            type="text"
+                            placeholder="Incident / Accident"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="padding:10px;">
+
+                        <input
+                            id="weeklyHSEIncidentDate_0"
+                            type="date"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="padding:10px;">
+
+                        <input
+                            id="weeklyHSEIncidentLocation_0"
+                            type="text"
+                            placeholder="Location"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="padding:10px;">
+
+                        <input
+                            id="weeklyHSEIncidentDescription_0"
+                            type="text"
+                            placeholder="Description"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="padding:10px;">
+
+                        <input
+                            id="weeklyHSEIncidentAction_0"
+                            type="text"
+                            placeholder="Immediate Action"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                            "
+                        >
+
+                    </td>
+
+
+                    <td style="padding:10px;">
+
+                        <select
+                            id="weeklyHSEIncidentStatus_0"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:9px 10px;
+                                border:1px solid #d4dae2;
+                                border-radius:6px;
+                                font-size:13px;
+                                background:#fff;
+                            "
+                        >
+
+                            <option value="Open">
+                                Open
+                            </option>
+
+                            <option value="In Progress">
+                                In Progress
+                            </option>
+
+                            <option value="Closed">
+                                Closed
+                            </option>
+
+                        </select>
+
+                    </td>
+
+
+                    <td style="
+                        padding:10px;
+                        text-align:center;
+                    ">
+
+                        <button
+                            type="button"
+                            onclick="this.closest('tr').remove()"
+                            style="
+                                border:none;
+                                background:#f3f4f6;
+                                color:#b42318;
+                                border-radius:6px;
+                                padding:7px 10px;
+                                cursor:pointer;
+                                font-size:12px;
+                            "
+                        >
+                            Remove
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
         <div style="margin-bottom:16px;">
 
