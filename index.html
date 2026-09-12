@@ -12851,10 +12851,104 @@ const hseStatus =
     )?.value || "Good";
 
 
-const hseIncidents =
-    document.getElementById(
-        "weeklyHSEIncidents"
-    )?.value.trim() || "";
+const hseIncidents = [];
+
+const hseIncidentRows =
+    document.querySelectorAll(
+        "#weeklyHSEIncidentRows tr"
+    );
+
+hseIncidentRows.forEach(row => {
+
+    const nameInput =
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentName_"]'
+        );
+
+    const dateInput =
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentDate_"]'
+        );
+
+    const locationInput =
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentLocation_"]'
+        );
+
+    const descriptionInput =
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentDescription_"]'
+        );
+
+    const actionInput =
+        row.querySelector(
+            'input[id^="weeklyHSEIncidentAction_"]'
+        );
+
+    const statusInput =
+        row.querySelector(
+            'select[id^="weeklyHSEIncidentStatus_"]'
+        );
+
+
+    const incident =
+        nameInput
+        ? nameInput.value.trim()
+        : "";
+
+    const date =
+        dateInput
+        ? dateInput.value
+        : "";
+
+    const location =
+        locationInput
+        ? locationInput.value.trim()
+        : "";
+
+    const description =
+        descriptionInput
+        ? descriptionInput.value.trim()
+        : "";
+
+    const immediateAction =
+        actionInput
+        ? actionInput.value.trim()
+        : "";
+
+    const status =
+        statusInput
+        ? statusInput.value
+        : "Open";
+
+
+    if(
+        incident ||
+        date ||
+        location ||
+        description ||
+        immediateAction
+    ){
+
+        hseIncidents.push({
+
+            incident,
+
+            date,
+
+            location,
+
+            description,
+
+            immediateAction,
+
+            status
+
+        });
+
+    }
+
+});
 
 
 const hseObservations =
