@@ -11964,6 +11964,127 @@ materialRows.forEach(row => {
     }
 
 });  
+    /* =====================================================
+   COLLECT WEEKLY SITE ACTIVITIES / ISSUES
+===================================================== */
+
+const siteIssues = [];
+
+const siteIssueRows =
+    document.querySelectorAll(
+        "#weeklySiteIssueRows tr"
+    );
+
+siteIssueRows.forEach(row => {
+
+    const activityInput =
+        row.querySelector(
+            'input[id^="weeklySiteIssueActivity_"]'
+        );
+
+    const descriptionInput =
+        row.querySelector(
+            'input[id^="weeklySiteIssueDescription_"]'
+        );
+
+    const impactInput =
+        row.querySelector(
+            'select[id^="weeklySiteIssueImpact_"]'
+        );
+
+    const responsibleInput =
+        row.querySelector(
+            'input[id^="weeklySiteIssueResponsible_"]'
+        );
+
+    const actionInput =
+        row.querySelector(
+            'input[id^="weeklySiteIssueAction_"]'
+        );
+
+    const targetDateInput =
+        row.querySelector(
+            'input[id^="weeklySiteIssueTargetDate_"]'
+        );
+
+    const statusInput =
+        row.querySelector(
+            'select[id^="weeklySiteIssueStatus_"]'
+        );
+
+
+    const activity =
+        activityInput
+        ? activityInput.value.trim()
+        : "";
+
+
+    const description =
+        descriptionInput
+        ? descriptionInput.value.trim()
+        : "";
+
+
+    const impact =
+        impactInput
+        ? impactInput.value
+        : "";
+
+
+    const responsibleParty =
+        responsibleInput
+        ? responsibleInput.value.trim()
+        : "";
+
+
+    const requiredAction =
+        actionInput
+        ? actionInput.value.trim()
+        : "";
+
+
+    const targetDate =
+        targetDateInput
+        ? targetDateInput.value
+        : "";
+
+
+    const status =
+        statusInput
+        ? statusInput.value
+        : "Open";
+
+
+    if(
+        activity ||
+        description ||
+        impact ||
+        responsibleParty ||
+        requiredAction ||
+        targetDate
+    ){
+
+        siteIssues.push({
+
+            activity,
+
+            description,
+
+            impact,
+
+            responsibleParty,
+
+            requiredAction,
+
+            targetDate,
+
+            status
+
+        });
+
+    }
+
+});
 const report = {
 
     id:
@@ -12016,7 +12137,8 @@ const report = {
 
 manpower,
 equipment,
-  materials,  
+  materials, 
+    siteIssues,
 status:
         editIndex === null
         ?
