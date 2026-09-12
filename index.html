@@ -8507,6 +8507,17 @@ function openWeeklyReportForm(
     report
 ){
 
+    window.weeklyProgressPhotosDraft =
+        Array.isArray(report.progressPhotos)
+        ? report.progressPhotos.map(photo => ({
+            image: photo.image || photo.src || "",
+            activity: photo.activity || "",
+            location: photo.location || "",
+            date: photo.date || "",
+            remarks: photo.remarks || ""
+        }))
+        : [];
+
     const existing =
         document.getElementById(
             "weeklyReportModal"
@@ -9161,6 +9172,33 @@ function openWeeklyReportForm(
 
         </table>
 
+    </div>
+
+</div>
+
+<!-- PROGRESS PHOTOGRAPHS -->
+
+<div style="margin-top:25px;">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:6px;">
+
+        <div>
+            <h3 style="margin:0 0 6px 0;color:#17243a;">Progress Photographs</h3>
+            <p style="color:#708096;font-size:13px;margin:0;">Add site photographs showing the progress achieved during the reporting period.</p>
+        </div>
+
+        <label for="weeklyProgressPhotoInput" class="btn btn-secondary" style="white-space:nowrap;cursor:pointer;">
+            + Add Progress Photos
+        </label>
+
+        <input id="weeklyProgressPhotoInput" type="file" accept="image/*" multiple style="display:none;" onchange="window.handleWeeklyProgressPhotoFiles(this)">
+
+    </div>
+
+    <div id="weeklyProgressPhotoRows" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:15px;"></div>
+
+    <div id="weeklyProgressPhotoEmpty" style="border:1px dashed #cfd6df;border-radius:8px;padding:25px;text-align:center;color:#7b8797;font-size:13px;margin-top:15px;">
+        No progress photographs added yet.
     </div>
 
 </div>
@@ -11047,6 +11085,9 @@ function openWeeklyReportForm(
     );
 
 
+    renderWeeklyProgressPhotoCards();
+
+
     modal.addEventListener(
         "click",
         function(event){
@@ -11347,6 +11388,138 @@ function(){
     tbody.appendChild(row);
 
 };
+/* =====================================================
+   WEEKLY PROGRESS PHOTO HELPERS
+===================================================== */
+
+window.handleWeeklyProgressPhotoFiles =
+async function(input){
+
+    if(!input || !input.files){ return; }
+
+    if(!Array.isArray(window.weeklyProgressPhotosDraft)){
+        window.weeklyProgressPhotosDraft = [];
+    }
+
+    const files = Array.from(input.files);
+
+    for(const file of files){
+
+        if(!file.type.startsWith("image/")){ continue; }
+
+        try{
+            const image = await compressWeeklyProgressPhoto(file);
+            window.weeklyProgressPhotosDraft.push({
+                image, activity:"", location:"", date:"", remarks:""
+            });
+        }catch(error){
+            console.error("Unable to process progress photograph:", error);
+        }
+
+    }
+
+    input.value = "";
+    renderWeeklyProgressPhotoCards();
+
+};
+
+function compressWeeklyProgressPhoto(file){
+
+    return new Promise((resolve,reject) => {
+
+        const reader = new FileReader();
+
+        reader.onload = function(event){
+
+            const img = new Image();
+
+            img.onload = function(){
+
+                const maxWidth = 1400;
+                const maxHeight = 1000;
+                let width = img.width;
+                let height = img.height;
+                const scale = Math.min(1, maxWidth / width, maxHeight / height);
+                width = Math.round(width * scale);
+                height = Math.round(height * scale);
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+
+                const context = canvas.getContext("2d");
+                context.drawImage(img, 0, 0, width, height);
+
+                resolve(canvas.toDataURL("image/jpeg", 0.78));
+            };
+
+            img.onerror = reject;
+            img.src = event.target.result;
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+
+}
+
+window.removeWeeklyProgressPhoto =
+function(index){
+
+    if(!Array.isArray(window.weeklyProgressPhotosDraft)){ return; }
+
+    window.weeklyProgressPhotosDraft.splice(index, 1);
+    renderWeeklyProgressPhotoCards();
+
+};
+
+window.renderWeeklyProgressPhotoCards =
+function(){
+
+    const container = document.getElementById("weeklyProgressPhotoRows");
+    const empty = document.getElementById("weeklyProgressPhotoEmpty");
+
+    if(!container){ return; }
+
+    const photos = Array.isArray(window.weeklyProgressPhotosDraft)
+        ? window.weeklyProgressPhotosDraft
+        : [];
+
+    container.innerHTML = photos.map((photo,index) => `
+
+        <div data-photo-index="${index}" style="border:1px solid #dfe4ea;border-radius:10px;overflow:hidden;background:#ffffff;box-shadow:0 2px 7px rgba(20,30,45,.06);">
+
+            <div style="height:220px;background:#f4f6f8;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <img src="${photo.image}" alt="Progress Photograph ${index + 1}" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+
+            <div style="padding:14px;">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <strong style="color:#17243a;font-size:13px;">Photo ${index + 1}</strong>
+                    <button type="button" onclick="window.removeWeeklyProgressPhoto(${index})" style="border:none;background:#f3f4f6;color:#b42318;border-radius:6px;padding:6px 9px;cursor:pointer;font-size:12px;">Remove</button>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <input data-field="activity" type="text" value="${weeklyReportEscape(photo.activity || "")}" placeholder="Activity / Description" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                    <input data-field="location" type="text" value="${weeklyReportEscape(photo.location || "")}" placeholder="Location" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                    <input data-field="date" type="date" value="${photo.date || ""}" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                    <input data-field="remarks" type="text" value="${weeklyReportEscape(photo.remarks || "")}" placeholder="Remarks" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #d4dae2;border-radius:6px;font-size:13px;">
+                </div>
+
+            </div>
+
+        </div>
+
+    `).join("");
+
+    if(empty){
+        empty.style.display = photos.length ? "none" : "block";
+    }
+
+};
+
+
 /* =====================================================
    UPDATE REPORTING DATES
 ===================================================== */
@@ -12741,6 +12914,38 @@ siteIssueRows.forEach(row => {
 
 });
     /* =====================================================
+   COLLECT WEEKLY PROGRESS PHOTOGRAPHS
+===================================================== */
+
+const progressPhotos = [];
+
+const progressPhotoCards =
+    document.querySelectorAll(
+        "#weeklyProgressPhotoRows > div[data-photo-index]"
+    );
+
+progressPhotoCards.forEach(card => {
+
+    const index = Number(card.getAttribute("data-photo-index"));
+
+    const photo =
+        window.weeklyProgressPhotosDraft &&
+        window.weeklyProgressPhotosDraft[index]
+        ? window.weeklyProgressPhotosDraft[index]
+        : {};
+
+    const activity = card.querySelector('[data-field="activity"]')?.value.trim() || "";
+    const location = card.querySelector('[data-field="location"]')?.value.trim() || "";
+    const date = card.querySelector('[data-field="date"]')?.value || "";
+    const remarks = card.querySelector('[data-field="remarks"]')?.value.trim() || "";
+
+    if(photo.image){
+        progressPhotos.push({ image: photo.image, activity, location, date, remarks });
+    }
+
+});
+
+/* =====================================================
    COLLECT WEEKLY HSE
 ===================================================== */
 
@@ -12988,6 +13193,7 @@ const report = {
         "weeklyReportOverallWeather"
     ).value,
 
+progressPhotos,
 manpower,
 equipment,
   materials, 
@@ -13145,6 +13351,7 @@ function(
 
 /* =====================================================
    END WEEKLY REPORTS MODULE - STEP 1
+===================================================== */
 
 /* =====================================================
    RENDER REPORTS
