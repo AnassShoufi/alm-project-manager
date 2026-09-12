@@ -10932,163 +10932,204 @@ function openWeeklyReportForm(
 
             </thead>
 
+<tbody id="weeklyHSEIncidentRows">
 
-            <tbody id="weeklyHSEIncidentRows">
+    ${(
+        Array.isArray(report.hse?.incidents) &&
+        report.hse.incidents.length > 0
+        ?
+        report.hse.incidents
+        :
+        [
+            {
+                incident:"",
+                date:"",
+                location:"",
+                description:"",
+                immediateAction:"",
+                status:"Open"
+            }
+        ]
+    ).map((incident, i) => `
 
-                <tr>
+        <tr>
 
-                    <td style="padding:10px;">
+            <td style="padding:10px;">
 
-                        <input
-                            id="weeklyHSEIncidentName_0"
-                            type="text"
-                            placeholder="Incident / Accident"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
+                <input
+                    id="weeklyHSEIncidentName_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        incident.incident || ""
+                    )}"
+                    placeholder="Incident / Accident"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                    </td>
-
-
-                    <td style="padding:10px;">
-
-                        <input
-                            id="weeklyHSEIncidentDate_0"
-                            type="date"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
-
-                    </td>
-
-
-                    <td style="padding:10px;">
-
-                        <input
-                            id="weeklyHSEIncidentLocation_0"
-                            type="text"
-                            placeholder="Location"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
-
-                    </td>
+            </td>
 
 
-                    <td style="padding:10px;">
+            <td style="padding:10px;">
 
-                        <input
-                            id="weeklyHSEIncidentDescription_0"
-                            type="text"
-                            placeholder="Description"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
+                <input
+                    id="weeklyHSEIncidentDate_${i}"
+                    type="date"
+                    value="${incident.date || ""}"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                    </td>
-
-
-                    <td style="padding:10px;">
-
-                        <input
-                            id="weeklyHSEIncidentAction_0"
-                            type="text"
-                            placeholder="Immediate Action"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
-
-                    </td>
+            </td>
 
 
-                    <td style="padding:10px;">
+            <td style="padding:10px;">
 
-                        <select
-                            id="weeklyHSEIncidentStatus_0"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                                background:#fff;
-                            "
-                        >
+                <input
+                    id="weeklyHSEIncidentLocation_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        incident.location || ""
+                    )}"
+                    placeholder="Location"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                            <option value="Open">
-                                Open
-                            </option>
-
-                            <option value="In Progress">
-                                In Progress
-                            </option>
-
-                            <option value="Closed">
-                                Closed
-                            </option>
-
-                        </select>
-
-                    </td>
+            </td>
 
 
-                    <td style="
-                        padding:10px;
-                        text-align:center;
-                    ">
+            <td style="padding:10px;">
 
-                        <button
-                            type="button"
-                            onclick="this.closest('tr').remove()"
-                            style="
-                                border:none;
-                                background:#f3f4f6;
-                                color:#b42318;
-                                border-radius:6px;
-                                padding:7px 10px;
-                                cursor:pointer;
-                                font-size:12px;
-                            "
-                        >
-                            Remove
-                        </button>
+                <input
+                    id="weeklyHSEIncidentDescription_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        incident.description || ""
+                    )}"
+                    placeholder="Description"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                    </td>
+            </td>
 
-                </tr>
 
-            </tbody>
+            <td style="padding:10px;">
+
+                <input
+                    id="weeklyHSEIncidentAction_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        incident.immediateAction || ""
+                    )}"
+                    placeholder="Immediate Action"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
+
+            </td>
+
+
+            <td style="padding:10px;">
+
+                <select
+                    id="weeklyHSEIncidentStatus_${i}"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                        background:#fff;
+                    "
+                >
+
+                    <option
+                        value="Open"
+                        ${incident.status === "Open" ? "selected" : ""}
+                    >
+                        Open
+                    </option>
+
+                    <option
+                        value="In Progress"
+                        ${incident.status === "In Progress" ? "selected" : ""}
+                    >
+                        In Progress
+                    </option>
+
+                    <option
+                        value="Closed"
+                        ${incident.status === "Closed" ? "selected" : ""}
+                    >
+                        Closed
+                    </option>
+
+                </select>
+
+            </td>
+
+
+            <td style="
+                padding:10px;
+                text-align:center;
+            ">
+
+                <button
+                    type="button"
+                    onclick="this.closest('tr').remove()"
+                    style="
+                        border:none;
+                        background:#f3f4f6;
+                        color:#b42318;
+                        border-radius:6px;
+                        padding:7px 10px;
+                        cursor:pointer;
+                        font-size:12px;
+                    "
+                >
+                    Remove
+                </button>
+
+            </td>
+
+        </tr>
+
+    `).join("")}
+
+</tbody>
 
         </table>
 
