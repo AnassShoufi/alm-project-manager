@@ -12382,6 +12382,49 @@ siteIssueRows.forEach(row => {
 
 });
     console.log("WEEKLY SITE ISSUES:", siteIssues);
+    /* =====================================================
+   COLLECT WEEKLY HSE
+===================================================== */
+
+const hseStatus =
+    document.getElementById(
+        "weeklyHSEStatus"
+    )?.value || "Good";
+
+
+const hseIncidents =
+    document.getElementById(
+        "weeklyHSEIncidents"
+    )?.value.trim() || "";
+
+
+const hseObservations =
+    document.getElementById(
+        "weeklyHSEObservations"
+    )?.value.trim() || "";
+
+
+const hseActions =
+    document.getElementById(
+        "weeklyHSEActions"
+    )?.value.trim() || "";
+
+
+const hse = {
+
+    status:
+        hseStatus,
+
+    incidents:
+        hseIncidents,
+
+    observations:
+        hseObservations,
+
+    correctiveActions:
+        hseActions
+
+};
 const report = {
 
     id:
@@ -12436,6 +12479,7 @@ manpower,
 equipment,
   materials, 
     siteIssues,
+    hse,
 status:
         editIndex === null
         ?
