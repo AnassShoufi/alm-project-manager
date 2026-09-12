@@ -10402,179 +10402,290 @@ function openWeeklyReportForm(
             </thead>
 
 
-            <tbody id="weeklySiteIssueRows">
+          <tbody id="weeklySiteIssueRows">
 
-                <tr>
+    ${(
+        Array.isArray(report.siteIssues) &&
+        report.siteIssues.length > 0
+        ?
+        report.siteIssues
+        :
+        [
+            {
+                activity:"",
+                description:"",
+                impact:"",
+                responsibleParty:"",
+                requiredAction:"",
+                targetDate:"",
+                status:"Open"
+            }
+        ]
+    ).map((issue, i) => `
 
-                    <td style="
-                        padding:10px;
-                    ">
+        <tr>
 
-                        <input
-                            id="weeklySiteIssueActivity_0"
-                            type="text"
-                            placeholder="Activity / Issue"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
+            <!-- ACTIVITY / ISSUE -->
 
-                    </td>
+            <td style="
+                padding:10px;
+            ">
 
+                <input
+                    id="weeklySiteIssueActivity_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        issue.activity || ""
+                    )}"
+                    placeholder="Activity / Issue"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                    <td style="
-                        padding:10px;
-                    ">
-
-                        <input
-                            id="weeklySiteIssueDescription_0"
-                            type="text"
-                            placeholder="Description"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
-
-                    </td>
-
-
-                    <td style="
-                        padding:10px;
-                    ">
-
-                        <select
-                            id="weeklySiteIssueImpact_0"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                                background:#fff;
-                            "
-                        >
-
-                            <option value="">Select</option>
-                            <option value="None">None</option>
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-
-                        </select>
-
-                    </td>
+            </td>
 
 
-                    <td style="
-                        padding:10px;
-                    ">
+            <!-- DESCRIPTION -->
 
-                        <input
-                            id="weeklySiteIssueResponsible_0"
-                            type="text"
-                            placeholder="Responsible Party"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
+            <td style="
+                padding:10px;
+            ">
 
-                    </td>
+                <input
+                    id="weeklySiteIssueDescription_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        issue.description || ""
+                    )}"
+                    placeholder="Description"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-
-                    <td style="
-                        padding:10px;
-                    ">
-
-                        <input
-                            id="weeklySiteIssueAction_0"
-                            type="text"
-                            placeholder="Required Action"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
-
-                    </td>
+            </td>
 
 
-                    <td style="
-                        padding:10px;
-                    ">
+            <!-- IMPACT -->
 
-                        <input
-                            id="weeklySiteIssueTargetDate_0"
-                            type="date"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                            "
-                        >
+            <td style="
+                padding:10px;
+            ">
 
-                    </td>
+                <select
+                    id="weeklySiteIssueImpact_${i}"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                        background:#fff;
+                    "
+                >
+
+                    <option
+                        value=""
+                        ${issue.impact === "" ? "selected" : ""}
+                    >
+                        Select
+                    </option>
+
+                    <option
+                        value="None"
+                        ${issue.impact === "None" ? "selected" : ""}
+                    >
+                        None
+                    </option>
+
+                    <option
+                        value="Low"
+                        ${issue.impact === "Low" ? "selected" : ""}
+                    >
+                        Low
+                    </option>
+
+                    <option
+                        value="Medium"
+                        ${issue.impact === "Medium" ? "selected" : ""}
+                    >
+                        Medium
+                    </option>
+
+                    <option
+                        value="High"
+                        ${issue.impact === "High" ? "selected" : ""}
+                    >
+                        High
+                    </option>
+
+                </select>
+
+            </td>
 
 
-                    <td style="
-                        padding:10px;
-                    ">
+            <!-- RESPONSIBLE PARTY -->
 
-                        <select
-                            id="weeklySiteIssueStatus_0"
-                            style="
-                                width:100%;
-                                box-sizing:border-box;
-                                padding:9px 10px;
-                                border:1px solid #d4dae2;
-                                border-radius:6px;
-                                font-size:13px;
-                                background:#fff;
-                            "
-                        >
+            <td style="
+                padding:10px;
+            ">
 
-                            <option value="Open">
-                                Open
-                            </option>
+                <input
+                    id="weeklySiteIssueResponsible_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        issue.responsibleParty || ""
+                    )}"
+                    placeholder="Responsible Party"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-                            <option value="In Progress">
-                                In Progress
-                            </option>
+            </td>
 
-                            <option value="Closed">
-                                Closed
-                            </option>
 
-                        </select>
+            <!-- REQUIRED ACTION -->
 
-                    </td>
+            <td style="
+                padding:10px;
+            ">
 
-                </tr>
+                <input
+                    id="weeklySiteIssueAction_${i}"
+                    type="text"
+                    value="${weeklyReportEscape(
+                        issue.requiredAction || ""
+                    )}"
+                    placeholder="Required Action"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
 
-            </tbody>
+            </td>
 
+
+            <!-- TARGET DATE -->
+
+            <td style="
+                padding:10px;
+            ">
+
+                <input
+                    id="weeklySiteIssueTargetDate_${i}"
+                    type="date"
+                    value="${issue.targetDate || ""}"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                    "
+                >
+
+            </td>
+
+
+            <!-- STATUS -->
+
+            <td style="
+                padding:10px;
+            ">
+
+                <select
+                    id="weeklySiteIssueStatus_${i}"
+                    style="
+                        width:100%;
+                        box-sizing:border-box;
+                        padding:9px 10px;
+                        border:1px solid #d4dae2;
+                        border-radius:6px;
+                        font-size:13px;
+                        background:#fff;
+                    "
+                >
+
+                    <option
+                        value="Open"
+                        ${issue.status === "Open" ? "selected" : ""}
+                    >
+                        Open
+                    </option>
+
+                    <option
+                        value="In Progress"
+                        ${issue.status === "In Progress" ? "selected" : ""}
+                    >
+                        In Progress
+                    </option>
+
+                    <option
+                        value="Closed"
+                        ${issue.status === "Closed" ? "selected" : ""}
+                    >
+                        Closed
+                    </option>
+
+                </select>
+
+            </td>
+
+
+            <!-- ACTION -->
+
+            <td style="
+                padding:10px;
+                text-align:center;
+            ">
+
+                <button
+                    type="button"
+                    onclick="this.closest('tr').remove()"
+                    style="
+                        border:none;
+                        background:#f3f4f6;
+                        color:#b42318;
+                        border-radius:6px;
+                        padding:7px 10px;
+                        cursor:pointer;
+                        font-size:12px;
+                    "
+                >
+                    Remove
+                </button>
+
+            </td>
+
+        </tr>
+
+    `).join("")}
+
+</tbody>
         </table>
 
     </div>
