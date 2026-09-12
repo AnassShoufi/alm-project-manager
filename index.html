@@ -12049,6 +12049,180 @@ function(){
     tbody.appendChild(row);
 
 };
+    window.addWeeklyHSEIncidentRow =
+function(){
+
+    const tbody =
+        document.getElementById(
+            "weeklyHSEIncidentRows"
+        );
+
+    if(!tbody){
+        return;
+    }
+
+    const index =
+        tbody.querySelectorAll("tr").length;
+
+    const row =
+        document.createElement("tr");
+
+    row.innerHTML = `
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklyHSEIncidentName_${index}"
+                type="text"
+                placeholder="Incident / Accident"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklyHSEIncidentDate_${index}"
+                type="date"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklyHSEIncidentLocation_${index}"
+                type="text"
+                placeholder="Location"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklyHSEIncidentDescription_${index}"
+                type="text"
+                placeholder="Description"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <input
+                id="weeklyHSEIncidentAction_${index}"
+                type="text"
+                placeholder="Immediate Action"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                "
+            >
+
+        </td>
+
+
+        <td style="padding:10px;">
+
+            <select
+                id="weeklyHSEIncidentStatus_${index}"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:9px 10px;
+                    border:1px solid #d4dae2;
+                    border-radius:6px;
+                    font-size:13px;
+                    background:#fff;
+                "
+            >
+
+                <option value="Open">
+                    Open
+                </option>
+
+                <option value="In Progress">
+                    In Progress
+                </option>
+
+                <option value="Closed">
+                    Closed
+                </option>
+
+            </select>
+
+        </td>
+
+
+        <td style="
+            padding:10px;
+            text-align:center;
+        ">
+
+            <button
+                type="button"
+                onclick="this.closest('tr').remove()"
+                style="
+                    border:none;
+                    background:#f3f4f6;
+                    color:#b42318;
+                    border-radius:6px;
+                    padding:7px 10px;
+                    cursor:pointer;
+                    font-size:12px;
+                "
+            >
+                Remove
+            </button>
+
+        </td>
+
+    `;
+
+    tbody.appendChild(row);
+
+};
 /* =====================================================
    SAVE WEEKLY REPORT
 ===================================================== */
