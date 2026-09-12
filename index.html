@@ -12904,6 +12904,29 @@ const hseIncidentRows =
 );
 
 hseIncidentRows.forEach(row => {
+    console.log(
+    "HSE INCIDENT ROW DATA:",
+    {
+        incident: row.querySelector(
+            'input[id^="weeklyHSEIncidentName_"]'
+        )?.value,
+        date: row.querySelector(
+            'input[id^="weeklyHSEIncidentDate_"]'
+        )?.value,
+        location: row.querySelector(
+            'input[id^="weeklyHSEIncidentLocation_"]'
+        )?.value,
+        description: row.querySelector(
+            'input[id^="weeklyHSEIncidentDescription_"]'
+        )?.value,
+        action: row.querySelector(
+            'input[id^="weeklyHSEIncidentAction_"]'
+        )?.value,
+        status: row.querySelector(
+            'select[id^="weeklyHSEIncidentStatus_"]'
+        )?.value
+    }
+);
 
     const nameInput =
         row.querySelector(
