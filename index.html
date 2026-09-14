@@ -3276,35 +3276,144 @@ window.renderEquipmentSection = function(project){
     }
 
 
-    content.innerHTML = `
+content.innerHTML = `
 
-        <div class="section-header">
+    <div class="section-header">
 
-            <div>
+        <div>
 
-                <h2>🚜 Equipment</h2>
+            <h2>🚜 Equipment</h2>
 
-                <p>
-                    Manage project equipment, vehicles and machinery
-                </p>
-
-            </div>
-
-
-            <button
-                class="btn btn-primary"
-                onclick="
-                    window.addEquipment(
-                        '${project.id}'
-                    );
-                "
-            >
-                + Add Equipment
-            </button>
+            <p>
+                Manage project equipment, vehicles and machinery
+            </p>
 
         </div>
 
-    `;
+
+        <button
+            class="btn btn-primary"
+            onclick="
+                window.addEquipment(
+                    '${project.id}'
+                );
+            "
+        >
+            + Add Equipment
+        </button>
+
+    </div>
+
+
+    <!-- EQUIPMENT SUMMARY -->
+
+    <div style="
+        display:grid;
+        grid-template-columns:
+            repeat(5, minmax(0,1fr));
+        gap:14px;
+        margin-bottom:20px;
+    ">
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Total Equipment
+            </div>
+
+            <div class="stat-value">
+                ${equipment.length}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Operational
+            </div>
+
+            <div class="stat-value">
+                ${
+                    equipment.filter(
+                        item =>
+                            String(
+                                item.status || ""
+                            ).toLowerCase()
+                            === "operational"
+                    ).length
+                }
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Under Maintenance
+            </div>
+
+            <div class="stat-value">
+                ${
+                    equipment.filter(
+                        item =>
+                            String(
+                                item.status || ""
+                            ).toLowerCase()
+                            === "under maintenance"
+                    ).length
+                }
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Out of Service
+            </div>
+
+            <div class="stat-value">
+                ${
+                    equipment.filter(
+                        item =>
+                            String(
+                                item.status || ""
+                            ).toLowerCase()
+                            === "out of service"
+                    ).length
+                }
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Available
+            </div>
+
+            <div class="stat-value">
+                ${
+                    equipment.filter(
+                        item =>
+                            String(
+                                item.status || ""
+                            ).toLowerCase()
+                            === "available"
+                    ).length
+                }
+            </div>
+
+        </div>
+
+    </div>
+
+`;
 
 };
 /* =========================
