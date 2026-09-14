@@ -5120,9 +5120,9 @@ content.innerHTML = `
     </div>
 
 `;
-   /* =====================================================
+  /* =====================================================
    EQUIPMENT MODULE
-   STEP 11A - EQUIPMENT SEARCH
+   STEP 11E - COMBINED FILTERS
 ===================================================== */
 
 const equipmentSearch =
@@ -5130,43 +5130,223 @@ const equipmentSearch =
         "equipmentSearch"
     );
 
-if(equipmentSearch){
+const equipmentTypeFilter =
+    document.getElementById(
+        "equipmentTypeFilter"
+    );
 
-    equipmentSearch.addEventListener(
-        "input",
-        function(){
+const equipmentStatusFilter =
+    document.getElementById(
+        "equipmentStatusFilter"
+    );
 
-            const search =
-                this.value
-                .trim()
-                .toLowerCase();
+const equipmentOwnershipFilter =
+    document.getElementById(
+        "equipmentOwnershipFilter"
+    );
 
-            const rows =
-                document.querySelectorAll(
-                    "#equipmentRegisterBody tr"
+
+/* -----------------------------------------------------
+   POPULATE TYPE FILTER
+----------------------------------------------------- */
+
+if(equipmentTypeFilter){
+
+    const types = [
+        ...new Set(
+            equipment
+                .map(
+                    item =>
+                        item.type
+                )
+                .filter(
+                    type =>
+                        type
+                )
+        )
+    ];
+
+    types.forEach(
+        function(type){
+
+            const option =
+                document.createElement(
+                    "option"
                 );
 
-            rows.forEach(
-                function(row){
+            option.value =
+                type;
 
-                    const text =
-                        row.textContent
-                        .toLowerCase();
+            option.textContent =
+                type;
 
-                    row.style.display =
-                        !search ||
-                        text.includes(search)
-                            ? ""
-                            : "none";
-
-                }
+            equipmentTypeFilter.appendChild(
+                option
             );
 
         }
     );
 
-} 
+}
 
+
+/* -----------------------------------------------------
+   APPLY ALL FILTERS TOGETHER
+----------------------------------------------------- */
+
+function applyEquipmentFilters(){
+
+    const search =
+        equipmentSearch
+            ?
+            equipmentSearch.value
+                .trim()
+                .toLowerCase()
+            :
+            "";
+
+    const selectedType =
+        equipmentTypeFilter
+            ?
+            equipmentTypeFilter.value
+            :
+            "";
+
+    const selectedStatus =
+        equipmentStatusFilter
+            ?
+            equipmentStatusFilter.value
+            :
+            "";
+
+    const selectedOwnership =
+        equipmentOwnershipFilter
+            ?
+            equipmentOwnershipFilter.value
+            :
+            "";
+
+
+    const rows =
+        document.querySelectorAll(
+            "#equipmentRegisterBody tr"
+        );
+
+
+    rows.forEach(
+        function(row, index){
+
+            const item =
+                equipment[index];
+
+
+            if(!item){
+
+                row.style.display =
+                    "none";
+
+                return;
+
+            }
+
+
+            const searchableText =
+                [
+                    item.id,
+                    item.name,
+                    item.type,
+                    item.brandModel,
+                    item.location
+                ]
+                .join(" ")
+                .toLowerCase();
+
+
+            const matchesSearch =
+                !search ||
+                searchableText.includes(
+                    search
+                );
+
+
+            const matchesType =
+                !selectedType ||
+                item.type ===
+                    selectedType;
+
+
+            const matchesStatus =
+                !selectedStatus ||
+                item.status ===
+                    selectedStatus;
+
+
+            const matchesOwnership =
+                !selectedOwnership ||
+                item.ownership ===
+                    selectedOwnership;
+
+
+            const showRow =
+                matchesSearch &&
+                matchesType &&
+                matchesStatus &&
+                matchesOwnership;
+
+
+            row.style.display =
+                showRow
+                    ? ""
+                    : "none";
+
+        }
+    );
+
+}
+
+
+/* -----------------------------------------------------
+   FILTER EVENTS
+----------------------------------------------------- */
+
+if(equipmentSearch){
+
+    equipmentSearch.addEventListener(
+        "input",
+        applyEquipmentFilters
+    );
+
+}
+
+
+if(equipmentTypeFilter){
+
+    equipmentTypeFilter.addEventListener(
+        "change",
+        applyEquipmentFilters
+    );
+
+}
+
+
+if(equipmentStatusFilter){
+
+    equipmentStatusFilter.addEventListener(
+        "change",
+        applyEquipmentFilters
+    );
+
+}
+
+
+if(equipmentOwnershipFilter){
+
+    equipmentOwnershipFilter.addEventListener(
+        "change",
+        applyEquipmentFilters
+    );
+
+}
 };
 /* =========================
    SECTION ICONS
