@@ -5010,9 +5010,42 @@ content.innerHTML = `
                                     <td style="
                                         padding:12px;
                                     ">
-                                        ${escapeHTML(
-                                            item.status || "-"
-                                        )}
+                                       <span
+    style="
+        display:inline-block;
+        padding:4px 9px;
+        border-radius:12px;
+        font-size:11px;
+        font-weight:600;
+        white-space:nowrap;
+        background:
+            ${
+                String(item.status || "").toLowerCase() === "operational"
+                    ? "#dcfce7"
+                    : String(item.status || "").toLowerCase() === "available"
+                    ? "#dbeafe"
+                    : String(item.status || "").toLowerCase() === "under maintenance"
+                    ? "#fef3c7"
+                    : String(item.status || "").toLowerCase() === "out of service"
+                    ? "#fee2e2"
+                    : "#f1f5f9"
+            };
+        color:
+            ${
+                String(item.status || "").toLowerCase() === "operational"
+                    ? "#166534"
+                    : String(item.status || "").toLowerCase() === "available"
+                    ? "#1d4ed8"
+                    : String(item.status || "").toLowerCase() === "under maintenance"
+                    ? "#92400e"
+                    : String(item.status || "").toLowerCase() === "out of service"
+                    ? "#991b1b"
+                    : "#475569"
+            };
+    "
+>
+    ${escapeHTML(item.status || "-")}
+</span>
                                     </td>
 
                                     <td style="
