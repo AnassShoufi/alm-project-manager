@@ -4497,6 +4497,64 @@ window.updateEquipment = function(event, projectId, equipmentIndex){
     );
 
 };
+    /* =====================================================
+   EQUIPMENT MODULE
+   STEP 9 - DELETE EQUIPMENT
+===================================================== */
+
+window.deleteEquipment = function(projectId, equipmentIndex){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const equipment =
+        (project.equipment || [])
+        [equipmentIndex];
+
+
+    if(!equipment){
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this equipment?\n\n" +
+            (equipment.name || "Equipment") +
+            " (" +
+            (equipment.id || "") +
+            ")"
+        );
+
+
+    if(!confirmed){
+        return;
+    }
+
+
+    project.equipment.splice(
+        equipmentIndex,
+        1
+    );
+
+
+    persist();
+
+
+    renderEquipmentSection(
+        project
+    );
+
+};
 /* =====================================================
    CLOSE EQUIPMENT VIEW MODAL
 ===================================================== */
@@ -4994,11 +5052,12 @@ content.innerHTML = `
     Edit
 </button>
 
-                                            <button
-                                                class="action-btn"
-                                            >
-                                                Delete
-                                            </button>
+                                           <button
+    class="action-btn"
+    onclick="deleteEquipment('${project.id}', ${index})"
+>
+    Delete
+</button>
 
                                         </div>
 
