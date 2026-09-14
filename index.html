@@ -2580,6 +2580,13 @@ if(section === "tasks"){
 
     return;
 }
+    if(section === "equipment"){
+
+    renderEquipmentSection(project);
+
+    return;
+
+}
 const titles = {
 
     documents: "Documents",
@@ -3232,7 +3239,74 @@ window.deleteBOQ = function(projectId,index){
     );
 
 };
+/* =====================================================
+   EQUIPMENT MODULE
+   STEP 1 - INITIALIZE & RENDER
+===================================================== */
 
+function ensureEquipment(project){
+
+    if(!Array.isArray(project.equipment)){
+
+        project.equipment = [];
+
+        persist();
+
+    }
+
+    return project.equipment;
+
+}
+
+
+window.renderEquipmentSection = function(project){
+
+    ensureEquipment(project);
+
+    const equipment =
+        project.equipment || [];
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!content){
+        return;
+    }
+
+
+    content.innerHTML = `
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>🚜 Equipment</h2>
+
+                <p>
+                    Manage project equipment, vehicles and machinery
+                </p>
+
+            </div>
+
+
+            <button
+                class="btn btn-primary"
+                onclick="
+                    window.addEquipment(
+                        '${project.id}'
+                    );
+                "
+            >
+                + Add Equipment
+            </button>
+
+        </div>
+
+    `;
+
+};
 /* =========================
    SECTION ICONS
 ========================= */
