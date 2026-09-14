@@ -1466,6 +1466,25 @@ let manpowerFilters = {
                         <label>Description</label>
                         <textarea id="description"></textarea>
                     </div>
+                    <div class="form-group">
+    <label>ERP Go-Live Date</label>
+    <input id="erpGoLiveDate" type="date">
+    <small>
+        Date from which weekly reports will be managed in the ERP.
+    </small>
+</div>
+
+<div class="form-group">
+    <label>Previous Weekly Reports Archive</label>
+    <input
+        id="previousWeeklyReportsArchive"
+        type="url"
+        placeholder="https://drive.google.com/drive/folders/..."
+    >
+    <small>
+        Google Drive folder containing weekly reports created before ERP Go-Live.
+    </small>
+</div>
 
                 </div>
 
@@ -3350,6 +3369,11 @@ function editProject(id){
     document.getElementById("status").value = project.status || "Active";
     document.getElementById("progress").value = project.progress || 0;
     document.getElementById("description").value = project.description || "";
+    document.getElementById("erpGoLiveDate").value =
+    project.erpGoLiveDate || "";
+
+document.getElementById("previousWeeklyReportsArchive").value =
+    project.previousWeeklyReportsArchive || "";
 
     document.getElementById("projectModal").style.display = "flex";
 }
@@ -3566,12 +3590,22 @@ function saveProject(event){
         startDate: document.getElementById("startDate").value,
 
         completionDate: document.getElementById("completionDate").value,
+        erpGoLiveDate: document.getElementById("erpGoLiveDate")?.value || "",
+previousWeeklyReportsArchive:
+    document.getElementById("previousWeeklyReportsArchive")?.value.trim() || "",
 
         status: document.getElementById("status").value,
 
-        progress: Number(document.getElementById("progress").value) || 0,
+       progress: Number(document.getElementById("progress").value) || 0,
 
-        description: document.getElementById("description").value.trim()
+description:
+    document.getElementById("description").value.trim(),
+
+erpGoLiveDate:
+    document.getElementById("erpGoLiveDate").value || "",
+
+previousWeeklyReportsArchive:
+    document.getElementById("previousWeeklyReportsArchive").value.trim() || ""
     };
 
 
