@@ -3736,7 +3736,319 @@ window.closeEquipmentModal = function(){
     }
 
 };
+    
+/* =====================================================
+   EQUIPMENT MODULE
+   STEP 6 - VIEW EQUIPMENT
+===================================================== */
 
+window.viewEquipment = function(projectId, equipmentIndex){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const equipment =
+        (project.equipment || [])
+        [equipmentIndex];
+
+
+    if(!equipment){
+        return;
+    }
+
+
+    const existing =
+        document.getElementById(
+            "equipmentViewModal"
+        );
+
+    if(existing){
+        existing.remove();
+    }
+
+
+    const modal =
+        document.createElement(
+            "div"
+        );
+
+    modal.id =
+        "equipmentViewModal";
+
+    modal.className =
+        "modal-overlay";
+
+    modal.style.display =
+        "flex";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                width:760px;
+                max-width:95%;
+            "
+        >
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Equipment Details
+                    </h2>
+
+                    <div style="
+                        margin-top:5px;
+                        color:#708096;
+                        font-size:12px;
+                    ">
+                        ${escapeHTML(
+                            project.name
+                        )}
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="close"
+                    onclick="
+                        closeEquipmentViewModal();
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div
+                class="modal-body"
+                style="
+                    max-height:70vh;
+                    overflow-y:auto;
+                "
+            >
+
+                <div class="project-info-grid">
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Equipment ID
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.id || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Equipment / Plant
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.name || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Type
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.type || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Brand / Model
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.brandModel || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Ownership
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.ownership || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Site Location
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.location || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.status || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Mobilization Date
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                equipment.mobilizationDate || "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="project-description"
+                    style="
+                        margin-top:20px;
+                    "
+                >
+
+                    <h3>
+                        Notes
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(
+                            equipment.notes ||
+                            "No notes available."
+                        )}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn"
+                    onclick="
+                        closeEquipmentViewModal();
+                    "
+                >
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+
+    modal.addEventListener(
+        "click",
+        function(e){
+
+            if(e.target === modal){
+
+                closeEquipmentViewModal();
+
+            }
+
+        }
+    );
+
+};
+
+
+/* =====================================================
+   CLOSE EQUIPMENT VIEW MODAL
+===================================================== */
+
+window.closeEquipmentViewModal = function(){
+
+    const modal =
+        document.getElementById(
+            "equipmentViewModal"
+        );
+
+
+    if(modal){
+
+        modal.remove();
+
+    }
+
+};
 window.renderEquipmentSection = function(project){
 
     ensureEquipment(project);
@@ -4201,11 +4513,12 @@ content.innerHTML = `
 
                                         <div class="actions">
 
-                                            <button
-                                                class="action-btn"
-                                            >
-                                                View
-                                            </button>
+                                           <button
+    class="action-btn"
+    onclick="viewEquipment('${project.id}', ${index})"
+>
+    View
+</button>
 
                                             <button
                                                 class="action-btn"
