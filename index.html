@@ -7427,7 +7427,7 @@ function ensureReportsFolders(project){
     return project.reportsFolders;
 
 }
-/* =====================================================
+    /* =====================================================
    WEEKLY REPORTS MODULE - STEP 1
 ===================================================== */
 
@@ -13408,32 +13408,108 @@ function(input){
 
     reader.onload = function(e){
 
-        const logo = e.target.result;
+        const source = e.target.result;
+        const image = new Image();
 
-        localStorage.setItem(
-            "alm_company_logo",
-            logo
-        );
+        image.onload = function(){
 
-        const preview =
-            document.getElementById(
-                "weeklyCompanyLogoPreview"
+            const maxWidth = 700;
+            const maxHeight = 220;
+
+            const scale = Math.min(
+                1,
+                maxWidth / image.naturalWidth,
+                maxHeight / image.naturalHeight
             );
 
-        const placeholder =
-            document.getElementById(
-                "weeklyCompanyLogoPlaceholder"
-            );
+            const canvas = document.createElement("canvas");
 
-        if(preview){
-            preview.src = logo;
-            preview.style.display = "block";
-        }
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
 
-        if(placeholder){
-            placeholder.style.display = "none";
-        }
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
+            let logo = canvas.toDataURL("image/png");
+
+            try{
+
+                localStorage.setItem(
+                    "alm_company_logo",
+                    logo
+                );
+
+            }catch(error){
+
+                /*
+                    If the PNG is still too large for localStorage,
+                    use a compressed JPEG fallback. This keeps the
+                    logo small enough for browser storage.
+                */
+
+                const fallbackCanvas = document.createElement("canvas");
+                fallbackCanvas.width = canvas.width;
+                fallbackCanvas.height = canvas.height;
+
+                const fallbackCtx = fallbackCanvas.getContext("2d");
+                fallbackCtx.fillStyle = "#ffffff";
+                fallbackCtx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+                fallbackCtx.drawImage(canvas, 0, 0);
+
+                logo = fallbackCanvas.toDataURL(
+                    "image/jpeg",
+                    0.82
+                );
+
+                try{
+                    localStorage.setItem(
+                        "alm_company_logo",
+                        logo
+                    );
+                }catch(secondError){
+                    alert(
+                        "The logo could not be saved. Please use a smaller logo image."
+                    );
+                    input.value = "";
+                    return;
+                }
+
+            }
+
+            const preview =
+                document.getElementById(
+                    "weeklyCompanyLogoPreview"
+                );
+
+            const placeholder =
+                document.getElementById(
+                    "weeklyCompanyLogoPlaceholder"
+                );
+
+            if(preview){
+                preview.src = logo;
+                preview.style.display = "block";
+            }
+
+            if(placeholder){
+                placeholder.style.display = "none";
+            }
+
+        };
+
+        image.onerror = function(){
+            alert("The selected logo image could not be loaded.");
+            input.value = "";
+        };
+
+        image.src = source;
+
+    };
+
+    reader.onerror = function(){
+        alert("The logo file could not be read.");
+        input.value = "";
     };
 
     reader.readAsDataURL(file);
@@ -13488,7 +13564,7 @@ function(projectId, index){
     const pageLogoHtml =
         companyLogo
         ? `<img src="${companyLogo}" alt="Company Logo">`
-        : `${pageLogoHtml}`;
+        : `<div class="page-brand-fallback">ALM Project Manager</div>`;
 
     const weatherDays = [
         "Saturday",
