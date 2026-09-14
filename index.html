@@ -7427,7 +7427,7 @@ function ensureReportsFolders(project){
     return project.reportsFolders;
 
 }
-    /* =====================================================
+/* =====================================================
    WEEKLY REPORTS MODULE - STEP 1
 ===================================================== */
 
@@ -13517,7 +13517,7 @@ function(input){
 
 
 /* =====================================================
-   PRINT WEEKLY REPORT - PROFESSIONAL PDF
+   PRINT WEEKLY REPORT - PROFESSIONAL CLIENT PRESENTATION
 ===================================================== */
 
 window.printWeeklyReport =
@@ -13534,55 +13534,45 @@ function(projectId, index){
 
     ensureWeeklyReports(project);
 
-    const report =
-        project.weeklyReports[index];
+    const report = project.weeklyReports[index];
 
     if(!report){
         return;
     }
 
-    const esc =
-        value =>
-            weeklyReportEscape(
-                value === null || value === undefined
-                ? ""
-                : value
-            );
+    const esc = value =>
+        weeklyReportEscape(
+            value === null || value === undefined ? "" : value
+        );
 
-    const date =
-        value =>
-            weeklyReportDate(value || "-");
+    const date = value =>
+        weeklyReportDate(value || "-");
 
     const companyLogo =
         localStorage.getItem("alm_company_logo") || "";
 
-    const logoHtml =
-        companyLogo
-        ? `<img class="company-logo" src="${companyLogo}" alt="Company Logo">`
-        : `<div class="brand-box">ALM</div><div class="brand-name">ALM Project Manager</div>`;
+    const logoHtml = companyLogo
+        ? `<img class="cover-logo" src="${companyLogo}" alt="Company Logo">`
+        : `<div class="fallback-logo">ALM</div>`;
 
-    const pageLogoHtml =
-        companyLogo
-        ? `<img src="${companyLogo}" alt="Company Logo">`
-        : `<div class="page-brand-fallback">ALM Project Manager</div>`;
+    const headerLogoHtml = companyLogo
+        ? `<img class="header-logo" src="${companyLogo}" alt="Company Logo">`
+        : `<div class="header-fallback">ALM Project Manager</div>`;
 
     const weatherDays = [
-        "Saturday",
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday"
+        "Saturday","Sunday","Monday","Tuesday",
+        "Wednesday","Thursday","Friday"
     ];
 
-    const weatherRows =
-        weatherDays.map(day => `
-            <tr>
-                <td class="day-cell"><strong>${esc(day)}</strong></td>
-                <td>${esc((report.weather && report.weather[day]) || "-")}</td>
-            </tr>
-        `).join("");
+    const weatherRows = weatherDays.map(day => `
+        <tr>
+            <td><strong>${esc(day)}</strong></td>
+            <td>${esc((report.weather && report.weather[day]) || "-")}</td>
+            <td>${day === "Sunday" || day === "Monday"
+                ? "Rain stoppage / site condition"
+                : "-"}</td>
+        </tr>
+    `).join("");
 
     const workRows =
         (Array.isArray(report.workProgress) ? report.workProgress : [])
@@ -13590,7 +13580,7 @@ function(projectId, index){
             <tr>
                 <td>${esc(item.activity || "-")}</td>
                 <td>${esc(item.location || "-")}</td>
-                <td class="center">${item.progress === "" || item.progress === undefined ? "-" : esc(item.progress) + "%"}</td>
+                <td class="center progress-value">${item.progress === "" || item.progress === undefined ? "-" : esc(item.progress) + "%"}</td>
                 <td>${esc(item.remarks || "-")}</td>
             </tr>
         `).join("");
@@ -13621,13 +13611,13 @@ function(projectId, index){
         (Array.isArray(report.materials) ? report.materials : [])
         .map(item => `
             <tr>
-                <td>${esc(item.name || "-")}</td>
+                <td><strong>${esc(item.name || "-")}</strong></td>
                 <td class="center">${esc(item.unit || "-")}</td>
                 <td class="num">${esc(item.availableFromPreviousWeek === undefined ? "0" : item.availableFromPreviousWeek)}</td>
                 <td class="num">${esc(item.planned === "" ? "-" : item.planned)}</td>
                 <td class="num">${esc(item.delivered === "" ? "-" : item.delivered)}</td>
                 <td class="num">${esc(item.used === "" ? "-" : item.used)}</td>
-                <td class="num strong">${esc(item.balance === "" ? "-" : item.balance)}</td>
+                <td class="num balance-cell">${esc(item.balance === "" ? "-" : item.balance)}</td>
                 <td>${esc(item.remarks || "-")}</td>
             </tr>
         `).join("");
@@ -13636,13 +13626,13 @@ function(projectId, index){
         (Array.isArray(report.siteIssues) ? report.siteIssues : [])
         .map(item => `
             <tr>
-                <td>${esc(item.activity || "-")}</td>
+                <td><strong>${esc(item.activity || "-")}</strong></td>
                 <td>${esc(item.description || "-")}</td>
                 <td class="center">${esc(item.impact || "-")}</td>
                 <td>${esc(item.responsibleParty || "-")}</td>
                 <td>${esc(item.requiredAction || "-")}</td>
                 <td class="center">${date(item.targetDate)}</td>
-                <td class="center">${esc(item.status || "Open")}</td>
+                <td class="center"><span class="status-pill status-${String(item.status || "Open").toLowerCase().replace(/\s+/g,"-")}">${esc(item.status || "Open")}</span></td>
             </tr>
         `).join("");
 
@@ -13652,12 +13642,12 @@ function(projectId, index){
         (Array.isArray(hse.incidents) ? hse.incidents : [])
         .map(item => `
             <tr>
-                <td>${esc(item.incident || "-")}</td>
+                <td><strong>${esc(item.incident || "-")}</strong></td>
                 <td>${date(item.date)}</td>
                 <td>${esc(item.location || "-")}</td>
                 <td>${esc(item.description || "-")}</td>
                 <td>${esc(item.immediateAction || "-")}</td>
-                <td class="center">${esc(item.status || "Open")}</td>
+                <td class="center"><span class="status-pill status-${String(item.status || "Open").toLowerCase().replace(/\s+/g,"-")}">${esc(item.status || "Open")}</span></td>
             </tr>
         `).join("");
 
@@ -13665,12 +13655,12 @@ function(projectId, index){
         (Array.isArray(hse.observations) ? hse.observations : [])
         .map(item => `
             <tr>
-                <td>${esc(item.observation || "-")}</td>
+                <td><strong>${esc(item.observation || "-")}</strong></td>
                 <td>${date(item.date)}</td>
                 <td>${esc(item.location || "-")}</td>
                 <td>${esc(item.riskFinding || "-")}</td>
                 <td>${esc(item.recommendedAction || "-")}</td>
-                <td class="center">${esc(item.status || "Open")}</td>
+                <td class="center"><span class="status-pill status-${String(item.status || "Open").toLowerCase().replace(/\s+/g,"-")}">${esc(item.status || "Open")}</span></td>
             </tr>
         `).join("");
 
@@ -13679,48 +13669,98 @@ function(projectId, index){
         .map(item => `
             <tr>
                 <td>${esc(item.relatedTo || "-")}</td>
-                <td>${esc(item.correctiveAction || "-")}</td>
+                <td><strong>${esc(item.correctiveAction || "-")}</strong></td>
                 <td>${esc(item.responsibleParty || "-")}</td>
                 <td>${date(item.targetDate)}</td>
-                <td class="center">${esc(item.status || "Open")}</td>
+                <td class="center"><span class="status-pill status-${String(item.status || "Open").toLowerCase().replace(/\s+/g,"-")}">${esc(item.status || "Open")}</span></td>
             </tr>
         `).join("");
 
-    const photoItems =
-        (Array.isArray(report.progressPhotos) ? report.progressPhotos : [])
-        .map((photo, photoIndex) => `
-            <div class="photo-card">
-                <div class="photo-heading">
-                    <span>PHOTO ${String(photoIndex + 1).padStart(2,"0")}</span>
-                    <span>${date(photo.date)}</span>
-                </div>
-                <img src="${photo.image || ""}" alt="Progress Photo ${photoIndex + 1}">
-                <div class="photo-caption">
-                    <div class="photo-activity">${esc(photo.activity || "Site Progress")}</div>
-                    <div><strong>Location:</strong> ${esc(photo.location || "-")}</div>
-                    ${photo.remarks ? `<div><strong>Remarks:</strong> ${esc(photo.remarks)}</div>` : ""}
-                </div>
-            </div>
-        `).join("");
+    const photos =
+        Array.isArray(report.progressPhotos)
+        ? report.progressPhotos
+        : [];
 
-    const sectionTitle = title => `
-        <div class="section-title">
+    const sectionTitle = (number, title, color) => `
+        <div class="section-title" style="--section-color:${color};">
+            <span class="section-number">${number}</span>
             <span>${title}</span>
         </div>
     `;
 
     const table = (headers, rows, emptyText="No records for this reporting period.") => `
-        <div class="table-wrap">
-            <table class="report-table">
-                <thead>
-                    <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
-                </thead>
-                <tbody>
-                    ${rows || `<tr><td colspan="${headers.length}" class="empty-cell">${emptyText}</td></tr>`}
-                </tbody>
-            </table>
+        <table class="report-table">
+            <thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+            <tbody>
+                ${rows || `<tr><td colspan="${headers.length}" class="empty-cell">${emptyText}</td></tr>`}
+            </tbody>
+        </table>
+    `;
+
+    const pageHeader = `
+        <div class="page-header">
+            <div class="header-brand">${headerLogoHtml}</div>
+            <div class="header-meta">
+                <strong>${esc(project.name || "Project")}</strong>
+                <span>Weekly Report ${esc(report.weekNumber || "-")}</span>
+                <span>${date(report.startDate)} – ${date(report.endDate)}</span>
+            </div>
         </div>
     `;
+
+    const pageFooter = `
+        <div class="page-footer">
+            <span>AL-MANSOUR ENGINEERING &amp; CONTRACTING LTD. | Confidential</span>
+            <span>${esc(project.name || "Project")} | Weekly Report ${esc(report.weekNumber || "-")}</span>
+        </div>
+    `;
+
+    const photoPages = [];
+    for(let i = 0; i < photos.length; i += 2){
+        const pair = photos.slice(i, i + 2);
+        photoPages.push(`
+            <div class="print-page">
+                ${pageHeader}
+                ${sectionTitle("9", "PROGRESS PHOTOGRAPHS", "#f59e0b")}
+                <div class="photo-grid">
+                    ${pair.map((photo, localIndex) => {
+                        const photoNo = i + localIndex + 1;
+                        return `
+                            <div class="photo-card">
+                                <div class="photo-topline">
+                                    <strong>PHOTO ${String(photoNo).padStart(2,"0")}</strong>
+                                    <span>${date(photo.date)}</span>
+                                </div>
+                                <img src="${photo.image || ""}" alt="Progress Photo ${photoNo}">
+                                <div class="photo-caption">
+                                    <div class="photo-title">${esc(photo.activity || "Site Progress")}</div>
+                                    <div><strong>Location:</strong> ${esc(photo.location || "-")}</div>
+                                    ${photo.remarks ? `<div><strong>Remarks:</strong> ${esc(photo.remarks)}</div>` : ""}
+                                </div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+                ${pageFooter}
+            </div>
+        `);
+    }
+
+    if(!photos.length){
+        photoPages.push(`
+            <div class="print-page">
+                ${pageHeader}
+                ${sectionTitle("9", "PROGRESS PHOTOGRAPHS", "#f59e0b")}
+                <div class="empty-photo">No progress photographs were added for this reporting period.</div>
+                ${pageFooter}
+            </div>
+        `);
+    }
+
+    const review = report.reviewApproval || {};
+    const prepared = review.preparedBy || {};
+    const reviewed = review.reviewedBy || {};
+    const approved = review.approvedBy || {};
 
     const printWindow = window.open("", "_blank");
 
@@ -13737,688 +13777,173 @@ function(projectId, index){
 <meta charset="UTF-8">
 <title>${esc(project.name || "Project")} - Weekly Report ${esc(report.weekNumber || "")}</title>
 <style>
-@page{
-    size:A4 portrait;
-    margin:10mm 10mm 12mm 10mm;
-}
-
-*{
-    box-sizing:border-box;
-}
-
-html,body{
-    margin:0;
-    padding:0;
-    background:#fff;
-    color:#17243a;
-    font-family:Arial,Helvetica,sans-serif;
-    font-size:9px;
-    line-height:1.4;
-    -webkit-print-color-adjust:exact;
-    print-color-adjust:exact;
-}
-
-body{
-    padding:0;
-}
-
-.report{
-    width:100%;
-}
-
-.print-toolbar{
-    display:flex;
-    justify-content:flex-end;
-    gap:8px;
-    padding:8px 0 10px;
-    border-bottom:1px solid #d9e0e8;
-    margin-bottom:10px;
-}
-
-.print-toolbar button{
-    border:none;
-    border-radius:5px;
-    padding:8px 15px;
-    font-size:10px;
-    font-weight:700;
-    cursor:pointer;
-}
-
-.btn-print{
-    background:#17243a;
-    color:#fff;
-}
-
-.btn-close{
-    background:#edf1f5;
-    color:#17243a;
-}
-
-.print-page{
-    position:relative;
-    min-height:0;
-    padding:0 0 9mm;
-    page-break-after:always;
-    break-after:page;
-}
-
-.print-page.cover-page{
-    min-height:267mm;
-}
-
-.print-page:last-child{
-    page-break-after:auto;
-    break-after:auto;
-}
-
-.page-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    border-bottom:1px solid #d7dee7;
-    padding-bottom:5px;
-    margin-bottom:9px;
-    font-size:7.5px;
-    color:#66758a;
-}
-
-.page-header strong{
-    color:#17243a;
-}
-
-.page-footer{
-    position:absolute;
-    left:0;
-    right:0;
-    bottom:1mm;
-    border-top:1px solid #e1e6ec;
-    padding-top:4px;
-    display:flex;
-    justify-content:space-between;
-    font-size:7px;
-    color:#8a95a5;
-}
-
-.cover{
-    min-height:267mm;
-    border:1px solid #d5dce5;
-    padding:18mm 17mm 12mm;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-}
-
-.brand{
-    display:flex;
-    align-items:center;
-    gap:11px;
-    border-bottom:3px solid #17243a;
-    padding-bottom:10px;
-}
-
-.brand-box{
-    width:48px;
-    height:48px;
-    border-radius:8px;
-    background:#f7a900;
-    color:#fff;
-    font-size:18px;
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.brand-name{
-    font-size:20px;
-    font-weight:700;
-}
-
-.company-logo{
-    max-width:180px;
-    max-height:52px;
-    object-fit:contain;
-    display:block;
-}
-
-.page-brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.page-brand img{
-    max-width:155px;
-    max-height:42px;
-    object-fit:contain;
-}
-
-
-.cover-title{
-    text-align:center;
-    margin-top:36mm;
-}
-
-.cover-title h1{
-    font-size:25px;
-    margin:0 0 8px;
-    font-weight:700;
-    letter-spacing:.3px;
-}
-
-.cover-title h2{
-    font-size:13px;
-    margin:0;
-    color:#6b788b;
-    font-weight:500;
-}
-
-.report-status{
-    display:inline-block;
-    margin-top:9px;
-    padding:4px 12px;
-    border:1px solid #cfd7e1;
-    border-radius:20px;
-    font-size:8px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.5px;
-}
-
-.info-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    border:1px solid #d5dce5;
-    margin-top:24mm;
-}
-
-.info-item{
-    padding:8px 10px;
-    border-bottom:1px solid #e2e7ed;
-}
-
-.info-item:nth-child(odd){
-    border-right:1px solid #e2e7ed;
-}
-
-.info-item:nth-last-child(-n+2){
-    border-bottom:none;
-}
-
-.info-label{
-    font-size:7.5px;
-    text-transform:uppercase;
-    color:#748197;
-    font-weight:700;
-    margin-bottom:2px;
-}
-
-.info-value{
-    font-size:10px;
-    font-weight:600;
-}
-
-.cover-purpose{
-    text-align:center;
-    margin-top:13mm;
-    color:#66758a;
-    font-size:8.5px;
-}
-
-.cover-footer{
-    text-align:center;
-    color:#8792a2;
-    font-size:8px;
-}
-
-.section-title{
-    background:#17243a;
-    color:#fff;
-    font-size:11px;
-    font-weight:700;
-    padding:7px 9px;
-    margin:0 0 7px;
-    letter-spacing:.2px;
-    display:flex;
-    align-items:center;
-    min-height:26px;
-    page-break-after:avoid;
-}
-
-.report-section{
-    margin:0 0 12px;
-    page-break-inside:auto;
-}
-
-.sub-title{
-    font-size:9px;
-    font-weight:700;
-    margin:8px 0 5px;
-    color:#17243a;
-    page-break-after:avoid;
-}
-
-.summary-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:7px;
-    margin-bottom:8px;
-}
-
-.summary-card{
-    border:1px solid #d6dde6;
-    padding:8px;
-    text-align:center;
-}
-
-.summary-label{
-    font-size:7px;
-    text-transform:uppercase;
-    color:#738096;
-    font-weight:700;
-}
-
-.summary-value{
-    font-size:13px;
-    font-weight:700;
-    margin-top:2px;
-}
-
-.summary-meta{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:5px 18px;
-    padding:5px 0 0;
-    font-size:8.5px;
-}
-
-.report-table{
-    width:100%;
-    border-collapse:collapse;
-    table-layout:fixed;
-    margin:0;
-}
-
-.report-table th{
-    background:#edf1f5;
-    color:#344054;
-    font-size:7.4px;
-    font-weight:700;
-    text-align:left;
-    border:1px solid #cbd4df;
-    padding:5px 5px;
-    vertical-align:middle;
-}
-
-.report-table td{
-    border:1px solid #d5dce5;
-    padding:5px 5px;
-    vertical-align:top;
-    word-wrap:break-word;
-    overflow-wrap:anywhere;
-}
-
-.report-table thead{
-    display:table-header-group;
-}
-
-.report-table tr{
-    page-break-inside:avoid;
-    break-inside:avoid;
-}
-
-.center{
-    text-align:center!important;
-}
-
-.num{
-    text-align:right!important;
-}
-
-.strong{
-    font-weight:700;
-}
-
-.empty-cell{
-    text-align:center;
-    color:#8a95a5;
-    padding:11px!important;
-}
-
-.status-box{
-    display:inline-block;
-    border:1px solid #cfd7e1;
-    border-radius:4px;
-    padding:5px 12px;
-    font-weight:700;
-    background:#f8fafc;
-}
-
-.hse-summary{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    border:1px solid #d6dde6;
-    padding:7px 9px;
-    margin-bottom:8px;
-}
-
-.hse-summary-label{
-    font-size:8px;
-    font-weight:700;
-    color:#657389;
-    text-transform:uppercase;
-}
-
-.photo-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-}
-
-.photo-card{
-    border:1px solid #d3dae4;
-    padding:6px;
-    page-break-inside:avoid;
-    break-inside:avoid;
-}
-
-.photo-heading{
-    display:flex;
-    justify-content:space-between;
-    gap:8px;
-    font-size:7.5px;
-    font-weight:700;
-    color:#526176;
-    margin-bottom:5px;
-}
-
-.photo-card img{
-    display:block;
-    width:100%;
-    height:78mm;
-    object-fit:cover;
-    background:#f2f4f7;
-}
-
-.photo-caption{
-    font-size:8px;
-    line-height:1.4;
-    padding-top:5px;
-    color:#475467;
-}
-
-.photo-activity{
-    font-size:9.5px;
-    font-weight:700;
-    color:#17243a;
-    margin-bottom:2px;
-}
-
-.signatures{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:18px;
-    margin-top:26mm;
-    page-break-inside:avoid;
-}
-
-.signature{
-    border-top:1px solid #687386;
-    padding-top:6px;
-    min-height:34px;
-    font-size:8px;
-    line-height:1.45;
-}
-
-.signature strong{
-    font-size:8.5px;
-}
-
-.signature-role{
-    color:#66758a;
-}
-
-.footer-note{
-    margin-top:15mm;
-    text-align:center;
-    color:#8792a2;
-    font-size:7.5px;
-}
-
-@media print{
-    .print-toolbar{
-        display:none!important;
-    }
-}
+@page{size:A4 portrait;margin:8mm 9mm 9mm 9mm;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:#fff;color:#17243a;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:1.42;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{padding:0;}
+.print-toolbar{display:flex;justify-content:flex-end;gap:8px;padding:8px 0 10px;border-bottom:1px solid #d7dee7;margin-bottom:8px;}
+.print-toolbar button{border:0;border-radius:6px;padding:9px 16px;font-size:11px;font-weight:700;cursor:pointer;}
+.btn-print{background:#0d3b66;color:#fff;}.btn-close{background:#edf2f7;color:#17243a;}
+.print-page{position:relative;height:272mm;min-height:272mm;max-height:272mm;overflow:hidden;page-break-after:always;break-after:page;padding:0 0 9mm;background:#fff;}
+.print-page:last-child{page-break-after:auto;break-after:auto;}
+.page-header{height:22mm;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0d3b66;margin-bottom:6mm;padding:0 2mm;}
+.header-brand{display:flex;align-items:center;min-width:55%;height:18mm;}.header-logo{max-height:17mm;max-width:72mm;object-fit:contain;object-position:left center;}.header-fallback{font-size:18px;font-weight:800;color:#0d3b66;}
+.header-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;color:#53657a;font-size:9px;text-align:right;}.header-meta strong{font-size:11px;color:#17243a;}
+.section-title{height:11mm;display:flex;align-items:center;gap:8px;padding:0 10px;margin:0 0 4mm;border-radius:5px;background:var(--section-color);color:#fff;font-size:13px;font-weight:800;letter-spacing:.15px;}
+.section-number{display:inline-flex;width:23px;height:23px;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.22);font-size:11px;}
+.report-section{margin-bottom:5mm;}.section-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4mm;}
+.summary-card{border:1px solid #d6e0ea;border-radius:6px;padding:10px 12px;background:#f7fbff;min-height:21mm;}.summary-label{font-size:8.5px;text-transform:uppercase;color:#66788c;font-weight:800;}.summary-value{font-size:15px;font-weight:800;color:#0d3b66;margin-top:4px;}
+.summary-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;background:#f3f7fb;border-left:4px solid #1769aa;padding:10px 12px;margin-bottom:5mm;border-radius:4px;font-size:9.5px;}.summary-meta strong{color:#52657a;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #d5dfe9;border-radius:7px;overflow:hidden;margin-top:7mm;}.info-item{padding:9px 12px;border-right:1px solid #d5dfe9;border-bottom:1px solid #d5dfe9;}.info-item:nth-child(even){border-right:0;}.info-label{font-size:8px;text-transform:uppercase;color:#6a7b8e;font-weight:800;}.info-value{font-size:11px;font-weight:700;color:#17243a;margin-top:3px;}
+.report-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:4mm;font-size:9.2px;}.report-table th{background:#e9f1f8;color:#173d61;font-weight:800;font-size:8.5px;text-transform:uppercase;padding:7px 6px;border:1px solid #c8d4df;text-align:left;}.report-table td{padding:6px;border:1px solid #d2dce5;vertical-align:middle;word-break:break-word;}.report-table tbody tr:nth-child(even){background:#fafcff;}.center{text-align:center;}.num{text-align:right;}.strong,.balance-cell{font-weight:800;color:#0d3b66;}.progress-value{font-weight:800;color:#1769aa;}.empty-cell{text-align:center;color:#7b8795;padding:13px!important;background:#fafbfd!important;}
+.sub-title{font-size:10.5px;font-weight:800;color:#173d61;margin:4mm 0 2mm;padding-left:8px;border-left:4px solid #1769aa;}.hse-summary{display:flex;justify-content:space-between;align-items:center;border:1px solid #b9e3cd;background:#edf9f2;padding:10px 13px;border-radius:6px;margin-bottom:4mm;}.hse-summary-label{font-weight:800;color:#205d3e;}.status-box{font-size:13px;font-weight:800;color:#137447;background:#d9f3e4;border-radius:14px;padding:5px 14px;}.status-pill{display:inline-block;padding:3px 8px;border-radius:12px;font-size:8px;font-weight:800;background:#eef2f6;color:#52657a;}.status-open{background:#fee4e2;color:#b42318;}.status-in-progress{background:#fff0c2;color:#8a5b00;}.status-closed{background:#d9f3e4;color:#137447;}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:7mm;}.photo-card{border:1px solid #cbd7e3;border-radius:7px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.08);}.photo-topline{display:flex;justify-content:space-between;align-items:center;padding:7px 9px;background:#f3f7fb;color:#53657a;font-size:8.5px;}.photo-topline strong{color:#173d61;}.photo-card img{display:block;width:100%;height:88mm;object-fit:cover;background:#eef2f6;}.photo-caption{padding:8px 10px;font-size:9px;line-height:1.55;background:#fbfdff;}.photo-title{font-size:11px;font-weight:800;color:#0d3b66;margin-bottom:4px;}.empty-photo{border:1px dashed #c8d4df;border-radius:7px;padding:25mm;text-align:center;color:#738397;background:#f8fafc;}
+.cover-page{height:272mm;min-height:272mm;max-height:272mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;page-break-after:always;}.cover-top{border-bottom:4px solid #0d3b66;padding:3mm 2mm 5mm;display:flex;justify-content:space-between;align-items:center;}.cover-logo{max-height:24mm;max-width:85mm;object-fit:contain;}.fallback-logo{font-size:28px;font-weight:900;color:#0d3b66;border:3px solid #0d3b66;padding:7px 12px;border-radius:7px;}.cover-tag{font-size:9px;color:#5d7186;text-align:right;line-height:1.6;}.cover-hero{margin-top:10mm;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#0d3b66,#1769aa);padding:17mm 14mm;color:#fff;}.cover-hero h1{margin:0;font-size:28px;line-height:1.12;letter-spacing:.2px;}.cover-hero p{margin:7px 0 0;font-size:12px;color:#eaf3fb;}.cover-status{display:inline-block;margin-top:10px;background:#f59e0b;color:#17243a;font-weight:900;padding:5px 13px;border-radius:14px;font-size:9px;text-transform:uppercase;}.cover-accent{height:6px;background:linear-gradient(90deg,#f59e0b 0 25%,#0d3b66 25% 75%,#1b7f5b 75%);margin-top:0;}.cover-highlights{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:7mm;}.cover-highlight{padding:9px;border:1px solid #d7e1ea;border-radius:6px;background:#f7fafc;}.cover-highlight strong{display:block;color:#0d3b66;font-size:8px;text-transform:uppercase;}.cover-highlight span{display:block;font-size:11px;font-weight:800;margin-top:3px;}.cover-footer{border-top:1px solid #cdd8e3;padding-top:5px;display:flex;justify-content:space-between;font-size:8px;color:#66788c;}.cover-note{text-align:center;color:#52657a;font-size:9px;margin-top:5mm;}
+.signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin-top:8mm;}.signature{border:1px solid #d2dce5;border-top:3px solid #0d3b66;border-radius:5px;padding:9px;min-height:38mm;background:#fbfdff;}.signature strong{font-size:10px;color:#0d3b66;}.signature-name{font-size:11px;font-weight:800;margin-top:7px;}.signature-role{font-size:9px;color:#68798b;margin-top:3px;}.approval-note{background:#f4f8fb;border-left:4px solid #1769aa;padding:10px 12px;border-radius:4px;font-size:9.5px;color:#47586a;}
+.page-footer{position:absolute;left:0;right:0;bottom:1mm;border-top:1px solid #d9e2ea;padding-top:4px;display:flex;justify-content:space-between;font-size:7.5px;color:#7b8998;}
+@media print{.print-toolbar{display:none;}body{padding:0;}.print-page{page-break-after:always;break-after:page;}.cover-page{page-break-after:always;}.report-table thead{display:table-header-group;}.report-table tr{break-inside:avoid;page-break-inside:avoid;}}
 </style>
 </head>
 <body>
 
 <div class="print-toolbar">
-    <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+    <button class="btn-print" onclick="window.print()">🖨 Print / Save PDF</button>
     <button class="btn-close" onclick="window.close()">Close</button>
 </div>
 
 <div class="report">
 
 <!-- COVER -->
-<div class="print-page cover-page">
-    <div class="cover">
-        <div>
-            <div class="brand">
-                ${logoHtml}
-            </div>
-
-            <div class="cover-title">
-                <h1>WEEKLY PROJECT PROGRESS REPORT</h1>
-                <h2>Construction Progress &amp; Site Management Report</h2>
-                <div class="report-status">${esc(report.status || "Draft")}</div>
-            </div>
-
-            <div class="info-grid">
-                <div class="info-item"><div class="info-label">Project</div><div class="info-value">${esc(project.name || "-")}</div></div>
-                <div class="info-item"><div class="info-label">Report Number</div><div class="info-value">Week ${esc(report.weekNumber || "-")}</div></div>
-                <div class="info-item"><div class="info-label">Reporting Period</div><div class="info-value">${date(report.startDate)} – ${date(report.endDate)}</div></div>
-                <div class="info-item"><div class="info-label">Report Date</div><div class="info-value">${date(report.reportDate)}</div></div>
-                <div class="info-item"><div class="info-label">Project Manager</div><div class="info-value">${esc(report.projectManager || project.manager || "-")}</div></div>
-                <div class="info-item"><div class="info-label">Project Starting Date</div><div class="info-value">${date(report.projectStartDate)}</div></div>
-            </div>
-
-            <div class="cover-purpose">
-                Prepared for Project Management / Client / Consultant Review
+<div class="cover-page">
+    <div>
+        <div class="cover-top">
+            <div>${logoHtml}</div>
+            <div class="cover-tag">
+                <strong>WEEKLY PROJECT PROGRESS REPORT</strong><br>
+                Project Management / Client / Consultant<br>
+                ${date(report.startDate)} – ${date(report.endDate)}
             </div>
         </div>
 
+        <div class="cover-hero">
+            <h1>WEEKLY PROJECT<br>PROGRESS REPORT</h1>
+            <p>Construction Progress &amp; Site Management Report</p>
+            <span class="cover-status">${esc(report.status || "Draft")}</span>
+        </div>
+
+        <div class="cover-highlights">
+            <div class="cover-highlight"><strong>Project</strong><span>${esc(project.name || "-")}</span></div>
+            <div class="cover-highlight"><strong>Report Number</strong><span>Week ${esc(report.weekNumber || "-")}</span></div>
+            <div class="cover-highlight"><strong>Project Manager</strong><span>${esc(report.projectManager || project.manager || "-")}</span></div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item"><div class="info-label">Reporting Period</div><div class="info-value">${date(report.startDate)} – ${date(report.endDate)}</div></div>
+            <div class="info-item"><div class="info-label">Report Date</div><div class="info-value">${date(report.reportDate)}</div></div>
+            <div class="info-item"><div class="info-label">Project Starting Date</div><div class="info-value">${date(report.projectStartDate)}</div></div>
+            <div class="info-item"><div class="info-label">Overall Weather</div><div class="info-value">${esc(report.overallWeather || "-")}</div></div>
+        </div>
+    </div>
+
+    <div>
+        <div class="cover-note">Prepared for Project Management / Client / Consultant Review</div>
+        <div class="cover-accent"></div>
         <div class="cover-footer">
-            ALM Project Manager &nbsp;|&nbsp; ${esc(project.name || "Project")} &nbsp;|&nbsp; Weekly Report ${esc(report.weekNumber || "-")}
+            <span>AL-MANSOUR ENGINEERING &amp; CONTRACTING LTD.</span>
+            <span>Confidential Project Document</span>
         </div>
     </div>
 </div>
 
 <!-- PAGE 2 -->
 <div class="print-page">
-    <div class="page-header">
-        ${pageLogoHtml}
-        <span>${esc(project.name || "Project")} — Weekly Report ${esc(report.weekNumber || "-")}</span>
+    ${pageHeader}
+
+    ${sectionTitle("1", "EXECUTIVE SUMMARY", "#1769aa")}
+    <div class="section-grid">
+        <div class="summary-card"><div class="summary-label">Overall Weather</div><div class="summary-value">${esc(report.overallWeather || "-")}</div></div>
+        <div class="summary-card"><div class="summary-label">Rain Stoppage</div><div class="summary-value">${esc(Number(report.rainStoppageHours || 0))} hrs</div></div>
+        <div class="summary-card"><div class="summary-label">HSE Status</div><div class="summary-value">${esc(hse.status || "-")}</div></div>
+    </div>
+    <div class="summary-meta">
+        <div><strong>Reporting Period:</strong> ${date(report.startDate)} – ${date(report.endDate)}</div>
+        <div><strong>Report Date:</strong> ${date(report.reportDate)}</div>
+        <div><strong>Project Manager:</strong> ${esc(report.projectManager || project.manager || "-")}</div>
+        <div><strong>Report Status:</strong> ${esc(report.status || "Draft")}</div>
     </div>
 
-    <section class="report-section">
-        ${sectionTitle("1. EXECUTIVE SUMMARY")}
-        <div class="summary-grid">
-            <div class="summary-card"><div class="summary-label">Overall Weather</div><div class="summary-value">${esc(report.overallWeather || "-")}</div></div>
-            <div class="summary-card"><div class="summary-label">Rain Stoppage</div><div class="summary-value">${esc(Number(report.rainStoppageHours || 0))} hrs</div></div>
-            <div class="summary-card"><div class="summary-label">HSE Status</div><div class="summary-value">${esc(hse.status || "-")}</div></div>
-        </div>
-        <div class="summary-meta">
-            <div><strong>Reporting Period:</strong> ${date(report.startDate)} – ${date(report.endDate)}</div>
-            <div><strong>Report Date:</strong> ${date(report.reportDate)}</div>
-            <div><strong>Project Manager:</strong> ${esc(report.projectManager || project.manager || "-")}</div>
-            <div><strong>Report Status:</strong> ${esc(report.status || "Draft")}</div>
-        </div>
-    </section>
+    ${sectionTitle("2", "WEATHER & SITE CONDITIONS", "#1769aa")}
+    ${table(["Day","Weather","Remarks"], weatherRows)}
 
-    <section class="report-section">
-        ${sectionTitle("2. WEATHER & SITE CONDITIONS")}
-        ${table(["Day","Weather"], weatherRows)}
-    </section>
-
-    <section class="report-section">
-        ${sectionTitle("3. WORK PROGRESS")}
-        ${table(["Activity / Work Item","Location","Progress This Week","Remarks"], workRows)}
-    </section>
-
-    <section class="report-section">
-        ${sectionTitle("4. MANPOWER ON SITE")}
-        ${table(["Trade / Personnel","Planned","Actual","Remarks"], manpowerRows)}
-    </section>
-
-    <div class="page-footer">
-        <span>ALM Project Manager — Confidential Project Document</span>
-        <span>Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
+    ${pageFooter}
 </div>
 
 <!-- PAGE 3 -->
 <div class="print-page">
-    <div class="page-header">
-        ${pageLogoHtml}
-        <span>${esc(project.name || "Project")} — Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
+    ${pageHeader}
 
-    <section class="report-section">
-        ${sectionTitle("5. EQUIPMENT / PLANT & MACHINERY")}
-        ${table(["Equipment / Plant","Planned","Actual","Remarks"], equipmentRows)}
-    </section>
+    ${sectionTitle("3", "WORK PROGRESS", "#1b7f5b")}
+    ${table(["Activity / Work Item","Location","Progress This Week","Remarks"], workRows)}
 
-    <section class="report-section">
-        ${sectionTitle("6. MATERIALS ON SITE / MATERIAL DELIVERIES")}
-        ${table(["Material","Unit","Previous Balance","Planned","Delivered","Used","Balance","Remarks"], materialRows)}
-    </section>
+    ${sectionTitle("4", "MANPOWER ON SITE", "#1769aa")}
+    ${table(["Trade / Personnel","Planned","Actual","Remarks"], manpowerRows)}
 
-    <section class="report-section">
-        ${sectionTitle("7. SITE ACTIVITIES / KEY ISSUES & DELAYS")}
-        ${table(["Activity / Issue","Description","Impact","Responsible Party","Required Action","Target Date","Status"], issueRows)}
-    </section>
+    ${sectionTitle("5", "EQUIPMENT / PLANT & MACHINERY", "#315b7d")}
+    ${table(["Equipment / Plant","Planned","Actual","Remarks"], equipmentRows)}
 
-    <div class="page-footer">
-        <span>ALM Project Manager — Confidential Project Document</span>
-        <span>Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
+    ${pageFooter}
 </div>
 
 <!-- PAGE 4 -->
 <div class="print-page">
-    <div class="page-header">
-        ${pageLogoHtml}
-        <span>${esc(project.name || "Project")} — Weekly Report ${esc(report.weekNumber || "-")}</span>
+    ${pageHeader}
+
+    ${sectionTitle("6", "MATERIALS ON SITE / MATERIAL DELIVERIES", "#6f42c1")}
+    ${table(["Material","Unit","Previous Balance","Planned","Delivered","Used","Balance","Remarks"], materialRows)}
+
+    ${sectionTitle("7", "SITE ACTIVITIES / KEY ISSUES & DELAYS", "#d92d20")}
+    ${table(["Activity / Issue","Description","Impact","Responsible Party","Required Action","Target Date","Status"], issueRows)}
+
+    <div style="margin-top:3mm;padding:9px 12px;border-radius:6px;background:#fff7e6;border-left:4px solid #f59e0b;color:#674b16;font-size:9.5px;">
+        <strong>KEY NOTES</strong><br>
+        Review open issues, required actions and target dates before issuing the report.
     </div>
 
-    <section class="report-section">
-        ${sectionTitle("8. HEALTH, SAFETY & ENVIRONMENT (HSE)")}
-
-        <div class="hse-summary">
-            <span class="hse-summary-label">Overall Safety Status</span>
-            <span class="status-box">${esc(hse.status || "Good")}</span>
-        </div>
-
-        <div class="sub-title">Incidents / Accidents</div>
-        ${table(["Incident / Accident","Date","Location","Description","Immediate Action","Status"], incidentRows)}
-
-        <div class="sub-title">Safety Observations</div>
-        ${table(["Safety Observation","Date","Location","Risk / Finding","Recommended Action","Status"], observationRows)}
-
-        <div class="sub-title">Corrective Actions</div>
-        ${table(["Related To","Corrective Action","Responsible Party","Target Date","Status"], correctiveRows)}
-    </section>
-
-    <div class="page-footer">
-        <span>ALM Project Manager — Confidential Project Document</span>
-        <span>Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
+    ${pageFooter}
 </div>
 
-<!-- PROGRESS PHOTOGRAPHS -->
-${photoItems ? `
+<!-- PAGE 5 -->
 <div class="print-page">
-    <div class="page-header">
-        ${pageLogoHtml}
-        <span>${esc(project.name || "Project")} — Weekly Report ${esc(report.weekNumber || "-")}</span>
+    ${pageHeader}
+
+    ${sectionTitle("8", "HEALTH, SAFETY & ENVIRONMENT (HSE)", "#1b7f5b")}
+    <div class="hse-summary">
+        <span class="hse-summary-label">Overall Safety Status</span>
+        <span class="status-box">${esc(hse.status || "Good")}</span>
     </div>
 
-    ${sectionTitle("9. PROGRESS PHOTOGRAPHS")}
-    <div class="photo-grid">
-        ${photoItems}
-    </div>
+    <div class="sub-title">Incidents / Accidents</div>
+    ${table(["Incident / Accident","Date","Location","Description","Immediate Action","Status"], incidentRows)}
 
-    <div class="page-footer">
-        <span>ALM Project Manager — Confidential Project Document</span>
-        <span>Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
-</div>
-` : `
-<div class="print-page">
-    <div class="page-header">
-        ${pageLogoHtml}
-        <span>${esc(project.name || "Project")} — Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
+    <div class="sub-title">Safety Observations</div>
+    ${table(["Safety Observation","Date","Location","Risk / Finding","Recommended Action","Status"], observationRows)}
 
-    ${sectionTitle("9. PROGRESS PHOTOGRAPHS")}
-    <div class="empty-cell" style="border:1px solid #d5dce5;padding:18px;text-align:center;">
-        No progress photographs were added for this reporting period.
-    </div>
+    <div class="sub-title">Corrective Actions</div>
+    ${table(["Related To","Corrective Action","Responsible Party","Target Date","Status"], correctiveRows)}
 
-    <div class="page-footer">
-        <span>ALM Project Manager — Confidential Project Document</span>
-        <span>Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
-</div>
-`}
-
-<!-- APPROVAL -->
-<div class="print-page">
-    <div class="page-header">
-        ${pageLogoHtml}
-        <span>${esc(project.name || "Project")} — Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
-
-    ${sectionTitle("10. REPORT REVIEW & APPROVAL")}
-
-    <div style="margin-top:10mm;font-size:9px;color:#475467;">
-        This report has been prepared as the official weekly record of project progress, site conditions, resources, materials, HSE matters and photographic evidence for the stated reporting period.
-    </div>
+    ${sectionTitle("10", "REPORT REVIEW & APPROVAL", "#0d3b66")}
+    <div class="approval-note">This report has been prepared as the official weekly record of project progress, site conditions, resources, materials, HSE matters and photographic evidence for the stated reporting period.</div>
 
     <div class="signatures">
-        <div class="signature">
-            <strong>Prepared By</strong><br>
-            ${esc((report.reviewApproval && report.reviewApproval.preparedBy && report.reviewApproval.preparedBy.name) || "-")}<br>
-            <span class="signature-role">${esc((report.reviewApproval && report.reviewApproval.preparedBy && report.reviewApproval.preparedBy.role) || "Project Manager")}</span><br>
-            <span class="signature-role">Date: ${report.reviewApproval && report.reviewApproval.preparedBy && report.reviewApproval.preparedBy.date ? esc(report.reviewApproval.preparedBy.date) : "-"}</span>
-        </div>
-        <div class="signature">
-            <strong>Reviewed By</strong><br>
-            ${esc((report.reviewApproval && report.reviewApproval.reviewedBy && report.reviewApproval.reviewedBy.name) || "-")}<br>
-            <span class="signature-role">${esc((report.reviewApproval && report.reviewApproval.reviewedBy && report.reviewApproval.reviewedBy.role) || "Project / Construction Management")}</span><br>
-            <span class="signature-role">Date: ${report.reviewApproval && report.reviewApproval.reviewedBy && report.reviewApproval.reviewedBy.date ? esc(report.reviewApproval.reviewedBy.date) : "-"}</span>
-        </div>
-        <div class="signature">
-            <strong>Approved By</strong><br>
-            ${esc((report.reviewApproval && report.reviewApproval.approvedBy && report.reviewApproval.approvedBy.name) || "-")}<br>
-            <span class="signature-role">${esc((report.reviewApproval && report.reviewApproval.approvedBy && report.reviewApproval.approvedBy.role) || "Client / Consultant")}</span><br>
-            <span class="signature-role">Date: ${report.reviewApproval && report.reviewApproval.approvedBy && report.reviewApproval.approvedBy.date ? esc(report.reviewApproval.approvedBy.date) : "-"}</span>
-        </div>
+        <div class="signature"><strong>Prepared By</strong><div class="signature-name">${esc(prepared.name || "-")}</div><div class="signature-role">${esc(prepared.role || "Project Manager")}</div><div class="signature-role">Date: ${prepared.date ? esc(prepared.date) : "-"}</div></div>
+        <div class="signature"><strong>Reviewed By</strong><div class="signature-name">${esc(reviewed.name || "-")}</div><div class="signature-role">${esc(reviewed.role || "Project / Construction Management")}</div><div class="signature-role">Date: ${reviewed.date ? esc(reviewed.date) : "-"}</div></div>
+        <div class="signature"><strong>Approved By</strong><div class="signature-name">${esc(approved.name || "-")}</div><div class="signature-role">${esc(approved.role || "Client / Consultant")}</div><div class="signature-role">Date: ${approved.date ? esc(approved.date) : "-"}</div></div>
     </div>
 
-    <div class="footer-note">
-        ALM Project Manager &nbsp;|&nbsp; ${esc(project.name || "Project")} &nbsp;|&nbsp; Weekly Report ${esc(report.weekNumber || "-")}<br>
-        Confidential — For Project Management / Client / Consultant Use
-    </div>
-
-    <div class="page-footer">
-        <span>ALM Project Manager — Confidential Project Document</span>
-        <span>Weekly Report ${esc(report.weekNumber || "-")}</span>
-    </div>
+    ${pageFooter}
 </div>
+
+${photoPages.join("")}
 
 </div>
 </body>
