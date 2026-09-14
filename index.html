@@ -3412,7 +3412,397 @@ content.innerHTML = `
         </div>
 
     </div>
+    </div>
 
+
+    <!-- EQUIPMENT REGISTER -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <h2>Equipment Register</h2>
+
+                <div style="
+                    margin-top:4px;
+                    color:#708096;
+                    font-size:12px;
+                ">
+                    Equipment, plant and machinery assigned to this project
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH & FILTERS -->
+
+        <div style="
+            padding:16px 20px;
+            border-bottom:1px solid #e5e7eb;
+            display:grid;
+            grid-template-columns:
+                minmax(220px,1fr)
+                180px
+                180px
+                180px;
+            gap:12px;
+        ">
+
+            <input
+                id="equipmentSearch"
+                type="text"
+                placeholder="🔍 Search equipment..."
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:10px 12px;
+                    border:1px solid #d4dae2;
+                    border-radius:7px;
+                    font-size:13px;
+                "
+            >
+
+
+            <select
+                id="equipmentTypeFilter"
+                style="
+                    width:100%;
+                    padding:10px 12px;
+                    border:1px solid #d4dae2;
+                    border-radius:7px;
+                    font-size:13px;
+                    background:white;
+                "
+            >
+                <option value="">All Types</option>
+            </select>
+
+
+            <select
+                id="equipmentStatusFilter"
+                style="
+                    width:100%;
+                    padding:10px 12px;
+                    border:1px solid #d4dae2;
+                    border-radius:7px;
+                    font-size:13px;
+                    background:white;
+                "
+            >
+                <option value="">All Status</option>
+                <option value="Operational">Operational</option>
+                <option value="Available">Available</option>
+                <option value="Under Maintenance">Under Maintenance</option>
+                <option value="Out of Service">Out of Service</option>
+            </select>
+
+
+            <select
+                id="equipmentOwnershipFilter"
+                style="
+                    width:100%;
+                    padding:10px 12px;
+                    border:1px solid #d4dae2;
+                    border-radius:7px;
+                    font-size:13px;
+                    background:white;
+                "
+            >
+                <option value="">All Ownership</option>
+                <option value="Company">Company</option>
+                <option value="Subcontractor">Subcontractor</option>
+                <option value="Rented">Rented</option>
+            </select>
+
+        </div>
+
+
+        <!-- REGISTER TABLE -->
+
+        <div style="
+            overflow-x:auto;
+            width:100%;
+        ">
+
+            <table style="
+                width:100%;
+                min-width:1250px;
+                border-collapse:collapse;
+                font-size:13px;
+            ">
+
+                <thead>
+
+                    <tr style="
+                        background:#f3f6fa;
+                        color:#374151;
+                    ">
+
+                        <th style="
+                            padding:12px;
+                            text-align:center;
+                            width:45px;
+                        ">
+                            #
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Equipment ID
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Equipment / Plant
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Type
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Brand / Model
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Ownership
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Site Location
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Status
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Mobilization Date
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:left;
+                        ">
+                            Notes
+                        </th>
+
+                        <th style="
+                            padding:12px;
+                            text-align:center;
+                        ">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${
+                        equipment.length
+                        ?
+
+                        equipment.map(
+                            (item,index) => `
+
+                                <tr>
+
+                                    <td style="
+                                        padding:12px;
+                                        text-align:center;
+                                    ">
+                                        ${index + 1}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.id || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        <strong>
+                                            ${escapeHTML(
+                                                item.name || "-"
+                                            )}
+                                        </strong>
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.type || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.brandModel || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.ownership || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.location || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.status || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.mobilizationDate || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                    ">
+                                        ${escapeHTML(
+                                            item.notes || "-"
+                                        )}
+                                    </td>
+
+                                    <td style="
+                                        padding:12px;
+                                        text-align:center;
+                                    ">
+
+                                        <div class="actions">
+
+                                            <button
+                                                class="action-btn"
+                                            >
+                                                View
+                                            </button>
+
+                                            <button
+                                                class="action-btn"
+                                            >
+                                                Edit
+                                            </button>
+
+                                            <button
+                                                class="action-btn"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            `
+                        ).join("")
+
+                        :
+
+                        `
+                        <tr>
+
+                            <td
+                                colspan="11"
+                                style="
+                                    padding:50px 20px;
+                                    text-align:center;
+                                    color:#64748b;
+                                "
+                            >
+
+                                <div style="
+                                    font-size:36px;
+                                    margin-bottom:10px;
+                                ">
+                                    🚜
+                                </div>
+
+                                <strong style="
+                                    display:block;
+                                    color:#334155;
+                                    font-size:15px;
+                                    margin-bottom:6px;
+                                ">
+                                    No Equipment Registered
+                                </strong>
+
+                                <span style="
+                                    font-size:13px;
+                                ">
+                                    Add equipment to start building
+                                    the project equipment register.
+                                </span>
+
+                            </td>
+
+                        </tr>
+                        `
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+`;
 `;
 
 };
