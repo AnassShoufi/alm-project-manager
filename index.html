@@ -8265,6 +8265,19 @@ function renderWeeklyReportsSection(project){
                                                         <button
                                                             class="action-btn"
                                                             onclick="
+                                                                window.printWeeklyReport(
+                                                                    '${project.id}',
+                                                                    ${index}
+                                                                );
+                                                            "
+                                                        >
+                                                            🖨️ Print
+                                                        </button>
+
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
                                                                 window.deleteWeeklyReport(
                                                                     '${project.id}',
                                                                     ${index}
@@ -13262,6 +13275,1190 @@ status:
 
 /* =====================================================
    CLOSE WEEKLY REPORT MODAL
+===================================================== */
+
+window.closeWeeklyReportModal =
+function(){
+
+    const modal =
+        document.getElementById(
+            "weeklyReportModal"
+        );
+
+    if(modal){
+
+        modal.remove();
+
+    }
+
+};
+
+
+/* =====================================================
+   PRINT WEEKLY REPORT
+===================================================== */
+
+window.printWeeklyReport =
+function(
+    projectId,
+    index
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    ensureWeeklyReports(project);
+
+    const report =
+        project.weeklyReports[index];
+
+    if(!report){
+        return;
+    }
+
+    const esc =
+        value =>
+            String(
+                value === undefined ||
+                value === null
+                ? ""
+                : value
+            )
+            .replace(/&/g,"&amp;")
+            .replace(/</g,"&lt;")
+            .replace(/>/g,"&gt;")
+            .replace(/"/g,"&quot;")
+            .replace(/'/g,"&#039;");
+
+    const date =
+        value =>
+            value
+            ? weeklyReportDate(value)
+            : "-";
+
+    const valueOrDash =
+        value =>
+            value === undefined ||
+            value === null ||
+            value === ""
+            ? "-"
+            : esc(value);
+
+    const projectName =
+        project.name ||
+        project.projectName ||
+        project.title ||
+        "Project";
+
+    const projectClient =
+        project.client ||
+        project.clientName ||
+        "";
+
+    const weatherDays = [
+        "Saturday",
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+    ];
+
+    const weatherRows =
+        weatherDays.map(day => `
+            <tr>
+                <td><strong>${day}</strong></td>
+                <td>${valueOrDash(report.weather?.[day])}</td>
+            </tr>
+        `).join("");
+
+    const workProgress =
+        Array.isArray(report.workProgress)
+        ? report.workProgress
+        : [];
+
+    const workRows =
+        workProgress.length
+        ?
+        workProgress.map(item => `
+            <tr>
+                <td>${valueOrDash(item.activity)}</td>
+                <td>${valueOrDash(item.location)}</td>
+                <td class="num">${item.progress === "" ? "-" : esc(item.progress) + "%"}</td>
+                <td>${valueOrDash(item.remarks)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="4" class="empty-cell">No work progress recorded.</td></tr>`;
+
+    const manpower =
+        Array.isArray(report.manpower)
+        ? report.manpower
+        : [];
+
+    const manpowerRows =
+        manpower.length
+        ?
+        manpower.map(item => `
+            <tr>
+                <td>${valueOrDash(item.trade)}</td>
+                <td class="num">${valueOrDash(item.planned)}</td>
+                <td class="num">${valueOrDash(item.actual)}</td>
+                <td>${valueOrDash(item.remarks)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="4" class="empty-cell">No manpower records.</td></tr>`;
+
+    const equipment =
+        Array.isArray(report.equipment)
+        ? report.equipment
+        : [];
+
+    const equipmentRows =
+        equipment.length
+        ?
+        equipment.map(item => `
+            <tr>
+                <td>${valueOrDash(item.name)}</td>
+                <td class="num">${valueOrDash(item.planned)}</td>
+                <td class="num">${valueOrDash(item.actual)}</td>
+                <td>${valueOrDash(item.remarks)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="4" class="empty-cell">No equipment records.</td></tr>`;
+
+    const materials =
+        Array.isArray(report.materials)
+        ? report.materials
+        : [];
+
+    const materialRows =
+        materials.length
+        ?
+        materials.map(item => `
+            <tr>
+                <td>${valueOrDash(item.name)}</td>
+                <td>${valueOrDash(item.unit)}</td>
+                <td class="num">${valueOrDash(item.availableFromPreviousWeek)}</td>
+                <td class="num">${valueOrDash(item.planned)}</td>
+                <td class="num">${valueOrDash(item.delivered)}</td>
+                <td class="num">${valueOrDash(item.used)}</td>
+                <td class="num"><strong>${valueOrDash(item.balance)}</strong></td>
+                <td>${valueOrDash(item.remarks)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="8" class="empty-cell">No material records.</td></tr>`;
+
+    const siteIssues =
+        Array.isArray(report.siteIssues)
+        ? report.siteIssues
+        : [];
+
+    const issueRows =
+        siteIssues.length
+        ?
+        siteIssues.map(item => `
+            <tr>
+                <td>${valueOrDash(item.activity)}</td>
+                <td>${valueOrDash(item.description)}</td>
+                <td>${valueOrDash(item.impact)}</td>
+                <td>${valueOrDash(item.responsibleParty)}</td>
+                <td>${valueOrDash(item.requiredAction)}</td>
+                <td>${date(item.targetDate)}</td>
+                <td>${valueOrDash(item.status)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="7" class="empty-cell">No site activities, issues or delays recorded.</td></tr>`;
+
+    const hse =
+        report.hse || {};
+
+    const incidents =
+        Array.isArray(hse.incidents)
+        ? hse.incidents
+        : [];
+
+    const incidentRows =
+        incidents.length
+        ?
+        incidents.map(item => `
+            <tr>
+                <td>${valueOrDash(item.incident)}</td>
+                <td>${date(item.date)}</td>
+                <td>${valueOrDash(item.location)}</td>
+                <td>${valueOrDash(item.description)}</td>
+                <td>${valueOrDash(item.immediateAction)}</td>
+                <td>${valueOrDash(item.status)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="6" class="empty-cell">No incidents / accidents recorded.</td></tr>`;
+
+    const observations =
+        Array.isArray(hse.observations)
+        ? hse.observations
+        : (
+            hse.observations
+            ?
+            [{
+                observation:hse.observations,
+                date:"",
+                location:"",
+                riskFinding:"",
+                recommendedAction:"",
+                status:"Open"
+            }]
+            :
+            []
+        );
+
+    const observationRows =
+        observations.length
+        ?
+        observations.map(item => `
+            <tr>
+                <td>${valueOrDash(item.observation)}</td>
+                <td>${date(item.date)}</td>
+                <td>${valueOrDash(item.location)}</td>
+                <td>${valueOrDash(item.riskFinding)}</td>
+                <td>${valueOrDash(item.recommendedAction)}</td>
+                <td>${valueOrDash(item.status)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="6" class="empty-cell">No safety observations recorded.</td></tr>`;
+
+    const correctiveActions =
+        Array.isArray(hse.correctiveActions)
+        ? hse.correctiveActions
+        : (
+            hse.correctiveActions
+            ?
+            [{
+                relatedTo:"",
+                correctiveAction:hse.correctiveActions,
+                responsibleParty:"",
+                targetDate:"",
+                status:"Open"
+            }]
+            :
+            []
+        );
+
+    const correctiveRows =
+        correctiveActions.length
+        ?
+        correctiveActions.map(item => `
+            <tr>
+                <td>${valueOrDash(item.relatedTo)}</td>
+                <td>${valueOrDash(item.correctiveAction)}</td>
+                <td>${valueOrDash(item.responsibleParty)}</td>
+                <td>${date(item.targetDate)}</td>
+                <td>${valueOrDash(item.status)}</td>
+            </tr>
+        `).join("")
+        :
+        `<tr><td colspan="5" class="empty-cell">No corrective actions recorded.</td></tr>`;
+
+    const progressPhotos =
+        Array.isArray(report.progressPhotos)
+        ? report.progressPhotos
+        : [];
+
+    const photoPages =
+        progressPhotos.length
+        ?
+        progressPhotos.map((photo,photoIndex) => `
+            <div class="photo-card">
+                <div class="photo-number">
+                    PHOTO ${String(photoIndex + 1).padStart(2,"0")}
+                </div>
+                <img
+                    src="${photo.image || ""}"
+                    alt="Progress Photograph ${photoIndex + 1}"
+                >
+                <div class="photo-caption">
+                    <strong>${valueOrDash(photo.activity)}</strong>
+                    <div>
+                        <span>Location:</span>
+                        ${valueOrDash(photo.location)}
+                    </div>
+                    <div>
+                        <span>Date:</span>
+                        ${date(photo.date)}
+                    </div>
+                    ${
+                        photo.remarks
+                        ?
+                        `<div><span>Remarks:</span> ${valueOrDash(photo.remarks)}</div>`
+                        :
+                        ""
+                    }
+                </div>
+            </div>
+        `).join("")
+        :
+        `<div class="empty-photo">No progress photographs were added.</div>`;
+
+    const printWindow =
+        window.open(
+            "",
+            "_blank"
+        );
+
+    if(!printWindow){
+        alert(
+            "Please allow pop-ups to print the Weekly Report."
+        );
+        return;
+    }
+
+    printWindow.document.open();
+
+    printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+Weekly Report - ${esc(projectName)} - Week ${esc(report.weekNumber)}
+</title>
+
+<style>
+
+@page{
+    size:A4;
+    margin:14mm 13mm 16mm 13mm;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    color:#17243a;
+    font-size:10.5px;
+    line-height:1.45;
+    background:#fff;
+}
+
+.report{
+    width:100%;
+}
+
+.header{
+    border-bottom:3px solid #17243a;
+    padding-bottom:12px;
+    margin-bottom:18px;
+}
+
+.header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+}
+
+.brand{
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:.6px;
+}
+
+.report-title{
+    font-size:18px;
+    font-weight:700;
+    margin-top:4px;
+    text-transform:uppercase;
+}
+
+.report-subtitle{
+    color:#66758a;
+    margin-top:3px;
+}
+
+.report-meta{
+    text-align:right;
+    font-size:10px;
+    color:#4f5f73;
+}
+
+.cover-box{
+    margin-top:15px;
+    border:1px solid #d5dce5;
+    border-radius:5px;
+    overflow:hidden;
+}
+
+.cover-row{
+    display:grid;
+    grid-template-columns:22% 28% 22% 28%;
+}
+
+.cover-label{
+    background:#f1f4f8;
+    font-weight:700;
+    color:#34445a;
+}
+
+.cover-row > div{
+    padding:7px 9px;
+    border-right:1px solid #d5dce5;
+    border-bottom:1px solid #d5dce5;
+}
+
+.cover-row > div:nth-child(4n){
+    border-right:none;
+}
+
+.cover-row:last-child > div{
+    border-bottom:none;
+}
+
+.section{
+    margin-top:20px;
+    page-break-inside:auto;
+}
+
+.section-title{
+    background:#17243a;
+    color:#fff;
+    padding:8px 10px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    margin-bottom:8px;
+    page-break-after:avoid;
+}
+
+.sub-title{
+    font-size:11px;
+    font-weight:700;
+    color:#17243a;
+    margin:10px 0 6px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:8px;
+}
+
+thead{
+    display:table-header-group;
+}
+
+tr{
+    page-break-inside:avoid;
+}
+
+th{
+    background:#eef2f6;
+    color:#34445a;
+    font-weight:700;
+    text-align:left;
+    border:1px solid #cfd7e1;
+    padding:6px 7px;
+    vertical-align:middle;
+}
+
+td{
+    border:1px solid #d7dee7;
+    padding:6px 7px;
+    vertical-align:top;
+}
+
+tbody tr:nth-child(even) td{
+    background:#fafbfc;
+}
+
+.num{
+    text-align:center;
+}
+
+.empty-cell{
+    text-align:center;
+    color:#7b8797;
+    padding:12px;
+}
+
+.summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-bottom:8px;
+}
+
+.summary-card{
+    border:1px solid #d5dce5;
+    padding:9px;
+    border-radius:4px;
+}
+
+.summary-card .label{
+    color:#69788b;
+    font-size:9px;
+    text-transform:uppercase;
+}
+
+.summary-card .value{
+    font-size:14px;
+    font-weight:700;
+    margin-top:3px;
+}
+
+.note{
+    border:1px solid #d5dce5;
+    background:#fafbfc;
+    padding:9px;
+    border-radius:4px;
+    white-space:pre-wrap;
+}
+
+.status{
+    display:inline-block;
+    padding:4px 9px;
+    border:1px solid #cbd4df;
+    border-radius:12px;
+    font-weight:700;
+}
+
+.photo-section{
+    page-break-before:always;
+}
+
+.photo-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.photo-card{
+    border:1px solid #cfd7e1;
+    border-radius:5px;
+    overflow:hidden;
+    page-break-inside:avoid;
+    background:#fff;
+}
+
+.photo-number{
+    background:#eef2f6;
+    padding:6px 8px;
+    font-weight:700;
+    font-size:9px;
+    letter-spacing:.5px;
+}
+
+.photo-card img{
+    display:block;
+    width:100%;
+    height:78mm;
+    object-fit:cover;
+    background:#f4f6f8;
+}
+
+.photo-caption{
+    padding:8px;
+    font-size:9.5px;
+    line-height:1.5;
+}
+
+.photo-caption strong{
+    display:block;
+    font-size:10.5px;
+    margin-bottom:3px;
+}
+
+.photo-caption span{
+    color:#66758a;
+    font-weight:700;
+}
+
+.empty-photo{
+    border:1px dashed #cfd7e1;
+    padding:25px;
+    text-align:center;
+    color:#7b8797;
+}
+
+.footer{
+    margin-top:22px;
+    border-top:1px solid #cfd7e1;
+    padding-top:10px;
+    color:#69788b;
+    font-size:9px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.signature-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:15px;
+    margin-top:28px;
+}
+
+.signature{
+    border-top:1px solid #9ca8b7;
+    padding-top:5px;
+    color:#59687a;
+    min-height:30px;
+}
+
+.page-break{
+    page-break-before:always;
+}
+
+@media print{
+    body{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+    }
+
+    .no-print{
+        display:none !important;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="report">
+
+    <div class="header">
+
+        <div class="header-top">
+
+            <div>
+                <div class="brand">
+                    ALM PROJECT MANAGER
+                </div>
+
+                <div class="report-title">
+                    Weekly Project Progress Report
+                </div>
+
+                <div class="report-subtitle">
+                    ${esc(projectName)}
+                </div>
+            </div>
+
+            <div class="report-meta">
+                <div>
+                    <strong>REPORT NO.</strong>
+                    ${valueOrDash(report.weekNumber)}
+                </div>
+
+                <div style="margin-top:4px;">
+                    <strong>REPORT DATE</strong>
+                    ${date(report.reportDate)}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="cover-box">
+
+            <div class="cover-row">
+                <div class="cover-label">Project</div>
+                <div>${esc(projectName)}</div>
+                <div class="cover-label">Client</div>
+                <div>${valueOrDash(projectClient)}</div>
+            </div>
+
+            <div class="cover-row">
+                <div class="cover-label">Reporting Period</div>
+                <div>
+                    ${date(report.startDate)}
+                    -
+                    ${date(report.endDate)}
+                </div>
+                <div class="cover-label">Project Manager</div>
+                <div>
+                    ${valueOrDash(report.projectManager || project.manager)}
+                </div>
+            </div>
+
+            <div class="cover-row">
+                <div class="cover-label">Project Start Date</div>
+                <div>${date(report.projectStartDate)}</div>
+                <div class="cover-label">Overall Weather</div>
+                <div>${valueOrDash(report.overallWeather)}</div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            1. Executive Summary
+        </div>
+
+        <div class="summary-grid">
+
+            <div class="summary-card">
+                <div class="label">Reporting Week</div>
+                <div class="value">
+                    Week ${valueOrDash(report.weekNumber)}
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="label">Overall Weather</div>
+                <div class="value">
+                    ${valueOrDash(report.overallWeather)}
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="label">Rain Stoppage</div>
+                <div class="value">
+                    ${esc(report.rainStoppageHours || 0)} hrs
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            2. Weather & Site Conditions
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th style="width:25%;">Day</th>
+                    <th>Weather Condition</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${weatherRows}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            3. Work Progress
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Activity / Work Item</th>
+                    <th>Location</th>
+                    <th style="width:17%;">Progress This Week</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${workRows}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            4. Manpower on Site
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Trade / Personnel</th>
+                    <th style="width:15%;">Planned</th>
+                    <th style="width:15%;">Actual</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${manpowerRows}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            5. Equipment / Plant & Machinery
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Equipment / Plant</th>
+                    <th style="width:15%;">Planned</th>
+                    <th style="width:15%;">Actual</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${equipmentRows}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            6. Materials
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Unit</th>
+                    <th>Previous Balance</th>
+                    <th>Required / Planned</th>
+                    <th>Delivered</th>
+                    <th>Used</th>
+                    <th>Balance</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${materialRows}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            7. Site Activities / Key Issues & Delays
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Activity / Issue</th>
+                    <th>Description</th>
+                    <th>Impact</th>
+                    <th>Responsible Party</th>
+                    <th>Required Action</th>
+                    <th>Target Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${issueRows}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            8. HSE
+        </div>
+
+        <div class="sub-title">
+            Overall Safety Status
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <span class="status">
+                ${valueOrDash(hse.status || "Good")}
+            </span>
+        </div>
+
+        <div class="sub-title">
+            Incidents / Accidents
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Incident / Accident</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Immediate Action</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${incidentRows}
+            </tbody>
+
+        </table>
+
+        <div class="sub-title">
+            Safety Observations
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Safety Observation</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Risk / Finding</th>
+                    <th>Recommended Action</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${observationRows}
+            </tbody>
+
+        </table>
+
+        <div class="sub-title">
+            Corrective Actions
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Related To</th>
+                    <th>Corrective Action</th>
+                    <th>Responsible Party</th>
+                    <th>Target Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${correctiveRows}
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section photo-section">
+
+        <div class="section-title">
+            9. Progress Photographs
+        </div>
+
+        <div class="photo-grid">
+            ${photoPages}
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            10. Report Sign-Off
+        </div>
+
+        <div class="signature-grid">
+
+            <div class="signature">
+                Prepared By<br>
+                <strong>Project Manager</strong>
+            </div>
+
+            <div class="signature">
+                Reviewed By<br>
+                <strong>________________________</strong>
+            </div>
+
+            <div class="signature">
+                Approved By<br>
+                <strong>________________________</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer">
+
+        <div>
+            ${esc(projectName)}
+            &nbsp; | &nbsp;
+            Weekly Report - Week ${valueOrDash(report.weekNumber)}
+        </div>
+
+        <div>
+            Generated ${new Date().toLocaleDateString()}
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+window.onload =
+function(){
+
+    setTimeout(
+        function(){
+            window.print();
+        },
+        500
+    );
+
+};
+
+window.onafterprint =
+function(){
+    setTimeout(
+        function(){
+            window.close();
+        },
+        300
+    );
+};
+
+</script>
+
+</body>
+</html>
+    `);
+
+    printWindow.document.close();
+
+};
+
+/* =====================================================
+   DELETE WEEKLY REPORT
+===================================================== */
+
+window.deleteWeeklyReport =
+function(
+    projectId,
+    index
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project){
+
+        return;
+
+    }
+
+
+    ensureWeeklyReports(project);
+
+
+    const report =
+        project.weeklyReports[index];
+
+
+    if(!report){
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `Are you sure you want to delete Week ${report.weekNumber}?`
+        );
+
+
+    if(!confirmed){
+
+        return;
+
+    }
+
+
+    project.weeklyReports.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    renderWeeklyReportsSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   END WEEKLY REPORTS MODULE - STEP 1
 ===================================================== */
 
 window.closeWeeklyReportModal =
