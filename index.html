@@ -13539,10 +13539,14 @@ body{
 
 .print-page{
     position:relative;
-    min-height:267mm;
+    min-height:0;
     padding:0 0 9mm;
     page-break-after:always;
     break-after:page;
+}
+
+.print-page.cover-page{
+    min-height:267mm;
 }
 
 .print-page:last-child{
@@ -13706,6 +13710,7 @@ body{
 
 .report-section{
     margin:0 0 12px;
+    page-break-inside:auto;
 }
 
 .sub-title{
@@ -13921,7 +13926,7 @@ body{
 <div class="report">
 
 <!-- COVER -->
-<div class="print-page">
+<div class="print-page cover-page">
     <div class="cover">
         <div>
             <div class="brand">
