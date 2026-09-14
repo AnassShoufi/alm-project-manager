@@ -3257,7 +3257,371 @@ function ensureEquipment(project){
     return project.equipment;
 
 }
+/* =====================================================
+   EQUIPMENT MODULE
+   STEP 4 - ADD EQUIPMENT FORM
+===================================================== */
 
+window.addEquipment = function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const existing =
+        document.getElementById(
+            "equipmentModal"
+        );
+
+    if(existing){
+        existing.remove();
+    }
+
+
+    const modal =
+        document.createElement(
+            "div"
+        );
+
+    modal.id =
+        "equipmentModal";
+
+    modal.className =
+        "modal-overlay";
+
+    modal.style.display =
+        "flex";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                width:760px;
+                max-width:95%;
+            "
+        >
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Add Equipment
+                    </h2>
+
+                    <div style="
+                        margin-top:5px;
+                        color:#708096;
+                        font-size:12px;
+                    ">
+                        ${escapeHTML(
+                            project.name
+                        )}
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="close"
+                    onclick="
+                        closeEquipmentModal();
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                onsubmit="
+                    saveEquipment(
+                        event,
+                        '${project.id}'
+                    );
+                "
+            >
+
+                <div
+                    class="modal-body"
+                    style="
+                        max-height:70vh;
+                        overflow-y:auto;
+                    "
+                >
+
+                    <div class="form-grid">
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Equipment ID *
+                            </label>
+
+                            <input
+                                id="equipmentId"
+                                type="text"
+                                required
+                                placeholder="e.g. EQ-001"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Equipment / Plant *
+                            </label>
+
+                            <input
+                                id="equipmentName"
+                                type="text"
+                                required
+                                placeholder="e.g. Excavator"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Type *
+                            </label>
+
+                            <select
+                                id="equipmentType"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Type
+                                </option>
+
+                                <option value="Heavy Equipment">
+                                    Heavy Equipment
+                                </option>
+
+                                <option value="Vehicle">
+                                    Vehicle
+                                </option>
+
+                                <option value="Lifting Equipment">
+                                    Lifting Equipment
+                                </option>
+
+                                <option value="Small Plant">
+                                    Small Plant
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Brand / Model
+                            </label>
+
+                            <input
+                                id="equipmentBrandModel"
+                                type="text"
+                                placeholder="e.g. CAT 320"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Ownership *
+                            </label>
+
+                            <select
+                                id="equipmentOwnership"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Ownership
+                                </option>
+
+                                <option value="Company">
+                                    Company
+                                </option>
+
+                                <option value="Subcontractor">
+                                    Subcontractor
+                                </option>
+
+                                <option value="Rented">
+                                    Rented
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Site Location
+                            </label>
+
+                            <input
+                                id="equipmentLocation"
+                                type="text"
+                                placeholder="e.g. Main Site"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Status *
+                            </label>
+
+                            <select
+                                id="equipmentStatus"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Status
+                                </option>
+
+                                <option value="Operational">
+                                    Operational
+                                </option>
+
+                                <option value="Available">
+                                    Available
+                                </option>
+
+                                <option value="Under Maintenance">
+                                    Under Maintenance
+                                </option>
+
+                                <option value="Out of Service">
+                                    Out of Service
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Mobilization Date
+                            </label>
+
+                            <input
+                                id="equipmentMobilizationDate"
+                                type="date"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="form-group"
+                        style="
+                            margin-top:18px;
+                        "
+                    >
+
+                        <label>
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="equipmentNotes"
+                            rows="4"
+                            placeholder="Additional notes..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="modal-footer"
+                >
+
+                    <button
+                        type="button"
+                        class="btn"
+                        onclick="
+                            closeEquipmentModal();
+                        "
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Save Equipment
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+
+    modal.addEventListener(
+        "click",
+        function(e){
+
+            if(e.target === modal){
+
+                closeEquipmentModal();
+
+            }
+
+        }
+    );
+
+};
 
 window.renderEquipmentSection = function(project){
 
