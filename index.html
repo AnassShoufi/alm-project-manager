@@ -7480,10 +7480,21 @@ function ensureWeeklyReports(project){
 
     }
 
+    // Weekly Reports Archive settings
+    if(!project.weeklyReportsArchive){
+
+        project.weeklyReportsArchive = {
+            goLiveDate: "",
+            googleDriveUrl: ""
+        };
+
+        persist();
+
+    }
+
     return project.weeklyReports;
 
 }
-
 
 /* =====================================================
    WEEKLY REPORT ESCAPE
@@ -7993,7 +8004,178 @@ function renderWeeklyReportsSection(project){
                 + New Weekly Report
 
             </button>
+ </div>
 
+
+        <!-- PREVIOUS WEEKLY REPORTS ARCHIVE -->
+
+        <div class="panel" style="
+            margin-bottom:20px;
+            border-left:4px solid #0d6efd;
+        ">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        📁 Previous Weekly Reports Archive
+                    </h2>
+
+                    <div style="
+                        margin-top:4px;
+                        color:#708096;
+                        font-size:12px;
+                    ">
+                        Historical weekly reports created before ERP implementation
+                    </div>
+
+                </div>
+
+
+                ${
+                    project.weeklyReportsArchive &&
+                    project.weeklyReportsArchive.googleDriveUrl
+
+                    ?
+
+                    `
+                    <button
+                        class="btn btn-primary"
+                        onclick="
+                            window.openPreviousWeeklyReportsArchive(
+                                '${project.id}'
+                            );
+                        "
+                    >
+                        📂 Open Archive
+                    </button>
+                    `
+
+                    :
+
+                    `
+                    <button
+                        class="btn btn-secondary"
+                        onclick="
+                            window.configurePreviousWeeklyReportsArchive(
+                                '${project.id}'
+                            );
+                        "
+                    >
+                        ⚙ Configure Archive
+                    </button>
+                    `
+                }
+
+            </div>
+
+
+            <div style="
+                padding:18px 20px;
+                display:grid;
+                grid-template-columns:
+                    minmax(180px,220px) 1fr;
+                gap:15px;
+                align-items:center;
+            ">
+
+
+                <div>
+
+                    <div style="
+                        color:#708096;
+                        font-size:12px;
+                        margin-bottom:5px;
+                    ">
+                        ERP Go-Live Date
+                    </div>
+
+                    <strong>
+
+                        ${
+                            project.weeklyReportsArchive &&
+                            project.weeklyReportsArchive.goLiveDate
+
+                            ?
+
+                            weeklyReportDate(
+                                project.weeklyReportsArchive.goLiveDate
+                            )
+
+                            :
+
+                            "Not Set"
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <div style="
+                        color:#708096;
+                        font-size:12px;
+                        margin-bottom:5px;
+                    ">
+                        Archive Location
+                    </div>
+
+
+                    ${
+                        project.weeklyReportsArchive &&
+                        project.weeklyReportsArchive.googleDriveUrl
+
+                        ?
+
+                        `
+                        <div style="
+                            display:flex;
+                            align-items:center;
+                            gap:10px;
+                        ">
+
+                            <span style="
+                                color:#334155;
+                                overflow:hidden;
+                                text-overflow:ellipsis;
+                                white-space:nowrap;
+                            ">
+                                ${weeklyReportEscape(
+                                    project.weeklyReportsArchive.googleDriveUrl
+                                )}
+                            </span>
+
+                            <button
+                                class="action-btn"
+                                onclick="
+                                    window.configurePreviousWeeklyReportsArchive(
+                                        '${project.id}'
+                                    );
+                                "
+                            >
+                                Edit
+                            </button>
+
+                        </div>
+                        `
+
+                        :
+
+                        `
+                        <span style="
+                            color:#94a3b8;
+                        ">
+                            No Google Drive archive configured.
+                        </span>
+                        `
+                    }
+
+                </div>
+
+            </div>
         </div>
 
 
@@ -8346,7 +8528,121 @@ function renderWeeklyReportsSection(project){
     `;
 
 }
+/* =====================================================
+   PREVIOUS WEEKLY REPORTS - GOOGLE DRIVE ARCHIVE
+===================================================== */
 
+window.openPreviousWeeklyReportsArchive =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    const archive =
+        project.weeklyReportsArchive || {};
+
+    const archiveUrl =
+        (archive.googleDriveUrl || "").trim();
+
+    if(!archiveUrl){
+
+        alert(
+            "No Google Drive archive has been configured for this project."
+        );
+
+        return;
+    }
+
+    window.open(
+        archiveUrl,
+        "_blank",
+        "noopener,noreferrer"
+    );
+
+};
+
+
+window.configurePreviousWeeklyReportsArchive =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    if(!project.weeklyReportsArchive){
+
+        project.weeklyReportsArchive = {
+            goLiveDate: "",
+            googleDriveUrl: ""
+        };
+
+    }
+
+
+    const currentDate =
+        project.weeklyReportsArchive.goLiveDate || "";
+
+
+    const currentUrl =
+        project.weeklyReportsArchive.googleDriveUrl || "";
+
+
+    const goLiveDate =
+        prompt(
+            "ERP Go-Live Date (YYYY-MM-DD):",
+            currentDate
+        );
+
+
+    if(goLiveDate === null){
+        return;
+    }
+
+
+    const archiveUrl =
+        prompt(
+            "Google Drive folder URL for previous weekly reports:",
+            currentUrl
+        );
+
+
+    if(archiveUrl === null){
+        return;
+    }
+
+
+    project.weeklyReportsArchive.goLiveDate =
+        goLiveDate.trim();
+
+
+    project.weeklyReportsArchive.googleDriveUrl =
+        archiveUrl.trim();
+
+
+    persist();
+
+
+    renderWeeklyReportsSection(
+        project
+    );
+
+};
 
 /* =====================================================
    CREATE WEEKLY REPORT
