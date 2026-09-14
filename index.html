@@ -5120,6 +5120,52 @@ content.innerHTML = `
     </div>
 
 `;
+   /* =====================================================
+   EQUIPMENT MODULE
+   STEP 11A - EQUIPMENT SEARCH
+===================================================== */
+
+const equipmentSearch =
+    document.getElementById(
+        "equipmentSearch"
+    );
+
+if(equipmentSearch){
+
+    equipmentSearch.addEventListener(
+        "input",
+        function(){
+
+            const search =
+                this.value
+                .trim()
+                .toLowerCase();
+
+            const rows =
+                document.querySelectorAll(
+                    "#equipmentRegisterBody tr"
+                );
+
+            rows.forEach(
+                function(row){
+
+                    const text =
+                        row.textContent
+                        .toLowerCase();
+
+                    row.style.display =
+                        !search ||
+                        text.includes(search)
+                            ? ""
+                            : "none";
+
+                }
+            );
+
+        }
+    );
+
+} 
 
 };
 /* =========================
