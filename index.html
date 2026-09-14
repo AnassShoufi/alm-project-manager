@@ -3622,6 +3622,120 @@ window.addEquipment = function(projectId){
     );
 
 };
+    /* =====================================================
+   EQUIPMENT MODULE
+   STEP 5 - SAVE EQUIPMENT
+===================================================== */
+
+window.saveEquipment = function(event, projectId){
+
+    event.preventDefault();
+
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project){
+        return;
+    }
+
+
+    ensureEquipment(project);
+
+
+    const equipment = {
+
+        id:
+            document.getElementById(
+                "equipmentId"
+            ).value.trim(),
+
+        name:
+            document.getElementById(
+                "equipmentName"
+            ).value.trim(),
+
+        type:
+            document.getElementById(
+                "equipmentType"
+            ).value,
+
+        brandModel:
+            document.getElementById(
+                "equipmentBrandModel"
+            ).value.trim(),
+
+        ownership:
+            document.getElementById(
+                "equipmentOwnership"
+            ).value,
+
+        location:
+            document.getElementById(
+                "equipmentLocation"
+            ).value.trim(),
+
+        status:
+            document.getElementById(
+                "equipmentStatus"
+            ).value,
+
+        mobilizationDate:
+            document.getElementById(
+                "equipmentMobilizationDate"
+            ).value,
+
+        notes:
+            document.getElementById(
+                "equipmentNotes"
+            ).value.trim(),
+
+        createdAt:
+            new Date().toISOString()
+
+    };
+
+
+    project.equipment.push(
+        equipment
+    );
+
+
+    persist();
+
+
+    closeEquipmentModal();
+
+
+    renderEquipmentSection(
+        project
+    );
+
+};
+    /* =====================================================
+   CLOSE EQUIPMENT MODAL
+===================================================== */
+
+window.closeEquipmentModal = function(){
+
+    const modal =
+        document.getElementById(
+            "equipmentModal"
+        );
+
+
+    if(modal){
+
+        modal.remove();
+
+    }
+
+};
 
 window.renderEquipmentSection = function(project){
 
