@@ -4401,6 +4401,102 @@ window.editEquipment = function(projectId, equipmentIndex){
     );
 
 };
+    /* =====================================================
+   EQUIPMENT MODULE
+   STEP 8 - UPDATE EQUIPMENT
+===================================================== */
+
+window.updateEquipment = function(event, projectId, equipmentIndex){
+
+    event.preventDefault();
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const equipment =
+        (project.equipment || [])
+        [equipmentIndex];
+
+
+    if(!equipment){
+        return;
+    }
+
+
+    equipment.id =
+        document.getElementById(
+            "equipmentId"
+        ).value.trim();
+
+
+    equipment.name =
+        document.getElementById(
+            "equipmentName"
+        ).value.trim();
+
+
+    equipment.type =
+        document.getElementById(
+            "equipmentType"
+        ).value;
+
+
+    equipment.brandModel =
+        document.getElementById(
+            "equipmentBrandModel"
+        ).value.trim();
+
+
+    equipment.ownership =
+        document.getElementById(
+            "equipmentOwnership"
+        ).value;
+
+
+    equipment.location =
+        document.getElementById(
+            "equipmentLocation"
+        ).value.trim();
+
+
+    equipment.status =
+        document.getElementById(
+            "equipmentStatus"
+        ).value;
+
+
+    equipment.mobilizationDate =
+        document.getElementById(
+            "equipmentMobilizationDate"
+        ).value;
+
+
+    equipment.notes =
+        document.getElementById(
+            "equipmentNotes"
+        ).value.trim();
+
+
+    persist();
+
+
+    closeEquipmentModal();
+
+
+    renderEquipmentSection(
+        project
+    );
+
+};
 /* =====================================================
    CLOSE EQUIPMENT VIEW MODAL
 ===================================================== */
