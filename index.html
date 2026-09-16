@@ -3739,7 +3739,12 @@ window.saveEquipment = function(event, projectId){
 
     };
 
-
+console.log(
+    "Deployment Status:",
+    document.getElementById(
+        "equipmentDeploymentStatus"
+    )?.value
+);
     project.equipment.push(
         equipment
     );
