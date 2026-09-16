@@ -5154,9 +5154,46 @@ content.innerHTML = `
                                         )}
                                     </td>
 <td>
-    ${escapeHTML(
-        item.deploymentStatus || "-"
-    )}
+
+    <span
+        style="
+            display:inline-block;
+            padding:4px 9px;
+            border-radius:12px;
+            font-size:11px;
+            font-weight:600;
+            white-space:nowrap;
+
+            background:
+                ${
+                    String(item.deploymentStatus || "").toLowerCase() === "on site"
+                        ? "#dcfce7"
+                        : String(item.deploymentStatus || "").toLowerCase() === "in transit"
+                        ? "#dbeafe"
+                        : String(item.deploymentStatus || "").toLowerCase() === "standby"
+                        ? "#fef3c7"
+                        : String(item.deploymentStatus || "").toLowerCase() === "demobilized"
+                        ? "#fee2e2"
+                        : "#f1f5f9"
+                };
+
+            color:
+                ${
+                    String(item.deploymentStatus || "").toLowerCase() === "on site"
+                        ? "#166534"
+                        : String(item.deploymentStatus || "").toLowerCase() === "in transit"
+                        ? "#1d4ed8"
+                        : String(item.deploymentStatus || "").toLowerCase() === "standby"
+                        ? "#92400e"
+                        : String(item.deploymentStatus || "").toLowerCase() === "demobilized"
+                        ? "#991b1b"
+                        : "#475569"
+                };
+        "
+    >
+        ${escapeHTML(item.deploymentStatus || "-")}
+    </span>
+
 </td>
                                     <td style="
                                         padding:12px;
