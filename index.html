@@ -5153,7 +5153,11 @@ content.innerHTML = `
                                             item.mobilizationDate || "-"
                                         )}
                                     </td>
-
+<td>
+    ${escapeHTML(
+        item.deploymentStatus || "-"
+    )}
+</td>
                                     <td style="
                                         padding:12px;
                                     ">
