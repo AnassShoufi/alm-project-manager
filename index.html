@@ -4363,17 +4363,66 @@ window.editEquipment = function(projectId, equipmentIndex){
                         </div>
 
 
-                        <div class="form-group">
-                            <label>
-                                Mobilization Date
-                            </label>
+                       <div class="form-group">
 
-                            <input
-                                id="equipmentMobilizationDate"
-                                type="date"
-                                value="${equipment.mobilizationDate || ""}"
-                            >
-                        </div>
+    <label>
+        Mobilization Date
+    </label>
+
+    <input
+        id="equipmentMobilizationDate"
+        type="date"
+        value="${equipment.mobilizationDate || ""}"
+    >
+
+</div>
+
+
+<div class="form-group">
+
+    <label>
+        Deployment Status
+    </label>
+
+    <select
+        id="equipmentDeploymentStatus"
+    >
+
+        <option value="">
+            Select Deployment Status
+        </option>
+
+        <option
+            value="On Site"
+            ${equipment.deploymentStatus === "On Site" ? "selected" : ""}
+        >
+            On Site
+        </option>
+
+        <option
+            value="In Transit"
+            ${equipment.deploymentStatus === "In Transit" ? "selected" : ""}
+        >
+            In Transit
+        </option>
+
+        <option
+            value="Standby"
+            ${equipment.deploymentStatus === "Standby" ? "selected" : ""}
+        >
+            Standby
+        </option>
+
+        <option
+            value="Demobilized"
+            ${equipment.deploymentStatus === "Demobilized" ? "selected" : ""}
+        >
+            Demobilized
+        </option>
+
+    </select>
+
+</div>
 
                     </div>
 
