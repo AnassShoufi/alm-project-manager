@@ -13092,20 +13092,41 @@ window.weeklyEquipmentOptions = [
                             padding:10px;
                         ">
 
-                            <input
-                                id="weeklyEquipmentName_${i}"
-                                type="text"
-                                value="${weeklyReportEscape(item.name || "")}"
-                                placeholder="Equipment / Plant"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                           <select
+    id="weeklyEquipmentName_${i}"
+    style="
+        width:100%;
+        box-sizing:border-box;
+        padding:9px 10px;
+        border:1px solid #d4dae2;
+        border-radius:6px;
+        font-size:13px;
+        background:white;
+    "
+>
+    <option value="">
+        Select Equipment / Plant
+    </option>
+
+    ${window.weeklyEquipmentOptions
+        .map(
+            name => `
+                <option
+                    value="${weeklyReportEscape(name)}"
+                    ${
+                        String(item.name || "") ===
+                        String(name)
+                        ? "selected"
+                        : ""
+                    }
+                >
+                    ${weeklyReportEscape(name)}
+                </option>
+            `
+        )
+        .join("")
+    }
+</select>
 
                         </td>
 
@@ -14803,19 +14824,35 @@ function(){
             padding:10px;
         ">
 
-            <input
-                id="weeklyEquipmentName_${index}"
-                type="text"
-                placeholder="Equipment / Plant"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
-            >
+           <select
+    id="weeklyEquipmentName_${index}"
+    style="
+        width:100%;
+        box-sizing:border-box;
+        padding:9px 10px;
+        border:1px solid #d4dae2;
+        border-radius:6px;
+        font-size:13px;
+        background:white;
+    "
+>
+    <option value="">
+        Select Equipment / Plant
+    </option>
+
+    ${(window.weeklyEquipmentOptions || [])
+        .map(
+            name => `
+                <option
+                    value="${weeklyReportEscape(name)}"
+                >
+                    ${weeklyReportEscape(name)}
+                </option>
+            `
+        )
+        .join("")
+    }
+</select>
 
         </td>
 
