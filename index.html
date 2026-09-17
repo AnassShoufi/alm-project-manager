@@ -5761,6 +5761,97 @@ window.exportEquipmentExcel = function(projectId){
     );
 
 };
+    /* =====================================================
+   EQUIPMENT MODULE
+   STEP 19C - PRINT PDF
+===================================================== */
+
+window.printEquipmentPDF = function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    const equipment =
+        project.equipment || [];
+
+    const printWindow =
+        window.open(
+            "",
+            "_blank"
+        );
+
+    if(!printWindow){
+        alert(
+            "Please allow pop-ups to print the Equipment Register."
+        );
+        return;
+    }
+
+    printWindow.document.write(`
+
+        <!DOCTYPE html>
+
+        <html>
+
+        <head>
+
+            <title>
+                ${escapeHTML(
+                    project.name ||
+                    "Project"
+                )} - Equipment Register
+            </title>
+
+        </head>
+
+        <body>
+
+            <h1>
+                Equipment Register
+            </h1>
+
+            <h2>
+                ${escapeHTML(
+                    project.name ||
+                    "Project"
+                )}
+            </h2>
+
+            <p>
+                Total Equipment:
+                <strong>
+                    ${equipment.length}
+                </strong>
+            </p>
+
+        </body>
+
+        </html>
+
+    `);
+
+    printWindow.document.close();
+
+    setTimeout(
+        function(){
+
+            printWindow.focus();
+
+            printWindow.print();
+
+        },
+        500
+    );
+
+};
 /* =========================
    SECTION ICONS
 ========================= */
