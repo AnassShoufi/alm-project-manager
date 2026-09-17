@@ -13166,6 +13166,9 @@ window.weeklyEquipmentOptions = [
                                 step="1"
                                 value="${item.actual ?? ""}"
                                 placeholder="0"
+                                oninput="
+    window.validateWeeklyEquipmentActual(this);
+"
                                 style="
                                     width:100%;
                                     box-sizing:border-box;
@@ -14799,7 +14802,151 @@ function(){
 /* =====================================================
    ADD WEEKLY EQUIPMENT ROW
 ===================================================== */
+/* =====================================================
+   WEEKLY EQUIPMENT ACTUAL VALIDATION
+===================================================== */
 
+window.validateWeeklyEquipmentActual =
+function(input){
+
+    if(!input){
+        return;
+    }
+
+    const row =
+        input.closest("tr");
+
+    if(!row){
+        return;
+    }
+
+    const nameSelect =
+        row.querySelector(
+            'select[id^="weeklyEquipmentName_"]'
+        );
+
+    const name =
+        nameSelect
+        ? nameSelect.value.trim()
+        : "";
+
+    let error =
+        row.querySelector(
+            ".weekly-equipment-actual-error"
+        );
+
+    if(!error){
+
+        error =
+            document.createElement("div");
+
+        error.className =
+            "weekly-equipment-actual-error";
+
+        error.style.cssText = `
+            color:#dc2626;
+            font-size:12px;
+            margin-top:5px;
+            font-weight:600;
+        `;
+
+        input.parentElement.appendChild(
+            error
+        );
+    }
+
+    error.textContent = "";
+
+    input.style.borderColor =
+        "#d4dae2";
+
+    if(!name || input.value === ""){
+        return;
+    }
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(currentProjectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    const available =
+        (project.equipment || [])
+            .filter(item =>
+                String(item.name || "").trim() === name &&
+                String(
+                    item.deploymentStatus || ""
+                ).toLowerCase() === "on site"
+            )
+            .length;
+
+    let otherActual = 0;
+
+    document
+        .querySelectorAll(
+            '#weeklyEquipmentRows input[id^="weeklyEquipmentActual_"]'
+        )
+        .forEach(otherInput => {
+
+            if(otherInput === input){
+                return;
+            }
+
+            const otherRow =
+                otherInput.closest("tr");
+
+            if(!otherRow){
+                return;
+            }
+
+            const otherNameSelect =
+                otherRow.querySelector(
+                    'select[id^="weeklyEquipmentName_"]'
+                );
+
+            const otherName =
+                otherNameSelect
+                ? otherNameSelect.value.trim()
+                : "";
+
+            if(otherName === name){
+
+                otherActual +=
+                    Number(
+                        otherInput.value || 0
+                    );
+            }
+
+        });
+
+    const maxAllowed =
+        Math.max(
+            0,
+            available - otherActual
+        );
+
+    const entered =
+        Number(input.value || 0);
+
+    if(entered > maxAllowed){
+
+        input.value =
+            maxAllowed;
+
+        input.style.borderColor =
+            "#dc2626";
+
+        error.textContent =
+            "You have exceeded the available equipment number.";
+
+    }
+
+};
 window.addWeeklyEquipmentRow =
 function(){
 
@@ -14890,6 +15037,9 @@ function(){
                 min="0"
                 step="1"
                 placeholder="0"
+                oninput="
+    window.validateWeeklyEquipmentActual(this);
+"
                 style="
                     width:100%;
                     box-sizing:border-box;
