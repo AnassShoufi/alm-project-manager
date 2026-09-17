@@ -4456,9 +4456,20 @@ window.editEquipment = function(projectId, equipmentIndex){
         Deployment Status
     </label>
 
-    <select
-        id="equipmentDeploymentStatus"
-    >
+   <select
+    id="equipmentDeploymentStatus"
+    onchange="
+        const demobDate =
+            document.getElementById(
+                'equipmentDemobilizationDate'
+            );
+
+        if(demobDate){
+            demobDate.required =
+                this.value === 'Demobilized';
+        }
+    "
+>
 
         <option value="">
             Select Deployment Status
