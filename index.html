@@ -16159,7 +16159,29 @@ const equipmentRows =
     document.querySelectorAll(
         "#weeklyEquipmentRows tr"
     );
+const equipmentLimits = {};
 
+(project.equipment || []).forEach(item => {
+
+    const name =
+        String(item.name || "").trim();
+
+    const deploymentStatus =
+        String(
+            item.deploymentStatus || ""
+        ).toLowerCase();
+
+    if(
+        name &&
+        deploymentStatus === "on site"
+    ){
+
+        equipmentLimits[name] =
+            (equipmentLimits[name] || 0) + 1;
+
+    }
+
+});
 equipmentRows.forEach(row => {
 
     const nameInput =
