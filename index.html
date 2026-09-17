@@ -5795,6 +5795,130 @@ window.printEquipmentPDF = function(projectId){
         return;
     }
 
+    const operational =
+        equipment.filter(
+            item =>
+                String(item.status || "").toLowerCase()
+                === "operational"
+        ).length;
+
+    const maintenance =
+        equipment.filter(
+            item =>
+                String(item.status || "").toLowerCase()
+                === "under maintenance"
+        ).length;
+
+    const outOfService =
+        equipment.filter(
+            item =>
+                String(item.status || "").toLowerCase()
+                === "out of service"
+        ).length;
+
+    const available =
+        equipment.filter(
+            item =>
+                String(item.status || "").toLowerCase()
+                === "available"
+        ).length;
+
+    const projectName =
+        project.name ||
+        project.projectName ||
+        "Project";
+
+    const printDate =
+        new Date().toLocaleDateString();
+
+    const logo =
+        localStorage.getItem(
+            "alm_company_logo"
+        );
+
+    let tableRows = "";
+
+    equipment.forEach(
+        function(item, index){
+
+            tableRows += `
+                <tr>
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.id || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.name || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.type || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.brandModel || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.ownership || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.location || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.status || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.mobilizationDate || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.deploymentStatus || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.demobilizationDate || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            item.notes || "-"
+                        )}
+                    </td>
+
+                </tr>
+            `;
+        }
+    );
+
     printWindow.document.write(`
 
         <!DOCTYPE html>
@@ -5804,33 +5928,403 @@ window.printEquipmentPDF = function(projectId){
         <head>
 
             <title>
-                ${escapeHTML(
-                    project.name ||
-                    "Project"
-                )} - Equipment Register
+                ${escapeHTML(projectName)}
+                - Equipment Register
             </title>
+
+            <style>
+
+                @page {
+                    size: A4 landscape;
+                    margin: 12mm;
+                }
+
+                * {
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family:
+                        Arial,
+                        Helvetica,
+                        sans-serif;
+
+                    margin: 0;
+                    color: #222;
+                    font-size: 9px;
+                }
+
+                .header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+
+                    border-bottom:
+                        2px solid #222;
+
+                    padding-bottom: 10px;
+                    margin-bottom: 12px;
+                }
+
+                .logo {
+                    max-height: 55px;
+                    max-width: 180px;
+                }
+
+                .header-title {
+                    text-align: right;
+                }
+
+                .header-title h1 {
+                    margin: 0;
+                    font-size: 20px;
+                }
+
+                .header-title p {
+                    margin: 4px 0 0;
+                    font-size: 10px;
+                }
+
+                .project-box {
+                    border:
+                        1px solid #ccc;
+
+                    padding: 8px 10px;
+                    margin-bottom: 10px;
+                }
+
+                .project-box strong {
+                    font-size: 12px;
+                }
+
+                .summary {
+                    display: grid;
+                    grid-template-columns:
+                        repeat(5, 1fr);
+
+                    gap: 7px;
+
+                    margin-bottom: 12px;
+                }
+
+                .summary-card {
+                    border:
+                        1px solid #ccc;
+
+                    padding: 7px;
+                    text-align: center;
+                }
+
+                .summary-card .number {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 2px;
+                }
+
+                .summary-card .label {
+                    font-size: 8px;
+                    text-transform: uppercase;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    table-layout: fixed;
+                }
+
+                th {
+                    background: #eeeeee;
+                    border:
+                        1px solid #999;
+
+                    padding: 5px 3px;
+
+                    font-size: 8px;
+                    font-weight: bold;
+
+                    text-align: center;
+                }
+
+                td {
+                    border:
+                        1px solid #bbb;
+
+                    padding: 4px 3px;
+
+                    vertical-align: top;
+                    word-wrap: break-word;
+                }
+
+                tbody tr:nth-child(even) {
+                    background: #f8f8f8;
+                }
+
+                th:nth-child(1),
+                td:nth-child(1) {
+                    width: 3%;
+                    text-align: center;
+                }
+
+                th:nth-child(2),
+                td:nth-child(2) {
+                    width: 7%;
+                }
+
+                th:nth-child(3),
+                td:nth-child(3) {
+                    width: 11%;
+                }
+
+                th:nth-child(4),
+                td:nth-child(4) {
+                    width: 8%;
+                }
+
+                th:nth-child(5),
+                td:nth-child(5) {
+                    width: 9%;
+                }
+
+                th:nth-child(6),
+                td:nth-child(6) {
+                    width: 7%;
+                }
+
+                th:nth-child(7),
+                td:nth-child(7) {
+                    width: 8%;
+                }
+
+                th:nth-child(8),
+                td:nth-child(8) {
+                    width: 8%;
+                }
+
+                th:nth-child(9),
+                td:nth-child(9) {
+                    width: 8%;
+                }
+
+                th:nth-child(10),
+                td:nth-child(10) {
+                    width: 8%;
+                }
+
+                th:nth-child(11),
+                td:nth-child(11) {
+                    width: 8%;
+                }
+
+                th:nth-child(12),
+                td:nth-child(12) {
+                    width: 16%;
+                }
+
+                .footer {
+                    margin-top: 10px;
+
+                    display: flex;
+                    justify-content: space-between;
+
+                    font-size: 8px;
+
+                    border-top:
+                        1px solid #ccc;
+
+                    padding-top: 5px;
+                }
+
+                @media print {
+
+                    .footer {
+                        position: fixed;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                    }
+
+                }
+
+            </style>
 
         </head>
 
         <body>
 
-            <h1>
-                Equipment Register
-            </h1>
+            <div class="header">
 
-            <h2>
-                ${escapeHTML(
-                    project.name ||
-                    "Project"
-                )}
-            </h2>
+                <div>
+                    ${
+                        logo
+                        ?
+                        `
+                        <img
+                            src="${logo}"
+                            class="logo"
+                        >
+                        `
+                        :
+                        ""
+                    }
+                </div>
 
-            <p>
-                Total Equipment:
-                <strong>
-                    ${equipment.length}
-                </strong>
-            </p>
+                <div class="header-title">
+
+                    <h1>
+                        EQUIPMENT REGISTER
+                    </h1>
+
+                    <p>
+                        Project Equipment,
+                        Vehicles & Machinery
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="project-box">
+
+                <div>
+                    <strong>
+                        Project:
+                    </strong>
+
+                    ${escapeHTML(projectName)}
+                </div>
+
+            </div>
+
+
+            <div class="summary">
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        ${equipment.length}
+                    </div>
+
+                    <div class="label">
+                        Total Equipment
+                    </div>
+
+                </div>
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        ${operational}
+                    </div>
+
+                    <div class="label">
+                        Operational
+                    </div>
+
+                </div>
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        ${maintenance}
+                    </div>
+
+                    <div class="label">
+                        Under Maintenance
+                    </div>
+
+                </div>
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        ${outOfService}
+                    </div>
+
+                    <div class="label">
+                        Out of Service
+                    </div>
+
+                </div>
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        ${available}
+                    </div>
+
+                    <div class="label">
+                        Available
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+                        <th>Equipment ID</th>
+                        <th>Equipment / Plant</th>
+                        <th>Type</th>
+                        <th>Brand / Model</th>
+                        <th>Ownership</th>
+                        <th>Site Location</th>
+                        <th>Status</th>
+                        <th>Mobilization Date</th>
+                        <th>Deployment Status</th>
+                        <th>Demobilization Date</th>
+                        <th>Notes</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    ${
+                        tableRows ||
+                        `
+                        <tr>
+                            <td
+                                colspan="12"
+                                style="
+                                    text-align:center;
+                                    padding:20px;
+                                "
+                            >
+                                No equipment records found.
+                            </td>
+                        </tr>
+                        `
+                    }
+
+                </tbody>
+
+            </table>
+
+
+            <div class="footer">
+
+                <div>
+                    ALM Project Manager
+                </div>
+
+                <div>
+                    Equipment Register
+                </div>
+
+                <div>
+                    Printed:
+                    ${printDate}
+                </div>
+
+            </div>
 
         </body>
 
