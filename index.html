@@ -16149,23 +16149,23 @@ manpowerRows.forEach(row => {
     }
 
 });
-/* =====================================================
+ /* =====================================================
    COLLECT WEEKLY EQUIPMENT
 ===================================================== */
 
 const equipment = [];
 
-const nameInput =
-    row.querySelector(
-        'select[id^="weeklyEquipmentName_"]'
+const equipmentRows =
+    document.querySelectorAll(
+        "#weeklyEquipmentRows tr"
     );
 
 equipmentRows.forEach(row => {
 
-   const nameInput =
-    row.querySelector(
-        'select[id^="weeklyEquipmentName_"]'
-    );
+    const nameInput =
+        row.querySelector(
+            'select[id^="weeklyEquipmentName_"]'
+        );
 
     const plannedInput =
         row.querySelector(
@@ -16229,7 +16229,7 @@ equipmentRows.forEach(row => {
 
     }
 
-});   
+});
   /* =====================================================
    COLLECT WEEKLY MATERIALS
 ===================================================== */
