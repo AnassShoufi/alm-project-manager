@@ -11860,8 +11860,33 @@ function(projectId){
 
             weather:{},
 
-            materials:
-                previousMaterials
+           materials:
+    previousMaterials,
+
+equipment:
+    (project.equipment || [])
+        .filter(
+            item =>
+                String(
+                    item.deploymentStatus || ""
+                ).toLowerCase()
+                === "on site"
+        )
+        .map(
+            item => ({
+                name:
+                    item.name || "",
+
+                planned:
+                    "",
+
+                actual:
+                    1,
+
+                remarks:
+                    ""
+            })
+        )
 
         }
     );
