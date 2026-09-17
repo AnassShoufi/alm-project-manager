@@ -11922,6 +11922,25 @@ function openWeeklyReportForm(
     editIndex,
     report
 ){
+    /* =====================================================
+   WEEKLY EQUIPMENT OPTIONS
+   Read equipment from Equipment Module
+===================================================== */
+
+window.weeklyEquipmentOptions = [
+    ...new Set(
+        (project.equipment || [])
+            .map(
+                item =>
+                    String(
+                        item.name || ""
+                    ).trim()
+            )
+            .filter(
+                name => name
+            )
+    )
+];
 
     window.weeklyProgressPhotosDraft =
         Array.isArray(report.progressPhotos)
