@@ -16223,7 +16223,30 @@ equipmentRows.forEach(row => {
         remarksInput
         ? remarksInput.value.trim()
         : "";
+if(name && actual !== ""){
 
+    const actualNumber =
+        Number(actual);
+
+    const availableQuantity =
+        equipmentLimits[name] || 0;
+
+    if(
+        actualNumber >
+        availableQuantity
+    ){
+
+        alert(
+            `Actual quantity for "${name}" cannot exceed ${availableQuantity}.`
+        );
+
+        throw new Error(
+            "Equipment quantity limit exceeded."
+        );
+
+    }
+
+}
     if(
         name ||
         planned !== "" ||
