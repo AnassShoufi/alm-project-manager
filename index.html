@@ -3555,8 +3555,19 @@ window.addEquipment = function(projectId){
     </label>
 
     <select
-        id="equipmentDeploymentStatus"
-    >
+    id="equipmentDeploymentStatus"
+    onchange="
+        const demobDate =
+            document.getElementById(
+                'equipmentDemobilizationDate'
+            );
+
+        if(demobDate){
+            demobDate.required =
+                this.value === 'Demobilized';
+        }
+    "
+>
 
         <option value="">
             Select Deployment Status
