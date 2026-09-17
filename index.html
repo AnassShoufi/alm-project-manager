@@ -4808,6 +4808,27 @@ content.innerHTML = `
         >
             + Add Equipment
         </button>
+        <button
+    class="btn"
+    onclick="
+        exportEquipmentExcel(
+            '${project.id}'
+        );
+    "
+>
+    📊 Export Excel
+</button>
+
+<button
+    class="btn"
+    onclick="
+        printEquipmentPDF(
+            '${project.id}'
+        );
+    "
+>
+    🖨️ Print PDF
+</button>
 
     </div>
 
