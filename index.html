@@ -5651,6 +5651,116 @@ if(equipmentOwnershipFilter){
 
 }
 };
+    /* =====================================================
+   EQUIPMENT MODULE
+   STEP 19B - EXCEL EXPORT
+===================================================== */
+
+window.exportEquipmentExcel = function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    const equipment =
+        project.equipment || [];
+
+    const data =
+        equipment.map(
+            function(item, index){
+
+                return {
+
+                    "#":
+                        index + 1,
+
+                    "Equipment ID":
+                        item.id || "",
+
+                    "Equipment / Plant":
+                        item.name || "",
+
+                    "Type":
+                        item.type || "",
+
+                    "Brand / Model":
+                        item.brandModel || "",
+
+                    "Ownership":
+                        item.ownership || "",
+
+                    "Site Location":
+                        item.location || "",
+
+                    "Status":
+                        item.status || "",
+
+                    "Mobilization Date":
+                        item.mobilizationDate || "",
+
+                    "Deployment Status":
+                        item.deploymentStatus || "",
+
+                    "Demobilization Date":
+                        item.demobilizationDate || "",
+
+                    "Notes":
+                        item.notes || ""
+
+                };
+
+            }
+        );
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            data
+        );
+
+    worksheet["!cols"] = [
+
+        {wch:6},
+        {wch:16},
+        {wch:24},
+        {wch:20},
+        {wch:20},
+        {wch:18},
+        {wch:20},
+        {wch:20},
+        {wch:20},
+        {wch:20},
+        {wch:22},
+        {wch:40}
+
+    ];
+
+    const workbook =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Equipment"
+    );
+
+    const projectName =
+        project.name ||
+        project.projectName ||
+        "Project";
+
+    XLSX.writeFile(
+        workbook,
+        `${projectName}-Equipment.xlsx`
+    );
+
+};
 /* =========================
    SECTION ICONS
 ========================= */
