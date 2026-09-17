@@ -4040,6 +4040,34 @@ window.viewEquipment = function(projectId, equipmentIndex){
                         </strong>
 
                     </div>
+                    <div class="project-info-card">
+
+    <span>
+        Deployment Status
+    </span>
+
+    <strong>
+        ${escapeHTML(
+            equipment.deploymentStatus || "-"
+        )}
+    </strong>
+
+</div>
+
+
+<div class="project-info-card">
+
+    <span>
+        Demobilization Date
+    </span>
+
+    <strong>
+        ${escapeHTML(
+            equipment.demobilizationDate || "-"
+        )}
+    </strong>
+
+</div>
 
                 </div>
 
