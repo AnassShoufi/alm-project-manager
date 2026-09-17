@@ -16155,9 +16155,9 @@ manpowerRows.forEach(row => {
 
 const equipment = [];
 
-const equipmentRows =
-    document.querySelectorAll(
-        "#weeklyEquipmentRows tr"
+const nameInput =
+    row.querySelector(
+        'select[id^="weeklyEquipmentName_"]'
     );
 
 equipmentRows.forEach(row => {
