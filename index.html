@@ -20929,28 +20929,87 @@ function getPaymentContractValue(project){
 /* =====================================================
    PAYMENT STATUS
 ===================================================== */
+/* =====================================================
+   PAYMENT PAYABLE AMOUNT
+   Payable = Invoice - WHT
+===================================================== */
+
+function getPaymentPayableAmount(payment){
+
+    const invoice =
+        parsePaymentMoney(
+            payment.invoiceValue
+        );
+
+    const wht =
+        parsePaymentMoney(
+            payment.whtAmount
+        );
+
+    return Math.max(
+        0,
+        invoice - wht
+    );
+
+}
+
+/* =====================================================
+   PAYMENT STATUS
+   PAYMENT IS COMPARED AGAINST PAYABLE AMOUNT
+===================================================== */
 
 function getPaymentStatus(payment){
 
-    const invoice = parsePaymentMoney(payment.invoiceValue);
-    const received = parsePaymentMoney(payment.paymentReceived);
+    const payable =
+        getPaymentPayableAmount(
+            payment
+        );
 
-    if(received > invoice && invoice > 0){
+    const received =
+        parsePaymentMoney(
+            payment.paymentReceived
+        );
+
+    if(
+        received > payable &&
+        payable > 0
+    ){
+
         return "Overpaid";
+
     }
 
-    if(invoice > 0 && received >= invoice){
+    if(
+        payable > 0 &&
+        received >= payable
+    ){
+
         return "Fully Paid";
+
     }
 
-    if(received > 0 && received < invoice){
+    if(
+        received > 0 &&
+        received < payable
+    ){
+
         return "Partially Paid";
+
+    }
+
+    if(
+        parsePaymentMoney(
+            payment.invoiceValue
+        ) > 0
+    ){
+
+        return "Invoiced";
+
     }
 
     return "Not Paid";
+
 }
-
-
 function getPaymentStatusColor(status){
 
     if(status === "Fully Paid"){
@@ -21284,17 +21343,25 @@ window.renderPaymentsSection = function(project){
                                 Contractor
                             </th>
 
-                            <th style="padding:10px;text-align:right;">
-                                Invoice Value
-                            </th>
+                        <th style="padding:10px;text-align:right;">
+    Invoice Value
+</th>
 
-                            <th style="padding:10px;text-align:right;">
-                                Payment Received
-                            </th>
+<th style="padding:10px;text-align:right;">
+    WHT Amount
+</th>
 
-                            <th style="padding:10px;text-align:right;">
-                                Balance
-                            </th>
+<th style="padding:10px;text-align:right;">
+    Payable Amount
+</th>
+
+<th style="padding:10px;text-align:right;">
+    Payment Received
+</th>
+
+<th style="padding:10px;text-align:right;">
+    Balance
+</th>
 
                             <th style="padding:10px;text-align:center;">
                                 Date Received
@@ -21342,13 +21409,29 @@ window.renderPaymentsSection = function(project){
 function buildPaymentRow(project,index,payment){
 
     const invoiceValue =
-        parsePaymentMoney(payment.invoiceValue);
+    parsePaymentMoney(
+        payment.invoiceValue
+    );
 
-    const paymentReceived =
-        parsePaymentMoney(payment.paymentReceived);
+const whtAmount =
+    parsePaymentMoney(
+        payment.whtAmount
+    );
 
-    const balance =
-        invoiceValue - paymentReceived;
+const payableAmount =
+    Math.max(
+        0,
+        invoiceValue - whtAmount
+    );
+
+const paymentReceived =
+    parsePaymentMoney(
+        payment.paymentReceived
+    );
+
+const balance =
+    payableAmount -
+    paymentReceived;
 
     const status =
         getPaymentStatus(payment);
@@ -21571,7 +21654,51 @@ function buildPaymentRow(project,index,payment){
 
             </td>
 
+<!-- WHT AMOUNT -->
 
+<td style="
+    padding:7px;
+    text-align:right;
+">
+
+    <input
+        id="payment-wht-${index}"
+        type="text"
+        value="${formatPaymentMoney(whtAmount)}"
+        onfocus="this.value=this.value.replace(/,/g,'')"
+        oninput="
+            updatePaymentAmount(
+                ${project.id},
+                ${index},
+                'whtAmount',
+                this.value
+            )
+        "
+        onblur="formatPaymentInput(this)"
+        style="
+            width:150px;
+            padding:7px;
+            border:1px solid #ccc;
+            border-radius:4px;
+            text-align:right;
+        "
+    >
+
+</td>
+
+
+<!-- PAYABLE AMOUNT -->
+
+<td
+    id="payment-payable-${index}"
+    style="
+        padding:7px;
+        text-align:right;
+        font-weight:600;
+    "
+>
+    ${formatPaymentMoney(payableAmount)}
+</td>
             <!-- PAYMENT RECEIVED -->
 
             <td style="
@@ -21771,14 +21898,42 @@ function updatePaymentRowCalculations(
     const payment =
         project.payments[index];
 
-    const invoice =
-        parsePaymentMoney(payment.invoiceValue);
+  const invoice =
+    parsePaymentMoney(
+        payment.invoiceValue
+    );
 
-    const received =
-        parsePaymentMoney(payment.paymentReceived);
+const wht =
+    parsePaymentMoney(
+        payment.whtAmount
+    );
 
-    const balance =
-        invoice - received;
+const payable =
+    Math.max(
+        0,
+        invoice - wht
+    );
+
+const received =
+    parsePaymentMoney(
+        payment.paymentReceived
+    );
+
+const balance =
+    payable - received;
+    const payableCell =
+    document.getElementById(
+        `payment-payable-${index}`
+    );
+
+if(payableCell){
+
+    payableCell.textContent =
+        formatPaymentMoney(
+            payable
+        );
+
+}
 
     const status =
         getPaymentStatus(payment);
@@ -21992,11 +22147,14 @@ window.addPaymentRow = function(projectId){
         contractor:
             "",
 
-        invoiceValue:
-            0,
+       invoiceValue:
+    0,
 
-        paymentReceived:
-            0,
+whtAmount:
+    0,
+
+paymentReceived:
+    0,
 
         paymentDate:
             "",
@@ -22442,19 +22600,28 @@ window.downloadPaymentsExcel = function(
                 parsePaymentMoney(
                     payment.invoiceValue
                 ),
+            "WHT Amount":
+    parsePaymentMoney(
+        payment.whtAmount
+    ),
+
+"Payable Amount":
+    getPaymentPayableAmount(
+        payment
+    ),
 
             "Payment Received":
                 parsePaymentMoney(
                     payment.paymentReceived
                 ),
 
-            "Balance":
-                parsePaymentMoney(
-                    payment.invoiceValue
-                ) -
-                parsePaymentMoney(
-                    payment.paymentReceived
-                ),
+           "Balance":
+    getPaymentPayableAmount(
+        payment
+    ) -
+    parsePaymentMoney(
+        payment.paymentReceived
+    ),
 
             "Date of Payment Received":
                 payment.paymentDate || "",
