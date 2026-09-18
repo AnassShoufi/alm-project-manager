@@ -12813,20 +12813,44 @@ window.weeklyEquipmentOptions = [
                             padding:10px;
                         ">
 
-                            <input
-                                id="weeklyManpowerTrade_${i}"
-                                type="text"
-                                value="${weeklyReportEscape(person.trade || "")}"
-                                placeholder="Trade / Personnel"
-                                style="
-                                    width:100%;
-                                    box-sizing:border-box;
-                                    padding:9px 10px;
-                                    border:1px solid #d4dae2;
-                                    border-radius:6px;
-                                    font-size:13px;
-                                "
-                            >
+                           <select
+    id="weeklyManpowerTrade_${i}"
+    style="
+        width:100%;
+        box-sizing:border-box;
+        padding:9px 10px;
+        border:1px solid #d4dae2;
+        border-radius:6px;
+        font-size:13px;
+        background:white;
+    "
+>
+    <option value="">
+        Select Trade / Personnel
+    </option>
+
+    ${window.getWeeklyManpowerOptions(
+        project,
+        report
+    )
+    .map(
+        item => `
+            <option
+                value="${weeklyReportEscape(item.trade)}"
+                ${
+                    String(person.trade || "").trim() ===
+                    String(item.trade).trim()
+                    ? "selected"
+                    : ""
+                }
+            >
+                ${weeklyReportEscape(item.trade)}
+                — Available: ${item.available}
+            </option>
+        `
+    )
+    .join("")}
+</select>
 
                         </td>
 
@@ -14715,8 +14739,502 @@ window.updateWeeklyEquipmentDeploymentSummary();
 /* =====================================================
    ADD WEEKLY MANPOWER ROW
 ===================================================== */
+/* =====================================================
+   WEEKLY MANPOWER INTEGRATION
+   MASTER SOURCE = MANPOWER MODULE
+   ACTUAL = ACTIVE MANPOWER LIMIT
+===================================================== */
 
-window.addWeeklyManpowerRow =
+window.getWeeklyManpowerOptions =
+function(project, report){
+
+    if(!project){
+        return [];
+    }
+
+    const reportDate =
+        (
+            report &&
+            report.reportDate
+        )
+        ||
+        document.getElementById(
+            "weeklyReportDate"
+        )?.value
+        ||
+        almMP2Today();
+
+    const records =
+        project.manpowerRecords || [];
+
+    const totals = {};
+
+    records
+        .filter(
+            record =>
+                almMP2IsActive(
+                    record,
+                    reportDate
+                )
+        )
+        .forEach(
+            record => {
+
+                const trade =
+                    String(
+                        record.trade || ""
+                    ).trim();
+
+                if(!trade){
+                    return;
+                }
+
+                totals[trade] =
+                    (
+                        totals[trade] || 0
+                    ) +
+                    Number(
+                        record.manpower || 0
+                    );
+
+            }
+        );
+
+    return Object.keys(totals)
+        .sort()
+        .map(
+            trade => ({
+                trade,
+                available:
+                    totals[trade]
+            })
+        );
+
+};
+
+
+/* =====================================================
+   WEEKLY MANPOWER ACTUAL VALIDATION
+===================================================== */
+
+window.validateWeeklyManpowerActual =
+function(input){
+
+    if(!input){
+        return;
+    }
+
+    const row =
+        input.closest("tr");
+
+    if(!row){
+        return;
+    }
+
+    const tradeSelect =
+        row.querySelector(
+            'select[id^="weeklyManpowerTrade_"]'
+        );
+
+    const trade =
+        tradeSelect
+        ? tradeSelect.value.trim()
+        : "";
+
+    let error =
+        row.querySelector(
+            ".weekly-manpower-actual-error"
+        );
+
+    if(!error){
+
+        error =
+            document.createElement(
+                "div"
+            );
+
+        error.className =
+            "weekly-manpower-actual-error";
+
+        error.style.cssText = `
+            color:#dc2626;
+            font-size:12px;
+            margin-top:5px;
+            font-weight:600;
+        `;
+
+        input.parentElement.appendChild(
+            error
+        );
+
+    }
+
+    error.textContent = "";
+
+    input.style.borderColor =
+        "#d4dae2";
+
+    if(
+        !trade ||
+        input.value === ""
+    ){
+        return;
+    }
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(currentProjectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    const reportDate =
+        document.getElementById(
+            "weeklyReportDate"
+        )?.value ||
+        almMP2Today();
+
+    const available =
+        (project.manpowerRecords || [])
+            .filter(
+                record =>
+                    String(
+                        record.trade || ""
+                    ).trim() === trade &&
+                    almMP2IsActive(
+                        record,
+                        reportDate
+                    )
+            )
+            .reduce(
+                (
+                    total,
+                    record
+                ) =>
+                    total +
+                    Number(
+                        record.manpower || 0
+                    ),
+                0
+            );
+
+    let otherActual = 0;
+
+    document
+        .querySelectorAll(
+            '#weeklyManpowerRows input[id^="weeklyManpowerActual_"]'
+        )
+        .forEach(
+            otherInput => {
+
+                if(
+                    otherInput === input
+                ){
+                    return;
+                }
+
+                const otherRow =
+                    otherInput.closest(
+                        "tr"
+                    );
+
+                if(!otherRow){
+                    return;
+                }
+
+                const otherTradeSelect =
+                    otherRow.querySelector(
+                        'select[id^="weeklyManpowerTrade_"]'
+                    );
+
+                const otherTrade =
+                    otherTradeSelect
+                    ? otherTradeSelect.value.trim()
+                    : "";
+
+                if(
+                    otherTrade === trade
+                ){
+
+                    otherActual +=
+                        Number(
+                            otherInput.value || 0
+                        );
+
+                }
+
+            }
+        );
+
+    const maxAllowed =
+        Math.max(
+            0,
+            available -
+            otherActual
+        );
+
+    const entered =
+        Number(
+            input.value || 0
+        );
+
+    if(
+        entered >
+        maxAllowed
+    ){
+
+        input.value =
+            maxAllowed;
+
+        input.style.borderColor =
+            "#dc2626";
+
+        error.textContent =
+            "You have exceeded the available manpower number.";
+
+    }
+
+};
+
+
+/* =====================================================
+   WEEKLY MANPOWER DEPLOYMENT SUMMARY
+===================================================== */
+
+window.updateWeeklyManpowerDeploymentSummary =
+function(){
+
+    const summaryBody =
+        document.getElementById(
+            "weeklyManpowerDeploymentSummaryBody"
+        );
+
+    if(!summaryBody){
+        return;
+    }
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(currentProjectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    const reportDate =
+        document.getElementById(
+            "weeklyReportDate"
+        )?.value ||
+        almMP2Today();
+
+    const totals = {};
+
+    document
+        .querySelectorAll(
+            "#weeklyManpowerRows tr"
+        )
+        .forEach(
+            row => {
+
+                const tradeSelect =
+                    row.querySelector(
+                        'select[id^="weeklyManpowerTrade_"]'
+                    );
+
+                const actualInput =
+                    row.querySelector(
+                        'input[id^="weeklyManpowerActual_"]'
+                    );
+
+                const trade =
+                    tradeSelect
+                    ? tradeSelect.value.trim()
+                    : "";
+
+                if(!trade){
+                    return;
+                }
+
+                const actual =
+                    actualInput
+                    ? Number(
+                        actualInput.value || 0
+                    )
+                    : 0;
+
+                totals[trade] =
+                    (
+                        totals[trade] || 0
+                    ) +
+                    actual;
+
+            }
+        );
+
+    const availableMap = {};
+
+    (project.manpowerRecords || [])
+        .filter(
+            record =>
+                almMP2IsActive(
+                    record,
+                    reportDate
+                )
+        )
+        .forEach(
+            record => {
+
+                const trade =
+                    String(
+                        record.trade || ""
+                    ).trim();
+
+                if(!trade){
+                    return;
+                }
+
+                availableMap[trade] =
+                    (
+                        availableMap[trade] || 0
+                    ) +
+                    Number(
+                        record.manpower || 0
+                    );
+
+            }
+        );
+
+    const trades =
+        Object.keys(totals);
+
+    if(!trades.length){
+
+        summaryBody.innerHTML =
+            "No manpower selected.";
+
+        return;
+
+    }
+
+    summaryBody.innerHTML =
+        trades
+            .map(
+                trade => `
+
+                    <div
+                        style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            padding:9px 0;
+                            border-bottom:1px solid #e5e7eb;
+                        "
+                    >
+
+                        <strong>
+                            ${weeklyReportEscape(
+                                trade
+                            )}
+                        </strong>
+
+                        <span>
+                            ${totals[trade]}
+                            /
+                            ${availableMap[trade] || 0}
+                        </span>
+
+                    </div>
+
+                `
+            )
+            .join("");
+
+};
+
+
+/* =====================================================
+   AUTO UPDATE WEEKLY MANPOWER SUMMARY
+===================================================== */
+
+if(
+    !window.weeklyManpowerIntegrationListenersAdded
+){
+
+    document.addEventListener(
+        "input",
+        function(event){
+
+            if(
+                event.target &&
+                event.target.id &&
+                event.target.id.startsWith(
+                    "weeklyManpowerActual_"
+                )
+            ){
+
+                window.validateWeeklyManpowerActual(
+                    event.target
+                );
+
+                window.updateWeeklyManpowerDeploymentSummary();
+
+            }
+
+        }
+    );
+
+    document.addEventListener(
+        "change",
+        function(event){
+
+            if(
+                event.target &&
+                event.target.id &&
+                event.target.id.startsWith(
+                    "weeklyManpowerTrade_"
+                )
+            ){
+
+                const row =
+                    event.target.closest(
+                        "tr"
+                    );
+
+                const actualInput =
+                    row
+                    ? row.querySelector(
+                        'input[id^="weeklyManpowerActual_"]'
+                    )
+                    : null;
+
+                if(actualInput){
+
+                    window.validateWeeklyManpowerActual(
+                        actualInput
+                    );
+
+                }
+
+                window.updateWeeklyManpowerDeploymentSummary();
+
+            }
+
+        }
+    );
+
+    window.weeklyManpowerIntegrationListenersAdded =
+        true;
+
+}
+
+    window.addWeeklyManpowerRow =
 function(){
 
     const tbody =
@@ -14727,7 +15245,16 @@ function(){
     if(!tbody){
         return;
     }
+const project =
+    projects.find(
+        p =>
+            String(p.id) ===
+            String(currentProjectId)
+    );
 
+if(!project){
+    return;
+}
 
     const index =
         tbody.querySelectorAll("tr").length;
@@ -14743,19 +15270,44 @@ function(){
             padding:10px;
         ">
 
-            <input
-                id="weeklyManpowerTrade_${index}"
-                type="text"
-                placeholder="Trade / Personnel"
-                style="
-                    width:100%;
-                    box-sizing:border-box;
-                    padding:9px 10px;
-                    border:1px solid #d4dae2;
-                    border-radius:6px;
-                    font-size:13px;
-                "
+            <select
+    id="weeklyManpowerTrade_${index}"
+    style="
+        width:100%;
+        box-sizing:border-box;
+        padding:9px 10px;
+        border:1px solid #d4dae2;
+        border-radius:6px;
+        font-size:13px;
+        background:white;
+    "
+>
+    <option value="">
+        Select Trade / Personnel
+    </option>
+
+    ${window.getWeeklyManpowerOptions(
+        project,
+        {
+            reportDate:
+                document.getElementById(
+                    "weeklyReportDate"
+                )?.value ||
+                almMP2Today()
+        }
+    )
+    .map(
+        item => `
+            <option
+                value="${weeklyReportEscape(item.trade)}"
             >
+                ${weeklyReportEscape(item.trade)}
+                — Available: ${item.available}
+            </option>
+        `
+    )
+    .join("")}
+</select>
 
         </td>
 
@@ -16487,10 +17039,10 @@ const manpowerRows =
 
 manpowerRows.forEach(row => {
 
-    const tradeInput =
-        row.querySelector(
-            'input[id^="weeklyManpowerTrade_"]'
-        );
+   const tradeInput =
+    row.querySelector(
+        'select[id^="weeklyManpowerTrade_"]'
+    );
 
     const plannedInput =
         row.querySelector(
