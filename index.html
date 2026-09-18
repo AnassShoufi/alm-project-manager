@@ -11930,6 +11930,12 @@ function openWeeklyReportForm(
 window.weeklyEquipmentOptions = [
     ...new Set(
         (project.equipment || [])
+            .filter(
+                item =>
+                    String(
+                        item.deploymentStatus || ""
+                    ).toLowerCase() === "on site"
+            )
             .map(
                 item =>
                     String(
