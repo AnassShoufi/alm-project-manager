@@ -12955,7 +12955,31 @@ window.weeklyEquipmentOptions = [
             </tbody>
 
         </table>
+<div
+    id="weeklyManpowerDeploymentSummary"
+    style="
+        margin-top:20px;
+        padding:16px;
+        border:1px solid #d4dae2;
+        border-radius:8px;
+        background:#f8fafc;
+    "
+>
+    <div
+        style="
+            font-size:16px;
+            font-weight:700;
+            color:#1f2937;
+            margin-bottom:12px;
+        "
+    >
+        Manpower Deployment Summary
+    </div>
 
+    <div id="weeklyManpowerDeploymentSummaryBody">
+        No manpower selected.
+    </div>
+</div>
     </div>
 
 </div>
@@ -14716,6 +14740,7 @@ window.weeklyEquipmentOptions = [
         modal
     );
 window.updateWeeklyEquipmentDeploymentSummary();
+    window.updateWeeklyManpowerDeploymentSummary();
 
     renderWeeklyProgressPhotoCards();
 
