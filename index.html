@@ -15008,11 +15008,23 @@ function(){
     ${(window.weeklyEquipmentOptions || [])
         .map(
             name => `
-                <option
-                    value="${weeklyReportEscape(name)}"
-                >
-                    ${weeklyReportEscape(name)}
-                </option>
+              <option
+    value="${weeklyReportEscape(name)}"
+>
+    ${weeklyReportEscape(name)}
+    — Available: ${
+        (project.equipment || [])
+            .filter(
+                equipment =>
+                    String(equipment.name || "").trim() ===
+                    String(name).trim() &&
+                    String(
+                        equipment.deploymentStatus || ""
+                    ).toLowerCase() === "on site"
+            )
+            .length
+    }
+</option>
             `
         )
         .join("")
