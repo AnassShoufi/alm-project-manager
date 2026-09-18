@@ -13100,6 +13100,19 @@ window.weeklyEquipmentOptions = [
 
                            <select
     id="weeklyEquipmentName_${i}"
+    onchange="
+    const actualInput =
+        this.closest('tr')
+            ?.querySelector(
+                'input[id^=\"weeklyEquipmentActual_\"]'
+            );
+
+    if(actualInput){
+        window.validateWeeklyEquipmentActual(
+            actualInput
+        );
+    }
+"
     style="
         width:100%;
         box-sizing:border-box;
@@ -14991,6 +15004,19 @@ function(){
 
            <select
     id="weeklyEquipmentName_${index}"
+    onchange="
+    const actualInput =
+        this.closest('tr')
+            ?.querySelector(
+                'input[id^=\"weeklyEquipmentActual_\"]'
+            );
+
+    if(actualInput){
+        window.validateWeeklyEquipmentActual(
+            actualInput
+        );
+    }
+"
     style="
         width:100%;
         box-sizing:border-box;
