@@ -15344,7 +15344,10 @@ function(){
 
             <button
                 type="button"
-                onclick="this.closest('tr').remove()"
+              onclick="
+    this.closest('tr').remove();
+    window.updateWeeklyEquipmentDeploymentSummary();
+"
                 style="
                     border:none;
                     background:#f3f4f6;
