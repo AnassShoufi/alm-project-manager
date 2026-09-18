@@ -15004,6 +15004,140 @@ function(input){
     }
 
 };
+    /* =====================================================
+   WEEKLY EQUIPMENT DEPLOYMENT SUMMARY
+===================================================== */
+
+window.updateWeeklyEquipmentDeploymentSummary =
+function(){
+
+    const summaryBody =
+        document.getElementById(
+            "weeklyEquipmentDeploymentSummaryBody"
+        );
+
+    if(!summaryBody){
+        return;
+    }
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(currentProjectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+    const totals = {};
+
+    document
+        .querySelectorAll(
+            "#weeklyEquipmentRows tr"
+        )
+        .forEach(row => {
+
+            const nameSelect =
+                row.querySelector(
+                    'select[id^="weeklyEquipmentName_"]'
+                );
+
+            const actualInput =
+                row.querySelector(
+                    'input[id^="weeklyEquipmentActual_"]'
+                );
+
+            const name =
+                nameSelect
+                ? nameSelect.value.trim()
+                : "";
+
+            if(!name){
+                return;
+            }
+
+            const actual =
+                actualInput
+                ? Number(actualInput.value || 0)
+                : 0;
+
+            if(!totals[name]){
+                totals[name] = 0;
+            }
+
+            totals[name] += actual;
+
+        });
+
+    const equipmentOnSite =
+        project.equipment || [];
+
+    const availableMap = {};
+
+    equipmentOnSite
+        .filter(
+            item =>
+                String(
+                    item.deploymentStatus || ""
+                ).toLowerCase() === "on site"
+        )
+        .forEach(item => {
+
+            const name =
+                String(
+                    item.name || ""
+                ).trim();
+
+            if(!name){
+                return;
+            }
+
+            availableMap[name] =
+                (availableMap[name] || 0) + 1;
+
+        });
+
+    const names =
+        Object.keys(totals);
+
+    if(names.length === 0){
+
+        summaryBody.innerHTML =
+            "No equipment selected.";
+
+        return;
+    }
+
+    summaryBody.innerHTML =
+        names
+            .map(
+                name => `
+                    <div
+                        style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            padding:9px 0;
+                            border-bottom:1px solid #e5e7eb;
+                        "
+                    >
+                        <strong>
+                            ${weeklyReportEscape(name)}
+                        </strong>
+
+                        <span>
+                            ${totals[name]}
+                            /
+                            ${availableMap[name] || 0}
+                        </span>
+                    </div>
+                `
+            )
+            .join("");
+
+};
 window.addWeeklyEquipmentRow =
 function(){
 
