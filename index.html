@@ -15138,6 +15138,53 @@ function(){
             .join("");
 
 };
+  /* =====================================================
+   AUTO UPDATE EQUIPMENT DEPLOYMENT SUMMARY
+===================================================== */
+
+if(!window.weeklyEquipmentSummaryListenerAdded){
+
+    document.addEventListener(
+        "input",
+        function(event){
+
+            if(
+                event.target &&
+                event.target.id &&
+                event.target.id.startsWith(
+                    "weeklyEquipmentActual_"
+                )
+            ){
+
+                window.updateWeeklyEquipmentDeploymentSummary();
+
+            }
+
+        }
+    );
+
+    document.addEventListener(
+        "change",
+        function(event){
+
+            if(
+                event.target &&
+                event.target.id &&
+                event.target.id.startsWith(
+                    "weeklyEquipmentName_"
+                )
+            ){
+
+                window.updateWeeklyEquipmentDeploymentSummary();
+
+            }
+
+        }
+    );
+
+    window.weeklyEquipmentSummaryListenerAdded = true;
+
+}  
 window.addWeeklyEquipmentRow =
 function(){
 
