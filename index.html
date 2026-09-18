@@ -15196,7 +15196,16 @@ function(){
     if(!tbody){
         return;
     }
+const project =
+    projects.find(
+        p =>
+            String(p.id) ===
+            String(currentProjectId)
+    );
 
+if(!project){
+    return;
+}
     const index =
         tbody.querySelectorAll("tr").length;
 
