@@ -24157,89 +24157,6 @@ function buildVariationRow(
 
             </td>
 
-
-            <!-- APPROVED -->
-
-            <td style="
-                padding:8px;
-                text-align:right;
-            ">
-
-                <input
-                    type="text"
-                    value="${variationEscape(
-                        variation.approvedValue || ""
-                    )}"
-                    oninput="
-                        updateVariationAmount(
-                            ${project.id},
-                            ${index},
-                            'approvedValue',
-                            this.value
-                        )
-                    "
-                    onblur="
-                        formatVariationInput(this);
-                        updateVariationAmount(
-                            ${project.id},
-                            ${index},
-                            'approvedValue',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:125px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                        text-align:right;
-                    "
-                >
-
-            </td>
-<!-- WHT -->
-
-<td style="
-    padding:8px;
-    text-align:right;
-">
-
-    <input
-        type="text"
-        value="${formatVariationMoney(
-            parseVariationMoney(
-                variation.whtAmount
-            )
-        )}"
-        onfocus="
-            this.value =
-                this.value.replace(/,/g,'')
-        "
-        oninput="
-            updateVariationWHT(
-                ${project.id},
-                ${index},
-                this.value
-            )
-        "
-        onblur="
-            formatVariationInput(this);
-            updateVariationWHT(
-                ${project.id},
-                ${index},
-                this.value
-            )
-        "
-        style="
-            width:125px;
-            padding:7px;
-            border:1px solid #ccc;
-            border-radius:4px;
-            text-align:right;
-        "
-    >
-
-</td>
 <!-- WHT -->
 
 <td style="
@@ -24253,17 +24170,19 @@ function buildVariationRow(
             variation.whtAmount || ""
         )}"
         oninput="
-            updateVariationWHT(
+            updateVariationAmount(
                 ${project.id},
                 ${index},
+                'whtAmount',
                 this.value
             )
         "
         onblur="
             formatVariationInput(this);
-            updateVariationWHT(
+            updateVariationAmount(
                 ${project.id},
                 ${index},
+                'whtAmount',
                 this.value
             )
         "
@@ -24277,6 +24196,8 @@ function buildVariationRow(
     >
 
 </td>
+
+
 <!-- PAYABLE -->
 
 <td style="
@@ -24287,91 +24208,97 @@ function buildVariationRow(
     <div
         id="variation-payable-${index}"
         style="
-            font-weight:700;
-            text-align:right;
+            width:125px;
             padding:7px;
+            border:1px solid #e5e7eb;
+            border-radius:4px;
+            background:#f8fafc;
+            text-align:right;
+            font-weight:600;
         "
     >
         ${formatVariationMoney(
-            Math.max(
-                0,
-                parseVariationMoney(
-                    variation.approvedValue
-                ) -
-                parseVariationMoney(
-                    variation.whtAmount
-                )
-            )
+            variation.payableAmount || 0
         )}
     </div>
 
 </td>
 
 
-            <!-- WORKFLOW STATUS -->
+<!-- PAYMENT RECEIVED -->
 
-            <td style="
-                padding:8px;
-                text-align:center;
-            ">
+<td style="
+    padding:8px;
+    text-align:right;
+">
 
-                <select
-                    onchange="
-                        updateVariationField(
-                            ${project.id},
-                            ${index},
-                            'status',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:125px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                    "
-                >
+    <input
+        type="text"
+        value="${variationEscape(
+            variation.paymentReceived || ""
+        )}"
+        oninput="
+            updateVariationAmount(
+                ${project.id},
+                ${index},
+                'paymentReceived',
+                this.value
+            )
+        "
+        onblur="
+            formatVariationInput(this);
+            updateVariationAmount(
+                ${project.id},
+                ${index},
+                'paymentReceived',
+                this.value
+            )
+        "
+        style="
+            width:125px;
+            padding:7px;
+            border:1px solid #ccc;
+            border-radius:4px;
+            text-align:right;
+        "
+    >
 
-                    <option
-                        value="Draft"
-                        ${variation.status === "Draft" ? "selected" : ""}
-                    >
-                        Draft
-                    </option>
-
-                    <option
-                        value="Submitted"
-                        ${variation.status === "Submitted" ? "selected" : ""}
-                    >
-                        Submitted
-                    </option>
-
-                    <option
-                        value="Under Review"
-                        ${variation.status === "Under Review" ? "selected" : ""}
-                    >
-                        Under Review
-                    </option>
-
-                    <option
-                        value="Approved"
-                        ${variation.status === "Approved" ? "selected" : ""}
-                    >
-                        Approved
-                    </option>
-
-                    <option
-                        value="Rejected"
-                        ${variation.status === "Rejected" ? "selected" : ""}
-                    >
-                        Rejected
-                    </option>
-
-                </select>
-
-            </td>
+</td>
 
 
+<!-- OUTSTANDING -->
+
+<td style="
+    padding:8px;
+    text-align:right;
+">
+
+    <div
+        id="variation-outstanding-${index}"
+        style="
+            width:125px;
+            padding:7px;
+            border:1px solid #e5e7eb;
+            border-radius:4px;
+            background:#f8fafc;
+            text-align:right;
+            font-weight:600;
+        "
+    >
+        ${formatVariationMoney(
+            Math.max(
+                0,
+                parseVariationMoney(
+                    variation.payableAmount
+                ) -
+                parseVariationMoney(
+                    variation.paymentReceived
+                )
+            )
+        )}
+    </div>
+
+</td>
             <!-- FINANCIAL STATUS -->
 
             <td style="
