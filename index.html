@@ -24189,48 +24189,79 @@ function buildVariationRow(
                 >
 
             </td>
+<!-- WHT -->
 
+<td style="
+    padding:8px;
+    text-align:right;
+">
 
-            <!-- PAYABLE -->
+    <input
+        type="text"
+        value="${formatVariationMoney(
+            parseVariationMoney(
+                variation.whtAmount
+            )
+        )}"
+        onfocus="
+            this.value =
+                this.value.replace(/,/g,'')
+        "
+        oninput="
+            updateVariationWHT(
+                ${project.id},
+                ${index},
+                this.value
+            )
+        "
+        onblur="
+            formatVariationInput(this);
+            updateVariationWHT(
+                ${project.id},
+                ${index},
+                this.value
+            )
+        "
+        style="
+            width:125px;
+            padding:7px;
+            border:1px solid #ccc;
+            border-radius:4px;
+            text-align:right;
+        "
+    >
 
-            <td style="
-                padding:8px;
-                text-align:right;
-            ">
+</td>
 
-                <input
-                    type="text"
-                    value="${variationEscape(
-                        variation.payableAmount || ""
-                    )}"
-                    oninput="
-                        updateVariationAmount(
-                            ${project.id},
-                            ${index},
-                            'payableAmount',
-                            this.value
-                        )
-                    "
-                    onblur="
-                        formatVariationInput(this);
-                        updateVariationAmount(
-                            ${project.id},
-                            ${index},
-                            'payableAmount',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:125px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                        text-align:right;
-                        font-weight:600;
-                    "
-                >
+<!-- PAYABLE -->
 
-            </td>
+<td style="
+    padding:8px;
+    text-align:right;
+">
+
+    <div
+        id="variation-payable-${index}"
+        style="
+            font-weight:700;
+            text-align:right;
+            padding:7px;
+        "
+    >
+        ${formatVariationMoney(
+            Math.max(
+                0,
+                parseVariationMoney(
+                    variation.approvedValue
+                ) -
+                parseVariationMoney(
+                    variation.whtAmount
+                )
+            )
+        )}
+    </div>
+
+</td>
 
 
             <!-- WORKFLOW STATUS -->
@@ -25279,7 +25310,83 @@ function(
 
 };
 
+/* =====================================================
+   UPDATE WHT
+===================================================== */
 
+window.updateVariationWHT =
+function(
+    projectId,
+    index,
+    value
+){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index]
+    ){
+        return;
+    }
+
+    const variation =
+        project.variations[index];
+
+    variation.whtAmount =
+        value;
+
+    const approved =
+        parseVariationMoney(
+            variation.approvedValue
+        );
+
+    const wht =
+        parseVariationMoney(
+            variation.whtAmount
+        );
+
+    variation.payableAmount =
+        Math.max(
+            0,
+            approved - wht
+        );
+
+    persist();
+
+    updateVariationSummary(
+        project
+    );
+
+    refreshVariationFinancialDisplays(
+        project,
+        index
+    );
+
+    updateVariationStageSummaryInPlace(
+        project,
+        index
+    );
+
+    const payableEl =
+        document.getElementById(
+            `variation-payable-${index}`
+        );
+
+    if(payableEl){
+
+        payableEl.innerText =
+            formatVariationMoney(
+                variation.payableAmount
+            );
+
+    }
+
+};
 /* =====================================================
    REFRESH FINANCIAL DISPLAY
 ===================================================== */
