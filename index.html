@@ -24236,7 +24236,43 @@ function buildVariationRow(
     >
 
 </td>
+<!-- WHT -->
 
+<td style="
+    padding:8px;
+    text-align:right;
+">
+
+    <input
+        type="text"
+        value="${variationEscape(
+            variation.whtAmount || ""
+        )}"
+        oninput="
+            updateVariationWHT(
+                ${project.id},
+                ${index},
+                this.value
+            )
+        "
+        onblur="
+            formatVariationInput(this);
+            updateVariationWHT(
+                ${project.id},
+                ${index},
+                this.value
+            )
+        "
+        style="
+            width:125px;
+            padding:7px;
+            border:1px solid #ccc;
+            border-radius:4px;
+            text-align:right;
+        "
+    >
+
+</td>
 <!-- PAYABLE -->
 
 <td style="
