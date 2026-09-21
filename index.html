@@ -25212,11 +25212,36 @@ function(
     }
 
 
-    project.variations[index][field] =
-        value;
+   project.variations[index][field] =
+    value;
 
 
-    persist();
+/* =====================================================
+   CALCULATE PAYABLE
+   PAYABLE = SUBMITTED VALUE - WHT
+===================================================== */
+
+const variation =
+    project.variations[index];
+
+const submitted =
+    parseVariationMoney(
+        variation.submittedValue
+    );
+
+const wht =
+    parseVariationMoney(
+        variation.whtAmount
+    );
+
+variation.payableAmount =
+    Math.max(
+        0,
+        submitted - wht
+    );
+
+
+persist();
 
 
     refreshVariationFinancialDisplays(
