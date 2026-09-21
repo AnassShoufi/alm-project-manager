@@ -25895,7 +25895,111 @@ if(mainStatusEl){
         project,
         variationIndex
     );
+/* =====================================================
+   IMMEDIATE PAYMENT STAGE DISPLAY REFRESH
+===================================================== */
 
+const stagePayableEl =
+    document.getElementById(
+        `variation-stage-payable-${variationIndex}-${stageIndex}`
+    );
+
+const stageBalanceEl =
+    document.getElementById(
+        `variation-stage-balance-${variationIndex}-${stageIndex}`
+    );
+
+const stageStatusEl =
+    document.getElementById(
+        `variation-stage-status-${variationIndex}-${stageIndex}`
+    );
+
+const invoice =
+    parseVariationMoney(
+        stage.invoiceValue
+    );
+
+const wht =
+    parseVariationMoney(
+        stage.whtAmount
+    );
+
+const payable =
+    Math.max(
+        0,
+        invoice - wht
+    );
+
+const received =
+    parseVariationMoney(
+        stage.paymentReceived !== undefined
+            ? stage.paymentReceived
+            : stage.receivedValue
+    );
+
+const balance =
+    payable - received;
+
+if(stagePayableEl){
+
+    stagePayableEl.innerText =
+        formatVariationMoney(
+            payable
+        );
+
+}
+
+if(stageBalanceEl){
+
+    stageBalanceEl.innerText =
+        formatVariationMoney(
+            balance
+        );
+
+}
+
+if(stageStatusEl){
+
+    let stageStatus = "Not Paid";
+
+    if(
+        received > payable &&
+        payable > 0
+    ){
+
+        stageStatus = "Overpaid";
+
+    }
+    else if(
+        received >= payable &&
+        payable > 0
+    ){
+
+        stageStatus = "Fully Paid";
+
+    }
+    else if(
+        received > 0 &&
+        received < payable
+    ){
+
+        stageStatus = "Partially Paid";
+
+    }
+    else if(
+        payable > 0
+    ){
+
+        stageStatus = "Invoiced";
+
+    }
+
+    stageStatusEl.innerHTML =
+        variationFinancialBadge(
+            stageStatus
+        );
+
+}
 };
 
 /* =====================================================
