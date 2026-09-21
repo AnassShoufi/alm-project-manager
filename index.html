@@ -6888,6 +6888,267 @@ function openProject(id){
     </div>
 
 </div>
+<!-- =====================================================
+     FINANCIAL OVERVIEW
+===================================================== -->
+
+<div class="panel" style="margin-top:20px;">
+
+    <div class="panel-header">
+        <h2>Financial Overview</h2>
+        <span style="
+            font-size:13px;
+            color:#6c757d;
+        ">
+            Payments & Variations
+        </span>
+    </div>
+
+    <div style="
+        padding:20px;
+        display:grid;
+        grid-template-columns:
+            repeat(
+                auto-fit,
+                minmax(210px, 1fr)
+            );
+        gap:15px;
+    ">
+
+        <!-- TOTAL INVOICED -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Total Invoiced
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.totalInvoiced
+                )}
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL WHT -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Total WHT
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.totalPaymentWHT
+                )}
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL PAYABLE -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Total Payable
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.totalPayable
+                )}
+            </div>
+
+        </div>
+
+
+        <!-- PAYMENT RECEIVED -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Payment Received
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.totalPaymentReceived
+                )}
+            </div>
+
+        </div>
+
+
+        <!-- OUTSTANDING -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Payment Outstanding
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.paymentOutstanding
+                )}
+            </div>
+
+        </div>
+
+
+        <!-- VARIATION PAYABLE -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Variation Payable
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.totalVariationPayable
+                )}
+            </div>
+
+        </div>
+
+
+        <!-- VARIATION RECEIVED -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Variation Received
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.totalVariationReceived
+                )}
+            </div>
+
+        </div>
+
+
+        <!-- VARIATION OUTSTANDING -->
+
+        <div style="
+            background:#f8f9fa;
+            border:1px solid #e9ecef;
+            border-radius:10px;
+            padding:18px;
+        ">
+
+            <div style="
+                font-size:13px;
+                color:#6c757d;
+                margin-bottom:8px;
+            ">
+                Variation Outstanding
+            </div>
+
+            <div style="
+                font-size:22px;
+                font-weight:700;
+            ">
+                ${formatPaymentMoney(
+                    overviewData.variationOutstanding
+                )}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 
                 <div class="panel">
 
