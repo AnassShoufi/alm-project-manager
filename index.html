@@ -25619,6 +25619,124 @@ function(
     */
 
     stage[field] = value;
+    /* =====================================================
+   IMMEDIATE STAGE PAYMENT TOTAL → MAIN VARIATION
+===================================================== */
+
+const stageTotals =
+    getVariationPaymentTotals(
+        variation
+    );
+
+const totalStagePaymentReceived =
+    stageTotals.received;
+
+/*
+   MAIN VARIATION PAYMENT RECEIVED
+*/
+
+variation.paymentReceived =
+    totalStagePaymentReceived;
+
+/*
+   MAIN VARIATION PAYABLE
+*/
+
+const variationPayable =
+    Math.max(
+        0,
+        parseVariationMoney(
+            variation.submittedValue
+        ) -
+        parseVariationMoney(
+            variation.whtAmount
+        )
+    );
+
+variation.payableAmount =
+    variationPayable;
+
+/*
+   MAIN VARIATION OUTSTANDING
+*/
+
+const variationOutstanding =
+    variationPayable -
+    totalStagePaymentReceived;
+
+/*
+   UPDATE MAIN PAYMENT RECEIVED IMMEDIATELY
+*/
+
+const mainReceivedEl =
+    document.getElementById(
+        `variation-payment-received-${variationIndex}`
+    );
+
+if(mainReceivedEl){
+
+    mainReceivedEl.innerText =
+        formatVariationMoney(
+            totalStagePaymentReceived
+        );
+
+}
+
+/*
+   UPDATE MAIN PAYABLE IMMEDIATELY
+*/
+
+const mainPayableEl =
+    document.getElementById(
+        `variation-payable-${variationIndex}`
+    );
+
+if(mainPayableEl){
+
+    mainPayableEl.innerText =
+        formatVariationMoney(
+            variationPayable
+        );
+
+}
+
+/*
+   UPDATE MAIN OUTSTANDING IMMEDIATELY
+*/
+
+const mainOutstandingEl =
+    document.getElementById(
+        `variation-outstanding-${variationIndex}`
+    );
+
+if(mainOutstandingEl){
+
+    mainOutstandingEl.innerText =
+        formatVariationMoney(
+            variationOutstanding
+        );
+
+}
+
+/*
+   UPDATE MAIN FINANCIAL STATUS
+*/
+
+const mainStatusEl =
+    document.getElementById(
+        `variation-financial-status-${variationIndex}`
+    );
+
+if(mainStatusEl){
+
+    mainStatusEl.innerHTML =
+        variationFinancialBadge(
+            getVariationFinancialStatus(
+                variation
+            )
+        );
+
+}
 
     /*
        KEEP OLD FIELD COMPATIBLE
