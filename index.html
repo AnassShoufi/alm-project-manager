@@ -25281,11 +25281,58 @@ function(
     }
 
 
-    project.variations[index][field] =
-        value;
+   project.variations[index][field] =
+    value;
 
 
-    persist();
+/* =====================================================
+   PAYABLE = SUBMITTED VALUE - WHT
+===================================================== */
+
+const variation =
+    project.variations[index];
+
+const submitted =
+    parseVariationMoney(
+        variation.submittedValue
+    );
+
+const wht =
+    parseVariationMoney(
+        variation.whtAmount
+    );
+
+variation.payableAmount =
+    Math.max(
+        0,
+        submitted - wht
+    );
+
+
+/* =====================================================
+   SAVE
+===================================================== */
+
+persist();
+
+
+/* =====================================================
+   UPDATE PAYABLE ON SCREEN
+===================================================== */
+
+const payableElement =
+    document.getElementById(
+        `variation-payable-${index}`
+    );
+
+if(payableElement){
+
+    payableElement.innerText =
+        formatVariationMoney(
+            variation.payableAmount
+        );
+
+}
 
 
     updateVariationSummary(
