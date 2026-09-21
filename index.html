@@ -25230,7 +25230,6 @@ function(
 /* =====================================================
    UPDATE MAIN AMOUNT
 ===================================================== */
-
 window.updateVariationAmount =
 function(
     projectId,
@@ -25238,6 +25237,142 @@ function(
     field,
     value
 ){
+
+    const project =
+        getVariationsProject(
+            projectId
+        );
+
+    if(
+        !project ||
+        !project.variations ||
+        !project.variations[index]
+    ){
+        return;
+    }
+
+    const variation =
+        project.variations[index];
+
+    /* =====================================================
+       UPDATE ENTERED VALUE
+    ===================================================== */
+
+    variation[field] =
+        value;
+
+
+    /* =====================================================
+       CALCULATE PAYABLE
+       PAYABLE = SUBMITTED - WHT
+    ===================================================== */
+
+    const submitted =
+        parseVariationMoney(
+            variation.submittedValue
+        );
+
+    const wht =
+        parseVariationMoney(
+            variation.whtAmount
+        );
+
+    variation.payableAmount =
+        Math.max(
+            0,
+            submitted - wht
+        );
+
+
+    /* =====================================================
+       CALCULATE OUTSTANDING
+       OUTSTANDING = PAYABLE - PAYMENT RECEIVED
+    ===================================================== */
+
+    const paymentReceived =
+        parseVariationMoney(
+            variation.paymentReceived
+        );
+
+    const outstanding =
+        variation.payableAmount -
+        paymentReceived;
+
+
+    /* =====================================================
+       SAVE
+    ===================================================== */
+
+    persist();
+
+
+    /* =====================================================
+       UPDATE SUMMARY
+    ===================================================== */
+
+    updateVariationSummary(
+        project
+    );
+
+
+    /* =====================================================
+       UPDATE FINANCIAL STATUS
+    ===================================================== */
+
+    refreshVariationFinancialDisplays(
+        project,
+        index
+    );
+
+
+    /* =====================================================
+       UPDATE PAYMENT STAGE SUMMARY
+    ===================================================== */
+
+    updateVariationStageSummaryInPlace(
+        project,
+        index
+    );
+
+
+    /* =====================================================
+       UPDATE PAYABLE DISPLAY
+    ===================================================== */
+
+    const payableElement =
+        document.getElementById(
+            `variation-payable-${index}`
+        );
+
+    if(payableElement){
+
+        payableElement.innerText =
+            formatVariationMoney(
+                variation.payableAmount
+            );
+
+    }
+
+
+    /* =====================================================
+       UPDATE OUTSTANDING DISPLAY
+    ===================================================== */
+
+    const outstandingElement =
+        document.getElementById(
+            `variation-outstanding-${index}`
+        );
+
+    if(outstandingElement){
+
+        outstandingElement.innerText =
+            formatVariationMoney(
+                outstanding
+            );
+
+    }
+
+};
 
     const project =
         getVariationsProject(
