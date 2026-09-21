@@ -6454,6 +6454,293 @@ document.getElementById("previousWeeklyReportsArchive").value =
 
     document.getElementById("projectModal").style.display = "flex";
 }
+    /* =====================================================
+   PROJECT OVERVIEW DASHBOARD
+===================================================== */
+
+function getProjectOverviewData(project){
+
+    const payments =
+        Array.isArray(project.payments)
+            ? project.payments
+            : [];
+
+    const variations =
+        Array.isArray(project.variations)
+            ? project.variations
+            : [];
+
+    const equipment =
+        Array.isArray(project.equipment)
+            ? project.equipment
+            : [];
+
+    const manpowerRecords =
+        Array.isArray(project.manpowerRecords)
+            ? project.manpowerRecords
+            : [];
+
+
+    /* =================================================
+       PAYMENTS
+    ================================================= */
+
+    let totalInvoiced = 0;
+    let totalPaymentWHT = 0;
+    let totalPayable = 0;
+    let totalPaymentReceived = 0;
+
+    payments.forEach(function(payment){
+
+        const invoice =
+            parsePaymentMoney(
+                payment.invoiceValue
+            );
+
+        const wht =
+            parsePaymentMoney(
+                payment.whtAmount
+            );
+
+        const payable =
+            Math.max(
+                0,
+                invoice - wht
+            );
+
+        const received =
+            parsePaymentMoney(
+                payment.paymentReceived
+            );
+
+        totalInvoiced += invoice;
+        totalPaymentWHT += wht;
+        totalPayable += payable;
+        totalPaymentReceived += received;
+
+    });
+
+    const paymentOutstanding =
+        totalPayable -
+        totalPaymentReceived;
+
+
+    /* =================================================
+       VARIATIONS
+    ================================================= */
+
+    let totalVariationSubmitted = 0;
+    let totalVariationWHT = 0;
+    let totalVariationPayable = 0;
+    let totalVariationReceived = 0;
+
+    variations.forEach(function(variation){
+
+        const submitted =
+            parseVariationMoney(
+                variation.submittedValue
+            );
+
+        const wht =
+            parseVariationMoney(
+                variation.whtAmount
+            );
+
+        const payable =
+            Math.max(
+                0,
+                submitted - wht
+            );
+
+        const received =
+            parseVariationMoney(
+                variation.paymentReceived
+            );
+
+        totalVariationSubmitted +=
+            submitted;
+
+        totalVariationWHT +=
+            wht;
+
+        totalVariationPayable +=
+            payable;
+
+        totalVariationReceived +=
+            received;
+
+    });
+
+    const variationOutstanding =
+        totalVariationPayable -
+        totalVariationReceived;
+
+
+    /* =================================================
+       EQUIPMENT
+    ================================================= */
+
+    const equipmentOperational =
+        equipment.filter(function(item){
+
+            return String(
+                item.status || ""
+            ).toLowerCase() === "operational";
+
+        }).length;
+
+    const equipmentMaintenance =
+        equipment.filter(function(item){
+
+            return String(
+                item.status || ""
+            ).toLowerCase() ===
+            "under maintenance";
+
+        }).length;
+
+    const equipmentOutOfService =
+        equipment.filter(function(item){
+
+            return String(
+                item.status || ""
+            ).toLowerCase() ===
+            "out of service";
+
+        }).length;
+
+    const equipmentAvailable =
+        equipment.filter(function(item){
+
+            return String(
+                item.status || ""
+            ).toLowerCase() ===
+            "available";
+
+        }).length;
+
+
+    /* =================================================
+       MANPOWER
+    ================================================= */
+
+    let manpowerTotal = 0;
+
+    if(
+        typeof almMP2GetCurrentStats ===
+        "function"
+    ){
+
+        const selectedDate =
+            project.manpowerAsOfDate ||
+            new Date()
+                .toISOString()
+                .slice(0,10);
+
+        const manpowerStats =
+            almMP2GetCurrentStats(
+                project,
+                selectedDate
+            );
+
+        manpowerTotal =
+            Number(
+                manpowerStats.total || 0
+            );
+
+    }
+    else{
+
+        manpowerTotal =
+            manpowerRecords.reduce(
+                function(total,record){
+
+                    return total +
+                        Number(
+                            record.manpower || 0
+                        );
+
+                },
+                0
+            );
+
+    }
+
+
+    /* =================================================
+       PROJECT PROGRESS
+    ================================================= */
+
+    const progress =
+        Number(
+            project.progress || 0
+        );
+
+
+    /* =================================================
+       RETURN OVERVIEW DATA
+    ================================================= */
+
+    return {
+
+        contractValue:
+            parsePaymentMoney(
+                project.contractValue ||
+                project.contractAmount ||
+                project.value ||
+                0
+            ),
+
+        progress,
+
+        totalInvoiced,
+
+        totalPaymentWHT,
+
+        totalPayable,
+
+        totalPaymentReceived,
+
+        paymentOutstanding,
+
+        totalVariationSubmitted,
+
+        totalVariationWHT,
+
+        totalVariationPayable,
+
+        totalVariationReceived,
+
+        variationOutstanding,
+
+        equipmentTotal:
+            equipment.length,
+
+        equipmentOperational,
+
+        equipmentMaintenance,
+
+        equipmentOutOfService,
+
+        equipmentAvailable,
+
+        manpowerTotal,
+
+        paymentCount:
+            payments.length,
+
+        variationCount:
+            variations.length,
+
+        equipmentCount:
+            equipment.length,
+
+        manpowerRecordCount:
+            manpowerRecords.length
+
+    };
+
+}
 /* =========================
    PROJECT WORKSPACE
 ========================= */
