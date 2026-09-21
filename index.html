@@ -24525,30 +24525,27 @@ function buildVariationPaymentStages(
     variation
 ){
 
-    const totals =
+    const variationPayable =
+        parseVariationMoney(
+            variation.payableAmount
+        );
+
+    const stageTotals =
         getVariationPaymentTotals(
             variation
         );
 
-    const payable =
-        calculateVariationPayable(
-            variation
-        );
+    const totalReceived =
+        stageTotals.received;
 
-    const received =
-        parseVariationMoney(
-            variation.paymentReceived
-        );
-
-    const outstandingPayable =
-        payable -
-        received;
+    const outstanding =
+        variationPayable -
+        totalReceived;
 
     const financialStatus =
         getVariationFinancialStatus(
             variation
         );
-
 
     return `
 
@@ -24558,6 +24555,8 @@ function buildVariationPaymentStages(
             background:white;
             overflow:auto;
         ">
+
+            <!-- HEADER -->
 
             <div style="
                 display:flex;
@@ -24610,6 +24609,8 @@ function buildVariationPaymentStages(
             </div>
 
 
+            <!-- FINANCIAL SUMMARY -->
+
             <div style="
                 display:flex;
                 gap:25px;
@@ -24621,64 +24622,87 @@ function buildVariationPaymentStages(
 
                 <div>
                     <span style="color:#6c757d;">
-                        Payable Amount:
+                        Variation Payable:
                     </span>
-                    <strong id="variation-stage-payable-${variationIndex}">
+
+                    <strong
+                        id="variation-stage-payable-${variationIndex}"
+                    >
                         ${formatVariationMoney(
-                            payable
+                            variationPayable
                         )}
                     </strong>
                 </div>
 
+
                 <div>
                     <span style="color:#6c757d;">
-                        Total Invoiced:
+                        Total Stage Invoiced:
                     </span>
-                    <strong id="variation-stage-invoiced-${variationIndex}">
+
+                    <strong
+                        id="variation-stage-invoiced-${variationIndex}"
+                    >
                         ${formatVariationMoney(
-                            totals.invoiced
+                            stageTotals.invoiced
                         )}
                     </strong>
                 </div>
 
+
                 <div>
                     <span style="color:#6c757d;">
-                        Stage Payments Received:
+                        Total Stage WHT:
                     </span>
-                    <strong id="variation-stage-received-${variationIndex}">
+
+                    <strong
+                        id="variation-stage-wht-${variationIndex}"
+                    >
                         ${formatVariationMoney(
-                            totals.received
+                            stageTotals.wht
                         )}
                     </strong>
                 </div>
 
+
                 <div>
                     <span style="color:#6c757d;">
-                        Main Payment Received:
+                        Total Payment Received:
                     </span>
-                    <strong id="variation-stage-main-received-${variationIndex}">
+
+                    <strong
+                        id="variation-stage-received-${variationIndex}"
+                    >
                         ${formatVariationMoney(
-                            received
+                            totalReceived
                         )}
                     </strong>
                 </div>
 
+
                 <div>
                     <span style="color:#6c757d;">
-                        Outstanding Payable:
+                        Outstanding:
                     </span>
-                    <strong id="variation-stage-outstanding-${variationIndex}">
+
+                    <strong
+                        id="variation-stage-outstanding-${variationIndex}"
+                    >
                         ${formatVariationMoney(
-                            outstandingPayable
+                            outstanding
                         )}
                     </strong>
                 </div>
+
 
                 <div>
                     <span style="color:#6c757d;">
                         Status:
                     </span>
-                    <span id="variation-stage-financial-status-${variationIndex}">
+
+                    <span
+                        id="variation-stage-financial-status-${variationIndex}"
+                    >
                         ${variationFinancialBadge(
                             financialStatus
                         )}
@@ -24705,7 +24729,7 @@ function buildVariationPaymentStages(
                     <table style="
                         width:100%;
                         border-collapse:collapse;
-                        min-width:1050px;
+                        min-width:1450px;
                     ">
 
                         <thead>
@@ -24715,7 +24739,10 @@ function buildVariationPaymentStages(
                                 border-bottom:1px solid #dee2e6;
                             ">
 
-                                <th style="padding:9px;">
+                                <th style="
+                                    padding:9px;
+                                    text-align:center;
+                                ">
                                     Stage
                                 </th>
 
@@ -24724,6 +24751,20 @@ function buildVariationPaymentStages(
                                     text-align:right;
                                 ">
                                     Invoice Value
+                                </th>
+
+                                <th style="
+                                    padding:9px;
+                                    text-align:right;
+                                ">
+                                    WHT Amount
+                                </th>
+
+                                <th style="
+                                    padding:9px;
+                                    text-align:right;
+                                ">
+                                    Payable Amount
                                 </th>
 
                                 <th style="
@@ -24740,19 +24781,31 @@ function buildVariationPaymentStages(
                                     Balance
                                 </th>
 
-                                <th style="padding:9px;">
-                                    Invoice Date
+                                <th style="
+                                    padding:9px;
+                                    text-align:center;
+                                ">
+                                    Date Received
                                 </th>
 
-                                <th style="padding:9px;">
-                                    Payment Received Date
+                                <th style="
+                                    padding:9px;
+                                    text-align:center;
+                                ">
+                                    Status
                                 </th>
 
-                                <th style="padding:9px;">
+                                <th style="
+                                    padding:9px;
+                                    text-align:center;
+                                ">
                                     Invoice PDF
                                 </th>
 
-                                <th style="padding:9px;">
+                                <th style="
+                                    padding:9px;
+                                    text-align:center;
+                                ">
                                     Action
                                 </th>
 
@@ -24794,8 +24847,6 @@ function buildVariationPaymentStages(
     `;
 
 }
-
-
 /* =====================================================
    PAYMENT STAGE ROW
 ===================================================== */
@@ -24812,14 +24863,60 @@ function buildVariationPaymentStageRow(
             stage.invoiceValue
         );
 
+    const wht =
+        parseVariationMoney(
+            stage.whtAmount
+        );
+
+    const payable =
+        Math.max(
+            0,
+            invoice - wht
+        );
+
     const received =
         parseVariationMoney(
             stage.receivedValue
         );
 
     const balance =
-        invoice -
-        received;
+        payable - received;
+
+
+    let status = "Not Paid";
+
+    if(
+        received > payable &&
+        payable > 0
+    ){
+
+        status = "Overpaid";
+
+    }
+    else if(
+        received >= payable &&
+        payable > 0
+    ){
+
+        status = "Fully Paid";
+
+    }
+    else if(
+        received > 0 &&
+        received < payable
+    ){
+
+        status = "Partially Paid";
+
+    }
+    else if(
+        payable > 0
+    ){
+
+        status = "Invoiced";
+
+    }
+
 
     const hasPDF =
         !!stage.fileId;
@@ -24831,14 +24928,21 @@ function buildVariationPaymentStageRow(
             border-bottom:1px solid #eee;
         ">
 
+
+            <!-- STAGE -->
+
             <td style="
                 padding:8px;
                 text-align:center;
                 font-weight:700;
             ">
+
                 ${stageIndex + 1}
+
             </td>
 
+
+            <!-- INVOICE VALUE -->
 
             <td style="
                 padding:8px;
@@ -24847,9 +24951,13 @@ function buildVariationPaymentStageRow(
 
                 <input
                     type="text"
-                    value="${variationEscape(
-                        stage.invoiceValue || ""
-                    )}"
+                    value="${formatVariationMoney(invoice)}"
+
+                    onfocus="
+                        this.value =
+                            this.value.replace(/,/g,'')
+                    "
+
                     oninput="
                         updateVariationStageAmount(
                             ${project.id},
@@ -24859,8 +24967,10 @@ function buildVariationPaymentStageRow(
                             this.value
                         )
                     "
+
                     onblur="
                         formatVariationInput(this);
+
                         updateVariationStageAmount(
                             ${project.id},
                             ${variationIndex},
@@ -24869,103 +24979,158 @@ function buildVariationPaymentStageRow(
                             this.value
                         )
                     "
-                    style="
-                        width:125px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                        text-align:right;
-                    "
-                >
 
-            </td>
-
-
-            <td style="
-                padding:8px;
-                text-align:right;
-            ">
-
-                <input
-                    type="text"
-                    value="${variationEscape(
-                        stage.receivedValue || ""
-                    )}"
-                    oninput="
-                        updateVariationStageAmount(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'receivedValue',
-                            this.value
-                        )
-                    "
-                    onblur="
-                        formatVariationInput(this);
-                        updateVariationStageAmount(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'receivedValue',
-                            this.value
-                        )
-                    "
-                    style="
-                        width:125px;
-                        padding:7px;
-                        border:1px solid #ccc;
-                        border-radius:4px;
-                        text-align:right;
-                    "
-                >
-
-            </td>
-
-
-            <td style="
-                padding:8px;
-                text-align:right;
-                font-weight:700;
-            "
-                id="
-                    variation-stage-balance-${variationIndex}-${stageIndex}
-                "
-            >
-                ${formatVariationMoney(
-                    balance
-                )}
-            </td>
-
-
-            <td style="
-                padding:8px;
-                text-align:center;
-            ">
-
-                <input
-                    type="date"
-                    value="${variationEscape(
-                        stage.invoiceDate || ""
-                    )}"
-                    onchange="
-                        updateVariationStageField(
-                            ${project.id},
-                            ${variationIndex},
-                            ${stageIndex},
-                            'invoiceDate',
-                            this.value
-                        )
-                    "
                     style="
                         width:135px;
                         padding:7px;
                         border:1px solid #ccc;
                         border-radius:4px;
+                        text-align:right;
                     "
                 >
 
             </td>
 
+
+            <!-- WHT -->
+
+            <td style="
+                padding:8px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${formatVariationMoney(wht)}"
+
+                    onfocus="
+                        this.value =
+                            this.value.replace(/,/g,'')
+                    "
+
+                    oninput="
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'whtAmount',
+                            this.value
+                        )
+                    "
+
+                    onblur="
+                        formatVariationInput(this);
+
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'whtAmount',
+                            this.value
+                        )
+                    "
+
+                    style="
+                        width:125px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- PAYABLE -->
+
+            <td
+                id="variation-stage-payable-${variationIndex}-${stageIndex}"
+                style="
+                    padding:8px;
+                    text-align:right;
+                    font-weight:700;
+                    background:#f8fafc;
+                "
+            >
+
+                ${formatVariationMoney(
+                    payable
+                )}
+
+            </td>
+
+
+            <!-- PAYMENT RECEIVED -->
+
+            <td style="
+                padding:8px;
+                text-align:right;
+            ">
+
+                <input
+                    type="text"
+                    value="${formatVariationMoney(received)}"
+
+                    onfocus="
+                        this.value =
+                            this.value.replace(/,/g,'')
+                    "
+
+                    oninput="
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'receivedValue',
+                            this.value
+                        )
+                    "
+
+                    onblur="
+                        formatVariationInput(this);
+
+                        updateVariationStageAmount(
+                            ${project.id},
+                            ${variationIndex},
+                            ${stageIndex},
+                            'receivedValue',
+                            this.value
+                        )
+                    "
+
+                    style="
+                        width:135px;
+                        padding:7px;
+                        border:1px solid #ccc;
+                        border-radius:4px;
+                        text-align:right;
+                    "
+                >
+
+            </td>
+
+
+            <!-- BALANCE -->
+
+            <td
+                id="variation-stage-balance-${variationIndex}-${stageIndex}"
+                style="
+                    padding:8px;
+                    text-align:right;
+                    font-weight:700;
+                    background:#f8fafc;
+                "
+            >
+
+                ${formatVariationMoney(
+                    balance
+                )}
+
+            </td>
+
+
+            <!-- DATE RECEIVED -->
 
             <td style="
                 padding:8px;
@@ -24977,6 +25142,7 @@ function buildVariationPaymentStageRow(
                     value="${variationEscape(
                         stage.receivedDate || ""
                     )}"
+
                     onchange="
                         updateVariationStageField(
                             ${project.id},
@@ -24986,6 +25152,7 @@ function buildVariationPaymentStageRow(
                             this.value
                         )
                     "
+
                     style="
                         width:145px;
                         padding:7px;
@@ -24997,6 +25164,23 @@ function buildVariationPaymentStageRow(
             </td>
 
 
+            <!-- STATUS -->
+
+            <td
+                id="variation-stage-status-${variationIndex}-${stageIndex}"
+                style="
+                    padding:8px;
+                    text-align:center;
+                "
+            >
+
+                ${paymentStatusBadge(status)}
+
+            </td>
+
+
+            <!-- PDF -->
+
             <td style="
                 padding:8px;
                 text-align:center;
@@ -25006,20 +25190,24 @@ function buildVariationPaymentStageRow(
                     hasPDF
                     ?
                     `
+
                         <div style="
-                            font-size:12px;
+                            font-size:11px;
                             color:#495057;
-                            margin-bottom:6px;
+                            margin-bottom:5px;
                             max-width:180px;
                             overflow:hidden;
                             text-overflow:ellipsis;
                             white-space:nowrap;
                         ">
+
                             📄 ${variationEscape(
                                 stage.fileName ||
                                 "Invoice PDF"
                             )}
+
                         </div>
+
 
                         <button
                             onclick="
@@ -25042,6 +25230,7 @@ function buildVariationPaymentStageRow(
                             View
                         </button>
 
+
                         <button
                             onclick="
                                 downloadVariationStagePDF(
@@ -25063,9 +25252,9 @@ function buildVariationPaymentStageRow(
                             Download
                         </button>
 
+
                         <label style="
                             display:inline-block;
-                            border:none;
                             background:#fd7e14;
                             color:white;
                             border-radius:4px;
@@ -25079,6 +25268,7 @@ function buildVariationPaymentStageRow(
                             <input
                                 type="file"
                                 accept=".pdf,application/pdf"
+
                                 onchange="
                                     replaceVariationStagePDF(
                                         ${project.id},
@@ -25087,6 +25277,7 @@ function buildVariationPaymentStageRow(
                                         this.files[0]
                                     )
                                 "
+
                                 style="
                                     display:none;
                                 "
@@ -25097,9 +25288,9 @@ function buildVariationPaymentStageRow(
                     `
                     :
                     `
+
                         <label style="
                             display:inline-block;
-                            border:none;
                             background:#198754;
                             color:white;
                             border-radius:4px;
@@ -25113,6 +25304,7 @@ function buildVariationPaymentStageRow(
                             <input
                                 type="file"
                                 accept=".pdf,application/pdf"
+
                                 onchange="
                                     uploadVariationStagePDF(
                                         ${project.id},
@@ -25121,17 +25313,21 @@ function buildVariationPaymentStageRow(
                                         this.files[0]
                                     )
                                 "
+
                                 style="
                                     display:none;
                                 "
                             >
 
                         </label>
+
                     `
                 }
 
             </td>
 
+
+            <!-- ACTION -->
 
             <td style="
                 padding:8px;
@@ -25151,7 +25347,7 @@ function buildVariationPaymentStageRow(
                         background:#dc3545;
                         color:white;
                         border-radius:4px;
-                        padding:6px 9px;
+                        padding:7px 10px;
                         cursor:pointer;
                     "
                 >
@@ -25165,656 +25361,6 @@ function buildVariationPaymentStageRow(
     `;
 
 }
-
-
-/* =====================================================
-   ADD VARIATION
-===================================================== */
-
-window.addVariationRow =
-function(projectId){
-
-    const project =
-        getVariationsProject(
-            projectId
-        );
-
-    if(!project){
-        return;
-    }
-
-    ensureVariationData(
-        project
-    );
-
-    const nextNumber =
-        project.variations.length + 1;
-
-    project.variations.push({
-
-        variationNumber:
-            "V-" +
-            String(nextNumber)
-                .padStart(3,"0"),
-
-        variationType:
-            "",
-
-        description:
-            "",
-
-        contractor:
-            "",
-
-        submittedValue:
-            "",
-
-        whtAmount:
-            "",
-
-        payableAmount:
-            0,
-
-        paymentReceived:
-            "",
-
-        status:
-            "Draft",
-
-        paymentStages:
-            []
-
-    });
-
-    persist();
-
-    renderVariationsSection(
-        project
-    );
-
-};
-
-
-/* =====================================================
-   UPDATE NORMAL FIELD
-===================================================== */
-
-window.updateVariationField =
-function(
-    projectId,
-    index,
-    field,
-    value
-){
-
-    const project =
-        getVariationsProject(
-            projectId
-        );
-
-    if(
-        !project ||
-        !project.variations ||
-        !project.variations[index]
-    ){
-        return;
-    }
-
-    project.variations[index][field] =
-        value;
-
-    persist();
-
-    if(field === "submittedValue" || field === "whtAmount"){
-
-        project.variations[index].payableAmount =
-            calculateVariationPayable(
-                project.variations[index]
-            );
-
-    }
-
-    updateVariationSummary(
-        project
-    );
-
-    refreshVariationFinancialDisplays(
-        project,
-        index
-    );
-
-    updateVariationStageSummaryInPlace(
-        project,
-        index
-    );
-
-};
-
-
-/* =====================================================
-   UPDATE MAIN AMOUNT
-   Submitted / WHT / Payment Received
-===================================================== */
-
-window.updateVariationAmount =
-function(
-    projectId,
-    index,
-    field,
-    value
-){
-
-    const project =
-        getVariationsProject(
-            projectId
-        );
-
-    if(
-        !project ||
-        !project.variations ||
-        !project.variations[index]
-    ){
-        return;
-    }
-
-    const variation =
-        project.variations[index];
-
-    variation[field] =
-        value;
-
-    variation.payableAmount =
-        calculateVariationPayable(
-            variation
-        );
-
-    persist();
-
-    const payable =
-        variation.payableAmount;
-
-    const received =
-        parseVariationMoney(
-            variation.paymentReceived
-        );
-
-    const outstanding =
-        payable -
-        received;
-
-    const payableElement =
-        document.getElementById(
-            `variation-payable-${index}`
-        );
-
-    if(payableElement){
-
-        payableElement.innerText =
-            formatVariationMoney(
-                payable
-            );
-
-    }
-
-    const outstandingElement =
-        document.getElementById(
-            `variation-outstanding-${index}`
-        );
-
-    if(outstandingElement){
-
-        outstandingElement.innerText =
-            formatVariationMoney(
-                outstanding
-            );
-
-    }
-
-    updateVariationSummary(
-        project
-    );
-
-    refreshVariationFinancialDisplays(
-        project,
-        index
-    );
-
-    updateVariationStageSummaryInPlace(
-        project,
-        index
-    );
-
-};
-
-
-/* =====================================================
-   REFRESH FINANCIAL DISPLAY
-===================================================== */
-
-function refreshVariationFinancialDisplays(
-    project,
-    index
-){
-
-    const variation =
-        project.variations[index];
-
-    if(!variation){
-        return;
-    }
-
-    const status =
-        getVariationFinancialStatus(
-            variation
-        );
-
-    const row =
-        document.getElementById(
-            `variation-row-${index}`
-        );
-
-    if(!row){
-        return;
-    }
-
-    const financialCell =
-        document.getElementById(
-            `variation-financial-${index}`
-        );
-
-    if(financialCell){
-
-        financialCell.innerHTML =
-            variationFinancialBadge(
-                status
-            );
-
-    }
-
-}
-
-
-/* =====================================================
-   UPDATE SUMMARY
-===================================================== */
-
-function updateVariationSummary(
-    project
-){
-
-    let totalSubmitted = 0;
-    let totalWHT = 0;
-    let totalPayable = 0;
-    let totalInvoiced = 0;
-    let totalReceived = 0;
-
-    (
-        project.variations ||
-        []
-    )
-    .forEach(
-        function(variation){
-
-            variation.payableAmount =
-                calculateVariationPayable(
-                    variation
-                );
-
-            totalSubmitted +=
-                parseVariationMoney(
-                    variation.submittedValue
-                );
-
-            totalWHT +=
-                parseVariationMoney(
-                    variation.whtAmount
-                );
-
-            totalPayable +=
-                variation.payableAmount;
-
-            totalReceived +=
-                parseVariationMoney(
-                    variation.paymentReceived
-                );
-
-            const totals =
-                getVariationPaymentTotals(
-                    variation
-                );
-
-            totalInvoiced +=
-                totals.invoiced;
-
-        }
-    );
-
-    const outstanding =
-        totalPayable -
-        totalReceived;
-
-    const submittedEl =
-        document.getElementById(
-            "variation-summary-submitted"
-        );
-
-    const whtEl =
-        document.getElementById(
-            "variation-summary-wht"
-        );
-
-    const payableEl =
-        document.getElementById(
-            "variation-summary-payable"
-        );
-
-    const invoicedEl =
-        document.getElementById(
-            "variation-summary-invoiced"
-        );
-
-    const receivedEl =
-        document.getElementById(
-            "variation-summary-received"
-        );
-
-    const outstandingEl =
-        document.getElementById(
-            "variation-summary-outstanding-payable"
-        );
-
-    if(submittedEl){
-
-        submittedEl.innerText =
-            formatVariationMoney(
-                totalSubmitted
-            );
-
-    }
-
-    if(whtEl){
-
-        whtEl.innerText =
-            formatVariationMoney(
-                totalWHT
-            );
-
-    }
-
-    if(payableEl){
-
-        payableEl.innerText =
-            formatVariationMoney(
-                totalPayable
-            );
-
-    }
-
-    if(invoicedEl){
-
-        invoicedEl.innerText =
-            formatVariationMoney(
-                totalInvoiced
-            );
-
-    }
-
-    if(receivedEl){
-
-        receivedEl.innerText =
-            formatVariationMoney(
-                totalReceived
-            );
-
-    }
-
-    if(outstandingEl){
-
-        outstandingEl.innerText =
-            formatVariationMoney(
-                outstanding
-            );
-
-    }
-
-}
-
-
-/* =====================================================
-   UPDATE PAYMENT STAGE SUMMARY
-===================================================== */
-
-function updateVariationStageSummaryInPlace(
-    project,
-    variationIndex
-){
-
-    const variation =
-        project.variations[
-            variationIndex
-        ];
-
-    if(!variation){
-        return;
-    }
-
-    const totals =
-        getVariationPaymentTotals(
-            variation
-        );
-
-    const payable =
-        calculateVariationPayable(
-            variation
-        );
-
-    const received =
-        parseVariationMoney(
-            variation.paymentReceived
-        );
-
-    const outstanding =
-        payable -
-        received;
-
-    const status =
-        getVariationFinancialStatus(
-            variation
-        );
-
-    const payableEl =
-        document.getElementById(
-            `variation-stage-payable-${variationIndex}`
-        );
-
-    const invoicedEl =
-        document.getElementById(
-            `variation-stage-invoiced-${variationIndex}`
-        );
-
-    const receivedEl =
-        document.getElementById(
-            `variation-stage-received-${variationIndex}`
-        );
-
-    const mainReceivedEl =
-        document.getElementById(
-            `variation-stage-main-received-${variationIndex}`
-        );
-
-    const outstandingEl =
-        document.getElementById(
-            `variation-stage-outstanding-${variationIndex}`
-        );
-
-    const statusEl =
-        document.getElementById(
-            `variation-stage-financial-status-${variationIndex}`
-        );
-
-    if(payableEl){
-
-        payableEl.innerText =
-            formatVariationMoney(
-                payable
-            );
-
-    }
-
-    if(invoicedEl){
-
-        invoicedEl.innerText =
-            formatVariationMoney(
-                totals.invoiced
-            );
-
-    }
-
-    if(receivedEl){
-
-        receivedEl.innerText =
-            formatVariationMoney(
-                totals.received
-            );
-
-    }
-
-    if(mainReceivedEl){
-
-        mainReceivedEl.innerText =
-            formatVariationMoney(
-                received
-            );
-
-    }
-
-    if(outstandingEl){
-
-        outstandingEl.innerText =
-            formatVariationMoney(
-                outstanding
-            );
-
-    }
-
-    if(statusEl){
-
-        statusEl.innerHTML =
-            variationFinancialBadge(
-                status
-            );
-
-    }
-
-    updateVariationSummary(
-        project
-    );
-
-}
-
-
-/* =====================================================
-   TOGGLE PAYMENT STAGES
-===================================================== */
-
-window.toggleVariationStages =
-function(
-    projectId,
-    variationIndex
-){
-
-    const row =
-        document.getElementById(
-            `variation-stages-${variationIndex}`
-        );
-
-    if(!row){
-        return;
-    }
-
-    row.style.display =
-        row.style.display === "none"
-        ?
-        "table-row"
-        :
-        "none";
-
-};
-
-
-/* =====================================================
-   ADD PAYMENT STAGE
-===================================================== */
-
-window.addVariationPaymentStage =
-function(
-    projectId,
-    variationIndex
-){
-
-    const project =
-        getVariationsProject(
-            projectId
-        );
-
-    if(!project){
-        return;
-    }
-
-    const variation =
-        project.variations[
-            variationIndex
-        ];
-
-    if(!variation){
-        return;
-    }
-
-    if(!variation.paymentStages){
-        variation.paymentStages = [];
-    }
-
-    variation.paymentStages.push({
-
-        stageId:
-            "stage-" +
-            Date.now() +
-            "-" +
-            Math.random()
-                .toString(36)
-                .substring(2,8),
-
-        invoiceValue:
-            "",
-
-        receivedValue:
-            "",
-
-        invoiceDate:
-            "",
-
-        receivedDate:
-            "",
-
-        fileId:
-            "",
-
-        fileName:
-            "",
-
-        fileType:
-            ""
-
-    });
-
-    persist();
-
-    renderVariationsSection(
-        project
-    );
-
-};
-
 
 /* =====================================================
    UPDATE PAYMENT STAGE FIELD
