@@ -25597,6 +25597,14 @@ function(
             variationIndex
         ];
 
+    if(
+        !Array.isArray(
+            variation.paymentStages
+        )
+    ){
+        variation.paymentStages = [];
+    }
+
     const stage =
         variation.paymentStages[
             stageIndex
@@ -25606,45 +25614,26 @@ function(
         return;
     }
 
-    stage[field] =
-        value;
+    /*
+       SAVE FIELD
+    */
 
-    if(
-        field === "invoiceValue" ||
-        field === "whtAmount"
-    ){
+    stage[field] = value;
 
-        const invoice =
-            parseVariationMoney(
-                stage.invoiceValue
-            );
+    /*
+       KEEP OLD FIELD COMPATIBLE
+    */
 
-        const wht =
-            parseVariationMoney(
-                stage.whtAmount
-            );
-
-        stage.payableAmount =
-            Math.max(
-                0,
-                invoice - wht
-            );
-
-    }
-
-    if(
-        field === "paymentReceived"
-    ){
-
-        stage.paymentReceived =
-            value;
+    if(field === "paymentReceived"){
 
         stage.receivedValue =
             value;
 
     }
 
-    persist();
+    /*
+       CALCULATE STAGE VALUES
+    */
 
     const invoice =
         parseVariationMoney(
@@ -25664,44 +25653,132 @@ function(
 
     const received =
         parseVariationMoney(
-            stage.paymentReceived
+            stage.paymentReceived !== undefined
+                ? stage.paymentReceived
+                : stage.receivedValue
         );
 
     const balance =
-        payable -
-        received;
+        payable - received;
 
-    const payableEl =
+    /*
+       UPDATE STAGE PAYABLE
+    */
+
+    const payableCell =
         document.getElementById(
             `variation-stage-payable-${variationIndex}-${stageIndex}`
         );
 
-    const balanceEl =
+    if(payableCell){
+
+        payableCell.innerText =
+            formatVariationMoney(
+                payable
+            );
+
+    }
+
+    /*
+       UPDATE STAGE BALANCE
+    */
+
+    const balanceCell =
         document.getElementById(
             `variation-stage-balance-${variationIndex}-${stageIndex}`
         );
 
-    if(payableEl){
-        payableEl.innerText =
-            formatVariationMoney(
-                payable
-            );
-    }
+    if(balanceCell){
 
-    if(balanceEl){
-        balanceEl.innerText =
+        balanceCell.innerText =
             formatVariationMoney(
                 balance
             );
+
     }
+
+    /*
+       UPDATE STAGE STATUS
+    */
+
+    const statusCell =
+        document.getElementById(
+            `variation-stage-status-${variationIndex}-${stageIndex}`
+        );
+
+    if(statusCell){
+
+        let status =
+            "Not Paid";
+
+        if(
+            received > payable &&
+            payable > 0
+        ){
+
+            status =
+                "Overpaid";
+
+        }
+        else if(
+            received >= payable &&
+            payable > 0
+        ){
+
+            status =
+                "Fully Paid";
+
+        }
+        else if(
+            received > 0 &&
+            received < payable
+        ){
+
+            status =
+                "Partially Paid";
+
+        }
+        else if(
+            payable > 0
+        ){
+
+            status =
+                "Invoiced";
+
+        }
+
+        statusCell.innerHTML =
+            variationFinancialBadge(
+                status
+            );
+
+    }
+
+    /*
+       SAVE
+    */
+
+    persist();
+
+    /*
+       UPDATE STAGE SUMMARY
+    */
 
     updateVariationStageSummaryInPlace(
         project,
         variationIndex
     );
 
-};
+    /*
+       UPDATE MAIN VARIATION
+    */
 
+    refreshVariationFinancialDisplays(
+        project,
+        variationIndex
+    );
+
+};
 
 /* =====================================================
    DELETE PAYMENT STAGE
