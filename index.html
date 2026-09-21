@@ -25914,31 +25914,7 @@ const stageStatusEl =
         `variation-stage-status-${variationIndex}-${stageIndex}`
     );
 
-const invoice =
-    parseVariationMoney(
-        stage.invoiceValue
-    );
 
-const wht =
-    parseVariationMoney(
-        stage.whtAmount
-    );
-
-const payable =
-    Math.max(
-        0,
-        invoice - wht
-    );
-
-const received =
-    parseVariationMoney(
-        stage.paymentReceived !== undefined
-            ? stage.paymentReceived
-            : stage.receivedValue
-    );
-
-const balance =
-    payable - received;
 
 if(stagePayableEl){
 
