@@ -25230,6 +25230,7 @@ function(
 /* =====================================================
    UPDATE MAIN AMOUNT
 ===================================================== */
+
 window.updateVariationAmount =
 function(
     projectId,
@@ -25352,6 +25353,27 @@ function(
             );
 
     }
+
+
+    /* =====================================================
+       UPDATE OUTSTANDING DISPLAY
+    ===================================================== */
+
+    const outstandingElement =
+        document.getElementById(
+            `variation-outstanding-${index}`
+        );
+
+    if(outstandingElement){
+
+        outstandingElement.innerText =
+            formatVariationMoney(
+                outstanding
+            );
+
+    }
+
+};
 
 
     /* =====================================================
