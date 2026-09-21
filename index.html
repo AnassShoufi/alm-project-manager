@@ -25296,6 +25296,7 @@ function updateVariationStageSummaryInPlace(
     if(!variation){
         return;
     }
+    
 
     updateAllVariationFinancialData(
         project
@@ -25403,7 +25404,328 @@ function updateVariationStageSummaryInPlace(
 
 }
 
+/* =====================================================
+   PAYMENT STAGES vs MAIN VARIATION VALIDATION
+===================================================== */
 
+function validateVariationPaymentStages(
+    project,
+    variationIndex
+){
+
+    const variation =
+        project.variations[
+            variationIndex
+        ];
+
+    if(!variation){
+        return;
+    }
+
+    const stages =
+        Array.isArray(
+            variation.paymentStages
+        )
+        ? variation.paymentStages
+        : [];
+
+    /*
+       MAIN VARIATION VALUES
+    */
+
+    const variationWHT =
+        parseVariationMoney(
+            variation.whtAmount
+        );
+
+    const variationPayable =
+        Math.max(
+            0,
+            parseVariationMoney(
+                variation.submittedValue
+            ) -
+            variationWHT
+        );
+
+    const variationPaymentReceived =
+        stages.reduce(
+            function(total, stage){
+
+                return total +
+                    parseVariationMoney(
+                        stage.paymentReceived !== undefined
+                            ? stage.paymentReceived
+                            : stage.receivedValue
+                    );
+
+            },
+            0
+        );
+
+    const variationOutstanding =
+        variationPayable -
+        variationPaymentReceived;
+
+    /*
+       STAGE TOTALS
+    */
+
+    let totalStageInvoice = 0;
+
+    let totalStageWHT = 0;
+
+    let totalStagePayable = 0;
+
+    let totalStageReceived = 0;
+
+    let totalStageBalance = 0;
+
+    stages.forEach(
+        function(stage){
+
+            const invoice =
+                parseVariationMoney(
+                    stage.invoiceValue
+                );
+
+            const wht =
+                parseVariationMoney(
+                    stage.whtAmount
+                );
+
+            const payable =
+                Math.max(
+                    0,
+                    invoice - wht
+                );
+
+            const received =
+                parseVariationMoney(
+                    stage.paymentReceived !== undefined
+                        ? stage.paymentReceived
+                        : stage.receivedValue
+                );
+
+            const balance =
+                payable - received;
+
+            totalStageInvoice +=
+                invoice;
+
+            totalStageWHT +=
+                wht;
+
+            totalStagePayable +=
+                payable;
+
+            totalStageReceived +=
+                received;
+
+            totalStageBalance +=
+                balance;
+
+        }
+    );
+
+    /*
+       DIFFERENCES
+    */
+
+    const payableDifference =
+        totalStagePayable -
+        variationPayable;
+
+    const whtDifference =
+        totalStageWHT -
+        variationWHT;
+
+    const balanceDifference =
+        totalStageBalance -
+        variationOutstanding;
+
+    const hasPayableDifference =
+        Math.abs(
+            payableDifference
+        ) > 0.01;
+
+    const hasWHTDifference =
+        Math.abs(
+            whtDifference
+        ) > 0.01;
+
+    const hasBalanceDifference =
+        Math.abs(
+            balanceDifference
+        ) > 0.01;
+
+    /*
+       FIND VALIDATION CONTAINER
+    */
+
+    const stagesRow =
+        document.getElementById(
+            `variation-stages-${variationIndex}`
+        );
+
+    if(!stagesRow){
+        return;
+    }
+
+    const container =
+        stagesRow.querySelector(
+            "td"
+        );
+
+    if(!container){
+        return;
+    }
+
+    let validationBox =
+        document.getElementById(
+            `variation-stage-validation-${variationIndex}`
+        );
+
+    /*
+       CREATE VALIDATION BOX
+    */
+
+    if(!validationBox){
+
+        validationBox =
+            document.createElement(
+                "div"
+            );
+
+        validationBox.id =
+            `variation-stage-validation-${variationIndex}`;
+
+        validationBox.style.margin =
+            "10px 0";
+
+        container.insertBefore(
+            validationBox,
+            container.firstChild
+        );
+
+    }
+
+    /*
+       NO DIFFERENCE
+    */
+
+    if(
+        !hasPayableDifference &&
+        !hasWHTDifference &&
+        !hasBalanceDifference
+    ){
+
+        validationBox.innerHTML =
+            "";
+
+        validationBox.style.display =
+            "none";
+
+        return;
+
+    }
+
+    /*
+       BUILD WARNINGS
+    */
+
+    let warnings = [];
+
+    if(hasPayableDifference){
+
+        warnings.push(`
+            <div style="margin-bottom:5px;">
+                <strong>Payable Mismatch:</strong>
+                Stage Payable =
+                ${formatVariationMoney(totalStagePayable)}
+                |
+                Variation Payable =
+                ${formatVariationMoney(variationPayable)}
+            </div>
+        `);
+
+    }
+
+    if(hasWHTDifference){
+
+        warnings.push(`
+            <div style="margin-bottom:5px;">
+                <strong>WHT Mismatch:</strong>
+                Stage WHT =
+                ${formatVariationMoney(totalStageWHT)}
+                |
+                Variation WHT =
+                ${formatVariationMoney(variationWHT)}
+            </div>
+        `);
+
+    }
+
+    if(hasBalanceDifference){
+
+        warnings.push(`
+            <div>
+                <strong>Outstanding Mismatch:</strong>
+                Stage Balance =
+                ${formatVariationMoney(totalStageBalance)}
+                |
+                Variation Outstanding =
+                ${formatVariationMoney(variationOutstanding)}
+            </div>
+        `);
+
+    }
+
+    /*
+       DISPLAY WARNING
+       NON-BLOCKING
+    */
+
+    validationBox.innerHTML = `
+        <div style="
+            background:#fff3cd;
+            border:1px solid #ffc107;
+            color:#856404;
+            border-radius:6px;
+            padding:10px 12px;
+            font-size:12px;
+            line-height:1.5;
+        ">
+
+            <strong>
+                ⚠ Payment Stage Validation Warning
+            </strong>
+
+            <div style="
+                margin-top:6px;
+            ">
+
+                ${warnings.join("")}
+
+            </div>
+
+            <div style="
+                margin-top:7px;
+                font-size:11px;
+                color:#6c757d;
+            ">
+
+                You may continue working. This warning does not
+                prevent payment stage entry or submission.
+
+            </div>
+
+        </div>
+    `;
+
+    validationBox.style.display =
+        "block";
+
+}
 /* =====================================================
    TOGGLE PAYMENT STAGES
 ===================================================== */
