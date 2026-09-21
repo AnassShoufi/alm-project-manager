@@ -25925,12 +25925,44 @@ if(stagePayableEl){
 
 }
 
-if(stageBalanceEl){
+/* =====================================================
+   IMMEDIATE STAGE BALANCE REFRESH
+===================================================== */
 
-    stageBalanceEl.innerText =
-        formatVariationMoney(
-            balance
-        );
+const stageTable =
+    document.querySelector(
+        `#variation-stages-${variationIndex} tbody`
+    );
+
+if(stageTable){
+
+    const row =
+        stageTable.rows[
+            stageIndex
+        ];
+
+    if(row){
+
+        /*
+           Columns:
+           0 = Stage
+           1 = Invoice
+           2 = WHT
+           3 = Payable
+           4 = Payment Received
+           5 = Balance
+        */
+
+        if(row.cells[5]){
+
+            row.cells[5].innerText =
+                formatVariationMoney(
+                    balance
+                );
+
+        }
+
+    }
 
 }
 
