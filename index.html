@@ -2216,14 +2216,63 @@ if (!content) {
 }
 
 
-    if(section === "overview"){
+   const page = document.getElementById("pageContent");
 
-        content.innerHTML =
-            projectOverviewHTML(project);
+const overviewPanel = Array.from(
+    page.querySelectorAll(".panel")
+).find(panel =>
+    panel.querySelector(".panel-header h2") &&
+    panel.querySelector(".panel-header h2")
+        .textContent
+        .trim() === "Project Overview"
+);
 
-        return;
+const modulesPanel = Array.from(
+    page.querySelectorAll(".panel")
+).find(panel =>
+    panel.querySelector(".panel-header h2") &&
+    panel.querySelector(".panel-header h2")
+        .textContent
+        .trim() === "Project Modules"
+);
+
+const contentPanel =
+    content.closest(".panel");
+
+
+if(section === "overview"){
+
+    if(contentPanel){
+        contentPanel.style.display = "none";
+    }
+
+    if(overviewPanel){
+
+        overviewPanel.style.display = "block";
+
+        if(modulesPanel){
+            modulesPanel.insertAdjacentElement(
+                "afterend",
+                overviewPanel
+            );
+        }
 
     }
+
+    return;
+
+}
+
+
+/* Hide full Overview when another module is opened */
+
+if(overviewPanel){
+    overviewPanel.style.display = "none";
+}
+
+if(contentPanel){
+    contentPanel.style.display = "block";
+}
 if(section === "drawings"){
 
     renderDrawingsSection(project);
