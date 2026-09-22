@@ -8177,9 +8177,11 @@ function openProject(id){
                         padding:20px;
                     ">
 
-                        <button class="btn btn-secondary">
-                            📋 Overview
-                        </button>
+                      <button
+    class="btn btn-secondary"
+    onclick="showProjectSection('overview', ${project.id}, this)">
+    📋 Overview
+</button>
           <button
     class="btn btn-secondary"
     onclick="showProjectSection('documents', ${project.id}, this)">
