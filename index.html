@@ -8280,6 +8280,66 @@ function openProject(id){
 
         </div>
     `;
+        /* =====================================================
+       PROJECT MODULE LAYOUT
+    ===================================================== */
+
+    const page = document.getElementById("pageContent");
+
+    const panels = Array.from(
+        page.querySelectorAll(".panel")
+    );
+
+    const overviewPanel = panels.find(panel =>
+        panel.querySelector(".panel-header h2") &&
+        panel.querySelector(".panel-header h2")
+            .textContent
+            .trim() === "Project Overview"
+    );
+
+    const modulesPanel = panels.find(panel =>
+        panel.querySelector(".panel-header h2") &&
+        panel.querySelector(".panel-header h2")
+            .textContent
+            .trim() === "Project Modules"
+    );
+
+    const sectionContent =
+        page.querySelector("#projectSectionContent");
+
+    /* Move Project Modules outside Overview */
+    if(modulesPanel){
+        page.appendChild(modulesPanel);
+    }
+
+    /* Create module content area directly below modules */
+    if(sectionContent && modulesPanel){
+
+        const moduleContentPanel =
+            document.createElement("div");
+
+        moduleContentPanel.className = "panel";
+
+        moduleContentPanel.style.marginTop = "20px";
+
+        sectionContent.parentNode.removeChild(
+            sectionContent
+        );
+
+        moduleContentPanel.appendChild(
+            sectionContent
+        );
+
+        modulesPanel.insertAdjacentElement(
+            "afterend",
+            moduleContentPanel
+        );
+    }
+
+    /* Hide the initial Overview */
+    if(overviewPanel){
+        overviewPanel.remove();
+    }
 }
 
 /* =========================
