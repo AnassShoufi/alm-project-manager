@@ -6781,6 +6781,199 @@ function openProject(id){
             </div>
 
             <div style="padding:25px">
+            <!-- =====================================================
+     PROJECT INFORMATION
+===================================================== -->
+
+<div style="
+    display:grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(180px, 1fr)
+        );
+    gap:12px;
+    margin-bottom:20px;
+">
+
+    <!-- CLIENT -->
+
+    <div style="
+        background:#f8f9fa;
+        border:1px solid #dee2e6;
+        border-radius:8px;
+        padding:14px;
+    ">
+
+        <div style="
+            font-size:12px;
+            color:#6c757d;
+            margin-bottom:5px;
+        ">
+            Client
+        </div>
+
+        <div style="
+            font-size:15px;
+            font-weight:700;
+            color:#17243a;
+        ">
+            ${escapeHTML(
+                project.client || "-"
+            )}
+        </div>
+
+    </div>
+
+
+    <!-- PROJECT MANAGER -->
+
+    <div style="
+        background:#f8f9fa;
+        border:1px solid #dee2e6;
+        border-radius:8px;
+        padding:14px;
+    ">
+
+        <div style="
+            font-size:12px;
+            color:#6c757d;
+            margin-bottom:5px;
+        ">
+            Project Manager
+        </div>
+
+        <div style="
+            font-size:15px;
+            font-weight:700;
+            color:#17243a;
+        ">
+            ${escapeHTML(
+                project.manager || "-"
+            )}
+        </div>
+
+    </div>
+
+
+    <!-- LOCATION -->
+
+    <div style="
+        background:#f8f9fa;
+        border:1px solid #dee2e6;
+        border-radius:8px;
+        padding:14px;
+    ">
+
+        <div style="
+            font-size:12px;
+            color:#6c757d;
+            margin-bottom:5px;
+        ">
+            Location
+        </div>
+
+        <div style="
+            font-size:15px;
+            font-weight:700;
+            color:#17243a;
+        ">
+            ${escapeHTML(
+                project.location || "-"
+            )}
+        </div>
+
+    </div>
+
+
+    <!-- START DATE -->
+
+    <div style="
+        background:#f8f9fa;
+        border:1px solid #dee2e6;
+        border-radius:8px;
+        padding:14px;
+    ">
+
+        <div style="
+            font-size:12px;
+            color:#6c757d;
+            margin-bottom:5px;
+        ">
+            Start Date
+        </div>
+
+        <div style="
+            font-size:15px;
+            font-weight:700;
+            color:#17243a;
+        ">
+            ${escapeHTML(
+                project.startDate || "-"
+            )}
+        </div>
+
+    </div>
+
+
+    <!-- COMPLETION DATE -->
+
+    <div style="
+        background:#f8f9fa;
+        border:1px solid #dee2e6;
+        border-radius:8px;
+        padding:14px;
+    ">
+
+        <div style="
+            font-size:12px;
+            color:#6c757d;
+            margin-bottom:5px;
+        ">
+            Completion Date
+        </div>
+
+        <div style="
+            font-size:15px;
+            font-weight:700;
+            color:#17243a;
+        ">
+            ${escapeHTML(
+                project.completionDate || "-"
+            )}
+        </div>
+
+    </div>
+
+
+    <!-- STATUS -->
+
+    <div style="
+        background:#f8f9fa;
+        border:1px solid #dee2e6;
+        border-radius:8px;
+        padding:14px;
+    ">
+
+        <div style="
+            font-size:12px;
+            color:#6c757d;
+            margin-bottom:5px;
+        ">
+            Project Status
+        </div>
+
+        <div style="
+            margin-top:4px;
+        ">
+            ${statusBadge(
+                project.status || "Active"
+            )}
+        </div>
+
+    </div>
+
+</div>
 
  <div class="stats">
 
