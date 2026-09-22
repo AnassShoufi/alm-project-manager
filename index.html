@@ -38,6 +38,9 @@ body{
     font-weight:bold;
     margin-bottom:35px;
 }
+    .logo img{
+    flex-shrink:0;
+}
 
 .logo-box{
     background:#f5a400;
@@ -1161,10 +1164,29 @@ let manpowerFilters = {
     <!-- SIDEBAR -->
     <aside class="sidebar">
 
-        <div class="logo">
-            <div class="logo-box">ALM</div>
-            <div>ALM<br>Project Manager</div>
-        </div>
+      <div class="logo">
+
+    <img
+        id="sidebarCompanyLogo"
+        src=""
+        alt="ALM Company Logo"
+        style="
+            width:42px;
+            height:42px;
+            object-fit:contain;
+            border-radius:6px;
+            background:#ffffff;
+            padding:3px;
+            box-sizing:border-box;
+        "
+    >
+
+    <div>
+        ALM<br>
+        Project Manager
+    </div>
+
+</div>
 
         <nav class="menu">
             <button class="active" onclick="showDashboard()">▦ Dashboard</button>
@@ -37048,6 +37070,58 @@ tbody tr:nth-child(even){
 /* =====================================================
    END MANPOWER STEP 8
 ===================================================== */
+</script>
+    <script>
+
+function loadSidebarCompanyLogo(){
+
+    const logo =
+        localStorage.getItem(
+            "alm_company_logo"
+        );
+
+    const image =
+        document.getElementById(
+            "sidebarCompanyLogo"
+        );
+
+    if(!image){
+        return;
+    }
+
+    if(logo){
+
+        image.src = logo;
+
+    }else{
+
+        image.style.display = "none";
+
+        const fallback =
+            document.createElement("div");
+
+        fallback.className = "logo-box";
+
+        fallback.textContent = "ALM";
+
+        image.parentNode.insertBefore(
+            fallback,
+            image
+        );
+
+    }
+
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        loadSidebarCompanyLogo();
+
+    }
+);
+
 </script>
 </body>
 </html>
