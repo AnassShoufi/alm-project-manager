@@ -25557,7 +25557,42 @@ function(){
     /* =====================================================
    TASKS MODULE
 ===================================================== */
+function renderTodoListSection(project){
 
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(content){
+
+        content.innerHTML = `
+            <div class="section-header">
+
+                <div>
+                    <h2>✅ To-Do List</h2>
+
+                    <p>
+                        Project actions and follow-ups
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="panel" style="margin-top:20px;padding:40px;text-align:center;">
+
+                <h2>To-Do List is Connected</h2>
+
+                <p>
+                    The module connection is working.
+                </p>
+
+            </div>
+        `;
+
+    }
+
+}
 function renderTasksSection(project){
 
     if(!project.tasks){
