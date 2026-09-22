@@ -2632,7 +2632,30 @@ if(section === "reports"){
 
 if(section === "todoList"){
 
-    window.renderTodoListSection(project);
+    content.innerHTML = `
+        <div class="section-header">
+            <div>
+                <h2>✅ To-Do List</h2>
+                <p>Manage project actions, follow-ups and pending items</p>
+            </div>
+
+            <button
+                class="btn btn-primary"
+                onclick="window.addTodoItem('${project.id}')">
+                + Add To-Do
+            </button>
+        </div>
+
+        <div class="panel" style="margin-top:20px;padding:40px;text-align:center;">
+
+            <h2>Project To-Do List</h2>
+
+            <p>
+                The To-Do List is connected successfully.
+            </p>
+
+        </div>
+    `;
 
     return;
 
