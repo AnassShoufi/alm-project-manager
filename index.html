@@ -503,6 +503,23 @@ tr:hover td{
     transition:all 0.15s ease;
 
 }
+    .module-icon{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    width:32px;
+
+    min-width:32px;
+
+    font-size:24px;
+
+    line-height:1;
+
+}
 
 
 .project-menu-btn:hover{
@@ -6353,7 +6370,11 @@ meetings: "Meetings"
 
     };
 
-    return icons[section] || "📁";
+   return `
+    <span class="module-icon">
+        ${icons[section] || "📁"}
+    </span>
+`;
 
 }
 
