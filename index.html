@@ -2621,6 +2621,17 @@ if(section === "reports"){
     return;
 
 }
+    /* =========================
+   TO-DO LIST
+========================= */
+
+if(section === "todoList"){
+
+    renderTodoListSection(project);
+
+    return;
+
+}
 /* =========================
    TASKS
 ========================= */
@@ -21625,6 +21636,1770 @@ function(projectId,index){
     );
 
 };  
+    /* =====================================================
+   PROJECT TO-DO LIST MODULE
+===================================================== */
+
+function ensureTodoList(project){
+
+    if(!Array.isArray(project.todoList)){
+        project.todoList = [];
+        persist();
+    }
+
+    return project.todoList;
+}
+
+
+/* =====================================================
+   TODO DATE STATUS
+===================================================== */
+
+function getTodoStatus(item){
+
+    if(
+        String(item.status || "").toLowerCase() ===
+        "completed"
+    ){
+        return "Done";
+    }
+
+    if(!item.dueDate){
+        return "Upcoming";
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const dueDate = new Date(item.dueDate);
+    dueDate.setHours(0,0,0,0);
+
+    const diffMs =
+        dueDate.getTime() -
+        today.getTime();
+
+    const daysLeft =
+        Math.ceil(
+            diffMs /
+            (1000 * 60 * 60 * 24)
+        );
+
+    if(daysLeft < 0){
+        return "Overdue";
+    }
+
+    if(daysLeft <= 2){
+        return "Urgent";
+    }
+
+    if(daysLeft <= 7){
+        return "Reminder";
+    }
+
+    return "Upcoming";
+}
+
+
+/* =====================================================
+   TODO DAYS LEFT
+===================================================== */
+
+function getTodoDaysLeft(item){
+
+    if(
+        String(item.status || "").toLowerCase() ===
+        "completed"
+    ){
+        return "Done";
+    }
+
+    if(!item.dueDate){
+        return "-";
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const dueDate = new Date(item.dueDate);
+    dueDate.setHours(0,0,0,0);
+
+    const diffMs =
+        dueDate.getTime() -
+        today.getTime();
+
+    const daysLeft =
+        Math.ceil(
+            diffMs /
+            (1000 * 60 * 60 * 24)
+        );
+
+    if(daysLeft < 0){
+        return `${Math.abs(daysLeft)} day(s) overdue`;
+    }
+
+    if(daysLeft === 0){
+        return "Due today";
+    }
+
+    if(daysLeft === 1){
+        return "1 day left";
+    }
+
+    return `${daysLeft} days left`;
+}
+
+
+/* =====================================================
+   TODO STATUS BADGE
+===================================================== */
+
+function todoStatusBadge(item){
+
+    const status =
+        getTodoStatus(item);
+
+    let style =
+        "background:#e9ecef;color:#495057;";
+
+    if(status === "Overdue"){
+        style =
+            "background:#f8d7da;color:#842029;";
+    }
+
+    if(status === "Urgent"){
+        style =
+            "background:#fde2e2;color:#b42318;";
+    }
+
+    if(status === "Reminder"){
+        style =
+            "background:#fff3cd;color:#856404;";
+    }
+
+    if(status === "Upcoming"){
+        style =
+            "background:#dbeafe;color:#1d4ed8;";
+    }
+
+    if(status === "Done"){
+        style =
+            "background:#d1e7dd;color:#0f5132;";
+    }
+
+    return `
+        <span
+            style="
+                display:inline-block;
+                padding:5px 10px;
+                border-radius:20px;
+                font-size:12px;
+                font-weight:700;
+                ${style}
+            "
+        >
+            ${status}
+        </span>
+    `;
+}
+
+
+/* =====================================================
+   TODO SORT
+===================================================== */
+
+function sortTodoList(items){
+
+    const order = {
+        "Overdue": 1,
+        "Urgent": 2,
+        "Reminder": 3,
+        "Upcoming": 4,
+        "Done": 5
+    };
+
+    return [...items].sort(function(a,b){
+
+        const statusA =
+            getTodoStatus(a);
+
+        const statusB =
+            getTodoStatus(b);
+
+        const orderA =
+            order[statusA] || 99;
+
+        const orderB =
+            order[statusB] || 99;
+
+        if(orderA !== orderB){
+            return orderA - orderB;
+        }
+
+        if(statusA === "Done"){
+            return String(
+                b.completedAt || ""
+            ).localeCompare(
+                String(a.completedAt || "")
+            );
+        }
+
+        if(!a.dueDate) return 1;
+        if(!b.dueDate) return -1;
+
+        return String(
+            a.dueDate
+        ).localeCompare(
+            String(b.dueDate)
+        );
+
+    });
+}
+
+
+/* =====================================================
+   TODO RENDER
+===================================================== */
+
+window.renderTodoListSection =
+function(project){
+
+    const todoList =
+        ensureTodoList(project);
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!content){
+        return;
+    }
+
+
+    const total =
+        todoList.length;
+
+    const overdue =
+        todoList.filter(
+            item =>
+                getTodoStatus(item) ===
+                "Overdue"
+        ).length;
+
+    const urgent =
+        todoList.filter(
+            item =>
+                getTodoStatus(item) ===
+                "Urgent"
+        ).length;
+
+    const reminder =
+        todoList.filter(
+            item =>
+                getTodoStatus(item) ===
+                "Reminder"
+        ).length;
+
+    const upcoming =
+        todoList.filter(
+            item =>
+                getTodoStatus(item) ===
+                "Upcoming"
+        ).length;
+
+    const done =
+        todoList.filter(
+            item =>
+                getTodoStatus(item) ===
+                "Done"
+        ).length;
+
+
+    const sortedTodos =
+        sortTodoList(todoList);
+
+
+    content.innerHTML = `
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    ✅ To-Do List
+                </h2>
+
+                <p>
+                    Manage project actions,
+                    follow-ups and pending items
+                </p>
+
+            </div>
+
+
+            <button
+                class="btn btn-primary"
+                onclick="
+                    window.addTodoItem(
+                        '${project.id}'
+                    );
+                "
+            >
+                + Add To-Do
+            </button>
+
+        </div>
+
+
+        <!-- TODO SUMMARY -->
+
+        <div
+            class="stats"
+            style="
+                margin-top:20px;
+            "
+        >
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Total
+                </div>
+
+                <div class="number">
+                    ${total}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Overdue
+                </div>
+
+                <div
+                    class="number"
+                    style="color:#b42318;"
+                >
+                    ${overdue}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Urgent
+                </div>
+
+                <div
+                    class="number"
+                    style="color:#b42318;"
+                >
+                    ${urgent}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Reminder
+                </div>
+
+                <div
+                    class="number"
+                    style="color:#856404;"
+                >
+                    ${reminder}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Upcoming
+                </div>
+
+                <div
+                    class="number"
+                    style="color:#1d4ed8;"
+                >
+                    ${upcoming}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Done
+                </div>
+
+                <div
+                    class="number"
+                    style="color:#0f5132;"
+                >
+                    ${done}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TODO REGISTER -->
+
+        <div
+            class="panel"
+            style="
+                margin-top:20px;
+            "
+        >
+
+            <div class="panel-header">
+
+                <h2>
+                    Project To-Do Register
+                </h2>
+
+            </div>
+
+
+            ${
+                sortedTodos.length === 0
+
+                ?
+
+                `
+                <div
+                    class="empty"
+                    style="
+                        padding:50px 20px;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size:48px;
+                        "
+                    >
+                        ✅
+                    </div>
+
+                    <h3>
+                        No To-Do items yet
+                    </h3>
+
+                    <p>
+                        Add the first action
+                        for this project.
+                    </p>
+
+                </div>
+                `
+
+                :
+
+                `
+
+                <div
+                    style="
+                        overflow-x:auto;
+                    "
+                >
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>#</th>
+
+                                <th>
+                                    To-Do
+                                </th>
+
+                                <th>
+                                    Assigned To
+                                </th>
+
+                                <th>
+                                    Due Date
+                                </th>
+
+                                <th>
+                                    Days Left
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            ${
+                                sortedTodos
+                                .map(
+                                    function(item){
+
+                                        const originalIndex =
+                                            todoList.indexOf(
+                                                item
+                                            );
+
+                                        return `
+
+                                            <tr>
+
+                                                <td>
+                                                    ${
+                                                        sortedTodos
+                                                        .indexOf(item) + 1
+                                                    }
+                                                </td>
+
+
+                                                <td>
+
+                                                    <strong>
+                                                        ${escapeHTML(
+                                                            item.title ||
+                                                            "-"
+                                                        )}
+                                                    </strong>
+
+                                                    ${
+                                                        item.description
+
+                                                        ?
+
+                                                        `
+                                                        <div
+                                                            style="
+                                                                margin-top:4px;
+                                                                color:#64748b;
+                                                                font-size:13px;
+                                                            "
+                                                        >
+                                                            ${escapeHTML(
+                                                                item.description
+                                                            )}
+                                                        </div>
+                                                        `
+
+                                                        :
+
+                                                        ""
+                                                    }
+
+                                                </td>
+
+
+                                                <td>
+                                                    ${escapeHTML(
+                                                        item.assignedTo ||
+                                                        "-"
+                                                    )}
+                                                </td>
+
+
+                                                <td>
+                                                    ${escapeHTML(
+                                                        item.dueDate ||
+                                                        "-"
+                                                    )}
+                                                </td>
+
+
+                                                <td>
+
+                                                    <strong>
+                                                        ${escapeHTML(
+                                                            getTodoDaysLeft(
+                                                                item
+                                                            )
+                                                        )}
+                                                    </strong>
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    ${todoStatusBadge(
+                                                        item
+                                                    )}
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    <div
+                                                        class="actions"
+                                                    >
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                window.viewTodoItem(
+                                                                    '${project.id}',
+                                                                    ${originalIndex}
+                                                                );
+                                                            "
+                                                        >
+                                                            View
+                                                        </button>
+
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                window.editTodoItem(
+                                                                    '${project.id}',
+                                                                    ${originalIndex}
+                                                                );
+                                                            "
+                                                        >
+                                                            Edit
+                                                        </button>
+
+
+                                                        ${
+                                                            getTodoStatus(item)
+                                                            !==
+                                                            "Done"
+
+                                                            ?
+
+                                                            `
+                                                            <button
+                                                                class="action-btn"
+                                                                onclick="
+                                                                    window.completeTodoItem(
+                                                                        '${project.id}',
+                                                                        ${originalIndex}
+                                                                    );
+                                                                "
+                                                            >
+                                                                Complete
+                                                            </button>
+                                                            `
+
+                                                            :
+
+                                                            ""
+                                                        }
+
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                window.deleteTodoItem(
+                                                                    '${project.id}',
+                                                                    ${originalIndex}
+                                                                );
+                                                            "
+                                                        >
+                                                            Delete
+                                                        </button>
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+
+                                        `;
+
+                                    }
+                                )
+                                .join("")
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                `
+            }
+
+        </div>
+
+    `;
+};
+
+
+/* =====================================================
+   ADD TODO
+===================================================== */
+
+window.addTodoItem =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "todoModal";
+
+    modal.className =
+        "modal-overlay";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                max-width:700px;
+            "
+        >
+
+            <div class="modal-header">
+
+                <h2>
+                    Add To-Do
+                </h2>
+
+                <button
+                    class="close"
+                    onclick="
+                        closeTodoModal();
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                onsubmit="
+                    saveTodoItem(
+                        event,
+                        '${project.id}'
+                    );
+                "
+            >
+
+                <div class="modal-body">
+
+                    <div class="form-group">
+
+                        <label>
+                            To-Do Title *
+                        </label>
+
+                        <input
+                            id="todoTitle"
+                            required
+                            type="text"
+                            placeholder="Enter action or follow-up"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Description
+                        </label>
+
+                        <textarea
+                            id="todoDescription"
+                            rows="3"
+                            placeholder="Describe the action"
+                        ></textarea>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            display:grid;
+                            grid-template-columns:
+                                1fr 1fr;
+                            gap:15px;
+                        "
+                    >
+
+                        <div class="form-group">
+
+                            <label>
+                                Assigned To
+                            </label>
+
+                            <input
+                                id="todoAssignedTo"
+                                type="text"
+                                placeholder="Person responsible"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Due Date *
+                            </label>
+
+                            <input
+                                id="todoDueDate"
+                                required
+                                type="date"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select
+                            id="todoStatus"
+                        >
+
+                            <option value="Pending">
+                                Pending
+                            </option>
+
+                            <option value="In Progress">
+                                In Progress
+                            </option>
+
+                            <option value="Completed">
+                                Completed
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="todoNotes"
+                            rows="3"
+                            placeholder="Additional notes"
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="
+                            closeTodoModal();
+                        "
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Save To-Do
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(modal);
+
+
+    modal.addEventListener(
+        "click",
+        function(e){
+
+            if(e.target === modal){
+                closeTodoModal();
+            }
+
+        }
+    );
+
+};
+
+
+/* =====================================================
+   SAVE TODO
+===================================================== */
+
+window.saveTodoItem =
+function(event, projectId){
+
+    event.preventDefault();
+
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    ensureTodoList(project);
+
+
+    const status =
+        document.getElementById(
+            "todoStatus"
+        ).value;
+
+
+    const todo = {
+
+        id:
+            "TODO-" +
+            Date.now(),
+
+        title:
+            document.getElementById(
+                "todoTitle"
+            ).value.trim(),
+
+        description:
+            document.getElementById(
+                "todoDescription"
+            ).value.trim(),
+
+        assignedTo:
+            document.getElementById(
+                "todoAssignedTo"
+            ).value.trim(),
+
+        dueDate:
+            document.getElementById(
+                "todoDueDate"
+            ).value,
+
+        status,
+
+        notes:
+            document.getElementById(
+                "todoNotes"
+            ).value.trim(),
+
+        createdAt:
+            new Date().toISOString(),
+
+        completedAt:
+            status === "Completed"
+                ? new Date().toISOString()
+                : ""
+
+    };
+
+
+    project.todoList.push(
+        todo
+    );
+
+
+    persist();
+
+
+    closeTodoModal();
+
+
+    renderTodoListSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   VIEW TODO
+===================================================== */
+
+window.viewTodoItem =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const todo =
+        (project.todoList || [])[index];
+
+    if(!todo){
+        return;
+    }
+
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "todoViewModal";
+
+    modal.className =
+        "modal-overlay";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                max-width:700px;
+            "
+        >
+
+            <div class="modal-header">
+
+                <h2>
+                    To-Do Details
+                </h2>
+
+                <button
+                    class="close"
+                    onclick="
+                        closeTodoViewModal();
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="project-info-grid">
+
+                    <div class="project-info-card">
+
+                        <span>
+                            To-Do
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                todo.title ||
+                                "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Assigned To
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                todo.assignedTo ||
+                                "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Due Date
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                todo.dueDate ||
+                                "-"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Days Left
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                getTodoDaysLeft(
+                                    todo
+                                )
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="project-info-card">
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong>
+                            ${todoStatusBadge(
+                                todo
+                            )}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        margin-top:20px;
+                    "
+                >
+
+                    <strong>
+                        Description
+                    </strong>
+
+                    <p>
+                        ${escapeHTML(
+                            todo.description ||
+                            "-"
+                        )}
+                    </p>
+
+                </div>
+
+
+                <div
+                    style="
+                        margin-top:20px;
+                    "
+                >
+
+                    <strong>
+                        Notes
+                    </strong>
+
+                    <p>
+                        ${escapeHTML(
+                            todo.notes ||
+                            "-"
+                        )}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    onclick="
+                        closeTodoViewModal();
+                    "
+                >
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+
+    modal.addEventListener(
+        "click",
+        function(e){
+
+            if(e.target === modal){
+                closeTodoViewModal();
+            }
+
+        }
+    );
+
+};
+
+
+/* =====================================================
+   EDIT TODO
+===================================================== */
+
+window.editTodoItem =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const todo =
+        (project.todoList || [])[index];
+
+    if(!todo){
+        return;
+    }
+
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "todoModal";
+
+    modal.className =
+        "modal-overlay";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                max-width:700px;
+            "
+        >
+
+            <div class="modal-header">
+
+                <h2>
+                    Edit To-Do
+                </h2>
+
+                <button
+                    class="close"
+                    onclick="
+                        closeTodoModal();
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                onsubmit="
+                    updateTodoItem(
+                        event,
+                        '${project.id}',
+                        ${index}
+                    );
+                "
+            >
+
+                <div class="modal-body">
+
+                    <div class="form-group">
+
+                        <label>
+                            To-Do Title *
+                        </label>
+
+                        <input
+                            id="todoTitle"
+                            required
+                            type="text"
+                            value="${escapeHTML(
+                                todo.title || ""
+                            )}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Description
+                        </label>
+
+                        <textarea
+                            id="todoDescription"
+                            rows="3"
+                        >${escapeHTML(
+                            todo.description || ""
+                        )}</textarea>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            display:grid;
+                            grid-template-columns:
+                                1fr 1fr;
+                            gap:15px;
+                        "
+                    >
+
+                        <div class="form-group">
+
+                            <label>
+                                Assigned To
+                            </label>
+
+                            <input
+                                id="todoAssignedTo"
+                                type="text"
+                                value="${escapeHTML(
+                                    todo.assignedTo || ""
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Due Date *
+                            </label>
+
+                            <input
+                                id="todoDueDate"
+                                required
+                                type="date"
+                                value="${escapeHTML(
+                                    todo.dueDate || ""
+                                )}"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select
+                            id="todoStatus"
+                        >
+
+                            <option
+                                value="Pending"
+                                ${
+                                    todo.status ===
+                                    "Pending"
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                Pending
+                            </option>
+
+                            <option
+                                value="In Progress"
+                                ${
+                                    todo.status ===
+                                    "In Progress"
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                In Progress
+                            </option>
+
+                            <option
+                                value="Completed"
+                                ${
+                                    todo.status ===
+                                    "Completed"
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                Completed
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="todoNotes"
+                            rows="3"
+                        >${escapeHTML(
+                            todo.notes || ""
+                        )}</textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="
+                            closeTodoModal();
+                        "
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Update To-Do
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+};
+
+
+/* =====================================================
+   UPDATE TODO
+===================================================== */
+
+window.updateTodoItem =
+function(event,projectId,index){
+
+    event.preventDefault();
+
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const todo =
+        (project.todoList || [])[index];
+
+    if(!todo){
+        return;
+    }
+
+
+    const status =
+        document.getElementById(
+            "todoStatus"
+        ).value;
+
+
+    todo.title =
+        document.getElementById(
+            "todoTitle"
+        ).value.trim();
+
+
+    todo.description =
+        document.getElementById(
+            "todoDescription"
+        ).value.trim();
+
+
+    todo.assignedTo =
+        document.getElementById(
+            "todoAssignedTo"
+        ).value.trim();
+
+
+    todo.dueDate =
+        document.getElementById(
+            "todoDueDate"
+        ).value;
+
+
+    todo.status =
+        status;
+
+
+    todo.notes =
+        document.getElementById(
+            "todoNotes"
+        ).value.trim();
+
+
+    if(status === "Completed"){
+
+        if(!todo.completedAt){
+
+            todo.completedAt =
+                new Date().toISOString();
+
+        }
+
+    }
+    else{
+
+        todo.completedAt = "";
+
+    }
+
+
+    persist();
+
+
+    closeTodoModal();
+
+
+    renderTodoListSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   COMPLETE TODO
+===================================================== */
+
+window.completeTodoItem =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const todo =
+        (project.todoList || [])[index];
+
+    if(!todo){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "Mark this To-Do as completed?"
+        )
+    ){
+        return;
+    }
+
+
+    todo.status =
+        "Completed";
+
+
+    todo.completedAt =
+        new Date().toISOString();
+
+
+    persist();
+
+
+    renderTodoListSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   DELETE TODO
+===================================================== */
+
+window.deleteTodoItem =
+function(projectId,index){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const todo =
+        (project.todoList || [])[index];
+
+    if(!todo){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            `Delete "${todo.title}"?`
+        )
+    ){
+        return;
+    }
+
+
+    project.todoList.splice(
+        index,
+        1
+    );
+
+
+    persist();
+
+
+    renderTodoListSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   CLOSE TODO MODALS
+===================================================== */
+
+window.closeTodoModal =
+function(){
+
+    const modal =
+        document.getElementById(
+            "todoModal"
+        );
+
+    if(modal){
+        modal.remove();
+    }
+
+};
+
+
+window.closeTodoViewModal =
+function(){
+
+    const modal =
+        document.getElementById(
+            "todoViewModal"
+        );
+
+    if(modal){
+        modal.remove();
+    }
+
+};
     /* =====================================================
    TASKS MODULE
 ===================================================== */
