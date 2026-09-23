@@ -9012,18 +9012,15 @@ function ensureDocumentsFolders(project){
 
     if(!project.documentsFolders){
 
-        project.documentsFolders = [
-            {
-                id: "root",
-                name: "Documents",
-                parentId: null,
-                files: []
-            }
-        ];
+        project.documentsFolders = [];
 
         persist();
 
     }
+
+    return project.documentsFolders;
+
+}
 
 
     if(
