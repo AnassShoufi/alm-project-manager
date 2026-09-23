@@ -9228,363 +9228,108 @@ function renderDocumentsSection(project){
             >
 
                 ${
+    visibleFolders
+        .map(folder => `
 
-                    visibleFolders
-                        .map(folder => `
+            <div
+                style="
+                    border:1px solid #ddd;
+                    border-radius:10px;
+                    padding:22px;
+                    background:#fff;
+                    box-shadow:0 2px 6px rgba(0,0,0,.05);
+                "
+            >
 
-                        <div
-                            style="
-                                border:1px solid #ddd;
-                                border-radius:10px;
-                                padding:22px;
-                                background:#fff;
-                                box-shadow:
-                                    0 2px 6px
-                                    rgba(0,0,0,.05);
-                            "
-                        >
+                <div
+                    onclick="
+                        window.openDocumentsFolder(
+                            '${project.id}',
+                            '${folder.id}'
+                        );
+                    "
+                    style="
+                        cursor:pointer;
+                    "
+                >
 
-                            <div
-                                onclick="
-                                    window.openDocumentsFolder(
-                                        '${project.id}',
-                                        '${folder.id}'
-                                    );
-                                "
-                                style="
-                                    cursor:pointer;
-                                "
-                            >
+                    <div
+                        style="
+                            font-size:42px;
+                        "
+                    >
+                        📁
+                    </div>
 
-                                <div
-                                    style="
-                                        font-size:42px;
-                                    "
-                                >
-                                    📁
-                                </div>
+                    <strong>
+                        ${escapeHTML(folder.name)}
+                    </strong>
 
-
-                                <strong>
-
-                                    ${escapeHTML(
-                                        folder.name
-                                    )}
-
-                                </strong>
-
-                            </div>
-
-
-                           <div
-    style="
-        margin-top:15px;
-        display:flex;
-        justify-content:center;
-        gap:8px;
-        flex-wrap:wrap;
-    "
->
-
-    <!-- RENAME -->
-    <button
-        type="button"
-        onclick="
-            event.stopPropagation();
-
-            window.renameDocumentsFolder(
-                '${project.id}',
-                '${folder.id}'
-            );
-        "
-        style="
-            background:#2563eb;
-            color:white;
-            border:none;
-            border-radius:6px;
-            padding:7px 14px;
-            cursor:pointer;
-            font-size:13px;
-        "
-    >
-        ✏ Rename
-    </button>
-
-
-  <div
-    style="
-        margin-top:15px;
-        display:flex;
-        justify-content:center;
-        gap:8px;
-        flex-wrap:wrap;
-    "
->
-
-    <button
-        type="button"
-        onclick="
-            event.stopPropagation();
-
-            window.renameDocumentsFolder(
-                '${project.id}',
-                '${folder.id}'
-            );
-        "
-        style="
-            background:#2563eb;
-            color:white;
-            border:none;
-            border-radius:6px;
-            padding:7px 14px;
-            cursor:pointer;
-            font-size:13px;
-        "
-    >
-        ✏ Rename
-    </button>
-
-
-    <button
-        type="button"
-        onclick="
-            event.stopPropagation();
-
-            window.deleteDocumentsFolder(
-                '${project.id}',
-                '${folder.id}'
-            );
-        "
-        style="
-            background:#dc2626;
-            color:white;
-            border:none;
-            border-radius:6px;
-            padding:7px 14px;
-            cursor:pointer;
-            font-size:13px;
-        "
-    >
-        🗑 Delete
-    </button>
-
-</div>
-
-</div>
-        ${
-            visibleDocuments.length === 0
-
-            ?
-
-            `
-
-            <div class="empty">
-
-                <div style="
-                    font-size:48px;
-                ">
-                    📂
                 </div>
 
 
-                <h3>
+                <div
+                    style="
+                        margin-top:15px;
+                        display:flex;
+                        justify-content:center;
+                        gap:8px;
+                        flex-wrap:wrap;
+                    "
+                >
 
-                    ${
-                        currentFolderId === null
-                        ? "No documents yet"
-                        : "This folder is empty"
-                    }
+                    <button
+                        type="button"
+                        onclick="
+                            event.stopPropagation();
+                            window.renameDocumentsFolder(
+                                '${project.id}',
+                                '${folder.id}'
+                            );
+                        "
+                        style="
+                            background:#2563eb;
+                            color:white;
+                            border:none;
+                            border-radius:6px;
+                            padding:7px 14px;
+                            cursor:pointer;
+                            font-size:13px;
+                        "
+                    >
+                        ✏ Rename
+                    </button>
 
-                </h3>
 
+                    <button
+                        type="button"
+                        onclick="
+                            event.stopPropagation();
+                            window.deleteDocumentsFolder(
+                                '${project.id}',
+                                '${folder.id}'
+                            );
+                        "
+                        style="
+                            background:#dc2626;
+                            color:white;
+                            border:none;
+                            border-radius:6px;
+                            padding:7px 14px;
+                            cursor:pointer;
+                            font-size:13px;
+                        "
+                    >
+                        🗑 Delete
+                    </button>
 
-                <p>
-
-                    ${
-                        currentFolderId === null
-
-                        ?
-
-                        "Create a folder or upload a document."
-
-                        :
-
-                        "Create a subfolder or upload a document into this folder."
-
-                    }
-
-                </p>
+                </div>
 
             </div>
 
-            `
-
-            :
-
-            `
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>Document</th>
-
-                        <th>File Type</th>
-
-                        <th>Uploaded By</th>
-
-                        <th>Date</th>
-
-                        <th>Actions</th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    ${
-
-                        visibleDocuments
-                            .map(item => {
-
-                                const doc =
-                                    item.doc;
-
-                                const index =
-                                    item.index;
-
-
-                                return `
-
-                                    <tr>
-
-                                        <td>
-
-                                            <strong>
-
-                                                ${escapeHTML(
-                                                    doc.title ||
-                                                    doc.fileName ||
-                                                    "-"
-                                                )}
-
-                                            </strong>
-
-
-                                            <div
-                                                style="
-                                                    margin-top:4px;
-                                                    color:#64748b;
-                                                    font-size:13px;
-                                                "
-                                            >
-
-                                                ${escapeHTML(
-                                                    doc.fileName || ""
-                                                )}
-
-                                            </div>
-
-                                        </td>
-
-
-                                        <td>
-
-                                            ${escapeHTML(
-                                                doc.fileType ||
-                                                "-"
-                                            )}
-
-                                        </td>
-
-
-                                        <td>
-
-                                            ${escapeHTML(
-                                                doc.uploadedBy ||
-                                                "-"
-                                            )}
-
-                                        </td>
-
-
-                                        <td>
-
-                                            ${escapeHTML(
-                                                doc.date ||
-                                                "-"
-                                            )}
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <div class="actions">
-
-
-                                                <button
-                                                    class="action-btn"
-                                                    onclick="
-                                                        window.viewDocument(
-                                                            '${project.id}',
-                                                            ${index}
-                                                        );
-                                                    "
-                                                >
-
-                                                    View
-
-                                                </button>
-
-
-                                                <button
-                                                    class="action-btn"
-                                                    onclick="
-                                                        window.downloadDocument(
-                                                            '${project.id}',
-                                                            ${index}
-                                                        );
-                                                    "
-                                                >
-
-                                                    Download
-
-                                                </button>
-
-
-                                                <button
-                                                    class="action-btn"
-                                                    onclick="
-                                                        window.deleteDocument(
-                                                            '${project.id}',
-                                                            ${index}
-                                                        );
-                                                    "
-                                                >
-
-                                                    Delete
-
-                                                </button>
-
-
-                                            </div>
-
-                                        </td>
-
-                                    </tr>
-
-                                `;
-
-                            })
-
-                            .join("")
-
-                    }
+        `)
+        .join("")
+}
 
                 </tbody>
 
