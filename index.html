@@ -9022,33 +9022,7 @@ function ensureDocumentsFolders(project){
 
 }
 
-    if(
-        !project.documentsFolders.find(
-            folder =>
-                String(folder.id) === "root"
-        )
-    ){
-
-        project.documentsFolders.unshift({
-
-            id: "root",
-
-            name: "Documents",
-
-            parentId: null,
-
-            files: []
-
-        });
-
-        persist();
-
-    }
-
-
-    return project.documentsFolders;
-
-}
+   
 
 
 /* =====================================================
