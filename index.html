@@ -8995,9 +8995,9 @@ function renderDrawingsPage(project){
 
 showDashboard();
 
-  /* =====================================================
+ /* =====================================================
    DOCUMENTS MODULE
-   Folder system based on BOQ structure
+   Folder System
 ===================================================== */
 
 window.documentsCurrentFolder =
@@ -9010,9 +9010,27 @@ window.documentsCurrentFolder =
 
 function ensureDocumentsFolders(project){
 
-    if(!project.documentsFolders){
+    /*
+       IMPORTANT:
+       Create the Root only when the folder system
+       does not exist at all.
 
-        project.documentsFolders = [];
+       If the user deletes the Root and the array becomes
+       empty, we DO NOT recreate it.
+    */
+
+    if(!Array.isArray(project.documentsFolders)){
+
+        project.documentsFolders = [
+
+            {
+                id: "root",
+                name: "Documents",
+                parentId: null,
+                files: []
+            }
+
+        ];
 
         persist();
 
@@ -9021,8 +9039,6 @@ function ensureDocumentsFolders(project){
     return project.documentsFolders;
 
 }
-
-   
 
 
 /* =====================================================
@@ -9035,10 +9051,15 @@ function renderDocumentsSection(project){
 
 
     const folders =
-        project.documentsFolders || [];
+        Array.isArray(project.documentsFolders)
+        ? project.documentsFolders
+        : [];
+
 
     const documents =
-        project.documents || [];
+        Array.isArray(project.documents)
+        ? project.documents
+        : [];
 
 
     const currentFolderId =
@@ -9053,52 +9074,73 @@ function renderDocumentsSection(project){
         );
 
 
+    const rootFolder =
+        folders.find(
+            folder =>
+                String(folder.id) === "root"
+        );
+
+
+    /*
+       At Root level, show the actual Root folder name.
+       This allows the Root itself to be renamed.
+    */
+
     const currentFolderName =
         currentFolder
-            ? currentFolder.name
-            : "Documents";
+        ? currentFolder.name
+        : (
+            rootFolder
+            ? rootFolder.name
+            : "Documents"
+        );
 
 
-    /* =========================
+    /* =================================================
        VISIBLE FOLDERS
-    ========================= */
+    ================================================= */
 
     const visibleFolders =
         folders.filter(
             folder =>
+
                 (folder.parentId || null) ===
                 (currentFolderId || null)
+
         );
 
 
-    /* =========================
+    /* =================================================
        VISIBLE DOCUMENTS
-    ========================= */
+    ================================================= */
 
     const visibleDocuments =
 
         documents
-            .map((doc,index) => ({
-                doc,
-                index
-            }))
 
-            .filter(item =>
+            .map(
+                (doc,index) => ({
+                    doc,
+                    index
+                })
+            )
 
-                String(
-                    item.doc.folderId ?? ""
-                ) ===
+            .filter(
+                item =>
 
-                String(
-                    currentFolderId ?? ""
-                )
+                    String(
+                        item.doc.folderId ?? ""
+                    ) ===
 
+                    String(
+                        currentFolderId ?? ""
+                    )
             );
 
 
-    /* =========================
-       CONTENT
-    ========================= */
+    /* =================================================
+       CONTENT ELEMENT
+    ================================================= */
 
     const content =
         document.getElementById(
@@ -9117,6 +9159,10 @@ function renderDocumentsSection(project){
     }
 
 
+    /* =================================================
+       HTML
+    ================================================= */
+
     content.innerHTML = `
 
         <div class="section-header">
@@ -9134,13 +9180,14 @@ function renderDocumentsSection(project){
             </div>
 
 
-            <div style="
-                display:flex;
-                gap:10px;
-                align-items:center;
-                flex-wrap:wrap;
-            ">
-
+            <div
+                style="
+                    display:flex;
+                    gap:10px;
+                    align-items:center;
+                    flex-wrap:wrap;
+                "
+            >
 
                 ${
                     currentFolderId !== null
@@ -9207,13 +9254,16 @@ function renderDocumentsSection(project){
         </div>
 
 
+        <!-- =================================================
+             FOLDERS
+        ================================================= -->
+
         ${
             visibleFolders.length > 0
 
             ?
 
             `
-
             <div
                 style="
                     display:grid;
@@ -9228,108 +9278,346 @@ function renderDocumentsSection(project){
             >
 
                 ${
-    visibleFolders
-        .map(folder => `
+                    visibleFolders
 
-            <div
-                style="
-                    border:1px solid #ddd;
-                    border-radius:10px;
-                    padding:22px;
-                    background:#fff;
-                    box-shadow:0 2px 6px rgba(0,0,0,.05);
-                "
-            >
+                        .map(
+                            folder => `
+
+                            <div
+                                style="
+                                    border:1px solid #ddd;
+                                    border-radius:10px;
+                                    padding:22px;
+                                    background:#fff;
+                                    box-shadow:
+                                        0 2px 6px
+                                        rgba(0,0,0,.05);
+                                "
+                            >
+
+                                <!-- FOLDER -->
+                                <div
+                                    onclick="
+                                        window.openDocumentsFolder(
+                                            '${project.id}',
+                                            '${folder.id}'
+                                        );
+                                    "
+                                    style="
+                                        cursor:pointer;
+                                    "
+                                >
+
+                                    <div
+                                        style="
+                                            font-size:42px;
+                                        "
+                                    >
+                                        📁
+                                    </div>
+
+
+                                    <strong>
+                                        ${escapeHTML(
+                                            folder.name || "Folder"
+                                        )}
+                                    </strong>
+
+                                </div>
+
+
+                                <!-- FOLDER ACTIONS -->
+                                <div
+                                    style="
+                                        margin-top:15px;
+                                        display:flex;
+                                        justify-content:center;
+                                        gap:8px;
+                                        flex-wrap:wrap;
+                                    "
+                                >
+
+                                    <!-- RENAME -->
+                                    <button
+                                        type="button"
+                                        onclick="
+                                            event.stopPropagation();
+
+                                            window.renameDocumentsFolder(
+                                                '${project.id}',
+                                                '${folder.id}'
+                                            );
+                                        "
+                                        style="
+                                            background:#2563eb;
+                                            color:white;
+                                            border:none;
+                                            border-radius:6px;
+                                            padding:7px 14px;
+                                            cursor:pointer;
+                                            font-size:13px;
+                                        "
+                                    >
+                                        ✏ Rename
+                                    </button>
+
+
+                                    <!-- DELETE -->
+                                    <button
+                                        type="button"
+                                        onclick="
+                                            event.stopPropagation();
+
+                                            window.deleteDocumentsFolder(
+                                                '${project.id}',
+                                                '${folder.id}'
+                                            );
+                                        "
+                                        style="
+                                            background:#dc2626;
+                                            color:white;
+                                            border:none;
+                                            border-radius:6px;
+                                            padding:7px 14px;
+                                            cursor:pointer;
+                                            font-size:13px;
+                                        "
+                                    >
+                                        🗑 Delete
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        `
+                        )
+
+                        .join("")
+
+                }
+
+            </div>
+            `
+
+            :
+
+            ``
+        }
+
+
+        <!-- =================================================
+             DOCUMENTS
+        ================================================= -->
+
+        ${
+            visibleDocuments.length === 0
+
+            ?
+
+            `
+
+            <div class="empty">
 
                 <div
-                    onclick="
-                        window.openDocumentsFolder(
-                            '${project.id}',
-                            '${folder.id}'
-                        );
-                    "
                     style="
-                        cursor:pointer;
+                        font-size:48px;
                     "
                 >
-
-                    <div
-                        style="
-                            font-size:42px;
-                        "
-                    >
-                        📁
-                    </div>
-
-                    <strong>
-                        ${escapeHTML(folder.name)}
-                    </strong>
-
+                    📂
                 </div>
 
 
-                <div
-                    style="
-                        margin-top:15px;
-                        display:flex;
-                        justify-content:center;
-                        gap:8px;
-                        flex-wrap:wrap;
-                    "
-                >
+                <h3>
 
-                    <button
-                        type="button"
-                        onclick="
-                            event.stopPropagation();
-                            window.renameDocumentsFolder(
-                                '${project.id}',
-                                '${folder.id}'
-                            );
-                        "
-                        style="
-                            background:#2563eb;
-                            color:white;
-                            border:none;
-                            border-radius:6px;
-                            padding:7px 14px;
-                            cursor:pointer;
-                            font-size:13px;
-                        "
-                    >
-                        ✏ Rename
-                    </button>
+                    ${
+                        currentFolderId === null
+                        ? "No documents yet"
+                        : "This folder is empty"
+                    }
+
+                </h3>
 
 
-                    <button
-                        type="button"
-                        onclick="
-                            event.stopPropagation();
-                            window.deleteDocumentsFolder(
-                                '${project.id}',
-                                '${folder.id}'
-                            );
-                        "
-                        style="
-                            background:#dc2626;
-                            color:white;
-                            border:none;
-                            border-radius:6px;
-                            padding:7px 14px;
-                            cursor:pointer;
-                            font-size:13px;
-                        "
-                    >
-                        🗑 Delete
-                    </button>
+                <p>
 
-                </div>
+                    ${
+                        currentFolderId === null
+
+                        ?
+
+                        "Create a folder or upload a document."
+
+                        :
+
+                        "Create a subfolder or upload a document into this folder."
+
+                    }
+
+                </p>
 
             </div>
 
-        `)
-        .join("")
-}
+            `
+
+            :
+
+            `
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Document</th>
+
+                        <th>File Type</th>
+
+                        <th>Uploaded By</th>
+
+                        <th>Date</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${
+                        visibleDocuments
+
+                            .map(
+                                item => {
+
+                                    const doc =
+                                        item.doc;
+
+                                    const index =
+                                        item.index;
+
+
+                                    return `
+
+                                        <tr>
+
+                                            <td>
+
+                                                <strong>
+                                                    ${
+                                                        escapeHTML(
+                                                            doc.title ||
+                                                            doc.fileName ||
+                                                            "-"
+                                                        )
+                                                    }
+                                                </strong>
+
+
+                                                <div
+                                                    style="
+                                                        margin-top:4px;
+                                                        color:#64748b;
+                                                        font-size:13px;
+                                                    "
+                                                >
+                                                    ${
+                                                        escapeHTML(
+                                                            doc.fileName || ""
+                                                        )
+                                                    }
+                                                </div>
+
+                                            </td>
+
+
+                                            <td>
+                                                ${
+                                                    escapeHTML(
+                                                        doc.fileType || "-"
+                                                    )
+                                                }
+                                            </td>
+
+
+                                            <td>
+                                                ${
+                                                    escapeHTML(
+                                                        doc.uploadedBy || "-"
+                                                    )
+                                                }
+                                            </td>
+
+
+                                            <td>
+                                                ${
+                                                    escapeHTML(
+                                                        doc.date || "-"
+                                                    )
+                                                }
+                                            </td>
+
+
+                                            <td>
+
+                                                <div class="actions">
+
+
+                                                    <button
+                                                        class="action-btn"
+                                                        onclick="
+                                                            window.viewDocument(
+                                                                '${project.id}',
+                                                                ${index}
+                                                            );
+                                                        "
+                                                    >
+                                                        View
+                                                    </button>
+
+
+                                                    <button
+                                                        class="action-btn"
+                                                        onclick="
+                                                            window.downloadDocument(
+                                                                '${project.id}',
+                                                                ${index}
+                                                            );
+                                                        "
+                                                    >
+                                                        Download
+                                                    </button>
+
+
+                                                    <button
+                                                        class="action-btn"
+                                                        onclick="
+                                                            window.deleteDocument(
+                                                                '${project.id}',
+                                                                ${index}
+                                                            );
+                                                        "
+                                                    >
+                                                        Delete
+                                                    </button>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    `;
+
+                                }
+                            )
+
+                            .join("")
+
+                    }
 
                 </tbody>
 
@@ -9380,14 +9668,22 @@ function(projectId, parentId = null){
         );
 
 
-    if(!folderName) return;
+    if(folderName === null) return;
 
 
     const cleanName =
         folderName.trim();
 
 
-    if(!cleanName) return;
+    if(!cleanName){
+
+        alert(
+            "Folder name cannot be empty."
+        );
+
+        return;
+
+    }
 
 
     const exists =
@@ -9397,6 +9693,7 @@ function(projectId, parentId = null){
                 String(
                     folder.parentId ?? null
                 ) ===
+
                 String(
                     parentId ?? null
                 )
@@ -9404,8 +9701,9 @@ function(projectId, parentId = null){
                 &&
 
                 String(
-                    folder.name
-                ).toLowerCase() ===
+                    folder.name || ""
+                )
+                .toLowerCase() ===
                 cleanName.toLowerCase()
         );
 
@@ -9437,7 +9735,8 @@ function(projectId, parentId = null){
         parentId:
             parentId,
 
-        files: []
+        files:
+            []
 
     };
 
@@ -9465,6 +9764,124 @@ function(projectId, parentId = null){
 
 
 /* =====================================================
+   RENAME DOCUMENT FOLDER
+===================================================== */
+
+window.renameDocumentsFolder =
+function(projectId, folderId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+
+    if(!project) return;
+
+
+    ensureDocumentsFolders(project);
+
+
+    const folder =
+        project.documentsFolders.find(
+            f =>
+                String(f.id) ===
+                String(folderId)
+        );
+
+
+    if(!folder){
+
+        alert(
+            "Folder not found."
+        );
+
+        return;
+
+    }
+
+
+    const newName =
+        prompt(
+            "Enter new folder name:",
+            folder.name || ""
+        );
+
+
+    if(newName === null) return;
+
+
+    const cleanName =
+        newName.trim();
+
+
+    if(!cleanName){
+
+        alert(
+            "Folder name cannot be empty."
+        );
+
+        return;
+
+    }
+
+
+    const duplicate =
+        project.documentsFolders.some(
+            other =>
+
+                String(other.id) !==
+                String(folder.id)
+
+                &&
+
+                String(
+                    other.parentId ?? null
+                ) ===
+
+                String(
+                    folder.parentId ?? null
+                )
+
+                &&
+
+                String(
+                    other.name || ""
+                )
+                .toLowerCase() ===
+                cleanName.toLowerCase()
+        );
+
+
+    if(duplicate){
+
+        alert(
+            "A folder with this name already exists."
+        );
+
+        return;
+
+    }
+
+
+    folder.name =
+        cleanName;
+
+
+    persist();
+
+
+    showProjectSection(
+        "documents",
+        project.id
+    );
+
+};
+
+
+/* =====================================================
    OPEN DOCUMENT FOLDER
 ===================================================== */
 
@@ -9479,26 +9896,19 @@ function(projectId, folderId){
         );
 
 
-    if(!project){
-
-        console.error(
-            "DOCUMENT PROJECT NOT FOUND:",
-            projectId
-        );
-
-        return;
-
-    }
+    if(!project) return;
 
 
     ensureDocumentsFolders(project);
 
 
-    /* ROOT */
+    /*
+       Clicking the Root always means
+       the main Documents level.
+    */
 
     if(
-        folderId === null ||
-        folderId === undefined
+        String(folderId) === "root"
     ){
 
         window.documentsCurrentFolder[
@@ -9510,7 +9920,6 @@ function(projectId, folderId){
             "documents",
             project.id
         );
-
 
         return;
 
@@ -9599,7 +10008,9 @@ function(projectId){
             project.id
         ] = null;
 
-    }else{
+    }
+
+    else{
 
         window.documentsCurrentFolder[
             project.id
@@ -9616,104 +10027,7 @@ function(projectId){
 
 };
 
-/* =====================================================
-   RENAME DOCUMENT FOLDER
-===================================================== */
 
-window.renameDocumentsFolder =
-function(projectId, folderId){
-
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
-        );
-
-    if(!project) return;
-
-    ensureDocumentsFolders(project);
-
-    const folder =
-        project.documentsFolders.find(
-            f =>
-                String(f.id) ===
-                String(folderId)
-        );
-
-    if(!folder){
-
-        console.error(
-            "DOCUMENT FOLDER NOT FOUND:",
-            folderId
-        );
-
-        return;
-    }
-
-    const newName =
-        prompt(
-            "Enter new folder name:",
-            folder.name || ""
-        );
-
-    if(newName === null) return;
-
-    const cleanName =
-        newName.trim();
-
-    if(!cleanName){
-
-        alert(
-            "Folder name cannot be empty."
-        );
-
-        return;
-    }
-
-    const exists =
-        project.documentsFolders.some(
-            other =>
-
-                String(other.id) !==
-                String(folder.id)
-
-                &&
-
-                String(
-                    other.parentId ?? null
-                ) ===
-                String(
-                    folder.parentId ?? null
-                )
-
-                &&
-
-                String(other.name)
-                    .toLowerCase() ===
-                cleanName.toLowerCase()
-        );
-
-    if(exists){
-
-        alert(
-            "A folder with this name already exists."
-        );
-
-        return;
-    }
-
-    folder.name =
-        cleanName;
-
-    persist();
-
-    showProjectSection(
-        "documents",
-        project.id
-    );
-
-};
 /* =====================================================
    DELETE DOCUMENT FOLDER
 ===================================================== */
@@ -9735,8 +10049,6 @@ function(projectId, folderId){
     ensureDocumentsFolders(project);
 
 
-
-
     const folder =
         project.documentsFolders.find(
             f =>
@@ -9747,9 +10059,8 @@ function(projectId, folderId){
 
     if(!folder){
 
-        console.error(
-            "DOCUMENT FOLDER NOT FOUND:",
-            folderId
+        alert(
+            "Folder not found."
         );
 
         return;
@@ -9757,11 +10068,23 @@ function(projectId, folderId){
     }
 
 
+    const isRoot =
+        String(folderId) === "root";
+
+
     const confirmed =
         confirm(
 
-            `Delete folder "${folder.name}"?\n\n` +
+            isRoot
 
+            ?
+
+            `Delete the Root Documents folder "${folder.name}"?\n\n` +
+            `ALL subfolders and ALL documents inside Documents will also be deleted.`
+
+            :
+
+            `Delete folder "${folder.name}"?\n\n` +
             `All subfolders and documents inside this folder will also be deleted.`
 
         );
@@ -9770,9 +10093,38 @@ function(projectId, folderId){
     if(!confirmed) return;
 
 
-    /* =========================
-       FIND ALL DESCENDANTS
-    ========================= */
+    /* =================================================
+       DELETE ROOT
+       Delete EVERYTHING in Documents
+    ================================================= */
+
+    if(isRoot){
+
+        project.documentsFolders = [];
+
+        project.documents = [];
+
+        window.documentsCurrentFolder[
+            project.id
+        ] = null;
+
+
+        persist();
+
+
+        showProjectSection(
+            "documents",
+            project.id
+        );
+
+        return;
+
+    }
+
+
+    /* =================================================
+       DELETE NORMAL FOLDER + DESCENDANTS
+    ================================================= */
 
     const foldersToDelete =
         new Set([
@@ -9793,11 +10145,11 @@ function(projectId, folderId){
 
                 if(
 
-                    child.parentId !== null &&
-
                     foldersToDelete.has(
                         String(child.parentId)
-                    ) &&
+                    )
+
+                    &&
 
                     !foldersToDelete.has(
                         String(child.id)
@@ -9819,13 +10171,16 @@ function(projectId, folderId){
     }
 
 
-    /* =========================
-       DELETE DOCUMENTS
-    ========================= */
+    /* DELETE DOCUMENTS */
 
-    if(project.documents){
+    if(
+        Array.isArray(
+            project.documents
+        )
+    ){
 
         project.documents =
+
             project.documents.filter(
                 doc =>
 
@@ -9839,23 +10194,22 @@ function(projectId, folderId){
     }
 
 
-    /* =========================
-       DELETE FOLDERS
-    ========================= */
+    /* DELETE FOLDERS */
 
     project.documentsFolders =
+
         project.documentsFolders.filter(
             folder =>
 
                 !foldersToDelete.has(
-                    String(folder.id)
+                    String(
+                        folder.id
+                    )
                 )
         );
 
 
-    /* =========================
-       GO TO PARENT
-    ========================= */
+    /* GO TO PARENT */
 
     window.documentsCurrentFolder[
         project.id
@@ -9915,7 +10269,8 @@ function(projectId){
         );
 
 
-    input.type = "file";
+    input.type =
+        "file";
 
 
     input.accept =
@@ -9976,7 +10331,8 @@ function(projectId){
                         .substring(2,8),
 
                 title:
-                    title || file.name,
+                    title.trim() ||
+                    file.name,
 
                 fileName:
                     file.name,
@@ -9989,7 +10345,7 @@ function(projectId){
                     e.target.result,
 
                 uploadedBy:
-                    uploadedBy ||
+                    uploadedBy.trim() ||
                     "Project Manager",
 
                 date:
@@ -10014,7 +10370,9 @@ function(projectId){
         };
 
 
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(
+            file
+        );
 
     };
 
@@ -10041,7 +10399,9 @@ function(projectId,index){
 
     if(
         !project ||
-        !project.documents
+        !Array.isArray(
+            project.documents
+        )
     ){
 
         alert(
@@ -10103,7 +10463,9 @@ function(projectId,index){
 
 
     const byteCharacters =
-        atob(parts[1]);
+        atob(
+            parts[1]
+        );
 
 
     const byteNumbers =
@@ -10170,7 +10532,9 @@ function(projectId,index){
 
     if(
         !project ||
-        !project.documents
+        !Array.isArray(
+            project.documents
+        )
     ){
 
         alert(
@@ -10247,7 +10611,9 @@ function(projectId,index){
 
     if(
         !project ||
-        !project.documents
+        !Array.isArray(
+            project.documents
+        )
     ){
 
         alert(
@@ -10268,7 +10634,7 @@ function(projectId,index){
 
     const confirmed =
         confirm(
-            `Are you sure you want to delete "${doc.fileName}"?`
+            `Are you sure you want to delete "${doc.fileName || doc.title || "this document"}"?`
         );
 
 
@@ -10289,7 +10655,7 @@ function(projectId,index){
         project.id
     );
 
-}; 
+};
     /* =====================================================
    DRAWINGS MODULE
    Folder system based on Documents structure
