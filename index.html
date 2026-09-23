@@ -9306,22 +9306,7 @@ function renderDocumentsSection(project){
                             </div>
 
 
-                            ${
-                                folder.id !== "root"
-
-                                ?
-
-                                `
-
-                                <div
-                                    style="
-                                        margin-top:15px;
-                                        display:flex;
-                                        justify-content:center;
-                                    "
-                                >
-
-                                  <div
+                           <div
     style="
         margin-top:15px;
         display:flex;
@@ -9331,6 +9316,7 @@ function renderDocumentsSection(project){
     "
 >
 
+    <!-- RENAME -->
     <button
         type="button"
         onclick="
@@ -9355,57 +9341,43 @@ function renderDocumentsSection(project){
     </button>
 
 
-    <button
-        type="button"
-        onclick="
-            event.stopPropagation();
+    <!-- DELETE - ONLY NON ROOT -->
+    ${
+        folder.id !== "root"
 
-            window.deleteDocumentsFolder(
-                '${project.id}',
-                '${folder.id}'
-            );
-        "
-        style="
-            background:#dc2626;
-            color:white;
-            border:none;
-            border-radius:6px;
-            padding:7px 14px;
-            cursor:pointer;
-            font-size:13px;
-        "
-    >
-        🗑 Delete
-    </button>
+        ?
+
+        `
+        <button
+            type="button"
+            onclick="
+                event.stopPropagation();
+
+                window.deleteDocumentsFolder(
+                    '${project.id}',
+                    '${folder.id}'
+                );
+            "
+            style="
+                background:#dc2626;
+                color:white;
+                border:none;
+                border-radius:6px;
+                padding:7px 14px;
+                cursor:pointer;
+                font-size:13px;
+            "
+        >
+            🗑 Delete
+        </button>
+        `
+
+        :
+
+        ``
+    }
 
 </div>
-
-                                </div>
-
-                                `
-
-                                :
-
-                                ``
-                            }
-
-                        </div>
-
-                    `)
-                    .join("")
-
-                }
-
-            </div>
-
-            `
-
-            :
-
-            ``
-        }
-
-
         ${
             visibleDocuments.length === 0
 
@@ -10025,17 +9997,6 @@ function(projectId, folderId){
     ensureDocumentsFolders(project);
 
 
-    if(
-        String(folderId) === "root"
-    ){
-
-        alert(
-            "The main Documents folder cannot be deleted."
-        );
-
-        return;
-
-    }
 
 
     const folder =
