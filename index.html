@@ -9311,41 +9311,64 @@ function renderDocumentsSection(project){
     </button>
 
 
-    <!-- DELETE - ONLY NON ROOT -->
-    ${
-        folder.id !== "root"
+  <div
+    style="
+        margin-top:15px;
+        display:flex;
+        justify-content:center;
+        gap:8px;
+        flex-wrap:wrap;
+    "
+>
 
-        ?
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
 
-        `
-        <button
-            type="button"
-            onclick="
-                event.stopPropagation();
+            window.renameDocumentsFolder(
+                '${project.id}',
+                '${folder.id}'
+            );
+        "
+        style="
+            background:#2563eb;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:7px 14px;
+            cursor:pointer;
+            font-size:13px;
+        "
+    >
+        ✏ Rename
+    </button>
 
-                window.deleteDocumentsFolder(
-                    '${project.id}',
-                    '${folder.id}'
-                );
-            "
-            style="
-                background:#dc2626;
-                color:white;
-                border:none;
-                border-radius:6px;
-                padding:7px 14px;
-                cursor:pointer;
-                font-size:13px;
-            "
-        >
-            🗑 Delete
-        </button>
-        `
 
-        :
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
 
-        ``
-    }
+            window.deleteDocumentsFolder(
+                '${project.id}',
+                '${folder.id}'
+            );
+        "
+        style="
+            background:#dc2626;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:7px 14px;
+            cursor:pointer;
+            font-size:13px;
+        "
+    >
+        🗑 Delete
+    </button>
+
+</div>
 
 </div>
         ${
