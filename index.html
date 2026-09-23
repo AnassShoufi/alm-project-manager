@@ -3137,7 +3137,70 @@ window.createBOQFolder = function(projectId,parentId = null){
 /* =========================
    DELETE BOQ FOLDER
 ========================= */
+/* =====================================================
+   RENAME BOQ FOLDER
+===================================================== */
 
+window.renameBOQFolder = function(projectId, folderId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    if(!project.boqFolders){
+        project.boqFolders = [];
+    }
+
+    const folder = project.boqFolders.find(
+        f => String(f.id) === String(folderId)
+    );
+
+    if(!folder){
+        alert("Folder not found.");
+        return;
+    }
+
+    const newName = prompt(
+        "Enter new folder name:",
+        folder.name || ""
+    );
+
+    if(newName === null){
+        return;
+    }
+
+    const cleanName = newName.trim();
+
+    if(!cleanName){
+        alert("Folder name cannot be empty.");
+        return;
+    }
+
+    const duplicate = project.boqFolders.some(
+        other =>
+            String(other.id) !== String(folder.id) &&
+            String(other.parentId ?? null) ===
+            String(folder.parentId ?? null) &&
+            String(other.name || "").toLowerCase() ===
+            cleanName.toLowerCase()
+    );
+
+    if(duplicate){
+        alert("A folder with this name already exists.");
+        return;
+    }
+
+    folder.name = cleanName;
+
+    persist();
+
+    showProjectSection(
+        "boq",
+        project.id
+    );
+};
 
 window.deleteBOQFolder = function(projectId, folderId){
 
