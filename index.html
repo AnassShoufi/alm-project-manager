@@ -2811,61 +2811,7 @@ const sectionTitle = titles[section] || section || "Section";
     `;
 
 }
-    /* =========================
-   BOQ FOLDERS
-========================= */
-
-window.boqCurrentFolder =
-    window.boqCurrentFolder || {};
-
-
-/* =========================
-   CREATE BOQ FOLDER
-========================= */
-
-window.createBOQFolder = function(projectId){
-
-    const project = projects.find(
-        p => p.id === projectId
-    );
-
-    if(!project) return;
-
-    if(!project.boqFolders){
-        project.boqFolders = [];
-    }
-
-    const name = prompt(
-        "Enter folder name:"
-    );
-
-    if(!name || !name.trim()){
-        return;
-    }
-
-    const folder = {
-
-        id:
-            "boq_folder_" +
-            Date.now(),
-
-        name:
-            name.trim()
-
-    };
-
-    project.boqFolders.push(folder);
-
-    persist();
-
-    showProjectSection(
-        "boq",
-        projectId
-    );
-
-};
-
-
+   
 /* =========================
    OPEN BOQ FOLDER
 ========================= */
