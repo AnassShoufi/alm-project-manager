@@ -10482,6 +10482,201 @@ window.deleteDrawingsFolder = function(projectId, folderId){
     renderDrawingsSection(project);
 
 };
+    /* =========================
+   ADD DRAWING
+========================= */
+
+window.addDrawing = function(projectId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    ensureDrawingsFolders(project);
+
+    if(!Array.isArray(project.drawings)){
+        project.drawings = [];
+    }
+
+    const currentFolderId =
+        window.drawingsCurrentFolder[project.id] ?? null;
+
+
+    /* =========================
+       DRAWING NUMBER
+    ========================= */
+
+    const drawingNo = prompt(
+        "Enter Drawing No.:"
+    );
+
+    if(drawingNo === null) return;
+
+    const cleanDrawingNo =
+        drawingNo.trim();
+
+    if(!cleanDrawingNo){
+
+        alert("Drawing No. cannot be empty.");
+
+        return;
+    }
+
+
+    /* =========================
+       DUPLICATE CHECK
+    ========================= */
+
+    const duplicate =
+        project.drawings.some(
+            drawing =>
+                String(drawing.folderId ?? null) ===
+                String(currentFolderId ?? null) &&
+                String(drawing.drawingNo || "")
+                    .toLowerCase() ===
+                cleanDrawingNo.toLowerCase()
+        );
+
+    if(duplicate){
+
+        alert(
+            "A drawing with this Drawing No. already exists in this folder."
+        );
+
+        return;
+    }
+
+
+    /* =========================
+       DRAWING TITLE
+    ========================= */
+
+    const title = prompt(
+        "Enter Drawing Title:"
+    );
+
+    if(title === null) return;
+
+    const cleanTitle =
+        title.trim();
+
+    if(!cleanTitle){
+
+        alert("Drawing Title cannot be empty.");
+
+        return;
+    }
+
+
+    /* =========================
+       DISCIPLINE
+    ========================= */
+
+    const discipline = prompt(
+        "Enter Discipline:\n\nArchitectural\nStructural\nMEP\nCivil\nOther"
+    );
+
+    if(discipline === null) return;
+
+    const cleanDiscipline =
+        discipline.trim();
+
+    if(!cleanDiscipline){
+
+        alert("Discipline cannot be empty.");
+
+        return;
+    }
+
+
+    /* =========================
+       REVISION
+    ========================= */
+
+    const revision = prompt(
+        "Enter Revision:",
+        "0"
+    );
+
+    if(revision === null) return;
+
+
+    /* =========================
+       DATE
+    ========================= */
+
+    const drawingDate = prompt(
+        "Enter Drawing Date (YYYY-MM-DD):",
+        new Date().toISOString().split("T")[0]
+    );
+
+    if(drawingDate === null) return;
+
+
+    /* =========================
+       NOTES
+    ========================= */
+
+    const notes = prompt(
+        "Enter Notes (optional):"
+    );
+
+    if(notes === null) return;
+
+
+    /* =========================
+       CREATE DRAWING
+    ========================= */
+
+    project.drawings.push({
+
+        id:
+            "drawing_" +
+            Date.now(),
+
+        folderId:
+            currentFolderId ?? null,
+
+        drawingNo:
+            cleanDrawingNo,
+
+        title:
+            cleanTitle,
+
+        discipline:
+            cleanDiscipline,
+
+        revision:
+            revision.trim(),
+
+        date:
+            drawingDate.trim(),
+
+        notes:
+            notes.trim(),
+
+        fileName:
+            "",
+
+        fileType:
+            "",
+
+        fileData:
+            "",
+
+        createdAt:
+            new Date().toISOString()
+
+    });
+
+
+    persist();
+
+    renderDrawingsSection(project);
+
+};
 window.createDrawingsFolder = function(projectId){
 
     const project = projects.find(
