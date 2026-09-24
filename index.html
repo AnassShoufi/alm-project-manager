@@ -10682,6 +10682,114 @@ window.addDrawing = function(projectId){
     renderDrawingsSection(project);
 
 };
+    window.editDrawing = function(projectId, drawingId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    const drawing = (project.drawings || []).find(
+        d => String(d.id) === String(drawingId)
+    );
+
+    if(!drawing){
+        alert("Drawing not found.");
+        return;
+    }
+
+    const drawingNo = prompt(
+        "Enter Drawing No.:",
+        drawing.drawingNo || ""
+    );
+
+    if(drawingNo === null) return;
+
+    const cleanDrawingNo = drawingNo.trim();
+
+    if(!cleanDrawingNo){
+        alert("Drawing No. cannot be empty.");
+        return;
+    }
+
+    const duplicate = (project.drawings || []).some(
+        other =>
+            String(other.id) !== String(drawing.id) &&
+            String(other.folderId ?? null) ===
+            String(drawing.folderId ?? null) &&
+            String(other.drawingNo || "").toLowerCase() ===
+            cleanDrawingNo.toLowerCase()
+    );
+
+    if(duplicate){
+        alert(
+            "A drawing with this Drawing No. already exists in this folder."
+        );
+        return;
+    }
+
+    const title = prompt(
+        "Enter Drawing Title:",
+        drawing.title || ""
+    );
+
+    if(title === null) return;
+
+    const cleanTitle = title.trim();
+
+    if(!cleanTitle){
+        alert("Drawing Title cannot be empty.");
+        return;
+    }
+
+    const discipline = prompt(
+        "Enter Discipline:",
+        drawing.discipline || ""
+    );
+
+    if(discipline === null) return;
+
+    const cleanDiscipline = discipline.trim();
+
+    if(!cleanDiscipline){
+        alert("Discipline cannot be empty.");
+        return;
+    }
+
+    const revision = prompt(
+        "Enter Revision:",
+        drawing.revision || ""
+    );
+
+    if(revision === null) return;
+
+    const drawingDate = prompt(
+        "Enter Drawing Date (YYYY-MM-DD):",
+        drawing.date || ""
+    );
+
+    if(drawingDate === null) return;
+
+    const notes = prompt(
+        "Enter Notes (optional):",
+        drawing.notes || ""
+    );
+
+    if(notes === null) return;
+
+    drawing.drawingNo = cleanDrawingNo;
+    drawing.title = cleanTitle;
+    drawing.discipline = cleanDiscipline;
+    drawing.revision = revision.trim();
+    drawing.date = drawingDate.trim();
+    drawing.notes = notes.trim();
+
+    persist();
+
+    renderDrawingsSection(project);
+
+};
     /* =========================
    RENDER DRAWING LIST
 ========================= */
