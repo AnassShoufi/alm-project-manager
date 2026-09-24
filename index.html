@@ -10370,6 +10370,76 @@ window.renameDrawingsFolder = function(projectId, folderId){
     renderDrawingsSection(project);
 
 };
+/* =========================
+   DELETE DRAWINGS FOLDER
+========================= */
+
+window.deleteDrawingsFolder = function(projectId, folderId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    ensureDrawingsFolders(project);
+
+    if(String(folderId) === "root"){
+
+        alert("The main Drawings folder cannot be deleted.");
+
+        return;
+    }
+
+    const folder = project.drawingsFolders.find(
+        f => String(f.id) === String(folderId)
+    );
+
+    if(!folder){
+
+        alert("Folder not found.");
+
+        return;
+    }
+
+    const confirmed = confirm(
+        `Delete folder "${folder.name}"?`
+    );
+
+    if(!confirmed) return;
+
+    const childFolderIds = project.drawingsFolders
+        .filter(
+            f =>
+                String(f.parentId) ===
+                String(folderId)
+        )
+        .map(f => String(f.id));
+
+    project.drawingsFolders =
+        project.drawingsFolders.filter(
+            f =>
+                String(f.id) !== String(folderId) &&
+                !childFolderIds.includes(String(f.id))
+        );
+
+    if(
+        String(
+            window.drawingsCurrentFolder[project.id]
+        ) === String(folderId)
+    ){
+
+        window.drawingsCurrentFolder[
+            project.id
+        ] = folder.parentId ?? null;
+
+    }
+
+    persist();
+
+    renderDrawingsSection(project);
+
+};
 window.createDrawingsFolder = function(projectId){
 
     const project = projects.find(
