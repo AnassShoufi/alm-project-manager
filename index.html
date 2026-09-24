@@ -11147,6 +11147,99 @@ async function getDrawingFile(fileId){
 
 }
     /* =========================
+   VIEW DRAWING FILE
+========================= */
+
+window.viewDrawingFile = async function(
+    projectId,
+    drawingId
+){
+
+    alert("View button clicked.");
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    const drawing =
+        (project.drawings || []).find(
+            d =>
+                String(d.id) ===
+                String(drawingId)
+        );
+
+    if(!drawing){
+
+        alert("Drawing not found.");
+
+        return;
+    }
+
+    if(!drawing.fileId){
+
+        alert(
+            "No file attached to this drawing."
+        );
+
+        return;
+    }
+
+    try{
+
+        const record =
+            await getDrawingFile(
+                drawing.fileId
+            );
+
+        if(!record){
+
+            alert(
+                "Drawing file was not found."
+            );
+
+            return;
+        }
+
+        const url =
+            URL.createObjectURL(
+                record.blob
+            );
+
+        window.open(
+            url,
+            "_blank"
+        );
+
+        setTimeout(
+            function(){
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            60000
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Drawing file view error:",
+            error
+        );
+
+        alert(
+            "The drawing file could not be opened.\n\n" +
+            error.message
+        );
+
+    }
+
+};
+    /* =========================
    UPLOAD DRAWING FILE
 ========================= */
 
