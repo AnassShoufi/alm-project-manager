@@ -10904,63 +10904,7 @@ const filteredDrawings =
         `;
 
     }
-    <div style="
-    display:flex;
-    gap:10px;
-    margin-bottom:15px;
-    align-items:center;
-">
 
-    <input
-        type="text"
-        placeholder="🔎 Search Drawing No. or Title..."
-        value="${escapeHTML(window.drawingsSearchTerm || "")}"
-        oninput="
-            window.drawingsSearchTerm = this.value;
-
-            renderDrawingsSection(
-                projects.find(
-                    p => p.id === ${project.id}
-                )
-            );
-        "
-        style="
-            flex:1;
-            padding:10px 12px;
-            border:1px solid #d1d5db;
-            border-radius:7px;
-            font-size:14px;
-            box-sizing:border-box;
-        "
-    >
-
-    <button
-        type="button"
-        onclick="
-            event.stopPropagation();
-
-            window.drawingsSearchTerm = '';
-
-            renderDrawingsSection(
-                projects.find(
-                    p => p.id === ${project.id}
-                )
-            );
-        "
-        style="
-            background:#64748b;
-            color:white;
-            border:none;
-            border-radius:7px;
-            padding:10px 15px;
-            cursor:pointer;
-            font-size:13px;
-        "
-    >
-        Clear
-    </button>
-
-</div>
 
     return `
 
