@@ -10928,15 +10928,10 @@ const filteredDrawings =
         type="text"
         placeholder="🔎 Search Drawing No. or Title..."
         value="${escapeHTML(window.drawingsSearchTerm || "")}"
-        oninput="
-            window.drawingsSearchTerm = this.value;
-
-            renderDrawingsSection(
-                projects.find(
-                    p => p.id === ${project.id}
-                )
-            );
-        "
+       oninput="
+    window.drawingsSearchTerm = this.value;
+    filterDrawingsTable(this.value);
+"
         style="
             flex:1;
             padding:10px 12px;
