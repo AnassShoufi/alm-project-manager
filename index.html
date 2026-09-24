@@ -10874,6 +10874,33 @@ function renderDrawingList(project, currentFolderId){
     }
 
 </td>
+<td style="
+    padding:12px;
+    white-space:nowrap;
+">
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
+
+            window.downloadDrawingFile(
+                '${project.id}',
+                '${drawing.id}'
+            );
+        "
+        style="
+            background:#475569;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:7px 12px;
+            cursor:pointer;
+            font-size:13px;
+        "
+    >
+        ⬇ Download
+    </button>
+</td>
                                     <td style="
     padding:12px;
     white-space:nowrap;
