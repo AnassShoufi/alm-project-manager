@@ -11054,6 +11054,60 @@ async function saveDrawingFile(
 
 }
     /* =========================
+   GET DRAWING FILE
+========================= */
+
+async function getDrawingFile(fileId){
+
+    if(!fileId){
+        return null;
+    }
+
+    const db =
+        await getDrawingsFileDB();
+
+    return new Promise(
+        function(resolve,reject){
+
+            const transaction =
+                db.transaction(
+                    "files",
+                    "readonly"
+                );
+
+            const store =
+                transaction.objectStore(
+                    "files"
+                );
+
+            const request =
+                store.get(
+                    fileId
+                );
+
+            request.onsuccess =
+            function(){
+
+                resolve(
+                    request.result || null
+                );
+
+            };
+
+            request.onerror =
+            function(){
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+    /* =========================
    UPLOAD DRAWING FILE
 ========================= */
 
