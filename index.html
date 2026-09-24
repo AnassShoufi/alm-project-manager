@@ -2286,6 +2286,17 @@ if(section === "documents"){
 
 }
     /* =========================
+   DRAWINGS
+========================= */
+
+if(section === "drawings"){
+
+    renderDrawingsSection(project);
+
+    return;
+
+}
+    /* =========================
    PAYMENTS
 ========================= */
 
@@ -9960,7 +9971,221 @@ function(projectId,index){
     );
 
 };
-   
+   /* =====================================================
+   DRAWINGS MODULE - NEW
+   STEP 1 - FOLDERS
+===================================================== */
+
+window.drawingsCurrentFolder =
+    window.drawingsCurrentFolder || {};
+
+
+/* =========================
+   ENSURE DRAWINGS FOLDERS
+========================= */
+
+function ensureDrawingsFolders(project){
+
+    if(!Array.isArray(project.drawingsFolders)){
+
+        project.drawingsFolders = [
+
+            {
+                id: "root",
+                name: "Drawings",
+                parentId: null
+            }
+
+        ];
+
+        persist();
+
+    }
+
+    if(
+        !project.drawingsFolders.some(
+            folder =>
+                String(folder.id) === "root"
+        )
+    ){
+
+        project.drawingsFolders.unshift({
+
+            id: "root",
+            name: "Drawings",
+            parentId: null
+
+        });
+
+        persist();
+
+    }
+
+    return project.drawingsFolders;
+
+}
+
+
+/* =========================
+   RENDER DRAWINGS
+========================= */
+
+function renderDrawingsSection(project){
+
+    ensureDrawingsFolders(project);
+
+    const folders =
+        project.drawingsFolders || [];
+
+    const currentFolderId =
+        window.drawingsCurrentFolder[project.id] ?? null;
+
+    const currentFolder =
+        folders.find(
+            folder =>
+                String(folder.id) ===
+                String(currentFolderId)
+        );
+
+    const currentFolderName =
+        currentFolder
+            ? currentFolder.name
+            : "Drawings";
+
+    const visibleFolders =
+        folders.filter(
+            folder =>
+                (folder.parentId || null) ===
+                (currentFolderId || null)
+        );
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!content) return;
+
+    content.innerHTML = `
+
+        <div class="project-section">
+
+            <div class="project-section-header">
+
+                <div>
+
+                    <h3>
+                        Drawings
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(project.name)}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                style="
+                    margin-bottom:20px;
+                    padding:12px 15px;
+                    background:#f7f9fb;
+                    border:1px solid #e1e5ea;
+                    border-radius:8px;
+                    font-weight:bold;
+                "
+            >
+
+                📁
+                ${escapeHTML(currentFolderName)}
+
+            </div>
+
+
+            <div
+                style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(auto-fill,minmax(220px,1fr));
+                    gap:15px;
+                "
+            >
+
+                ${
+                    visibleFolders.length
+                    ?
+                    visibleFolders.map(folder => `
+
+                        <div
+                            style="
+                                border:1px solid #e1e5ea;
+                                border-radius:10px;
+                                padding:20px;
+                                text-align:center;
+                                background:#ffffff;
+                                cursor:pointer;
+                            "
+                            onclick="
+                                window.drawingsCurrentFolder[
+                                    ${project.id}
+                                ] = '${folder.id}';
+
+                                renderDrawingsSection(
+                                    projects.find(
+                                        p => p.id === ${project.id}
+                                    )
+                                );
+                            "
+                        >
+
+                            <div
+                                style="
+                                    font-size:42px;
+                                    margin-bottom:10px;
+                                "
+                            >
+                                📁
+                            </div>
+
+                            <strong>
+                                ${escapeHTML(folder.name)}
+                            </strong>
+
+                        </div>
+
+                    `).join("")
+
+                    :
+
+                    `
+                    <div
+                        style="
+                            grid-column:1/-1;
+                            min-height:250px;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            border:2px dashed #dfe5ec;
+                            border-radius:10px;
+                            color:#708096;
+                        "
+                    >
+
+                        No folders yet.
+
+                    </div>
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
   /* =====================================================
    REPORTS MODULE
    Same folder system as Documents & Drawings
