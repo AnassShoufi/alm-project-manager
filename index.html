@@ -10790,6 +10790,72 @@ window.addDrawing = function(projectId){
     renderDrawingsSection(project);
 
 };
+    window.deleteDrawing = async function(projectId, drawingId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    const drawingIndex =
+        (project.drawings || []).findIndex(
+            d =>
+                String(d.id) ===
+                String(drawingId)
+        );
+
+    if(drawingIndex === -1){
+
+        alert("Drawing not found.");
+
+        return;
+    }
+
+    const drawing =
+        project.drawings[drawingIndex];
+
+    const confirmed = confirm(
+        `Delete drawing "${drawing.drawingNo}"?\n\nThis will also delete the attached file.`
+    );
+
+    if(!confirmed) return;
+
+    try{
+
+        if(drawing.fileId){
+
+            await deleteDrawingFile(
+                drawing.fileId
+            );
+
+        }
+
+        project.drawings.splice(
+            drawingIndex,
+            1
+        );
+
+        persist();
+
+        renderDrawingsSection(project);
+
+    }
+    catch(error){
+
+        console.error(
+            "Drawing deletion error:",
+            error
+        );
+
+        alert(
+            "The drawing could not be deleted.\n\n" +
+            error.message
+        );
+
+    }
+
+};
     /* =========================
    RENDER DRAWING LIST
 ========================= */
@@ -11034,6 +11100,33 @@ function renderDrawingList(project, currentFolderId){
         "
     >
         ✏️ Edit
+    </button>
+</td>
+<td style="
+    padding:12px;
+    white-space:nowrap;
+">
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
+
+            window.deleteDrawing(
+                '${project.id}',
+                '${drawing.id}'
+            );
+        "
+        style="
+            background:#dc2626;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:7px 12px;
+            cursor:pointer;
+            font-size:13px;
+        "
+    >
+        🗑️ Delete
     </button>
 </td>
                                     <td style="
@@ -11401,6 +11494,44 @@ window.viewDrawingFile = async function(
     }
 
 };
+    async function deleteDrawingFile(fileId){
+
+    if(!fileId){
+        return;
+    }
+
+    const db =
+        await getDrawingsFileDB();
+
+    return new Promise(
+        function(resolve,reject){
+
+            const transaction =
+                db.transaction(
+                    "files",
+                    "readwrite"
+                );
+
+            const store =
+                transaction.objectStore(
+                    "files"
+                );
+
+            store.delete(fileId);
+
+            transaction.oncomplete =
+            function(){
+                resolve();
+            };
+
+            transaction.onerror =
+            function(){
+                reject(transaction.error);
+            };
+
+        }
+    );
+}
     /* =========================
    DOWNLOAD DRAWING FILE
 ========================= */
