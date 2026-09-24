@@ -10029,7 +10029,53 @@ function ensureDrawingsFolders(project){
 /* =========================
    RENDER DRAWINGS
 ========================= */
+function filterDrawingsTable(searchValue){
 
+    const searchTerm =
+        String(searchValue || "")
+            .toLowerCase()
+            .trim();
+
+    const table =
+        document.querySelector(
+            "#projectSectionContent table"
+        );
+
+    if(!table) return;
+
+    const rows =
+        table.querySelectorAll(
+            "tbody tr"
+        );
+
+    rows.forEach(function(row){
+
+        const cells =
+            row.querySelectorAll("td");
+
+        if(cells.length < 2) return;
+
+        const drawingNo =
+            String(
+                cells[0].textContent || ""
+            ).toLowerCase();
+
+        const title =
+            String(
+                cells[1].textContent || ""
+            ).toLowerCase();
+
+        const matches =
+            !searchTerm ||
+            drawingNo.includes(searchTerm) ||
+            title.includes(searchTerm);
+
+        row.style.display =
+            matches ? "" : "none";
+
+    });
+
+}
 function renderDrawingsSection(project){
 
     ensureDrawingsFolders(project);
