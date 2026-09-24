@@ -11009,6 +11009,33 @@ function renderDrawingList(project, currentFolderId){
         ⬇ Download
     </button>
 </td>
+<td style="
+    padding:12px;
+    white-space:nowrap;
+">
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
+
+            window.editDrawing(
+                '${project.id}',
+                '${drawing.id}'
+            );
+        "
+        style="
+            background:#f59e0b;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:7px 12px;
+            cursor:pointer;
+            font-size:13px;
+        "
+    >
+        ✏️ Edit
+    </button>
+</td>
                                     <td style="
     padding:12px;
     white-space:nowrap;
