@@ -11115,9 +11115,17 @@ window.uploadDrawingFile = async function(
 
         persist();
 
-        renderDrawingsSection(
-            project
-        );
+alert(
+    "Drawing file uploaded successfully:\n\n" +
+    file.name +
+    "\n\nSize: " +
+    (file.size / 1024 / 1024).toFixed(2) +
+    " MB"
+);
+
+renderDrawingsSection(
+    project
+);
 
     }
     catch(error){
