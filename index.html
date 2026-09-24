@@ -10263,7 +10263,75 @@ ${
     /* =========================
    CREATE DRAWINGS FOLDER
 ========================= */
+/* =========================
+   RENAME DRAWINGS FOLDER
+========================= */
 
+window.renameDrawingsFolder = function(projectId, folderId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    ensureDrawingsFolders(project);
+
+    if(String(folderId) === "root"){
+        alert("The main Drawings folder cannot be renamed.");
+        return;
+    }
+
+    const folder = project.drawingsFolders.find(
+        f => String(f.id) === String(folderId)
+    );
+
+    if(!folder){
+        alert("Folder not found.");
+        return;
+    }
+
+    const newName = prompt(
+        "Enter new folder name:",
+        folder.name || ""
+    );
+
+    if(newName === null) return;
+
+    const cleanName = newName.trim();
+
+    if(!cleanName){
+
+        alert("Folder name cannot be empty.");
+
+        return;
+    }
+
+    const duplicate = project.drawingsFolders.some(
+        other =>
+            String(other.id) !== String(folder.id) &&
+            String(other.parentId ?? null) ===
+            String(folder.parentId ?? null) &&
+            String(other.name || "").toLowerCase() ===
+            cleanName.toLowerCase()
+    );
+
+    if(duplicate){
+
+        alert(
+            "A folder with this name already exists."
+        );
+
+        return;
+    }
+
+    folder.name = cleanName;
+
+    persist();
+
+    renderDrawingsSection(project);
+
+};
 window.createDrawingsFolder = function(projectId){
 
     const project = projects.find(
