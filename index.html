@@ -10764,6 +10764,9 @@ function renderDrawingList(project, currentFolderId){
                             <th style="padding:12px;">
                                 Date
                             </th>
+                            <th style="padding:12px;">
+    File
+</th>
 
                         </tr>
 
@@ -10811,6 +10814,27 @@ function renderDrawingList(project, currentFolderId){
                                             drawing.date || ""
                                         )}
                                     </td>
+                                    <td style="
+    padding:12px;
+    font-size:13px;
+">
+
+    ${
+        drawing.fileName
+        ?
+        `
+        📄
+        ${escapeHTML(drawing.fileName)}
+        `
+        :
+        `
+        <span style="color:#8a96a8;">
+            No file
+        </span>
+        `
+    }
+
+</td>
                                     <td style="
     padding:12px;
     white-space:nowrap;
