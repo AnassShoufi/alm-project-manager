@@ -10677,6 +10677,153 @@ window.addDrawing = function(projectId){
     renderDrawingsSection(project);
 
 };
+    /* =========================
+   RENDER DRAWING LIST
+========================= */
+
+function renderDrawingList(project, currentFolderId){
+
+    const drawings =
+        (project.drawings || []).filter(
+            drawing =>
+                String(drawing.folderId ?? null) ===
+                String(currentFolderId ?? null)
+        );
+
+    if(!drawings.length){
+
+        return `
+            <div
+                style="
+                    margin-top:25px;
+                    padding:25px;
+                    text-align:center;
+                    border:2px dashed #dfe5ec;
+                    border-radius:10px;
+                    color:#708096;
+                "
+            >
+                No drawings in this folder yet.
+            </div>
+        `;
+
+    }
+
+    return `
+
+        <div style="margin-top:30px;">
+
+            <h4 style="
+                margin-bottom:15px;
+                font-size:18px;
+                color:#25344a;
+            ">
+                Drawings
+            </h4>
+
+            <div style="
+                overflow-x:auto;
+                border:1px solid #e1e5ea;
+                border-radius:10px;
+            ">
+
+                <table style="
+                    width:100%;
+                    border-collapse:collapse;
+                    background:#ffffff;
+                ">
+
+                    <thead>
+
+                        <tr style="
+                            background:#f7f9fb;
+                            text-align:left;
+                        ">
+
+                            <th style="padding:12px;">
+                                Drawing No.
+                            </th>
+
+                            <th style="padding:12px;">
+                                Title
+                            </th>
+
+                            <th style="padding:12px;">
+                                Discipline
+                            </th>
+
+                            <th style="padding:12px;">
+                                Revision
+                            </th>
+
+                            <th style="padding:12px;">
+                                Date
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${
+                            drawings.map(
+                                drawing => `
+
+                                <tr style="
+                                    border-top:1px solid #e1e5ea;
+                                ">
+
+                                    <td style="
+                                        padding:12px;
+                                        font-weight:bold;
+                                    ">
+                                        ${escapeHTML(
+                                            drawing.drawingNo || ""
+                                        )}
+                                    </td>
+
+                                    <td style="padding:12px;">
+                                        ${escapeHTML(
+                                            drawing.title || ""
+                                        )}
+                                    </td>
+
+                                    <td style="padding:12px;">
+                                        ${escapeHTML(
+                                            drawing.discipline || ""
+                                        )}
+                                    </td>
+
+                                    <td style="padding:12px;">
+                                        ${escapeHTML(
+                                            drawing.revision || ""
+                                        )}
+                                    </td>
+
+                                    <td style="padding:12px;">
+                                        ${escapeHTML(
+                                            drawing.date || ""
+                                        )}
+                                    </td>
+
+                                </tr>
+
+                            `
+                            ).join("")
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
 window.createDrawingsFolder = function(projectId){
 
     const project = projects.find(
