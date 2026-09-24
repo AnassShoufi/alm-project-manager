@@ -10987,6 +10987,112 @@ async function saveDrawingFile(
     );
 
 }
+    /* =========================
+   UPLOAD DRAWING FILE
+========================= */
+
+window.uploadDrawingFile = async function(
+    projectId,
+    drawingId,
+    file
+){
+
+    if(!file){
+        return;
+    }
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project){
+        return;
+    }
+
+    const drawing = (project.drawings || []).find(
+        d => String(d.id) === String(drawingId)
+    );
+
+    if(!drawing){
+
+        alert("Drawing not found.");
+
+        return;
+    }
+
+
+    /* =========================
+       ALLOWED FILE TYPES
+    ========================= */
+
+    const fileName =
+        String(file.name || "").toLowerCase();
+
+    const allowed =
+        fileName.endsWith(".pdf") ||
+        fileName.endsWith(".dwg") ||
+        fileName.endsWith(".dxf");
+
+    if(!allowed){
+
+        alert(
+            "Please select a PDF, DWG, or DXF file."
+        );
+
+        return;
+    }
+
+
+    try{
+
+        const fileId =
+            "drawing-file-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,10);
+
+
+        await saveDrawingFile(
+            fileId,
+            file
+        );
+
+
+        drawing.fileId =
+            fileId;
+
+        drawing.fileName =
+            file.name;
+
+        drawing.fileType =
+            file.type ||
+            "application/octet-stream";
+
+
+        persist();
+
+        renderDrawingsSection(
+            project
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Drawing file upload error:",
+            error
+        );
+
+        alert(
+            "The drawing file could not be saved.\n\n" +
+            error.message
+        );
+
+    }
+
+};
 window.createDrawingsFolder = function(projectId){
 
     const project = projects.find(
