@@ -10070,21 +10070,43 @@ function renderDrawingsSection(project){
 
         <div class="project-section">
 
-            <div class="project-section-header">
+           <div class="project-section-header">
 
-                <div>
+    <div>
 
-                    <h3>
-                        Drawings
-                    </h3>
+        <h3>
+            Drawings
+        </h3>
 
-                    <p>
-                        ${escapeHTML(project.name)}
-                    </p>
+        <p>
+            ${escapeHTML(project.name)}
+        </p>
 
-                </div>
+    </div>
 
-            </div>
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
+
+            window.createDrawingsFolder(
+                ${project.id}
+            );
+        "
+        style="
+            background:#2563eb;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:9px 16px;
+            cursor:pointer;
+            font-weight:bold;
+        "
+    >
+        + Add Folder
+    </button>
+
+</div>
 
 
             <div
@@ -10186,6 +10208,76 @@ function renderDrawingsSection(project){
     `;
 
 }
+    /* =========================
+   CREATE DRAWINGS FOLDER
+========================= */
+
+window.createDrawingsFolder = function(projectId){
+
+    const project = projects.find(
+        p => String(p.id) === String(projectId)
+    );
+
+    if(!project) return;
+
+    ensureDrawingsFolders(project);
+
+    const currentFolderId =
+        window.drawingsCurrentFolder[project.id] ?? null;
+
+    const name = prompt(
+        "Enter folder name:"
+    );
+
+    if(name === null) return;
+
+    const cleanName = name.trim();
+
+    if(!cleanName){
+
+        alert("Folder name cannot be empty.");
+
+        return;
+    }
+
+    const duplicate =
+        project.drawingsFolders.some(
+            folder =>
+                String(folder.parentId ?? null) ===
+                String(currentFolderId ?? null) &&
+                String(folder.name || "")
+                    .toLowerCase() ===
+                cleanName.toLowerCase()
+        );
+
+    if(duplicate){
+
+        alert(
+            "A folder with this name already exists."
+        );
+
+        return;
+    }
+
+    project.drawingsFolders.push({
+
+        id:
+            "drawing_folder_" +
+            Date.now(),
+
+        name:
+            cleanName,
+
+        parentId:
+            currentFolderId ?? null
+
+    });
+
+    persist();
+
+    renderDrawingsSection(project);
+
+};
   /* =====================================================
    REPORTS MODULE
    Same folder system as Documents & Drawings
