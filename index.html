@@ -10150,16 +10150,18 @@ function renderDrawingsSection(project){
                                 cursor:pointer;
                             "
                             onclick="
-                                window.drawingsCurrentFolder[
-                                    ${project.id}
-                                ] = '${folder.id}';
+    event.stopPropagation();
 
-                                renderDrawingsSection(
-                                    projects.find(
-                                        p => p.id === ${project.id}
-                                    )
-                                );
-                            "
+    window.drawingsCurrentFolder[
+        ${project.id}
+    ] = '${folder.id}';
+
+    renderDrawingsSection(
+        projects.find(
+            p => p.id === ${project.id}
+        )
+    );
+"
                         >
 
                             <div
