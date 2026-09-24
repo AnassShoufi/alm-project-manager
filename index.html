@@ -10811,6 +10811,48 @@ function renderDrawingList(project, currentFolderId){
                                             drawing.date || ""
                                         )}
                                     </td>
+                                    <td style="
+    padding:12px;
+    white-space:nowrap;
+">
+
+    <input
+        type="file"
+        id="drawingFile_${project.id}_${drawing.id}"
+        accept=".pdf,.dwg,.dxf"
+        style="display:none;"
+        onchange="
+            window.uploadDrawingFile(
+                '${project.id}',
+                '${drawing.id}',
+                this.files[0]
+            );
+        "
+    >
+
+    <button
+        type="button"
+        onclick="
+            event.stopPropagation();
+
+            document.getElementById(
+                'drawingFile_${project.id}_${drawing.id}'
+            ).click();
+        "
+        style="
+            background:#16a34a;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:7px 12px;
+            cursor:pointer;
+            font-size:13px;
+        "
+    >
+        📎 Upload
+    </button>
+
+</td>
 
                                 </tr>
 
