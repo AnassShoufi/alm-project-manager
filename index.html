@@ -10105,7 +10105,28 @@ function renderDrawingsSection(project){
     >
         + Add Folder
     </button>
+<button
+    type="button"
+    onclick="
+        event.stopPropagation();
 
+        window.addDrawing(
+            ${project.id}
+        );
+    "
+    style="
+        background:#16a34a;
+        color:white;
+        border:none;
+        border-radius:6px;
+        padding:9px 16px;
+        cursor:pointer;
+        font-weight:bold;
+        margin-left:8px;
+    "
+>
+    + Add Drawing
+</button>
 </div>
 
 ${
