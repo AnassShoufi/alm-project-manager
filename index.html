@@ -2539,10 +2539,9 @@ window.openBOQFolder = function(projectId, folderId){
 ========================= */
 
 window.uploadBOQ = function(projectId){
-
-    const project = projects.find(
-        p => p.id === projectId
-    );
+const project = projects.find(
+    p => String(p.id) === String(projectId)
+);
 
     if(!project) return;
 
