@@ -21513,9 +21513,9 @@ function openBOQFolder(projectId, folderId){
 
 function goBackBOQFolder(projectId){
 
-    const project = projects.find(function(p){
-        return p.id === projectId;
-    });
+   const project = projects.find(function(p){
+    return String(p.id) === String(projectId);
+});
 
     if(!project) return;
 
