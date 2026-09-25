@@ -10702,7 +10702,7 @@ function selectDrawingDiscipline(){
     });
 
 }
-window.addDrawing = function(projectId){
+window.addDrawing = async function(projectId){
 
     const project = projects.find(
         p => String(p.id) === String(projectId)
@@ -10789,16 +10789,10 @@ window.addDrawing = function(projectId){
     /* =========================
        DISCIPLINE
     ========================= */
-const discipline = prompt(
-    "Enter Discipline:\n\nArchitectural\nStructural\nMEP\nCivil\nOther"
-);
+const cleanDiscipline =
+    await selectDrawingDiscipline();
 
-if(discipline === null) return;
-
-const cleanDiscipline = discipline.trim();
-
-if(!cleanDiscipline){
-    alert("Discipline cannot be empty.");
+if(cleanDiscipline === null){
     return;
 }
 
