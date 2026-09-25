@@ -10536,7 +10536,172 @@ window.deleteDrawingsFolder = function(projectId, folderId){
     /* =========================
    ADD DRAWING
 ========================= */
+function selectDrawingDiscipline(){
 
+    return new Promise(function(resolve){
+
+        const overlay =
+            document.createElement("div");
+
+        overlay.style.cssText = `
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.45);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:99999;
+        `;
+
+        overlay.innerHTML = `
+
+            <div style="
+                background:white;
+                width:380px;
+                max-width:90%;
+                padding:25px;
+                border-radius:10px;
+                box-shadow:0 10px 30px rgba(0,0,0,0.25);
+            ">
+
+                <h3 style="
+                    margin:0 0 18px 0;
+                    color:#25344a;
+                ">
+                    Select Discipline
+                </h3>
+
+                <select
+                    id="drawingDisciplineSelect"
+                    style="
+                        width:100%;
+                        padding:10px 12px;
+                        border:1px solid #d1d5db;
+                        border-radius:7px;
+                        font-size:14px;
+                        box-sizing:border-box;
+                    "
+                >
+
+                    <option value="">
+                        -- Select Discipline --
+                    </option>
+
+                    <option value="Architectural">
+                        Architectural
+                    </option>
+
+                    <option value="Structural">
+                        Structural
+                    </option>
+
+                    <option value="MEP">
+                        MEP
+                    </option>
+
+                    <option value="Civil">
+                        Civil
+                    </option>
+
+                    <option value="Other">
+                        Other
+                    </option>
+
+                </select>
+
+                <div style="
+                    display:flex;
+                    justify-content:flex-end;
+                    gap:10px;
+                    margin-top:20px;
+                ">
+
+                    <button
+                        type="button"
+                        id="cancelDrawingDiscipline"
+                        style="
+                            background:#64748b;
+                            color:white;
+                            border:none;
+                            border-radius:6px;
+                            padding:8px 15px;
+                            cursor:pointer;
+                        "
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        id="confirmDrawingDiscipline"
+                        style="
+                            background:#2563eb;
+                            color:white;
+                            border:none;
+                            border-radius:6px;
+                            padding:8px 15px;
+                            cursor:pointer;
+                        "
+                    >
+                        Continue
+                    </button>
+
+                </div>
+
+            </div>
+
+        `;
+
+        document.body.appendChild(overlay);
+
+        const select =
+            overlay.querySelector(
+                "#drawingDisciplineSelect"
+            );
+
+        const cancelButton =
+            overlay.querySelector(
+                "#cancelDrawingDiscipline"
+            );
+
+        const confirmButton =
+            overlay.querySelector(
+                "#confirmDrawingDiscipline"
+            );
+
+        cancelButton.onclick =
+        function(){
+
+            overlay.remove();
+
+            resolve(null);
+
+        };
+
+        confirmButton.onclick =
+        function(){
+
+            const value =
+                select.value;
+
+            if(!value){
+
+                alert(
+                    "Please select a Discipline."
+                );
+
+                return;
+            }
+
+            overlay.remove();
+
+            resolve(value);
+
+        };
+
+    });
+
+}
 window.addDrawing = function(projectId){
 
     const project = projects.find(
@@ -10624,40 +10789,18 @@ window.addDrawing = function(projectId){
     /* =========================
        DISCIPLINE
     ========================= */
-
-   const disciplineOptions = [
-    "Architectural",
-    "Structural",
-    "MEP",
-    "Civil",
-    "Other"
-];
-
-const disciplineChoice = prompt(
-    "Select Discipline:\n\n" +
-    "1 - Architectural\n" +
-    "2 - Structural\n" +
-    "3 - MEP\n" +
-    "4 - Civil\n" +
-    "5 - Other"
+const discipline = prompt(
+    "Enter Discipline:\n\nArchitectural\nStructural\nMEP\nCivil\nOther"
 );
 
-if(disciplineChoice === null) return;
+if(discipline === null) return;
 
-const disciplineIndex =
-    parseInt(disciplineChoice.trim(), 10) - 1;
+const cleanDiscipline = discipline.trim();
 
-if(
-    disciplineIndex < 0 ||
-    disciplineIndex >= disciplineOptions.length ||
-    isNaN(disciplineIndex)
-){
-    alert("Please select a valid Discipline number.");
+if(!cleanDiscipline){
+    alert("Discipline cannot be empty.");
     return;
 }
-
-const cleanDiscipline =
-    disciplineOptions[disciplineIndex];
 
     /* =========================
        REVISION
