@@ -21704,29 +21704,54 @@ const childFolders =
             childFolders.length
             ? childFolders.map(function(folder){
 
-                return `
-                    <div
-                        onclick="openBOQFolder('${project.id}','${folder.id}')"
-                        style="
-                            border:1px solid #ddd;
-                            border-radius:8px;
-                            padding:20px;
-                            cursor:pointer;
-                            background:#f8fafc;
-                        "
-                    >
+               return `
+    <div style="
+        border:1px solid #ddd;
+        border-radius:8px;
+        padding:20px;
+        background:#f8fafc;
+    ">
 
-                        <div style="font-size:32px;">📁</div>
+        <div
+            onclick="openBOQFolder('${project.id}','${folder.id}')"
+            style="cursor:pointer;"
+        >
 
-                        <div style="
-                            font-weight:bold;
-                            margin-top:10px;
-                        ">
-                            ${folder.name}
-                        </div>
+            <div style="font-size:32px;">
+                📁
+            </div>
 
-                    </div>
-                `;
+            <div style="
+                font-weight:bold;
+                margin-top:10px;
+            ">
+                ${folder.name}
+            </div>
+
+        </div>
+
+        <div style="
+            display:flex;
+            gap:6px;
+            margin-top:15px;
+        ">
+
+            <button
+                onclick="event.stopPropagation(); renameBOQFolder('${project.id}','${folder.id}')"
+            >
+                Rename
+            </button>
+
+            <button
+                onclick="event.stopPropagation(); deleteBOQFolder('${project.id}','${folder.id}')"
+            >
+                Delete
+            </button>
+
+        </div>
+
+    </div>
+`;
 
             }).join("")
             : `
