@@ -21462,36 +21462,9 @@ function ensureBOQFolders(project){
 
 function createBOQFolder(projectId){
 
-    const project = projects.find(function(p){
-        return p.id === projectId;
-    });
+    alert("CREATE BOQ FOLDER IS WORKING");
 
-    if(!project) return;
-
-    ensureBOQFolders(project);
-
-    const currentFolderId =
-        window.boqCurrentFolder[projectId] || "root";
-
-    const folderName = prompt("Enter folder name:");
-
-    if(!folderName || !folderName.trim()) return;
-
-    project.boqFolders.push({
-
-        id: "boq_folder_" + Date.now(),
-
-        name: folderName.trim(),
-
-        parentId: currentFolderId
-
-    });
-
-    persist();
-
-    renderBOQSection(project);
 }
-
 
 function openBOQFolder(projectId, folderId){
 
