@@ -2326,7 +2326,11 @@ function openProject(id){
                         onclick="showProjectSection('procurement', ${project.id}, this)">
                         📦 Procurement
                     </button>
-
+<button
+    class="project-menu-btn"
+    onclick="showProjectSection('subcontractors', ${project.id}, this)">
+    👷‍♂️ Subcontractors
+</button>
                     <button
                         class="project-menu-btn"
                         onclick="showProjectSection('payments', ${project.id}, this)">
@@ -2767,6 +2771,13 @@ if(section === "tasks"){
     renderEquipmentSection(project);
 
     return;
+        
+}
+    if(section === "subcontractors"){
+
+    renderSubcontractorsSection(project);
+
+    return;
 
 }
 const titles = {
@@ -3073,6 +3084,76 @@ const project = projects.find(
     `);
 
 };
+    /* =====================================================
+   SUBCONTRACTORS MODULE
+   STEP 2 - INITIAL PAGE
+===================================================== */
+
+function renderSubcontractorsSection(project){
+
+    const content =
+        document.getElementById("projectSectionContent");
+
+    if(!content){
+        console.error(
+            "projectSectionContent not found"
+        );
+        return;
+    }
+
+    content.innerHTML = `
+
+        <div class="project-section">
+
+            <div class="project-section-header">
+
+                <div>
+
+                    <h3>
+                        Subcontractors
+                    </h3>
+
+                    <p>
+                        Subcontractor Management
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div style="
+                padding:60px 20px;
+                text-align:center;
+                color:#64748b;
+            ">
+
+                <div style="
+                    font-size:50px;
+                    margin-bottom:15px;
+                ">
+                    👷‍♂️
+                </div>
+
+                <h3 style="
+                    margin:0 0 8px 0;
+                    color:#17243a;
+                ">
+                    Subcontractors
+                </h3>
+
+                <p style="
+                    margin:0;
+                ">
+                    Subcontractor module is ready.
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+}
    
 /* =====================================================
    EQUIPMENT MODULE
