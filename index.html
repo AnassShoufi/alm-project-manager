@@ -2288,10 +2288,17 @@ if(section === "documents"){
     /* =========================
    BOQ
 ========================= */
-
 if(section === "boq"){
 
-    renderBOQSection(project);
+    Promise.resolve(renderBOQSection(project)).catch(function(error){
+        console.error("BOQ Error:", error);
+        content.innerHTML = `
+            <div style="padding:30px; color:#b91c1c;">
+                <h3>BOQ could not be opened</h3>
+                <p>${error.message || error}</p>
+            </div>
+        `;
+    });
 
     return;
 
