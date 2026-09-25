@@ -10625,22 +10625,39 @@ window.addDrawing = function(projectId){
        DISCIPLINE
     ========================= */
 
-    const discipline = prompt(
-        "Enter Discipline:\n\nArchitectural\nStructural\nMEP\nCivil\nOther"
-    );
+   const disciplineOptions = [
+    "Architectural",
+    "Structural",
+    "MEP",
+    "Civil",
+    "Other"
+];
 
-    if(discipline === null) return;
+const disciplineChoice = prompt(
+    "Select Discipline:\n\n" +
+    "1 - Architectural\n" +
+    "2 - Structural\n" +
+    "3 - MEP\n" +
+    "4 - Civil\n" +
+    "5 - Other"
+);
 
-    const cleanDiscipline =
-        discipline.trim();
+if(disciplineChoice === null) return;
 
-    if(!cleanDiscipline){
+const disciplineIndex =
+    parseInt(disciplineChoice.trim(), 10) - 1;
 
-        alert("Discipline cannot be empty.");
+if(
+    disciplineIndex < 0 ||
+    disciplineIndex >= disciplineOptions.length ||
+    isNaN(disciplineIndex)
+){
+    alert("Please select a valid Discipline number.");
+    return;
+}
 
-        return;
-    }
-
+const cleanDiscipline =
+    disciplineOptions[disciplineIndex];
 
     /* =========================
        REVISION
