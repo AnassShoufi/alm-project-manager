@@ -591,57 +591,246 @@ tr:hover td{
     font-size:14px;
 
 }
+/* =====================================================
+   BOQ PROFESSIONAL DESIGN
+===================================================== */
+
+.boq-page{
+    background:#f8fafc;
+    border-radius:18px;
+    padding:28px;
+    margin:0;
+    min-height:420px;
+    box-sizing:border-box;
+}
+
+
 /* =========================
-   BOQ PROFESSIONAL UI
+   HEADER
 ========================= */
 
-#projectSectionContent .boq-header{
-    background:#ffffff !important;
-    border:1px solid #dbe3ec !important;
-    border-radius:14px !important;
-    padding:20px 24px !important;
-    margin-bottom:24px !important;
-    box-shadow:0 2px 8px rgba(15,23,42,.05) !important;
+.boq-page > div:first-child{
+    background:linear-gradient(
+        135deg,
+        #17243a 0%,
+        #263b5b 100%
+    );
+    border-radius:16px;
+    padding:24px 28px;
+    margin-bottom:24px;
+    color:#ffffff;
+    box-shadow:0 8px 24px rgba(15,23,42,.15);
 }
 
-#projectSectionContent .boq-header h2{
-    margin:0 !important;
-    font-size:24px !important;
+.boq-page h2{
+    color:#ffffff !important;
+    font-size:25px !important;
     font-weight:700 !important;
-    color:#17243a !important;
+    margin:0 !important;
 }
 
-#projectSectionContent .boq-header p{
+.boq-page p{
+    color:#dbe5f1 !important;
     margin:6px 0 0 !important;
-    color:#64748b !important;
     font-size:14px !important;
 }
 
-#projectSectionContent .boq-folder-card{
-    background:#ffffff !important;
-    border:1px solid #dbe3ec !important;
-    border-radius:14px !important;
-    padding:20px !important;
-    box-shadow:0 2px 8px rgba(15,23,42,.05) !important;
+
+/* =========================
+   HEADER BUTTON AREA
+========================= */
+
+.boq-page button{
+    font-family:inherit;
+    cursor:pointer;
+}
+
+.boq-page > div:first-child button{
+    border:none !important;
+    border-radius:8px !important;
+    padding:9px 15px !important;
+    font-size:13px !important;
+    font-weight:600 !important;
     transition:all .2s ease !important;
 }
 
-#projectSectionContent .boq-folder-card:hover{
-    transform:translateY(-3px) !important;
-    box-shadow:0 8px 22px rgba(15,23,42,.10) !important;
-    border-color:#b8c5d6 !important;
+.boq-page > div:first-child button:hover{
+    transform:translateY(-1px);
+    box-shadow:0 4px 10px rgba(0,0,0,.18);
 }
 
-#projectSectionContent .boq-folder-card button{
-    border:1px solid #cbd5e1 !important;
-    border-radius:6px !important;
-    padding:6px 10px !important;
+
+/* =========================
+   SEARCH
+========================= */
+
+.boq-page input[type="text"]{
+    width:100%;
+    box-sizing:border-box;
     background:#ffffff !important;
-    cursor:pointer !important;
+    border:1px solid #d7e0ea !important;
+    border-radius:10px !important;
+    padding:13px 16px !important;
+    font-size:14px !important;
+    color:#17243a !important;
+    outline:none;
+    margin-bottom:24px;
 }
 
-#projectSectionContent .boq-folder-card button:hover{
+.boq-page input[type="text"]:focus{
+    border-color:#64748b !important;
+    box-shadow:0 0 0 3px rgba(100,116,139,.12);
+}
+
+
+/* =========================
+   FOLDER GRID
+========================= */
+
+.boq-page .boq-folder-card{
+    background:#ffffff !important;
+    border:1px solid #dce4ed !important;
+    border-radius:16px !important;
+    padding:22px !important;
+    min-height:145px;
+    box-shadow:
+        0 3px 10px rgba(15,23,42,.06) !important;
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease !important;
+}
+
+.boq-page .boq-folder-card:hover{
+    transform:translateY(-4px) !important;
+    border-color:#aebdce !important;
+    box-shadow:
+        0 10px 25px rgba(15,23,42,.12) !important;
+}
+
+
+/* =========================
+   FOLDER ICON
+========================= */
+
+.boq-page .boq-folder-card .folder-icon{
+    font-size:42px;
+    margin-bottom:12px;
+}
+
+
+/* =========================
+   FOLDER NAME
+========================= */
+
+.boq-page .boq-folder-card strong,
+.boq-page .boq-folder-card h3{
+    color:#17243a !important;
+    font-size:16px !important;
+    font-weight:700 !important;
+}
+
+
+/* =========================
+   FOLDER BUTTONS
+========================= */
+
+.boq-page .boq-folder-card button{
+    background:#f8fafc !important;
+    color:#334155 !important;
+    border:1px solid #d5dee8 !important;
+    border-radius:7px !important;
+    padding:6px 11px !important;
+    font-size:12px !important;
+    font-weight:600 !important;
+}
+
+.boq-page .boq-folder-card button:hover{
+    background:#eef2f7 !important;
+}
+
+
+/* =========================
+   BOQ TABLE
+========================= */
+
+.boq-page table{
+    width:100%;
+    border-collapse:separate !important;
+    border-spacing:0 !important;
+    background:#ffffff !important;
+    border:1px solid #dce4ed !important;
+    border-radius:14px !important;
+    overflow:hidden;
+    box-shadow:
+        0 3px 12px rgba(15,23,42,.06);
+}
+
+.boq-page thead th{
     background:#f1f5f9 !important;
+    color:#475569 !important;
+    padding:14px 16px !important;
+    font-size:12px !important;
+    font-weight:700 !important;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    border-bottom:1px solid #dce4ed !important;
+}
+
+.boq-page tbody td{
+    padding:15px 16px !important;
+    color:#334155 !important;
+    font-size:13px !important;
+    border-bottom:1px solid #edf1f5 !important;
+}
+
+.boq-page tbody tr:last-child td{
+    border-bottom:none !important;
+}
+
+.boq-page tbody tr:hover{
+    background:#f8fafc !important;
+}
+
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.boq-page table button{
+    background:#ffffff !important;
+    color:#334155 !important;
+    border:1px solid #cbd5e1 !important;
+    border-radius:7px !important;
+    padding:6px 10px !important;
+    font-size:12px !important;
+    font-weight:600 !important;
+    margin-right:5px;
+    transition:all .2s ease !important;
+}
+
+.boq-page table button:hover{
+    background:#f1f5f9 !important;
+    transform:translateY(-1px);
+}
+
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.boq-page .boq-empty{
+    background:#ffffff;
+    border:1px dashed #cbd5e1;
+    border-radius:14px;
+    padding:45px 20px;
+    text-align:center;
+    color:#64748b;
+}
+
+.boq-page .boq-empty-icon{
+    font-size:46px;
+    margin-bottom:12px;
 }
 
 .project-info-grid{
@@ -21772,7 +21961,7 @@ const childFolders =
 
     });
     content.innerHTML = `
-        <div class="module-header">
+        <div class="boq-page">
 
             <div>
                 <h2>BOQ</h2>
