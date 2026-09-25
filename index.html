@@ -21813,12 +21813,12 @@ const childFolders =
                 <tbody>
 
                     ${
-                        visibleBoqs.map(function(item){
+                       visibleBoqs.map(function(boq){
 
-                            const boq = item.boq;
-                            const index = item.index;
+    const index =
+        project.boqs.indexOf(boq);
 
-                            return `
+    return `
                                 <tr style="
                                     border-bottom:1px solid #ddd;
                                 ">
