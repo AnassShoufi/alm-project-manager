@@ -21462,7 +21462,13 @@ function ensureBOQFolders(project){
 
 function createBOQFolder(projectId){
 
-    alert("CREATE BOQ FOLDER IS WORKING");
+    const folderName = prompt("Enter folder name:");
+
+    if(!folderName || !folderName.trim()){
+        return;
+    }
+
+    alert("Folder name: " + folderName.trim());
 
 }
 
