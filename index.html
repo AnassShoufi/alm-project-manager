@@ -5035,29 +5035,295 @@ function renderSubcontractorsSection(project){
 ========================= -->
 
 <div style="
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:20px;
-    padding:12px;
     background:#ffffff;
-    border:1px solid #e2e8f0;
+    border:1px solid #dce4ed;
     border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(15,23,42,.04);
 ">
 
-    <button type="button">All Trades</button>
-    <button type="button">Pile breakers</button>
-    <button type="button">Carpenters</button>
-    <button type="button">Iron benders</button>
-    <button type="button">Masons</button>
-    <button type="button">Painters</button>
-    <button type="button">Steel Welder</button>
-    <button type="button">Roofers</button>
-    <button type="button">Aluminum windows</button>
-    <button type="button">Doors</button>
-    <button type="button">Mechanical</button>
-    <button type="button">Electrical</button>
-    <button type="button">Plumbing</button>
+    <div style="
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        margin-bottom:12px;
+    ">
+
+        <div style="
+            font-size:13px;
+            font-weight:700;
+            color:#334155;
+        ">
+            Filter by Trade
+        </div>
+
+        <div style="
+            font-size:12px;
+            color:#94a3b8;
+        ">
+            Select a trade
+        </div>
+
+    </div>
+
+
+    <div style="
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    ">
+
+
+        <!-- ALL -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #1976b8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#1976b8;
+                color:#ffffff;
+                font-size:13px;
+                font-weight:600;
+                cursor:pointer;
+                transition:all .2s ease;
+            "
+        >
+            All Trades
+        </button>
+
+
+        <!-- PILE BREAKERS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Pile breakers
+        </button>
+
+
+        <!-- CARPENTERS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Carpenters
+        </button>
+
+
+        <!-- IRON BENDERS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Iron benders
+        </button>
+
+
+        <!-- MASONS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Masons
+        </button>
+
+
+        <!-- PAINTERS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Painters
+        </button>
+
+
+        <!-- STEEL WELDER -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Steel Welder
+        </button>
+
+
+        <!-- ROOFERS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Roofers
+        </button>
+
+
+        <!-- ALUMINUM WINDOWS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Aluminum windows
+        </button>
+
+
+        <!-- DOORS -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Doors
+        </button>
+
+
+        <!-- MECHANICAL -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Mechanical
+        </button>
+
+
+        <!-- ELECTRICAL -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Electrical
+        </button>
+
+
+        <!-- PLUMBING -->
+
+        <button
+            type="button"
+            style="
+                border:1px solid #d8e0e8;
+                border-radius:20px;
+                padding:8px 15px;
+                background:#f8fafc;
+                color:#334155;
+                font-size:13px;
+                font-weight:500;
+                cursor:pointer;
+            "
+        >
+            Plumbing
+        </button>
+
+
+    </div>
 
 </div>
             <!-- =========================
