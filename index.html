@@ -2289,12 +2289,7 @@ if(section === "documents"){
    BOQ
 ========================= */
 if(section === "boq"){
-    content.innerHTML = `
-        <div style="padding:30px;">
-            <h2>BOQ</h2>
-            <p>BOQ module is opening correctly.</p>
-        </div>
-    `;
+    renderBOQSection(project);
     return;
 }
 
@@ -21424,7 +21419,31 @@ async function deleteReportFile(
 /* =====================================================
    RENDER REPORTS
 ===================================================== */
+/* =========================
+   BOQ MODULE
+========================= */
 
+function renderBOQSection(project){
+
+    const content = document.getElementById("projectSectionContent");
+
+    if(!content){
+        console.error("projectSectionContent not found");
+        return;
+    }
+
+    content.innerHTML = `
+        <div style="padding:30px;">
+            <h2>BOQ</h2>
+
+            <div style="margin-top:20px;">
+                <button onclick="alert('Add BOQ clicked')">
+                    + Add BOQ
+                </button>
+            </div>
+        </div>
+    `;
+}
 function renderReportsSection(project){
 
     ensureReportsFolders(project);
