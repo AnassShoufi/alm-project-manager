@@ -2289,7 +2289,12 @@ if(section === "documents"){
    BOQ
 ========================= */
 if(section === "boq"){
-    alert(typeof renderBOQSection);
+    content.innerHTML = `
+        <div style="padding:30px;">
+            <h2>BOQ</h2>
+            <p>BOQ module is opening correctly.</p>
+        </div>
+    `;
     return;
 }
 
