@@ -21596,13 +21596,72 @@ const childFolders =
 
         </div>
 
-        <div id="boqContent">
+       <div id="boqContent">
 
-            <p style="padding:20px;">
-                BOQ files will appear here.
-            </p>
+    ${
+        currentFolderId !== "root"
+        ? `
+            <div style="margin-bottom:15px;">
+                <button onclick="goBackBOQFolder('${project.id}')">
+                    ← Back
+                </button>
+            </div>
+        `
+        : ""
+    }
 
-        </div>
+    <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+        gap:15px;
+        margin-bottom:25px;
+    ">
+
+        ${
+            childFolders.length
+            ? childFolders.map(function(folder){
+
+                return `
+                    <div
+                        onclick="openBOQFolder('${project.id}','${folder.id}')"
+                        style="
+                            border:1px solid #ddd;
+                            border-radius:8px;
+                            padding:20px;
+                            cursor:pointer;
+                            background:#f8fafc;
+                        "
+                    >
+
+                        <div style="font-size:32px;">📁</div>
+
+                        <div style="
+                            font-weight:bold;
+                            margin-top:10px;
+                        ">
+                            ${folder.name}
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("")
+            : `
+                <p style="color:#777;">
+                    No folders yet.
+                </p>
+            `
+        }
+
+    </div>
+
+    <div>
+        <p style="padding:20px;">
+            BOQ files will appear here.
+        </p>
+    </div>
+
+</div>
     `;
 }
 function renderReportsSection(project){
