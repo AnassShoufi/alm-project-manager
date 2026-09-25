@@ -2594,6 +2594,12 @@ const project = projects.find(
                     currentFolderId
 
             });
+            alert(
+    "BOQ SAVED\n\n" +
+    "File: " + file.name + "\n" +
+    "Total BOQs: " + project.boqs.length + "\n" +
+    "Folder: " + currentFolderId
+);
 
             persist();
 
