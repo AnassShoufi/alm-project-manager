@@ -1451,6 +1451,101 @@ let manpowerFilters = {
     }
 
 }
+
+/* =====================================================
+   BOQ UI ENHANCEMENT
+   Presentation only - no functionality changes
+===================================================== */
+.boq-page > div:nth-child(2){
+    display:flex !important;
+    gap:10px !important;
+    align-items:center;
+    margin-bottom:0;
+}
+
+.boq-page .boq-add-folder-btn,
+.boq-page .boq-add-file-btn{
+    border:0 !important;
+    border-radius:8px !important;
+    padding:9px 15px !important;
+    font-size:13px !important;
+    font-weight:700 !important;
+    color:#fff !important;
+    box-shadow:0 2px 6px rgba(15,23,42,.12);
+    transition:all .2s ease !important;
+}
+
+.boq-page .boq-add-folder-btn{
+    background:#1976b8 !important;
+}
+
+.boq-page .boq-add-file-btn{
+    background:#198754 !important;
+}
+
+.boq-page .boq-add-folder-btn:hover,
+.boq-page .boq-add-file-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 5px 12px rgba(15,23,42,.18);
+}
+
+.boq-page .boq-folder-card{
+    position:relative;
+}
+
+.boq-page .boq-folder-card button{
+    border-radius:7px !important;
+    padding:7px 12px !important;
+    font-size:12px !important;
+    font-weight:700 !important;
+}
+
+.boq-page .boq-folder-card .boq-rename-btn{
+    color:#2563eb !important;
+    border:1px solid #93c5fd !important;
+    background:#eff6ff !important;
+}
+
+.boq-page .boq-folder-card .boq-rename-btn:hover{
+    color:#1d4ed8 !important;
+    background:#dbeafe !important;
+    border-color:#60a5fa !important;
+}
+
+.boq-page .boq-folder-card .boq-delete-btn{
+    color:#dc2626 !important;
+    border:1px solid #fca5a5 !important;
+    background:#fef2f2 !important;
+}
+
+.boq-page .boq-folder-card .boq-delete-btn:hover{
+    color:#b91c1c !important;
+    background:#fee2e2 !important;
+    border-color:#f87171 !important;
+}
+
+.boq-page table .boq-view-btn{
+    color:#2563eb !important;
+    border-color:#93c5fd !important;
+    background:#eff6ff !important;
+}
+
+.boq-page table .boq-download-btn{
+    color:#198754 !important;
+    border-color:#86efac !important;
+    background:#f0fdf4 !important;
+}
+
+.boq-page table .boq-file-delete-btn{
+    color:#dc2626 !important;
+    border-color:#fca5a5 !important;
+    background:#fef2f2 !important;
+}
+
+.boq-page table .boq-view-btn:hover{background:#dbeafe !important;}
+.boq-page table .boq-download-btn:hover{background:#dcfce7 !important;}
+.boq-page table .boq-file-delete-btn:hover{background:#fee2e2 !important;}
+
 </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -22021,11 +22116,11 @@ const childFolders =
 
             <div style="display:flex; gap:10px;">
 
-                <button onclick="createBOQFolder('${project.id}')">
+                <button class="boq-add-folder-btn" onclick="createBOQFolder('${project.id}')">
                     + Add Folder
                 </button>
 
-             <button onclick="uploadBOQ('${project.id}')">
+             <button class="boq-add-file-btn" onclick="uploadBOQ('${project.id}')">
     + Add BOQ
 </button>
             </div>
@@ -22069,12 +22164,7 @@ const childFolders =
             ? childFolders.map(function(folder){
 
                return `
-    <div style="
-        border:1px solid #ddd;
-        border-radius:8px;
-        padding:20px;
-        background:#f8fafc;
-    ">
+    <div class="boq-folder-card">
 
         <div
             onclick="openBOQFolder('${project.id}','${folder.id}')"
@@ -22101,12 +22191,14 @@ const childFolders =
         ">
 
             <button
+                class="boq-rename-btn"
                 onclick="event.stopPropagation(); renameBOQFolder('${project.id}','${folder.id}')"
             >
                 Rename
             </button>
 
             <button
+                class="boq-delete-btn"
                 onclick="event.stopPropagation(); deleteBOQFolder('${project.id}','${folder.id}')"
             >
                 Delete
@@ -22192,18 +22284,21 @@ const childFolders =
                                     ">
 
                                         <button
+                                            class="boq-view-btn"
                                             onclick="viewBOQ('${project.id}',${index})"
                                         >
                                             View
                                         </button>
 
                                         <button
+                                            class="boq-download-btn"
                                             onclick="downloadBOQ('${project.id}',${index})"
                                         >
                                             Download
                                         </button>
 
                                         <button
+                                            class="boq-file-delete-btn"
                                             onclick="deleteBOQ('${project.id}',${index})"
                                         >
                                             Delete
