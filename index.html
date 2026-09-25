@@ -10261,7 +10261,7 @@ async function(
     if(!project) return;
 
 
-    const document =
+    const doc =
         (project.documents || [])
         .find(
             d =>
@@ -10307,10 +10307,10 @@ async function(
 
         try{
 
-            if(document.fileId){
+            if(doc.fileId){
 
                 await deleteDocumentFile(
-                    document.fileId
+                    doc.fileId
                 );
 
             }
@@ -10331,13 +10331,13 @@ async function(
             );
 
 
-            document.fileId =
+            doc.fileId =
                 fileId;
 
-            document.fileName =
+            doc.fileName =
                 file.name;
 
-            document.fileType =
+            doc.fileType =
                 file.type ||
                 "Unknown";
 
