@@ -21422,7 +21422,121 @@ async function deleteReportFile(
 /* =========================
    BOQ MODULE
 ========================= */
+/* =========================
+   BOQ FOLDERS
+========================= */
 
+window.boqCurrentFolder = window.boqCurrentFolder || {};
+
+function ensureBOQFolders(project){
+
+    if(!project.boqFolders){
+
+        project.boqFolders = [
+            {
+                id: "root",
+                name: "BOQ",
+                parentId: null
+            }
+        ];
+
+        persist();
+    }
+
+    if(!project.boqFolders.find(function(folder){
+        return folder.id === "root";
+    })){
+
+        project.boqFolders.unshift({
+            id: "root",
+            name: "BOQ",
+            parentId: null
+        });
+
+        persist();
+    }
+
+    return project.boqFolders;
+}
+
+
+function createBOQFolder(projectId){
+
+    const project = projects.find(function(p){
+        return p.id === projectId;
+    });
+
+    if(!project) return;
+
+    ensureBOQFolders(project);
+
+    const currentFolderId =
+        window.boqCurrentFolder[projectId] || "root";
+
+    const folderName = prompt("Enter folder name:");
+
+    if(!folderName || !folderName.trim()) return;
+
+    project.boqFolders.push({
+
+        id: "boq_folder_" + Date.now(),
+
+        name: folderName.trim(),
+
+        parentId: currentFolderId
+
+    });
+
+    persist();
+
+    renderBOQSection(project);
+}
+
+
+function openBOQFolder(projectId, folderId){
+
+    const project = projects.find(function(p){
+        return p.id === projectId;
+    });
+
+    if(!project) return;
+
+    window.boqCurrentFolder[projectId] = folderId;
+
+    renderBOQSection(project);
+}
+
+
+function goBackBOQFolder(projectId){
+
+    const project = projects.find(function(p){
+        return p.id === projectId;
+    });
+
+    if(!project) return;
+
+    ensureBOQFolders(project);
+
+    const currentFolderId =
+        window.boqCurrentFolder[projectId] || "root";
+
+    const currentFolder =
+        project.boqFolders.find(function(folder){
+            return folder.id === currentFolderId;
+        });
+
+    if(!currentFolder || !currentFolder.parentId){
+
+        window.boqCurrentFolder[projectId] = "root";
+
+    }else{
+
+        window.boqCurrentFolder[projectId] =
+            currentFolder.parentId;
+    }
+
+    renderBOQSection(project);
+}
 function renderBOQSection(project){
 
     const content = document.getElementById("projectSectionContent");
@@ -21431,7 +21545,24 @@ function renderBOQSection(project){
         console.error("projectSectionContent not found");
         return;
     }
+ensureBOQFolders(project);
 
+const folders = project.boqFolders || [];
+
+const currentFolderId =
+    window.boqCurrentFolder[project.id] || "root";
+
+window.boqCurrentFolder[project.id] = currentFolderId;
+
+const currentFolder =
+    folders.find(function(folder){
+        return folder.id === currentFolderId;
+    }) || folders[0];
+
+const childFolders =
+    folders.filter(function(folder){
+        return folder.parentId === currentFolderId;
+    });
     content.innerHTML = `
         <div class="module-header">
 
