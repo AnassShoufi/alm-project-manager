@@ -5406,40 +5406,270 @@ function renderSubcontractorsSection(project){
    
 
        
-            <!-- =========================
-                 EMPTY AREA
-                 FOR NEXT STEPS
-            ========================== -->
+   <!-- =========================
+     SUBCONTRACTOR REGISTER
+========================= -->
+
+<div style="
+    background:#ffffff;
+    border:1px solid #dce4ed;
+    border-radius:12px;
+    margin-top:20px;
+    overflow:hidden;
+    box-shadow:0 2px 8px rgba(15,23,42,.04);
+">
+
+
+    <!-- REGISTER HEADER -->
+
+    <div style="
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        padding:18px 20px;
+        border-bottom:1px solid #e2e8f0;
+    ">
+
+        <div>
+
+            <h3 style="
+                margin:0;
+                color:#0f172a;
+                font-size:17px;
+            ">
+                Subcontractor Register
+            </h3>
 
             <div style="
-                background:#ffffff;
-                border:1px solid #e2e8f0;
-                border-radius:12px;
-                padding:40px;
-                text-align:center;
+                margin-top:4px;
                 color:#64748b;
+                font-size:13px;
             ">
-
-                <div style="
-                    font-size:40px;
-                    margin-bottom:10px;
-                ">
-                    👷‍♂️
-                </div>
-
-                <h3 style="
-                    color:#0f172a;
-                    margin-bottom:8px;
-                ">
-                    No Subcontractors Added
-                </h3>
-
-                <p>
-                    Subcontractors will be added manually
-                    in the next step.
-                </p>
-
+                Registered subcontractors for this project
             </div>
+
+        </div>
+
+
+        <button
+            type="button"
+            style="
+                border:0;
+                border-radius:8px;
+                padding:10px 16px;
+                background:#1976b8;
+                color:#ffffff;
+                font-size:13px;
+                font-weight:600;
+                cursor:pointer;
+                box-shadow:0 2px 5px rgba(25,118,184,.20);
+            "
+        >
+            ＋ Add Subcontractor
+        </button>
+
+    </div>
+
+
+    <!-- TABLE -->
+
+    <div style="
+        overflow-x:auto;
+    ">
+
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            min-width:1200px;
+        ">
+
+            <thead>
+
+                <tr style="
+                    background:#f8fafc;
+                ">
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:center;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        S/N
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:left;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Trade
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:left;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Subcontractor Name
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:left;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Contract No.
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:left;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Contact Person
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:left;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Phone
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:right;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Contract Amount
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:center;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Start Date
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:center;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Completion Date
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:center;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Status
+                    </th>
+
+
+                    <th style="
+                        padding:13px 12px;
+                        text-align:center;
+                        border-bottom:1px solid #e2e8f0;
+                        color:#475569;
+                        font-size:12px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    ">
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                <tr>
+
+                    <td
+                        colspan="11"
+                        style="
+                            padding:45px 20px;
+                            text-align:center;
+                            color:#94a3b8;
+                            font-size:14px;
+                        "
+                    >
+
+                        <div style="
+                            font-size:32px;
+                            margin-bottom:8px;
+                        ">
+                            👷‍♂️
+                        </div>
+
+                        No subcontractors registered yet.
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
         </div>
 
