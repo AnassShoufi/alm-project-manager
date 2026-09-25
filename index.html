@@ -4692,17 +4692,111 @@ window.closeEquipmentViewModal = function(){
    STEP 2
 ===================================================== */
 
+/* =====================================================
+   SUBCONTRACTORS MODULE
+   STEP 3 - KPI CARDS
+===================================================== */
+
+function ensureSubcontractors(project){
+
+    if(!Array.isArray(project.subcontractors)){
+
+        project.subcontractors = [];
+
+        persist();
+
+    }
+
+    return project.subcontractors;
+}
+
+
 function renderSubcontractorsSection(project){
 
     const content =
         document.getElementById("projectSectionContent");
 
     if(!content){
+
         console.error(
             "projectSectionContent not found"
         );
+
         return;
     }
+
+
+    const subcontractors =
+        ensureSubcontractors(project);
+
+
+    /* =========================
+       KPI CALCULATIONS
+    ========================= */
+
+    const totalSubcontractors =
+        subcontractors.length;
+
+
+    const active =
+        subcontractors.filter(function(sub){
+
+            return sub.status === "Active";
+
+        }).length;
+
+
+    const completed =
+        subcontractors.filter(function(sub){
+
+            return sub.status === "Completed";
+
+        }).length;
+
+
+    const suspended =
+        subcontractors.filter(function(sub){
+
+            return sub.status === "Suspended";
+
+        }).length;
+
+
+    const totalContractAmount =
+        subcontractors.reduce(function(total, sub){
+
+            return total +
+                Number(sub.contractAmount || 0);
+
+        }, 0);
+
+
+    const totalPaid =
+        subcontractors.reduce(function(total, sub){
+
+            return total +
+                Number(sub.totalPaid || 0);
+
+        }, 0);
+
+
+    const balance =
+        totalContractAmount - totalPaid;
+
+
+    function money(value){
+
+        return "₦" +
+            Number(value || 0).toLocaleString(
+                "en-NG",
+                {
+                    minimumFractionDigits:2,
+                    maximumFractionDigits:2
+                }
+            );
+
+    }
+
 
     content.innerHTML = `
 
@@ -4711,33 +4805,263 @@ function renderSubcontractorsSection(project){
             <div class="project-section-header">
 
                 <div>
-                    <h3>👷‍♂️ Subcontractors</h3>
+
+                    <h3>
+                        👷‍♂️ Subcontractors
+                    </h3>
 
                     <p>
                         Subcontractor Management
                     </p>
+
                 </div>
 
             </div>
 
+
+            <!-- =========================
+                 KPI CARDS
+            ========================== -->
+
             <div style="
-                padding:60px;
+                display:grid;
+                grid-template-columns:
+                    repeat(4, 1fr);
+                gap:15px;
+                margin-bottom:20px;
+            ">
+
+
+                <!-- TOTAL -->
+
+                <div style="
+                    background:#f8fafc;
+                    border:1px solid #e2e8f0;
+                    border-radius:12px;
+                    padding:18px;
+                ">
+
+                    <div style="
+                        font-size:13px;
+                        color:#64748b;
+                        margin-bottom:8px;
+                    ">
+                        Total Subcontractors
+                    </div>
+
+                    <div style="
+                        font-size:28px;
+                        font-weight:700;
+                        color:#0f172a;
+                    ">
+                        ${totalSubcontractors}
+                    </div>
+
+                </div>
+
+
+                <!-- ACTIVE -->
+
+                <div style="
+                    background:#f0fdf4;
+                    border:1px solid #bbf7d0;
+                    border-radius:12px;
+                    padding:18px;
+                ">
+
+                    <div style="
+                        font-size:13px;
+                        color:#166534;
+                        margin-bottom:8px;
+                    ">
+                        🟢 Active
+                    </div>
+
+                    <div style="
+                        font-size:28px;
+                        font-weight:700;
+                        color:#166534;
+                    ">
+                        ${active}
+                    </div>
+
+                </div>
+
+
+                <!-- COMPLETED -->
+
+                <div style="
+                    background:#eff6ff;
+                    border:1px solid #bfdbfe;
+                    border-radius:12px;
+                    padding:18px;
+                ">
+
+                    <div style="
+                        font-size:13px;
+                        color:#1d4ed8;
+                        margin-bottom:8px;
+                    ">
+                        ✅ Completed
+                    </div>
+
+                    <div style="
+                        font-size:28px;
+                        font-weight:700;
+                        color:#1d4ed8;
+                    ">
+                        ${completed}
+                    </div>
+
+                </div>
+
+
+                <!-- SUSPENDED -->
+
+                <div style="
+                    background:#fff7ed;
+                    border:1px solid #fed7aa;
+                    border-radius:12px;
+                    padding:18px;
+                ">
+
+                    <div style="
+                        font-size:13px;
+                        color:#c2410c;
+                        margin-bottom:8px;
+                    ">
+                        ⏸️ Suspended
+                    </div>
+
+                    <div style="
+                        font-size:28px;
+                        font-weight:700;
+                        color:#c2410c;
+                    ">
+                        ${suspended}
+                    </div>
+
+                </div>
+
+
+                <!-- CONTRACT AMOUNT -->
+
+                <div style="
+                    background:#f8fafc;
+                    border:1px solid #e2e8f0;
+                    border-radius:12px;
+                    padding:18px;
+                ">
+
+                    <div style="
+                        font-size:13px;
+                        color:#64748b;
+                        margin-bottom:8px;
+                    ">
+                        💰 Total Contract Amount
+                    </div>
+
+                    <div style="
+                        font-size:22px;
+                        font-weight:700;
+                        color:#0f172a;
+                    ">
+                        ${money(totalContractAmount)}
+                    </div>
+
+                </div>
+
+
+                <!-- PAID -->
+
+                <div style="
+                    background:#f0fdf4;
+                    border:1px solid #bbf7d0;
+                    border-radius:12px;
+                    padding:18px;
+                ">
+
+                    <div style="
+                        font-size:13px;
+                        color:#166534;
+                        margin-bottom:8px;
+                    ">
+                        💵 Total Paid
+                    </div>
+
+                    <div style="
+                        font-size:22px;
+                        font-weight:700;
+                        color:#166534;
+                    ">
+                        ${money(totalPaid)}
+                    </div>
+
+                </div>
+
+
+                <!-- BALANCE -->
+
+                <div style="
+                    background:#fefce8;
+                    border:1px solid #fde68a;
+                    border-radius:12px;
+                    padding:18px;
+                ">
+
+                    <div style="
+                        font-size:13px;
+                        color:#a16207;
+                        margin-bottom:8px;
+                    ">
+                        📊 Balance
+                    </div>
+
+                    <div style="
+                        font-size:22px;
+                        font-weight:700;
+                        color:#a16207;
+                    ">
+                        ${money(balance)}
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =========================
+                 EMPTY AREA
+                 FOR NEXT STEPS
+            ========================== -->
+
+            <div style="
+                background:#ffffff;
+                border:1px solid #e2e8f0;
+                border-radius:12px;
+                padding:40px;
                 text-align:center;
+                color:#64748b;
             ">
 
                 <div style="
-                    font-size:50px;
-                    margin-bottom:15px;
+                    font-size:40px;
+                    margin-bottom:10px;
                 ">
                     👷‍♂️
                 </div>
 
-                <h3>
-                    Subcontractors Module
+                <h3 style="
+                    color:#0f172a;
+                    margin-bottom:8px;
+                ">
+                    No Subcontractors Added
                 </h3>
 
                 <p>
-                    Module initialized successfully.
+                    Subcontractors will be added manually
+                    in the next step.
                 </p>
 
             </div>
