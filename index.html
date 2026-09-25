@@ -4682,6 +4682,65 @@ window.closeEquipmentViewModal = function(){
     }
 
 };
+    /* =====================================================
+   SUBCONTRACTORS MODULE
+   STEP 2
+===================================================== */
+
+function renderSubcontractorsSection(project){
+
+    const content =
+        document.getElementById("projectSectionContent");
+
+    if(!content){
+        console.error(
+            "projectSectionContent not found"
+        );
+        return;
+    }
+
+    content.innerHTML = `
+
+        <div class="project-section">
+
+            <div class="project-section-header">
+
+                <div>
+                    <h3>👷‍♂️ Subcontractors</h3>
+
+                    <p>
+                        Subcontractor Management
+                    </p>
+                </div>
+
+            </div>
+
+            <div style="
+                padding:60px;
+                text-align:center;
+            ">
+
+                <div style="
+                    font-size:50px;
+                    margin-bottom:15px;
+                ">
+                    👷‍♂️
+                </div>
+
+                <h3>
+                    Subcontractors Module
+                </h3>
+
+                <p>
+                    Module initialized successfully.
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+}
 window.renderEquipmentSection = function(project){
 
     ensureEquipment(project);
