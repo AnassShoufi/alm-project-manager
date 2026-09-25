@@ -2274,15 +2274,6 @@ if(contentPanel){
     contentPanel.style.display = "block";
 }
 
-/* =========================
-   DOCUMENTS
-========================= */
-
-if(section === "documents"){
-
-    renderDocumentsSection(project);
-
-    return;
 
 }
     /* =========================
@@ -8309,14 +8300,16 @@ function renderDrawingsPage(project){
 ========================= */
 
 showDashboard();
-
- /* =====================================================
-   DOCUMENTS MODULE
-   Folder System
+    /* =====================================================
+   DOCUMENTS MODULE - NEW
+   FOLDERS + FILE STORAGE + SEARCH
 ===================================================== */
 
 window.documentsCurrentFolder =
     window.documentsCurrentFolder || {};
+
+window.documentsSearchTerm =
+    window.documentsSearchTerm || {};
 
 
 /* =====================================================
@@ -8325,24 +8318,14 @@ window.documentsCurrentFolder =
 
 function ensureDocumentsFolders(project){
 
-    /*
-       IMPORTANT:
-       Create the Root only when the folder system
-       does not exist at all.
-
-       If the user deletes the Root and the array becomes
-       empty, we DO NOT recreate it.
-    */
-
     if(!Array.isArray(project.documentsFolders)){
 
         project.documentsFolders = [
 
             {
-                id: "root",
-                name: "Documents",
-                parentId: null,
-                files: []
+                id:"root",
+                name:"Documents",
+                parentId:null
             }
 
         ];
@@ -8351,7 +8334,294 @@ function ensureDocumentsFolders(project){
 
     }
 
+    if(
+        !project.documentsFolders.some(
+            folder =>
+                String(folder.id) === "root"
+        )
+    ){
+
+        project.documentsFolders.unshift({
+
+            id:"root",
+            name:"Documents",
+            parentId:null
+
+        });
+
+        persist();
+
+    }
+
+    if(!Array.isArray(project.documents)){
+
+        project.documents = [];
+
+        persist();
+
+    }
+
     return project.documentsFolders;
+
+}
+
+
+/* =====================================================
+   INDEXEDDB
+===================================================== */
+
+let documentsFileDBPromise = null;
+
+
+function getDocumentsFileDB(){
+
+    if(documentsFileDBPromise){
+
+        return documentsFileDBPromise;
+
+    }
+
+    documentsFileDBPromise =
+        new Promise(
+            function(resolve,reject){
+
+                if(!window.indexedDB){
+
+                    reject(
+                        new Error(
+                            "IndexedDB is not available in this browser."
+                        )
+                    );
+
+                    return;
+                }
+
+                const request =
+                    indexedDB.open(
+                        "ALM_Documents_Files",
+                        1
+                    );
+
+                request.onupgradeneeded =
+                function(event){
+
+                    const db =
+                        event.target.result;
+
+                    if(
+                        !db.objectStoreNames.contains(
+                            "files"
+                        )
+                    ){
+
+                        db.createObjectStore(
+                            "files",
+                            {
+                                keyPath:"id"
+                            }
+                        );
+
+                    }
+
+                };
+
+                request.onsuccess =
+                function(){
+
+                    resolve(
+                        request.result
+                    );
+
+                };
+
+                request.onerror =
+                function(){
+
+                    reject(
+                        request.error
+                    );
+
+                };
+
+            }
+        );
+
+    return documentsFileDBPromise;
+
+}
+
+
+/* =====================================================
+   SAVE FILE
+===================================================== */
+
+async function saveDocumentFile(
+    fileId,
+    file
+){
+
+    const db =
+        await getDocumentsFileDB();
+
+    return new Promise(
+        function(resolve,reject){
+
+            const transaction =
+                db.transaction(
+                    "files",
+                    "readwrite"
+                );
+
+            const store =
+                transaction.objectStore(
+                    "files"
+                );
+
+            store.put({
+
+                id:fileId,
+
+                name:file.name,
+
+                type:
+                    file.type ||
+                    "application/octet-stream",
+
+                blob:file
+
+            });
+
+            transaction.oncomplete =
+            function(){
+
+                resolve();
+
+            };
+
+            transaction.onerror =
+            function(){
+
+                reject(
+                    transaction.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   GET FILE
+===================================================== */
+
+async function getDocumentFile(fileId){
+
+    if(!fileId){
+
+        return null;
+
+    }
+
+    const db =
+        await getDocumentsFileDB();
+
+    return new Promise(
+        function(resolve,reject){
+
+            const transaction =
+                db.transaction(
+                    "files",
+                    "readonly"
+                );
+
+            const store =
+                transaction.objectStore(
+                    "files"
+                );
+
+            const request =
+                store.get(
+                    fileId
+                );
+
+            request.onsuccess =
+            function(){
+
+                resolve(
+                    request.result || null
+                );
+
+            };
+
+            request.onerror =
+            function(){
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   DELETE FILE
+===================================================== */
+
+async function deleteDocumentFile(fileId){
+
+    if(!fileId){
+
+        return;
+
+    }
+
+    const db =
+        await getDocumentsFileDB();
+
+    return new Promise(
+        function(resolve,reject){
+
+            const transaction =
+                db.transaction(
+                    "files",
+                    "readwrite"
+                );
+
+            const store =
+                transaction.objectStore(
+                    "files"
+                );
+
+            store.delete(
+                fileId
+            );
+
+            transaction.oncomplete =
+            function(){
+
+                resolve();
+
+            };
+
+            transaction.onerror =
+            function(){
+
+                reject(
+                    transaction.error
+                );
+
+            };
+
+        }
+    );
 
 }
 
@@ -8364,22 +8634,13 @@ function renderDocumentsSection(project){
 
     ensureDocumentsFolders(project);
 
-
     const folders =
-        Array.isArray(project.documentsFolders)
-        ? project.documentsFolders
-        : [];
-
-
-    const documents =
-        Array.isArray(project.documents)
-        ? project.documents
-        : [];
-
+        project.documentsFolders || [];
 
     const currentFolderId =
-        window.documentsCurrentFolder?.[project.id] ?? null;
-
+        window.documentsCurrentFolder[
+            project.id
+        ] ?? null;
 
     const currentFolder =
         folders.find(
@@ -8388,197 +8649,176 @@ function renderDocumentsSection(project){
                 String(currentFolderId)
         );
 
-
-    const rootFolder =
-        folders.find(
-            folder =>
-                String(folder.id) === "root"
-        );
-
-
-    /*
-       At Root level, show the actual Root folder name.
-       This allows the Root itself to be renamed.
-    */
-
     const currentFolderName =
         currentFolder
-        ? currentFolder.name
-        : (
-            rootFolder
-            ? rootFolder.name
-            : "Documents"
-        );
+            ? currentFolder.name
+            : "Documents";
 
-
-    /* =================================================
-       VISIBLE FOLDERS
-    ================================================= */
 
     const visibleFolders =
         folders.filter(
             folder =>
-
                 (folder.parentId || null) ===
                 (currentFolderId || null)
-
         );
 
-
-    /* =================================================
-       VISIBLE DOCUMENTS
-    ================================================= */
-
-    const visibleDocuments =
-
-        documents
-
-            .map(
-                (doc,index) => ({
-                    doc,
-                    index
-                })
-            )
-
-            .filter(
-                item =>
-
-                    String(
-                        item.doc.folderId ?? ""
-                    ) ===
-
-                    String(
-                        currentFolderId ?? ""
-                    )
-            );
-
-
-    /* =================================================
-       CONTENT ELEMENT
-    ================================================= */
 
     const content =
         document.getElementById(
             "projectSectionContent"
         );
 
-
     if(!content){
-
-        console.error(
-            "projectSectionContent not found."
-        );
 
         return;
 
     }
 
 
-    /* =================================================
-       HTML
-    ================================================= */
-
     content.innerHTML = `
 
-        <div class="section-header">
+        <div class="project-section">
 
-            <div>
 
-                <h2>
-                    ${escapeHTML(currentFolderName)}
-                </h2>
-
-                <p>
-                    Project documents and files
-                </p>
-
-            </div>
-
+            <!-- =========================
+                 HEADER
+            ========================= -->
 
             <div
+                class="project-section-header"
                 style="
                     display:flex;
-                    gap:10px;
+                    justify-content:space-between;
                     align-items:center;
+                    gap:15px;
                     flex-wrap:wrap;
                 "
             >
 
-                ${
-                    currentFolderId !== null
+                <div>
 
-                    ?
+                    <h3>
+                        Documents
+                    </h3>
 
-                    `
+                    <p>
+                        ${escapeHTML(project.name)}
+                    </p>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        gap:8px;
+                        flex-wrap:wrap;
+                    "
+                >
+
+                    ${
+                        currentFolderId !== null
+                        ?
+                        `
+                        <button
+                            type="button"
+                            onclick="
+                                event.stopPropagation();
+
+                                window.goBackDocumentsFolder(
+                                    '${project.id}'
+                                );
+                            "
+                            style="
+                                background:#64748b;
+                                color:white;
+                                border:none;
+                                border-radius:6px;
+                                padding:8px 14px;
+                                cursor:pointer;
+                            "
+                        >
+                            ← Back
+                        </button>
+                        `
+                        :
+                        ""
+                    }
+
+
                     <button
-                        class="btn btn-secondary"
+                        type="button"
                         onclick="
-                            window.goBackDocumentsFolder(
+                            event.stopPropagation();
+
+                            window.createDocumentsFolder(
                                 '${project.id}'
                             );
                         "
+                        style="
+                            background:#2563eb;
+                            color:white;
+                            border:none;
+                            border-radius:6px;
+                            padding:8px 14px;
+                            cursor:pointer;
+                        "
                     >
-                        ← Back
+                        + Add Folder
                     </button>
-                    `
-
-                    :
-
-                    ``
-                }
 
 
-                <button
-                    class="btn btn-primary"
-                    onclick="
-                        window.createDocumentsFolder(
-                            '${project.id}',
-                            ${
-                                currentFolderId === null
-                                ? "null"
-                                : `'${currentFolderId}'`
-                            }
-                        );
-                    "
-                >
+                    <button
+                        type="button"
+                        onclick="
+                            event.stopPropagation();
 
-                    📁 ${
-                        currentFolderId === null
-                        ? "New Main Folder"
-                        : "New Subfolder"
-                    }
+                            window.addDocument(
+                                '${project.id}'
+                            );
+                        "
+                        style="
+                            background:#16a34a;
+                            color:white;
+                            border:none;
+                            border-radius:6px;
+                            padding:8px 14px;
+                            cursor:pointer;
+                        "
+                    >
+                        + Add Document
+                    </button>
 
-                </button>
-
-
-                <button
-                    class="btn btn-primary"
-                    onclick="
-                        window.uploadDocument(
-                            '${project.id}'
-                        );
-                    "
-                >
-
-                    + Add Document
-
-                </button>
+                </div>
 
             </div>
 
-        </div>
+
+            <!-- =========================
+                 CURRENT FOLDER
+            ========================= -->
+
+            <div
+                style="
+                    margin-bottom:20px;
+                    padding:12px 15px;
+                    background:#f7f9fb;
+                    border:1px solid #e1e5ea;
+                    border-radius:8px;
+                    font-weight:bold;
+                "
+            >
+
+                📁
+                ${escapeHTML(currentFolderName)}
+
+            </div>
 
 
-        <!-- =================================================
-             FOLDERS
-        ================================================= -->
+            <!-- =========================
+                 FOLDERS
+            ========================= -->
 
-        ${
-            visibleFolders.length > 0
-
-            ?
-
-            `
             <div
                 style="
                     display:grid;
@@ -8587,72 +8827,83 @@ function renderDocumentsSection(project){
                             auto-fill,
                             minmax(220px,1fr)
                         );
-                    gap:16px;
-                    margin-bottom:25px;
+                    gap:15px;
+                    margin-bottom:20px;
                 "
             >
 
                 ${
-                    visibleFolders
+                    visibleFolders.length
 
-                        .map(
-                            folder => `
+                    ?
+
+                    visibleFolders.map(
+                        folder => `
+
+                        <div
+                            style="
+                                border:1px solid #e1e5ea;
+                                border-radius:10px;
+                                padding:20px;
+                                text-align:center;
+                                background:#ffffff;
+                            "
+                        >
 
                             <div
+                                onclick="
+                                    event.stopPropagation();
+
+                                    window.documentsCurrentFolder[
+                                        '${project.id}'
+                                    ] = '${folder.id}';
+
+                                    renderDocumentsSection(
+                                        projects.find(
+                                            p =>
+                                                String(p.id) ===
+                                                String('${project.id}')
+                                        )
+                                    );
+                                "
                                 style="
-                                    border:1px solid #ddd;
-                                    border-radius:10px;
-                                    padding:22px;
-                                    background:#fff;
-                                    box-shadow:
-                                        0 2px 6px
-                                        rgba(0,0,0,.05);
+                                    cursor:pointer;
                                 "
                             >
 
-                                <!-- FOLDER -->
                                 <div
-                                    onclick="
-                                        window.openDocumentsFolder(
-                                            '${project.id}',
-                                            '${folder.id}'
-                                        );
-                                    "
                                     style="
-                                        cursor:pointer;
+                                        font-size:42px;
+                                        margin-bottom:10px;
                                     "
                                 >
-
-                                    <div
-                                        style="
-                                            font-size:42px;
-                                        "
-                                    >
-                                        📁
-                                    </div>
-
-
-                                    <strong>
-                                        ${escapeHTML(
-                                            folder.name || "Folder"
-                                        )}
-                                    </strong>
-
+                                    📁
                                 </div>
 
+                                <strong>
+                                    ${escapeHTML(
+                                        folder.name
+                                    )}
+                                </strong>
 
-                                <!-- FOLDER ACTIONS -->
+                            </div>
+
+
+                            ${
+                                String(folder.id) !== "root"
+
+                                ?
+
+                                `
                                 <div
                                     style="
                                         margin-top:15px;
                                         display:flex;
                                         justify-content:center;
-                                        gap:8px;
-                                        flex-wrap:wrap;
+                                        gap:7px;
                                     "
                                 >
 
-                                    <!-- RENAME -->
                                     <button
                                         type="button"
                                         onclick="
@@ -8668,16 +8919,15 @@ function renderDocumentsSection(project){
                                             color:white;
                                             border:none;
                                             border-radius:6px;
-                                            padding:7px 14px;
+                                            padding:7px 12px;
                                             cursor:pointer;
                                             font-size:13px;
                                         "
                                     >
-                                        ✏ Rename
+                                        ✏ Edit
                                     </button>
 
 
-                                    <!-- DELETE -->
                                     <button
                                         type="button"
                                         onclick="
@@ -8693,7 +8943,7 @@ function renderDocumentsSection(project){
                                             color:white;
                                             border:none;
                                             border-radius:6px;
-                                            padding:7px 14px;
+                                            padding:7px 12px;
                                             cursor:pointer;
                                             font-size:13px;
                                         "
@@ -8702,245 +8952,165 @@ function renderDocumentsSection(project){
                                     </button>
 
                                 </div>
+                                `
 
-                            </div>
+                                :
 
-                        `
-                        )
+                                ""
 
-                        .join("")
+                            }
 
+                        </div>
+
+                    `
+                    ).join("")
+
+                    :
+
+                    ""
                 }
 
             </div>
-            `
-
-            :
-
-            ``
-        }
 
 
-        <!-- =================================================
-             DOCUMENTS
-        ================================================= -->
+            <!-- =========================
+                 SEARCH
+            ========================= -->
 
-        ${
-            visibleDocuments.length === 0
+            <div
+                style="
+                    display:flex;
+                    gap:10px;
+                    margin-bottom:15px;
+                    align-items:center;
+                "
+            >
 
-            ?
+                <input
+                    type="text"
+                    placeholder="🔎 Search document or file name..."
+                    value="${escapeHTML(
+                        window.documentsSearchTerm[
+                            project.id
+                        ] || ""
+                    )}"
+                    oninput="
+                        window.documentsSearchTerm[
+                            '${project.id}'
+                        ] = this.value;
 
-            `
-
-            <div class="empty">
-
-                <div
+                        filterDocumentsTable(
+                            this.value
+                        );
+                    "
                     style="
-                        font-size:48px;
+                        flex:1;
+                        padding:10px 12px;
+                        border:1px solid #d1d5db;
+                        border-radius:7px;
+                        font-size:14px;
+                        box-sizing:border-box;
                     "
                 >
-                    📂
-                </div>
 
 
-                <h3>
+                <button
+                    type="button"
+                    onclick="
+                        event.stopPropagation();
 
-                    ${
-                        currentFolderId === null
-                        ? "No documents yet"
-                        : "This folder is empty"
-                    }
+                        window.documentsSearchTerm[
+                            '${project.id}'
+                        ] = '';
 
-                </h3>
-
-
-                <p>
-
-                    ${
-                        currentFolderId === null
-
-                        ?
-
-                        "Create a folder or upload a document."
-
-                        :
-
-                        "Create a subfolder or upload a document into this folder."
-
-                    }
-
-                </p>
+                        filterDocumentsTable('');
+                    "
+                    style="
+                        background:#64748b;
+                        color:white;
+                        border:none;
+                        border-radius:7px;
+                        padding:10px 15px;
+                        cursor:pointer;
+                        font-size:13px;
+                    "
+                >
+                    Clear
+                </button>
 
             </div>
 
-            `
 
-            :
+            <!-- =========================
+                 DOCUMENT TABLE
+            ========================= -->
 
-            `
+            <div
+                style="
+                    overflow-x:auto;
+                    border:1px solid #e1e5ea;
+                    border-radius:10px;
+                "
+            >
 
-            <table>
+                <table
+                    style="
+                        width:100%;
+                        border-collapse:collapse;
+                        background:#ffffff;
+                    "
+                >
 
-                <thead>
+                    <thead>
 
-                    <tr>
+                        <tr
+                            style="
+                                background:#f7f9fb;
+                                text-align:left;
+                            "
+                        >
 
-                        <th>Document</th>
+                            <th style="padding:12px;">
+                                Document
+                            </th>
 
-                        <th>File Type</th>
+                            <th style="padding:12px;">
+                                File Type
+                            </th>
 
-                        <th>Uploaded By</th>
+                            <th style="padding:12px;">
+                                Uploaded By
+                            </th>
 
-                        <th>Date</th>
+                            <th style="padding:12px;">
+                                Date
+                            </th>
 
-                        <th>Actions</th>
+                            <th style="padding:12px;">
+                                Actions
+                            </th>
 
-                    </tr>
+                        </tr>
 
-                </thead>
-
-
-                <tbody>
-
-                    ${
-                        visibleDocuments
-
-                            .map(
-                                item => {
-
-                                    const doc =
-                                        item.doc;
-
-                                    const index =
-                                        item.index;
-
-
-                                    return `
-
-                                        <tr>
-
-                                            <td>
-
-                                                <strong>
-                                                    ${
-                                                        escapeHTML(
-                                                            doc.title ||
-                                                            doc.fileName ||
-                                                            "-"
-                                                        )
-                                                    }
-                                                </strong>
+                    </thead>
 
 
-                                                <div
-                                                    style="
-                                                        margin-top:4px;
-                                                        color:#64748b;
-                                                        font-size:13px;
-                                                    "
-                                                >
-                                                    ${
-                                                        escapeHTML(
-                                                            doc.fileName || ""
-                                                        )
-                                                    }
-                                                </div>
+                    <tbody>
 
-                                            </td>
-
-
-                                            <td>
-                                                ${
-                                                    escapeHTML(
-                                                        doc.fileType || "-"
-                                                    )
-                                                }
-                                            </td>
-
-
-                                            <td>
-                                                ${
-                                                    escapeHTML(
-                                                        doc.uploadedBy || "-"
-                                                    )
-                                                }
-                                            </td>
-
-
-                                            <td>
-                                                ${
-                                                    escapeHTML(
-                                                        doc.date || "-"
-                                                    )
-                                                }
-                                            </td>
-
-
-                                            <td>
-
-                                                <div class="actions">
-
-
-                                                    <button
-                                                        class="action-btn"
-                                                        onclick="
-                                                            window.viewDocument(
-                                                                '${project.id}',
-                                                                ${index}
-                                                            );
-                                                        "
-                                                    >
-                                                        View
-                                                    </button>
-
-
-                                                    <button
-                                                        class="action-btn"
-                                                        onclick="
-                                                            window.downloadDocument(
-                                                                '${project.id}',
-                                                                ${index}
-                                                            );
-                                                        "
-                                                    >
-                                                        Download
-                                                    </button>
-
-
-                                                    <button
-                                                        class="action-btn"
-                                                        onclick="
-                                                            window.deleteDocument(
-                                                                '${project.id}',
-                                                                ${index}
-                                                            );
-                                                        "
-                                                    >
-                                                        Delete
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-
-                                    `;
-
-                                }
+                        ${
+                            renderDocumentsRows(
+                                project,
+                                currentFolderId
                             )
+                        }
 
-                            .join("")
+                    </tbody>
 
-                    }
+                </table>
 
-                </tbody>
+            </div>
 
-            </table>
-
-            `
-
-        }
+        </div>
 
     `;
 
@@ -8948,11 +9118,341 @@ function renderDocumentsSection(project){
 
 
 /* =====================================================
-   CREATE DOCUMENT FOLDER
+   RENDER DOCUMENT ROWS
+===================================================== */
+
+function renderDocumentsRows(
+    project,
+    currentFolderId
+){
+
+    const documents =
+        (project.documents || []).filter(
+            document =>
+                String(
+                    document.folderId ?? null
+                ) ===
+                String(
+                    currentFolderId ?? null
+                )
+        );
+
+
+    if(!documents.length){
+
+        return `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    style="
+                        padding:25px;
+                        text-align:center;
+                        color:#7b8794;
+                    "
+                >
+                    📂 No documents in this folder yet.
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+
+    return documents.map(
+        function(document){
+
+            return `
+
+                <tr
+                    style="
+                        border-top:1px solid #e1e5ea;
+                    "
+                >
+
+                    <td
+                        style="
+                            padding:12px;
+                        "
+                    >
+
+                        <strong>
+                            ${escapeHTML(
+                                document.title ||
+                                document.fileName ||
+                                "-"
+                            )}
+                        </strong>
+
+                        <div
+                            style="
+                                margin-top:4px;
+                                color:#64748b;
+                                font-size:13px;
+                            "
+                        >
+                            ${escapeHTML(
+                                document.fileName || ""
+                            )}
+                        </div>
+
+                    </td>
+
+
+                    <td style="padding:12px;">
+
+                        ${escapeHTML(
+                            document.fileType || "-"
+                        )}
+
+                    </td>
+
+
+                    <td style="padding:12px;">
+
+                        ${escapeHTML(
+                            document.uploadedBy ||
+                            "-"
+                        )}
+
+                    </td>
+
+
+                    <td style="padding:12px;">
+
+                        ${escapeHTML(
+                            document.date || "-"
+                        )}
+
+                    </td>
+
+
+                    <td
+                        style="
+                            padding:12px;
+                            white-space:nowrap;
+                        "
+                    >
+
+                        <button
+                            type="button"
+                            onclick="
+                                event.stopPropagation();
+
+                                window.viewDocument(
+                                    '${project.id}',
+                                    '${document.id}'
+                                );
+                            "
+                            style="
+                                background:#2563eb;
+                                color:white;
+                                border:none;
+                                border-radius:6px;
+                                padding:7px 12px;
+                                cursor:pointer;
+                                font-size:13px;
+                            "
+                        >
+                            👁 View
+                        </button>
+
+
+                        <button
+                            type="button"
+                            onclick="
+                                event.stopPropagation();
+
+                                window.downloadDocument(
+                                    '${project.id}',
+                                    '${document.id}'
+                                );
+                            "
+                            style="
+                                background:#475569;
+                                color:white;
+                                border:none;
+                                border-radius:6px;
+                                padding:7px 12px;
+                                cursor:pointer;
+                                font-size:13px;
+                                margin-left:5px;
+                            "
+                        >
+                            ⬇ Download
+                        </button>
+
+
+                        <button
+                            type="button"
+                            onclick="
+                                event.stopPropagation();
+
+                                window.editDocument(
+                                    '${project.id}',
+                                    '${document.id}'
+                                );
+                            "
+                            style="
+                                background:#f59e0b;
+                                color:white;
+                                border:none;
+                                border-radius:6px;
+                                padding:7px 12px;
+                                cursor:pointer;
+                                font-size:13px;
+                                margin-left:5px;
+                            "
+                        >
+                            ✏ Edit
+                        </button>
+
+
+                        <button
+                            type="button"
+                            onclick="
+                                event.stopPropagation();
+
+                                window.deleteDocument(
+                                    '${project.id}',
+                                    '${document.id}'
+                                );
+                            "
+                            style="
+                                background:#dc2626;
+                                color:white;
+                                border:none;
+                                border-radius:6px;
+                                padding:7px 12px;
+                                cursor:pointer;
+                                font-size:13px;
+                                margin-left:5px;
+                            "
+                        >
+                            🗑 Delete
+                        </button>
+
+
+                        <button
+                            type="button"
+                            onclick="
+                                event.stopPropagation();
+
+                                window.uploadDocumentFile(
+                                    '${project.id}',
+                                    '${document.id}'
+                                );
+                            "
+                            style="
+                                background:#16a34a;
+                                color:white;
+                                border:none;
+                                border-radius:6px;
+                                padding:7px 12px;
+                                cursor:pointer;
+                                font-size:13px;
+                                margin-left:5px;
+                            "
+                        >
+                            ⬆ Upload
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    ).join("");
+
+}
+
+
+/* =====================================================
+   FAST SEARCH
+===================================================== */
+
+window.filterDocumentsTable =
+function(searchValue){
+
+    const searchTerm =
+        String(
+            searchValue || ""
+        )
+        .toLowerCase()
+        .trim();
+
+
+    const table =
+        document.querySelector(
+            "#projectSectionContent table"
+        );
+
+    if(!table) return;
+
+
+    const rows =
+        table.querySelectorAll(
+            "tbody tr"
+        );
+
+
+    rows.forEach(
+        function(row){
+
+            const cells =
+                row.querySelectorAll(
+                    "td"
+                );
+
+            if(cells.length < 2) return;
+
+
+            const documentName =
+                String(
+                    cells[0].textContent || ""
+                )
+                .toLowerCase();
+
+
+            const fileType =
+                String(
+                    cells[1].textContent || ""
+                )
+                .toLowerCase();
+
+
+            const matches =
+                !searchTerm ||
+                documentName.includes(
+                    searchTerm
+                ) ||
+                fileType.includes(
+                    searchTerm
+                );
+
+
+            row.style.display =
+                matches
+                    ? ""
+                    : "none";
+
+        }
+    );
+
+};
+
+
+/* =====================================================
+   CREATE FOLDER
 ===================================================== */
 
 window.createDocumentsFolder =
-function(projectId, parentId = null){
+function(projectId){
 
     const project =
         projects.find(
@@ -8961,33 +9461,31 @@ function(projectId, parentId = null){
                 String(projectId)
         );
 
-
-    if(!project){
-
-        console.error(
-            "DOCUMENT PROJECT NOT FOUND:",
-            projectId
-        );
-
-        return;
-
-    }
+    if(!project) return;
 
 
-    ensureDocumentsFolders(project);
+    ensureDocumentsFolders(
+        project
+    );
 
 
-    const folderName =
+    const currentFolderId =
+        window.documentsCurrentFolder[
+            project.id
+        ] ?? null;
+
+
+    const name =
         prompt(
             "Enter folder name:"
         );
 
 
-    if(folderName === null) return;
+    if(name === null) return;
 
 
     const cleanName =
-        folderName.trim();
+        name.trim();
 
 
     if(!cleanName){
@@ -9001,16 +9499,15 @@ function(projectId, parentId = null){
     }
 
 
-    const exists =
+    const duplicate =
         project.documentsFolders.some(
             folder =>
 
                 String(
                     folder.parentId ?? null
                 ) ===
-
                 String(
-                    parentId ?? null
+                    currentFolderId ?? null
                 )
 
                 &&
@@ -9023,7 +9520,7 @@ function(projectId, parentId = null){
         );
 
 
-    if(exists){
+    if(duplicate){
 
         alert(
             "A folder with this name already exists."
@@ -9034,10 +9531,10 @@ function(projectId, parentId = null){
     }
 
 
-    const newFolder = {
+    project.documentsFolders.push({
 
         id:
-            "documents-folder-" +
+            "document_folder_" +
             Date.now() +
             "-" +
             Math.random()
@@ -9048,42 +9545,29 @@ function(projectId, parentId = null){
             cleanName,
 
         parentId:
-            parentId,
+            currentFolderId ?? null
 
-        files:
-            []
-
-    };
-
-
-    project.documentsFolders.push(
-        newFolder
-    );
+    });
 
 
     persist();
 
-
-    window.documentsCurrentFolder[
-        project.id
-    ] =
-        parentId;
-
-
-    showProjectSection(
-        "documents",
-        project.id
+    renderDocumentsSection(
+        project
     );
 
 };
 
 
 /* =====================================================
-   RENAME DOCUMENT FOLDER
+   RENAME FOLDER
 ===================================================== */
 
 window.renameDocumentsFolder =
-function(projectId, folderId){
+function(
+    projectId,
+    folderId
+){
 
     const project =
         projects.find(
@@ -9092,11 +9576,23 @@ function(projectId, folderId){
                 String(projectId)
         );
 
-
     if(!project) return;
 
 
-    ensureDocumentsFolders(project);
+    ensureDocumentsFolders(
+        project
+    );
+
+
+    if(String(folderId) === "root"){
+
+        alert(
+            "The main Documents folder cannot be renamed."
+        );
+
+        return;
+
+    }
 
 
     const folder =
@@ -9155,7 +9651,6 @@ function(projectId, folderId){
                 String(
                     other.parentId ?? null
                 ) ===
-
                 String(
                     folder.parentId ?? null
                 )
@@ -9187,21 +9682,22 @@ function(projectId, folderId){
 
     persist();
 
-
-    showProjectSection(
-        "documents",
-        project.id
+    renderDocumentsSection(
+        project
     );
 
 };
 
 
 /* =====================================================
-   OPEN DOCUMENT FOLDER
+   OPEN FOLDER
 ===================================================== */
 
 window.openDocumentsFolder =
-function(projectId, folderId){
+function(
+    projectId,
+    folderId
+){
 
     const project =
         projects.find(
@@ -9210,35 +9706,12 @@ function(projectId, folderId){
                 String(projectId)
         );
 
-
     if(!project) return;
 
 
-    ensureDocumentsFolders(project);
-
-
-    /*
-       Clicking the Root always means
-       the main Documents level.
-    */
-
-    if(
-        String(folderId) === "root"
-    ){
-
-        window.documentsCurrentFolder[
-            project.id
-        ] = null;
-
-
-        showProjectSection(
-            "documents",
-            project.id
-        );
-
-        return;
-
-    }
+    ensureDocumentsFolders(
+        project
+    );
 
 
     const folder =
@@ -9251,9 +9724,8 @@ function(projectId, folderId){
 
     if(!folder){
 
-        console.error(
-            "DOCUMENT FOLDER NOT FOUND:",
-            folderId
+        alert(
+            "Folder not found."
         );
 
         return;
@@ -9267,16 +9739,20 @@ function(projectId, folderId){
         folder.id;
 
 
-    showProjectSection(
-        "documents",
+    window.documentsSearchTerm[
         project.id
+    ] = "";
+
+
+    renderDocumentsSection(
+        project
     );
 
 };
 
 
 /* =====================================================
-   BACK TO PARENT FOLDER
+   BACK
 ===================================================== */
 
 window.goBackDocumentsFolder =
@@ -9289,11 +9765,12 @@ function(projectId){
                 String(projectId)
         );
 
-
     if(!project) return;
 
 
-    ensureDocumentsFolders(project);
+    ensureDocumentsFolders(
+        project
+    );
 
 
     const currentId =
@@ -9317,38 +9794,35 @@ function(projectId){
         );
 
 
-    if(!currentFolder){
-
-        window.documentsCurrentFolder[
-            project.id
-        ] = null;
-
-    }
-
-    else{
-
-        window.documentsCurrentFolder[
-            project.id
-        ] =
-            currentFolder.parentId ?? null;
-
-    }
-
-
-    showProjectSection(
-        "documents",
+    window.documentsCurrentFolder[
         project.id
+    ] =
+        currentFolder
+            ? currentFolder.parentId ?? null
+            : null;
+
+
+    window.documentsSearchTerm[
+        project.id
+    ] = "";
+
+
+    renderDocumentsSection(
+        project
     );
 
 };
 
 
 /* =====================================================
-   DELETE DOCUMENT FOLDER
+   DELETE FOLDER
 ===================================================== */
 
 window.deleteDocumentsFolder =
-function(projectId, folderId){
+async function(
+    projectId,
+    folderId
+){
 
     const project =
         projects.find(
@@ -9357,11 +9831,23 @@ function(projectId, folderId){
                 String(projectId)
         );
 
-
     if(!project) return;
 
 
-    ensureDocumentsFolders(project);
+    ensureDocumentsFolders(
+        project
+    );
+
+
+    if(String(folderId) === "root"){
+
+        alert(
+            "The main Documents folder cannot be deleted."
+        );
+
+        return;
+
+    }
 
 
     const folder =
@@ -9383,63 +9869,15 @@ function(projectId, folderId){
     }
 
 
-    const isRoot =
-        String(folderId) === "root";
-
-
     const confirmed =
         confirm(
-
-            isRoot
-
-            ?
-
-            `Delete the Root Documents folder "${folder.name}"?\n\n` +
-            `ALL subfolders and ALL documents inside Documents will also be deleted.`
-
-            :
-
             `Delete folder "${folder.name}"?\n\n` +
-            `All subfolders and documents inside this folder will also be deleted.`
-
+            `All subfolders and documents inside it will also be deleted.`
         );
 
 
     if(!confirmed) return;
 
-
-    /* =================================================
-       DELETE ROOT
-       Delete EVERYTHING in Documents
-    ================================================= */
-
-    if(isRoot){
-
-        project.documentsFolders = [];
-
-        project.documents = [];
-
-        window.documentsCurrentFolder[
-            project.id
-        ] = null;
-
-
-        persist();
-
-
-        showProjectSection(
-            "documents",
-            project.id
-        );
-
-        return;
-
-    }
-
-
-    /* =================================================
-       DELETE NORMAL FOLDER + DESCENDANTS
-    ================================================= */
 
     const foldersToDelete =
         new Set([
@@ -9456,24 +9894,30 @@ function(projectId, folderId){
 
 
         project.documentsFolders.forEach(
-            child => {
+            function(child){
 
                 if(
 
                     foldersToDelete.has(
-                        String(child.parentId)
+                        String(
+                            child.parentId
+                        )
                     )
 
                     &&
 
                     !foldersToDelete.has(
-                        String(child.id)
+                        String(
+                            child.id
+                        )
                     )
 
                 ){
 
                     foldersToDelete.add(
-                        String(child.id)
+                        String(
+                            child.id
+                        )
                     );
 
                     changed = true;
@@ -9486,68 +9930,99 @@ function(projectId, folderId){
     }
 
 
-    /* DELETE DOCUMENTS */
-
-    if(
-        Array.isArray(
-            project.documents
-        )
-    ){
-
-        project.documents =
-
-            project.documents.filter(
-                doc =>
-
-                    !foldersToDelete.has(
-                        String(
-                            doc.folderId
-                        )
-                    )
-            );
-
-    }
-
-
-    /* DELETE FOLDERS */
-
-    project.documentsFolders =
-
-        project.documentsFolders.filter(
-            folder =>
-
-                !foldersToDelete.has(
+    const documentsToDelete =
+        (project.documents || [])
+        .filter(
+            document =>
+                foldersToDelete.has(
                     String(
-                        folder.id
+                        document.folderId
                     )
                 )
         );
 
 
-    /* GO TO PARENT */
+    try{
 
-    window.documentsCurrentFolder[
-        project.id
-    ] =
-        folder.parentId ?? null;
+        for(
+            const document
+            of documentsToDelete
+        ){
+
+            if(document.fileId){
+
+                await deleteDocumentFile(
+                    document.fileId
+                );
+
+            }
+
+        }
 
 
-    persist();
+        project.documents =
+            (project.documents || [])
+            .filter(
+                document =>
+                    !foldersToDelete.has(
+                        String(
+                            document.folderId
+                        )
+                    )
+            );
 
 
-    showProjectSection(
-        "documents",
-        project.id
-    );
+        project.documentsFolders =
+            project.documentsFolders.filter(
+                folder =>
+                    !foldersToDelete.has(
+                        String(
+                            folder.id
+                        )
+                    )
+            );
+
+
+        window.documentsCurrentFolder[
+            project.id
+        ] =
+            folder.parentId ?? null;
+
+
+        window.documentsSearchTerm[
+            project.id
+        ] = "";
+
+
+        persist();
+
+        renderDocumentsSection(
+            project
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Document folder deletion error:",
+            error
+        );
+
+        alert(
+            "The folder could not be deleted.\n\n" +
+            error.message
+        );
+
+    }
 
 };
 
 
 /* =====================================================
-   UPLOAD DOCUMENT
+   ADD DOCUMENT
 ===================================================== */
 
-window.uploadDocument =
+window.addDocument =
 function(projectId){
 
     const project =
@@ -9557,19 +10032,12 @@ function(projectId){
                 String(projectId)
         );
 
-
-    if(!project){
-
-        alert(
-            "Project not found."
-        );
-
-        return;
-
-    }
+    if(!project) return;
 
 
-    ensureDocumentsFolders(project);
+    ensureDocumentsFolders(
+        project
+    );
 
 
     const currentFolderId =
@@ -9602,92 +10070,295 @@ function(projectId){
         if(!file) return;
 
 
-        const title =
-            prompt(
-                "Document Title:",
-                file.name
-            );
+        window.processDocumentUpload(
+            project.id,
+            currentFolderId,
+            file
+        );
+
+    };
 
 
-        if(title === null) return;
+    input.click();
+
+};
 
 
-        const uploadedBy =
-            prompt(
-                "Uploaded By:",
-                "Project Manager"
-            );
+/* =====================================================
+   PROCESS NEW DOCUMENT
+===================================================== */
+
+window.processDocumentUpload =
+async function(
+    projectId,
+    folderId,
+    file
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project) return;
 
 
-        if(uploadedBy === null) return;
+    const title =
+        prompt(
+            "Document Title:",
+            file.name
+        );
 
 
-        const reader =
-            new FileReader();
+    if(title === null) return;
 
 
-        reader.onload =
-        function(e){
+    const uploadedBy =
+        prompt(
+            "Uploaded By:",
+            "Project Manager"
+        );
 
-            if(!project.documents){
 
-                project.documents = [];
+    if(uploadedBy === null) return;
+
+
+    try{
+
+        const fileId =
+            "document-file-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2,10);
+
+
+        await saveDocumentFile(
+            fileId,
+            file
+        );
+
+
+        if(!Array.isArray(
+            project.documents
+        )){
+
+            project.documents = [];
+
+        }
+
+
+        project.documents.push({
+
+            id:
+                "document_" +
+                Date.now() +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .substring(2,8),
+
+            folderId:
+                folderId ?? null,
+
+            title:
+                title.trim() ||
+                file.name,
+
+            fileName:
+                file.name,
+
+            fileType:
+                file.type ||
+                "Unknown",
+
+            uploadedBy:
+                uploadedBy.trim() ||
+                "Project Manager",
+
+            date:
+                new Date()
+                    .toISOString()
+                    .split("T")[0],
+
+            fileId:fileId,
+
+            createdAt:
+                new Date()
+                    .toISOString()
+
+        });
+
+
+        persist();
+
+
+        alert(
+            "Document uploaded successfully:\n\n" +
+            file.name +
+            "\n\nSize: " +
+            (
+                file.size /
+                1024 /
+                1024
+            ).toFixed(2) +
+            " MB"
+        );
+
+
+        renderDocumentsSection(
+            project
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Document upload error:",
+            error
+        );
+
+        alert(
+            "The document could not be saved.\n\n" +
+            error.message
+        );
+
+    }
+
+};
+
+
+/* =====================================================
+   UPLOAD / REPLACE FILE
+===================================================== */
+
+window.uploadDocumentFile =
+async function(
+    projectId,
+    documentId
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project) return;
+
+
+    const document =
+        (project.documents || [])
+        .find(
+            d =>
+                String(d.id) ===
+                String(documentId)
+        );
+
+
+    if(!document){
+
+        alert(
+            "Document not found."
+        );
+
+        return;
+
+    }
+
+
+    const input =
+        document.createElement(
+            "input"
+        );
+
+
+    input.type =
+        "file";
+
+
+    input.accept =
+        ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.dwg,.zip";
+
+
+    input.onchange =
+    async function(){
+
+        const file =
+            input.files[0];
+
+
+        if(!file) return;
+
+
+        try{
+
+            if(document.fileId){
+
+                await deleteDocumentFile(
+                    document.fileId
+                );
 
             }
 
 
-            project.documents.push({
+            const fileId =
+                "document-file-" +
+                Date.now() +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .substring(2,10);
 
-                id:
-                    Date.now() +
-                    "-" +
-                    Math.random()
-                        .toString(36)
-                        .substring(2,8),
 
-                title:
-                    title.trim() ||
-                    file.name,
+            await saveDocumentFile(
+                fileId,
+                file
+            );
 
-                fileName:
-                    file.name,
 
-                fileType:
-                    file.type ||
-                    "Unknown",
+            document.fileId =
+                fileId;
 
-                fileData:
-                    e.target.result,
+            document.fileName =
+                file.name;
 
-                uploadedBy:
-                    uploadedBy.trim() ||
-                    "Project Manager",
-
-                date:
-                    new Date()
-                        .toISOString()
-                        .split("T")[0],
-
-                folderId:
-                    currentFolderId
-
-            });
+            document.fileType =
+                file.type ||
+                "Unknown";
 
 
             persist();
 
 
-            showProjectSection(
-                "documents",
-                project.id
+            alert(
+                "Document file replaced successfully:\n\n" +
+                file.name
             );
 
-        };
 
+            renderDocumentsSection(
+                project
+            );
 
-        reader.readAsDataURL(
-            file
-        );
+        }
+        catch(error){
+
+            console.error(
+                "Document replacement error:",
+                error
+            );
+
+            alert(
+                "The document file could not be replaced.\n\n" +
+                error.message
+            );
+
+        }
 
     };
 
@@ -9702,7 +10373,10 @@ function(projectId){
 ===================================================== */
 
 window.viewDocument =
-function(projectId,index){
+async function(
+    projectId,
+    documentId
+){
 
     const project =
         projects.find(
@@ -9711,16 +10385,22 @@ function(projectId,index){
                 String(projectId)
         );
 
+    if(!project) return;
 
-    if(
-        !project ||
-        !Array.isArray(
-            project.documents
-        )
-    ){
+
+    const document =
+        (project.documents || [])
+        .find(
+            d =>
+                String(d.id) ===
+                String(documentId)
+        );
+
+
+    if(!document){
 
         alert(
-            "Project or documents not found."
+            "Document not found."
         );
 
         return;
@@ -9728,17 +10408,10 @@ function(projectId,index){
     }
 
 
-    const doc =
-        project.documents[index];
-
-
-    if(
-        !doc ||
-        !doc.fileData
-    ){
+    if(!document.fileId){
 
         alert(
-            "No file is attached to this document."
+            "No file attached to this document."
         );
 
         return;
@@ -9746,86 +10419,62 @@ function(projectId,index){
     }
 
 
-    const parts =
-        doc.fileData.split(",");
+    try{
+
+        const record =
+            await getDocumentFile(
+                document.fileId
+            );
 
 
-    if(parts.length < 2){
+        if(!record){
+
+            alert(
+                "Document file was not found."
+            );
+
+            return;
+
+        }
+
+
+        const url =
+            URL.createObjectURL(
+                record.blob
+            );
+
+
+        window.open(
+            url,
+            "_blank"
+        );
+
+
+        setTimeout(
+            function(){
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            60000
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Document view error:",
+            error
+        );
 
         alert(
-            "Invalid file data."
+            "The document could not be opened.\n\n" +
+            error.message
         );
-
-        return;
 
     }
-
-
-    const mimeType =
-
-        parts[0]
-            .match(
-                /data:(.*?);base64/
-            )?.[1]
-
-        ||
-
-        doc.fileType
-
-        ||
-
-        "application/octet-stream";
-
-
-    const byteCharacters =
-        atob(
-            parts[1]
-        );
-
-
-    const byteNumbers =
-        new Array(
-            byteCharacters.length
-        );
-
-
-    for(
-        let i = 0;
-        i < byteCharacters.length;
-        i++
-    ){
-
-        byteNumbers[i] =
-            byteCharacters.charCodeAt(i);
-
-    }
-
-
-    const byteArray =
-        new Uint8Array(
-            byteNumbers
-        );
-
-
-    const blob =
-        new Blob(
-            [byteArray],
-            {
-                type: mimeType
-            }
-        );
-
-
-    const blobURL =
-        URL.createObjectURL(
-            blob
-        );
-
-
-    window.open(
-        blobURL,
-        "_blank"
-    );
 
 };
 
@@ -9835,7 +10484,10 @@ function(projectId,index){
 ===================================================== */
 
 window.downloadDocument =
-function(projectId,index){
+async function(
+    projectId,
+    documentId
+){
 
     const project =
         projects.find(
@@ -9844,16 +10496,22 @@ function(projectId,index){
                 String(projectId)
         );
 
+    if(!project) return;
 
-    if(
-        !project ||
-        !Array.isArray(
-            project.documents
-        )
-    ){
+
+    const document =
+        (project.documents || [])
+        .find(
+            d =>
+                String(d.id) ===
+                String(documentId)
+        );
+
+
+    if(!document){
 
         alert(
-            "Project or documents not found."
+            "Document not found."
         );
 
         return;
@@ -9861,17 +10519,10 @@ function(projectId,index){
     }
 
 
-    const doc =
-        project.documents[index];
-
-
-    if(
-        !doc ||
-        !doc.fileData
-    ){
+    if(!document.fileId){
 
         alert(
-            "No file is attached to this document."
+            "No file attached to this document."
         );
 
         return;
@@ -9879,31 +10530,177 @@ function(projectId,index){
     }
 
 
-    const link =
-        document.createElement(
-            "a"
+    try{
+
+        const record =
+            await getDocumentFile(
+                document.fileId
+            );
+
+
+        if(!record){
+
+            alert(
+                "Document file was not found."
+            );
+
+            return;
+
+        }
+
+
+        const url =
+            URL.createObjectURL(
+                record.blob
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            document.fileName ||
+            record.name ||
+            "Document";
+
+
+        document.body.appendChild(
+            link
         );
 
 
-    link.href =
-        doc.fileData;
+        link.click();
 
 
-    link.download =
-        doc.fileName ||
-        "Document";
+        link.remove();
 
 
-    document.body.appendChild(
-        link
-    );
+        setTimeout(
+            function(){
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            1000
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Document download error:",
+            error
+        );
+
+        alert(
+            "The document could not be downloaded.\n\n" +
+            error.message
+        );
+
+    }
+
+};
 
 
-    link.click();
+/* =====================================================
+   EDIT DOCUMENT
+===================================================== */
+
+window.editDocument =
+function(
+    projectId,
+    documentId
+){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project) return;
 
 
-    document.body.removeChild(
-        link
+    const document =
+        (project.documents || [])
+        .find(
+            d =>
+                String(d.id) ===
+                String(documentId)
+        );
+
+
+    if(!document){
+
+        alert(
+            "Document not found."
+        );
+
+        return;
+
+    }
+
+
+    const title =
+        prompt(
+            "Document Title:",
+            document.title || ""
+        );
+
+
+    if(title === null) return;
+
+
+    const uploadedBy =
+        prompt(
+            "Uploaded By:",
+            document.uploadedBy ||
+            "Project Manager"
+        );
+
+
+    if(uploadedBy === null) return;
+
+
+    const cleanTitle =
+        title.trim();
+
+
+    if(!cleanTitle){
+
+        alert(
+            "Document Title cannot be empty."
+        );
+
+        return;
+
+    }
+
+
+    document.title =
+        cleanTitle;
+
+
+    document.uploadedBy =
+        uploadedBy.trim() ||
+        "Project Manager";
+
+
+    persist();
+
+
+    renderDocumentsSection(
+        project
     );
 
 };
@@ -9914,7 +10711,10 @@ function(projectId,index){
 ===================================================== */
 
 window.deleteDocument =
-function(projectId,index){
+async function(
+    projectId,
+    documentId
+){
 
     const project =
         projects.find(
@@ -9923,16 +10723,22 @@ function(projectId,index){
                 String(projectId)
         );
 
+    if(!project) return;
 
-    if(
-        !project ||
-        !Array.isArray(
-            project.documents
-        )
-    ){
+
+    const documentIndex =
+        (project.documents || [])
+        .findIndex(
+            d =>
+                String(d.id) ===
+                String(documentId)
+        );
+
+
+    if(documentIndex === -1){
 
         alert(
-            "Project or documents not found."
+            "Document not found."
         );
 
         return;
@@ -9940,37 +10746,62 @@ function(projectId,index){
     }
 
 
-    const doc =
-        project.documents[index];
-
-
-    if(!doc) return;
+    const document =
+        project.documents[
+            documentIndex
+        ];
 
 
     const confirmed =
         confirm(
-            `Are you sure you want to delete "${doc.fileName || doc.title || "this document"}"?`
+            `Delete document "${document.title || document.fileName || "this document"}"?\n\nThe attached file will also be deleted.`
         );
 
 
     if(!confirmed) return;
 
 
-    project.documents.splice(
-        index,
-        1
-    );
+    try{
+
+        if(document.fileId){
+
+            await deleteDocumentFile(
+                document.fileId
+            );
+
+        }
 
 
-    persist();
+        project.documents.splice(
+            documentIndex,
+            1
+        );
 
 
-    showProjectSection(
-        "documents",
-        project.id
-    );
+        persist();
+
+
+        renderDocumentsSection(
+            project
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Document deletion error:",
+            error
+        );
+
+        alert(
+            "The document could not be deleted.\n\n" +
+            error.message
+        );
+
+    }
 
 };
+
    /* =====================================================
    DRAWINGS MODULE - NEW
    STEP 1 - FOLDERS
