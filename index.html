@@ -21462,14 +21462,39 @@ function ensureBOQFolders(project){
 
 function createBOQFolder(projectId){
 
+    const project = projects.find(function(p){
+        return p.id === projectId;
+    });
+
+    if(!project){
+        alert("Project not found");
+        return;
+    }
+
+    ensureBOQFolders(project);
+
     const folderName = prompt("Enter folder name:");
 
     if(!folderName || !folderName.trim()){
         return;
     }
 
-    alert("Folder name: " + folderName.trim());
+    const currentFolderId =
+        window.boqCurrentFolder[projectId] || "root";
 
+    project.boqFolders.push({
+
+        id: "boq_folder_" + Date.now(),
+
+        name: folderName.trim(),
+
+        parentId: currentFolderId
+
+    });
+
+    persist();
+
+    renderBOQSection(project);
 }
 
 function openBOQFolder(projectId, folderId){
