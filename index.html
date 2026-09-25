@@ -21541,6 +21541,85 @@ function goBackBOQFolder(projectId){
 
     renderBOQSection(project);
 }
+    /* =========================
+   RENAME BOQ FOLDER
+========================= */
+
+window.renameBOQFolder = function(projectId, folderId){
+
+    const project = projects.find(function(p){
+        return String(p.id) === String(projectId);
+    });
+
+    if(!project) return;
+
+    ensureBOQFolders(project);
+
+    const folder = project.boqFolders.find(function(f){
+        return String(f.id) === String(folderId);
+    });
+
+    if(!folder) return;
+
+    const newName = prompt(
+        "Enter new folder name:",
+        folder.name
+    );
+
+    if(!newName || !newName.trim()) return;
+
+    folder.name = newName.trim();
+
+    persist();
+
+    showProjectSection("boq", projectId);
+};
+
+
+/* =========================
+   DELETE BOQ FOLDER
+========================= */
+
+window.deleteBOQFolder = function(projectId, folderId){
+
+    const project = projects.find(function(p){
+        return String(p.id) === String(projectId);
+    });
+
+    if(!project) return;
+
+    ensureBOQFolders(project);
+
+    if(String(folderId) === "root"){
+        alert("The main BOQ folder cannot be deleted.");
+        return;
+    }
+
+    const folder = project.boqFolders.find(function(f){
+        return String(f.id) === String(folderId);
+    });
+
+    if(!folder) return;
+
+    const confirmed = confirm(
+        'Are you sure you want to delete "' +
+        folder.name +
+        '"?'
+    );
+
+    if(!confirmed) return;
+
+    project.boqFolders =
+        project.boqFolders.filter(function(f){
+            return String(f.id) !== String(folderId);
+        });
+
+    persist();
+
+    window.boqCurrentFolder[projectId] = "root";
+
+    showProjectSection("boq", projectId);
+};
 function renderBOQSection(project){
 
     const content = document.getElementById("projectSectionContent");
