@@ -21645,6 +21645,16 @@ const childFolders =
     folders.filter(function(folder){
         return folder.parentId === currentFolderId;
     });
+    const visibleBoqs =
+    (project.boqs || []).filter(function(boq){
+
+        const boqFolderId =
+            boq.folderId || "root";
+
+        return String(boqFolderId) ===
+               String(currentFolderId);
+
+    });
     content.innerHTML = `
         <div class="module-header">
 
