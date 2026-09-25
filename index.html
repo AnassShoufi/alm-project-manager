@@ -21433,14 +21433,44 @@ function renderBOQSection(project){
     }
 
     content.innerHTML = `
-        <div style="padding:30px;">
-            <h2>BOQ</h2>
+        <div class="module-header">
 
-            <div style="margin-top:20px;">
-                <button onclick="alert('Add BOQ clicked')">
+            <div>
+                <h2>BOQ</h2>
+                <p>Bill of Quantities</p>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+
+                <button onclick="createBOQFolder('${project.id}')">
+                    + Add Folder
+                </button>
+
+                <button onclick="addBOQ('${project.id}')">
                     + Add BOQ
                 </button>
+
             </div>
+
+        </div>
+
+        <div style="margin:20px 0;">
+
+            <input
+                type="text"
+                placeholder="Search BOQ..."
+                oninput="filterBOQTable(this.value)"
+                style="width:100%; padding:10px;"
+            >
+
+        </div>
+
+        <div id="boqContent">
+
+            <p style="padding:20px;">
+                BOQ files will appear here.
+            </p>
+
         </div>
     `;
 }
