@@ -2622,10 +2622,9 @@ const project = projects.find(
 ========================= */
 
 window.viewBOQ = function(projectId,index){
-
-    const project = projects.find(
-        p => p.id === projectId
-    );
+const project = projects.find(
+    p => String(p.id) === String(projectId)
+);
 
     if(!project || !project.boqs) return;
 
@@ -21622,6 +21621,66 @@ window.deleteBOQFolder = function(projectId, folderId){
     persist();
 
     window.boqCurrentFolder[projectId] = "root";
+
+    showProjectSection("boq", projectId);
+};
+    /* =========================
+   DOWNLOAD BOQ
+========================= */
+
+window.downloadBOQ = function(projectId, index){
+
+    const project = projects.find(function(p){
+        return String(p.id) === String(projectId);
+    });
+
+    if(!project || !project.boqs) return;
+
+    const boq = project.boqs[index];
+
+    if(!boq || !boq.fileData){
+        alert("No file is attached to this BOQ.");
+        return;
+    }
+
+    const link = document.createElement("a");
+
+    link.href = boq.fileData;
+    link.download = boq.fileName || "BOQ";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+
+/* =========================
+   DELETE BOQ
+========================= */
+
+window.deleteBOQ = function(projectId, index){
+
+    const project = projects.find(function(p){
+        return String(p.id) === String(projectId);
+    });
+
+    if(!project || !project.boqs) return;
+
+    const boq = project.boqs[index];
+
+    if(!boq) return;
+
+    if(!confirm(
+        'Are you sure you want to delete "' +
+        boq.fileName +
+        '"?'
+    )){
+        return;
+    }
+
+    project.boqs.splice(index, 1);
+
+    persist();
 
     showProjectSection("boq", projectId);
 };
