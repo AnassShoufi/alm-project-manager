@@ -5295,25 +5295,49 @@ window.openSubcontractorWorkItems = function(
                     overflow-y:auto;
                  ">
 
-                <div style="
-                    display:flex;
-                    justify-content:flex-end;
-                    margin-bottom:15px;
-                ">
+               <div style="
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    margin-bottom:15px;
+">
 
-                    <button
-                        class="btn btn-primary"
-                        onclick="
-                            addSubcontractorWorkItem(
-                                '${project.id}',
-                                '${sub.id}'
-                            );
-                        "
-                    >
-                        + Add Work Item
-                    </button>
+    <button
+        type="button"
+        onclick="
+            exportSubcontractorWorkItemsExcel(
+                '${project.id}',
+                '${sub.id}'
+            );
+        "
+        style="
+            border:1px solid #1976b8;
+            background:#ffffff;
+            color:#1976b8;
+            border-radius:8px;
+            padding:10px 18px;
+            font-weight:600;
+            cursor:pointer;
+        "
+    >
+        📊 Export Excel
+    </button>
 
-                </div>
+
+    <button
+        class="btn btn-primary"
+        onclick="
+            addSubcontractorWorkItem(
+                '${project.id}',
+                '${sub.id}'
+            );
+        "
+    >
+        + Add Work Item
+    </button>
+
+</div>
 
 
                 <div id="subWorkItemsContainer">
@@ -8282,6 +8306,313 @@ function(projectId){
 /* =====================================================
    END SUBCONTRACTORS MODULE
 ===================================================== */
+    /* =====================================================
+   EXPORT SUBCONTRACTOR WORK ITEMS TO EXCEL
+===================================================== */
+
+window.exportSubcontractorWorkItemsExcel =
+function(
+    projectId,
+    subcontractorId
+){
+
+    const project =
+        projects.find(function(p){
+            return String(p.id) ===
+                String(projectId);
+        });
+
+    if(!project) return;
+
+
+    ensureSubcontractors(project);
+
+
+    const sub =
+        project.subcontractors.find(
+            function(item){
+                return String(item.id) ===
+                    String(subcontractorId);
+            }
+        );
+
+
+    if(!sub) return;
+
+
+    const workItems =
+        sub.workItems || [];
+
+
+    if(!workItems.length){
+
+        alert(
+            "There are no Work Items to export."
+        );
+
+        return;
+
+    }
+
+
+    const data = [];
+
+
+    workItems.forEach(
+        function(item){
+
+            let cumulative = 0;
+
+
+            /* =========================
+               NO STAGES
+            ========================= */
+
+            if(
+                !item.stages ||
+                !item.stages.length
+            ){
+
+                data.push({
+
+                    "Subcontractor":
+                        sub.name || "",
+
+                    "Trade":
+                        sub.trade || "",
+
+                    "Contract No.":
+                        sub.contractNo || "",
+
+                    "Work Item":
+                        item.name || "",
+
+                    "Expected Qty":
+                        Number(
+                            item.expectedQty || 0
+                        ),
+
+                    "Unit":
+                        item.unit || "",
+
+                    "Rate":
+                        Number(
+                            item.rate || 0
+                        ),
+
+                    "Stage":
+                        "",
+
+                    "Date":
+                        "",
+
+                    "Executed Qty":
+                        0,
+
+                    "Cumulative Qty":
+                        0,
+
+                    "Remaining Qty":
+                        Number(
+                            item.expectedQty || 0
+                        ),
+
+                    "Amount Due":
+                        0,
+
+                    "Paid":
+                        0,
+
+                    "Balance":
+                        0,
+
+                    "Invoice No.":
+                        ""
+
+                });
+
+                return;
+
+            }
+
+
+            /* =========================
+               STAGES
+            ========================= */
+
+            item.stages.forEach(
+                function(stage){
+
+                    cumulative +=
+                        Number(
+                            stage.executedQty || 0
+                        );
+
+
+                    const amountDue =
+                        Number(
+                            stage.executedQty || 0
+                        ) *
+                        Number(
+                            item.rate || 0
+                        );
+
+
+                    const paid =
+                        Number(
+                            stage.paid || 0
+                        );
+
+
+                    const balance =
+                        Math.max(
+                            0,
+                            amountDue - paid
+                        );
+
+
+                    const remaining =
+                        Math.max(
+                            0,
+                            Number(
+                                item.expectedQty || 0
+                            ) -
+                            cumulative
+                        );
+
+
+                    data.push({
+
+                        "Subcontractor":
+                            sub.name || "",
+
+                        "Trade":
+                            sub.trade || "",
+
+                        "Contract No.":
+                            sub.contractNo || "",
+
+                        "Work Item":
+                            item.name || "",
+
+                        "Expected Qty":
+                            Number(
+                                item.expectedQty || 0
+                            ),
+
+                        "Unit":
+                            item.unit || "",
+
+                        "Rate":
+                            Number(
+                                item.rate || 0
+                            ),
+
+                        "Stage":
+                            stage.stageNo || "",
+
+                        "Date":
+                            stage.date || "",
+
+                        "Executed Qty":
+                            Number(
+                                stage.executedQty || 0
+                            ),
+
+                        "Cumulative Qty":
+                            cumulative,
+
+                        "Remaining Qty":
+                            remaining,
+
+                        "Amount Due":
+                            amountDue,
+
+                        "Paid":
+                            paid,
+
+                        "Balance":
+                            balance,
+
+                        "Invoice No.":
+                            stage.invoiceNo || ""
+
+                    });
+
+                }
+            );
+
+        }
+    );
+
+
+    /* =========================
+       CREATE WORKSHEET
+    ========================= */
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            data
+        );
+
+
+    worksheet["!cols"] = [
+
+        {wch:28},
+        {wch:20},
+        {wch:18},
+        {wch:30},
+        {wch:15},
+        {wch:12},
+        {wch:16},
+        {wch:10},
+        {wch:15},
+        {wch:16},
+        {wch:18},
+        {wch:18},
+        {wch:18},
+        {wch:18},
+        {wch:18},
+        {wch:20}
+
+    ];
+
+
+    /* =========================
+       CREATE WORKBOOK
+    ========================= */
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Work Items"
+    );
+
+
+    /* =========================
+       FILE NAME
+    ========================= */
+
+    const safeSubName =
+        String(
+            sub.name || "Subcontractor"
+        )
+        .replace(
+            /[\\/:*?"<>|]/g,
+            "-"
+        );
+
+
+    XLSX.writeFile(
+        workbook,
+        `${safeSubName}-Work-Items.xlsx`
+    );
+
+};
     /* =====================================================
    EQUIPMENT MODULE
    STEP 5 - SAVE EQUIPMENT
