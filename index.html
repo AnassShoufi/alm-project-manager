@@ -6016,7 +6016,7 @@ function renderSubcontractorStages(
 
 
 /* =====================================================
-   ADD WORK ITEM
+   ADD / EDIT WORK ITEM
 ===================================================== */
 
 window.addSubcontractorWorkItem = function(
@@ -6061,6 +6061,8 @@ window.addSubcontractorWorkItem = function(
     }
 
 
+    /* REMOVE EXISTING MODAL */
+
     const existing =
         document.getElementById(
             "subcontractorWorkItemFormModal"
@@ -6070,6 +6072,8 @@ window.addSubcontractorWorkItem = function(
         existing.remove();
     }
 
+
+    /* CREATE MODAL */
 
     const modal =
         document.createElement("div");
@@ -6085,37 +6089,87 @@ window.addSubcontractorWorkItem = function(
         position:fixed;
         inset:0;
         z-index:100000;
-        background:rgba(15,23,42,.65);
+        background:rgba(15,23,42,.58);
         align-items:center;
         justify-content:center;
         padding:20px;
+        box-sizing:border-box;
     `;
 
 
     modal.innerHTML = `
 
-        <div class="modal"
-             style="
-                width:650px;
+        <div
+            style="
+                width:760px;
                 max-width:96%;
-             ">
+                max-height:92vh;
+                background:#ffffff;
+                border-radius:12px;
+                box-shadow:
+                    0 20px 60px
+                    rgba(15,23,42,.25);
+                overflow:hidden;
+            "
+        >
 
-            <div class="modal-header">
 
-                <h2>
-                    ${
-                        item
-                        ?
-                        "Edit Work Item"
-                        :
-                        "Add Work Item"
-                    }
-                </h2>
+            <!-- =========================
+                 HEADER
+            ========================= -->
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                padding:22px 30px;
+                border-bottom:1px solid #e2e8f0;
+                background:#ffffff;
+            ">
+
+                <div>
+
+                    <h2 style="
+                        margin:0;
+                        font-size:24px;
+                        font-weight:700;
+                        color:#17243a;
+                    ">
+                        ${
+                            item
+                            ?
+                            "Edit Work Item"
+                            :
+                            "Add Work Item"
+                        }
+                    </h2>
+
+
+                    <div style="
+                        margin-top:5px;
+                        font-size:13px;
+                        color:#64748b;
+                    ">
+                        Define the work item, expected quantity
+                        and agreed rate.
+                    </div>
+
+                </div>
+
 
                 <button
-                    class="close"
+                    type="button"
                     onclick="
                         closeSubcontractorWorkItemForm();
+                    "
+                    style="
+                        border:0;
+                        background:transparent;
+                        color:#64748b;
+                        font-size:28px;
+                        line-height:1;
+                        cursor:pointer;
+                        padding:4px 8px;
                     "
                 >
                     ×
@@ -6123,6 +6177,10 @@ window.addSubcontractorWorkItem = function(
 
             </div>
 
+
+            <!-- =========================
+                 BODY
+            ========================= -->
 
             <form
                 onsubmit="
@@ -6141,46 +6199,85 @@ window.addSubcontractorWorkItem = function(
                 "
             >
 
-                <div class="modal-body">
-
-                    <div class="form-grid">
-
-
-                        <div class="form-group"
-                             style="
-                                grid-column:1/-1;
-                             ">
-
-                            <label>
-                                Work Item *
-                            </label>
-
-                            <input
-                                id="subWorkItemName"
-                                type="text"
-                                required
-                                placeholder="
-                                    e.g. Pile Breaking
-                                "
-                                value="${
-                                    item
-                                    ?
-                                    escapeHTML(
-                                        item.name || ""
-                                    )
-                                    :
-                                    ""
-                                }"
-                            >
-
-                        </div>
+                <div style="
+                    padding:28px 30px;
+                    max-height:65vh;
+                    overflow-y:auto;
+                ">
 
 
-                        <div class="form-group">
+                    <!-- WORK ITEM -->
 
-                            <label>
+                    <div style="
+                        margin-bottom:22px;
+                    ">
+
+                        <label style="
+                            display:block;
+                            font-size:13px;
+                            font-weight:700;
+                            color:#475569;
+                            margin-bottom:8px;
+                        ">
+                            Work Item *
+                        </label>
+
+
+                        <input
+                            id="subWorkItemName"
+                            type="text"
+                            required
+                            placeholder="e.g. Pile Breaking"
+                            value="${
+                                item
+                                ?
+                                escapeHTML(
+                                    item.name || ""
+                                )
+                                :
+                                ""
+                            }"
+                            style="
+                                width:100%;
+                                box-sizing:border-box;
+                                padding:13px 14px;
+                                border:1px solid #cbd5e1;
+                                border-radius:8px;
+                                font-size:14px;
+                                color:#17243a;
+                                outline:none;
+                            "
+                        >
+
+                    </div>
+
+
+                    <!-- =========================
+                         QUANTITY / UNIT / RATE
+                    ========================= -->
+
+                    <div style="
+                        display:grid;
+                        grid-template-columns:
+                            1fr 1fr 1fr;
+                        gap:18px;
+                    ">
+
+
+                        <!-- EXPECTED QUANTITY -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                font-size:13px;
+                                font-weight:700;
+                                color:#475569;
+                                margin-bottom:8px;
+                            ">
                                 Expected Quantity *
                             </label>
+
 
                             <input
                                 id="subExpectedQty"
@@ -6197,50 +6294,136 @@ window.addSubcontractorWorkItem = function(
                                     :
                                     0
                                 }"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:13px 14px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                "
                             >
 
-                            <small style="
+
+                            <div style="
+                                margin-top:7px;
+                                font-size:11px;
                                 color:#64748b;
-                                display:block;
-                                margin-top:4px;
+                                line-height:1.4;
                             ">
-                                Enter once for the
-                                entire work item.
-                            </small>
+                                Enter once for the entire
+                                work item.
+                            </div>
 
                         </div>
 
 
-                        <div class="form-group">
+                        <!-- UNIT -->
 
-                            <label>
+                        <div>
+
+                            <label style="
+                                display:block;
+                                font-size:13px;
+                                font-weight:700;
+                                color:#475569;
+                                margin-bottom:8px;
+                            ">
                                 Unit *
                             </label>
 
-                            <input
+
+                            <select
                                 id="subWorkUnit"
-                                type="text"
                                 required
-                                placeholder="e.g. LF, m², m³, No."
-                                value="${
-                                    item
-                                    ?
-                                    escapeHTML(
-                                        item.unit || ""
-                                    )
-                                    :
-                                    ""
-                                }"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:13px 14px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    color:#17243a;
+                                    background:#ffffff;
+                                    cursor:pointer;
+                                "
                             >
+
+                                <option value="">
+                                    Select Unit
+                                </option>
+
+                                <option value="m">
+                                    m
+                                </option>
+
+                                <option value="LM">
+                                    LM
+                                </option>
+
+                                <option value="LF">
+                                    LF
+                                </option>
+
+                                <option value="m²">
+                                    m²
+                                </option>
+
+                                <option value="m³">
+                                    m³
+                                </option>
+
+                                <option value="No.">
+                                    No.
+                                </option>
+
+                                <option value="kg">
+                                    kg
+                                </option>
+
+                                <option value="ton">
+                                    ton
+                                </option>
+
+                                <option value="item">
+                                    item
+                                </option>
+
+                                <option value="lot">
+                                    lot
+                                </option>
+
+                                <option value="LS">
+                                    LS
+                                </option>
+
+                                <option value="day">
+                                    day
+                                </option>
+
+                                <option value="month">
+                                    month
+                                </option>
+
+                            </select>
 
                         </div>
 
 
-                        <div class="form-group">
+                        <!-- RATE -->
 
-                            <label>
+                        <div>
+
+                            <label style="
+                                display:block;
+                                font-size:13px;
+                                font-weight:700;
+                                color:#475569;
+                                margin-bottom:8px;
+                            ">
                                 Rate *
                             </label>
+
 
                             <input
                                 id="subWorkRate"
@@ -6248,6 +6431,7 @@ window.addSubcontractorWorkItem = function(
                                 min="0"
                                 step="0.01"
                                 required
+                                placeholder="0.00"
                                 value="${
                                     item
                                     ?
@@ -6257,8 +6441,52 @@ window.addSubcontractorWorkItem = function(
                                     :
                                     0
                                 }"
+                                style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:13px 14px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                "
                             >
 
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================
+                         INFORMATION BOX
+                    ========================= -->
+
+                    <div style="
+                        margin-top:24px;
+                        padding:15px 17px;
+                        background:#f8fafc;
+                        border:1px solid #e2e8f0;
+                        border-radius:8px;
+                    ">
+
+                        <div style="
+                            font-size:12px;
+                            font-weight:700;
+                            color:#334155;
+                            margin-bottom:5px;
+                        ">
+                            Work Item Control
+                        </div>
+
+                        <div style="
+                            font-size:12px;
+                            color:#64748b;
+                            line-height:1.6;
+                        ">
+                            Expected Quantity is fixed for this
+                            work item. Progress stages will be
+                            entered separately and the system will
+                            automatically calculate cumulative
+                            execution and remaining quantity.
                         </div>
 
                     </div>
@@ -6266,9 +6494,14 @@ window.addSubcontractorWorkItem = function(
                 </div>
 
 
+                <!-- =========================
+                     FOOTER
+                ========================= -->
+
                 <div style="
-                    padding:15px 20px;
+                    padding:18px 30px;
                     border-top:1px solid #e2e8f0;
+                    background:#ffffff;
                     display:flex;
                     justify-content:flex-end;
                     gap:10px;
@@ -6276,9 +6509,18 @@ window.addSubcontractorWorkItem = function(
 
                     <button
                         type="button"
-                        class="btn btn-secondary"
                         onclick="
                             closeSubcontractorWorkItemForm();
+                        "
+                        style="
+                            border:0;
+                            background:#e2e8f0;
+                            color:#334155;
+                            border-radius:8px;
+                            padding:12px 22px;
+                            font-size:14px;
+                            font-weight:700;
+                            cursor:pointer;
                         "
                     >
                         Cancel
@@ -6287,9 +6529,24 @@ window.addSubcontractorWorkItem = function(
 
                     <button
                         type="submit"
-                        class="btn btn-primary"
+                        style="
+                            border:0;
+                            background:#1976b8;
+                            color:#ffffff;
+                            border-radius:8px;
+                            padding:12px 24px;
+                            font-size:14px;
+                            font-weight:700;
+                            cursor:pointer;
+                        "
                     >
-                        Save Work Item
+                        ${
+                            item
+                            ?
+                            "Save Changes"
+                            :
+                            "Save Work Item"
+                        }
                     </button>
 
                 </div>
@@ -6303,23 +6560,49 @@ window.addSubcontractorWorkItem = function(
 
     document.body.appendChild(modal);
 
+
+    /* =========================
+       SET EXISTING UNIT
+    ========================= */
+
+    if(item){
+
+        const unitSelect =
+            document.getElementById(
+                "subWorkUnit"
+            );
+
+        if(unitSelect){
+
+            unitSelect.value =
+                item.unit || "";
+
+        }
+
+    }
+
 };
 
 
-window.editSubcontractorWorkItem = function(
-    projectId,
-    subcontractorId,
-    workItemId
-){
+/* =====================================================
+   CLOSE WORK ITEM FORM
+===================================================== */
 
-    addSubcontractorWorkItem(
-        projectId,
-        subcontractorId,
-        workItemId
-    );
+window.closeSubcontractorWorkItemForm =
+function(){
+
+    const modal =
+        document.getElementById(
+            "subcontractorWorkItemFormModal"
+        );
+
+    if(modal){
+
+        modal.remove();
+
+    }
 
 };
-
 
 window.closeSubcontractorWorkItemForm =
 function(){
