@@ -5453,6 +5453,7 @@ function renderSubcontractorsSection(project){
 
         <button
             type="button"
+            onclick="openSubcontractorForm(${project.id})"
             style="
                 border:0;
                 border-radius:8px;
@@ -5674,6 +5675,545 @@ function renderSubcontractorsSection(project){
         </div>
 
     `;
+}
+    /* =====================================================
+   SUBCONTRACTOR FORM
+   STEP 6
+===================================================== */
+
+function openSubcontractorForm(projectId){
+
+    const project = projects.find(function(p){
+
+        return String(p.id) === String(projectId);
+
+    });
+
+    if(!project) return;
+
+
+    const oldModal =
+        document.getElementById(
+            "subcontractorFormModal"
+        );
+
+    if(oldModal){
+
+        oldModal.remove();
+
+    }
+
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "subcontractorFormModal";
+
+
+    modal.innerHTML = `
+
+        <div style="
+            position:fixed;
+            inset:0;
+            background:rgba(15,23,42,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:99999;
+            padding:20px;
+        ">
+
+            <div style="
+                width:100%;
+                max-width:850px;
+                max-height:90vh;
+                overflow-y:auto;
+                background:#ffffff;
+                border-radius:14px;
+                box-shadow:0 20px 60px rgba(15,23,42,.25);
+            ">
+
+
+                <!-- HEADER -->
+
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    padding:20px 24px;
+                    border-bottom:1px solid #e2e8f0;
+                ">
+
+                    <div>
+
+                        <h2 style="
+                            margin:0;
+                            color:#0f172a;
+                            font-size:20px;
+                        ">
+                            👷‍♂️ Add Subcontractor
+                        </h2>
+
+                        <div style="
+                            margin-top:5px;
+                            color:#64748b;
+                            font-size:13px;
+                        ">
+                            Add subcontractor information
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        onclick="closeSubcontractorForm()"
+                        style="
+                            border:0;
+                            background:transparent;
+                            font-size:25px;
+                            color:#64748b;
+                            cursor:pointer;
+                        "
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <!-- FORM -->
+
+                <div style="
+                    padding:24px;
+                ">
+
+                    <div style="
+                        display:grid;
+                        grid-template-columns:1fr 1fr;
+                        gap:18px;
+                    ">
+
+
+                        <!-- TRADE -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Trade
+                            </label>
+
+                            <select
+                                id="subTrade"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                                <option value="">
+                                    Select Trade
+                                </option>
+
+                                <option value="Pile breakers">
+                                    Pile breakers
+                                </option>
+
+                                <option value="Carpenters">
+                                    Carpenters
+                                </option>
+
+                                <option value="Iron benders">
+                                    Iron benders
+                                </option>
+
+                                <option value="Masons">
+                                    Masons
+                                </option>
+
+                                <option value="Painters">
+                                    Painters
+                                </option>
+
+                                <option value="Steel Welder">
+                                    Steel Welder
+                                </option>
+
+                                <option value="Roofers">
+                                    Roofers
+                                </option>
+
+                                <option value="Aluminum windows">
+                                    Aluminum windows
+                                </option>
+
+                                <option value="Doors">
+                                    Doors
+                                </option>
+
+                                <option value="Mechanical">
+                                    Mechanical
+                                </option>
+
+                                <option value="Electrical">
+                                    Electrical
+                                </option>
+
+                                <option value="Plumbing">
+                                    Plumbing
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- NAME -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Subcontractor Name
+                            </label>
+
+                            <input
+                                id="subName"
+                                type="text"
+                                placeholder="Enter subcontractor name"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- CONTRACT NO -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Contract No.
+                            </label>
+
+                            <input
+                                id="subContractNo"
+                                type="text"
+                                placeholder="e.g. SC-001"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- CONTACT PERSON -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Contact Person
+                            </label>
+
+                            <input
+                                id="subContact"
+                                type="text"
+                                placeholder="Contact person name"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- PHONE -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Phone
+                            </label>
+
+                            <input
+                                id="subPhone"
+                                type="text"
+                                placeholder="Phone number"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- CONTRACT AMOUNT -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Contract Amount
+                            </label>
+
+                            <input
+                                id="subContractAmount"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- START DATE -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Start Date
+                            </label>
+
+                            <input
+                                id="subStartDate"
+                                type="date"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- COMPLETION DATE -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Completion Date
+                            </label>
+
+                            <input
+                                id="subCompletionDate"
+                                type="date"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div>
+
+                            <label style="
+                                display:block;
+                                margin-bottom:7px;
+                                font-size:13px;
+                                font-weight:600;
+                                color:#334155;
+                            ">
+                                Status
+                            </label>
+
+                            <select
+                                id="subStatus"
+                                style="
+                                    width:100%;
+                                    padding:11px 12px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:8px;
+                                    font-size:14px;
+                                    box-sizing:border-box;
+                                "
+                            >
+
+                                <option value="Active">
+                                    Active
+                                </option>
+
+                                <option value="Completed">
+                                    Completed
+                                </option>
+
+                                <option value="Suspended">
+                                    Suspended
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- BUTTONS -->
+
+                    <div style="
+                        display:flex;
+                        justify-content:flex-end;
+                        gap:10px;
+                        margin-top:25px;
+                        padding-top:20px;
+                        border-top:1px solid #e2e8f0;
+                    ">
+
+                        <button
+                            type="button"
+                            onclick="closeSubcontractorForm()"
+                            style="
+                                border:1px solid #cbd5e1;
+                                background:#ffffff;
+                                color:#475569;
+                                border-radius:8px;
+                                padding:10px 18px;
+                                font-weight:600;
+                                cursor:pointer;
+                            "
+                        >
+                            Cancel
+                        </button>
+
+
+                        <button
+                            type="button"
+                            style="
+                                border:0;
+                                background:#1976b8;
+                                color:#ffffff;
+                                border-radius:8px;
+                                padding:10px 20px;
+                                font-weight:600;
+                                cursor:pointer;
+                            "
+                        >
+                            Save Subcontractor
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(modal);
+
+}
+
+
+function closeSubcontractorForm(){
+
+    const modal =
+        document.getElementById(
+            "subcontractorFormModal"
+        );
+
+    if(modal){
+
+        modal.remove();
+
+    }
+
 }
 window.renderEquipmentSection = function(project){
 
