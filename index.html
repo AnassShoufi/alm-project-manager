@@ -4248,38 +4248,121 @@ window.openSubcontractorForm = function(
                     <div class="form-grid">
 
 
-                        <div class="form-group">
+                       <div class="form-group">
 
-                            <label>
-                                Trade *
-                            </label>
+    <label>
+        Trade *
+    </label>
 
-                            <select
-                                id="subTrade"
-                                required
-                            >
+    <select
+        id="subTrade"
+        required
+        onchange="handleSubcontractorTradeChange(this);"
+    >
 
-                                <option value="">
-                                    Select Trade
-                                </option>
+        <option value="">
+            Select Trade
+        </option>
 
-                                <option>Pile breakers</option>
-                                <option>Carpenters</option>
-                                <option>Iron benders</option>
-                                <option>Masons</option>
-                                <option>Painters</option>
-                                <option>Steel Welder</option>
-                                <option>Roofers</option>
-                                <option>Aluminum windows</option>
-                                <option>Doors</option>
-                                <option>Mechanical</option>
-                                <option>Electrical</option>
-                                <option>Plumbing</option>
+        <option value="Pile breakers">
+            Pile breakers
+        </option>
 
-                            </select>
+        <option value="Carpenters">
+            Carpenters
+        </option>
 
-                        </div>
+        <option value="Iron benders">
+            Iron benders
+        </option>
 
+        <option value="Masons">
+            Masons
+        </option>
+
+        <option value="Painters">
+            Painters
+        </option>
+
+        <option value="Steel Welder">
+            Steel Welder
+        </option>
+
+        <option value="Roofers">
+            Roofers
+        </option>
+
+        <option value="Aluminum windows">
+            Aluminum windows
+        </option>
+
+        <option value="Doors">
+            Doors
+        </option>
+
+        <option value="Mechanical">
+            Mechanical
+        </option>
+
+        <option value="Electrical">
+            Electrical
+        </option>
+
+        <option value="Plumbing">
+            Plumbing
+        </option>
+
+
+        <!-- CUSTOM TRADES WILL BE ADDED HERE -->
+
+        <option value="__ADD_NEW_TRADE__">
+            + Add New Trade
+        </option>
+
+    </select>
+
+
+    <div
+        id="newSubcontractorTradeBox"
+        style="
+            display:none;
+            margin-top:10px;
+        "
+    >
+
+        <input
+            id="newSubcontractorTrade"
+            type="text"
+            placeholder="Enter new trade name"
+            style="
+                width:100%;
+                box-sizing:border-box;
+                padding:11px 13px;
+                border:1px solid #cbd5e1;
+                border-radius:7px;
+            "
+        >
+
+        <button
+            type="button"
+            onclick="saveNewSubcontractorTrade();"
+            style="
+                margin-top:8px;
+                border:0;
+                background:#1976b8;
+                color:#ffffff;
+                padding:9px 16px;
+                border-radius:7px;
+                font-weight:600;
+                cursor:pointer;
+            "
+        >
+            Add Trade
+        </button>
+
+    </div>
+
+</div>
 
                         <div class="form-group">
 
@@ -4536,27 +4619,311 @@ window.openSubcontractorForm = function(
     `;
 
 
-    document.body.appendChild(modal);
+ document.body.appendChild(modal);
 
 
-    if(subcontractor){
+/* =====================================================
+   LOAD CUSTOM SUBCONTRACTOR TRADES
+===================================================== */
 
+const tradeSelect =
+    document.getElementById(
+        "subTrade"
+    );
+
+
+if(tradeSelect){
+
+    const customTrades =
+        getCustomSubcontractorTrades();
+
+
+    const addOption =
+        tradeSelect.querySelector(
+            'option[value="__ADD_NEW_TRADE__"]'
+        );
+
+
+    customTrades.forEach(
+        function(trade){
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                trade;
+
+
+            option.textContent =
+                trade;
+
+
+            if(addOption){
+
+                tradeSelect.insertBefore(
+                    option,
+                    addOption
+                );
+
+            }else{
+
+                tradeSelect.appendChild(
+                    option
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LOAD EXISTING SUBCONTRACTOR DATA
+===================================================== */
+
+if(subcontractor){
+
+    document.getElementById(
+        "subTrade"
+    ).value =
+        subcontractor.trade || "";
+
+
+    document.getElementById(
+        "subStatus"
+    ).value =
+        subcontractor.status || "Active";
+
+}
+
+};
+
+function getCustomSubcontractorTrades(){
+
+    try{
+
+        const trades =
+            JSON.parse(
+                localStorage.getItem(
+                    "alm_subcontractor_trades"
+                ) || "[]"
+            );
+
+        return Array.isArray(trades)
+            ? trades
+            : [];
+
+    }catch(error){
+
+        return [];
+
+    }
+
+}
+
+
+/* =====================================================
+   HANDLE ADD NEW TRADE
+===================================================== */
+
+window.handleSubcontractorTradeChange =
+function(select){
+
+    if(
+        select.value !==
+        "__ADD_NEW_TRADE__"
+    ){
+
+        return;
+
+    }
+
+
+    const box =
         document.getElementById(
-            "subTrade"
-        ).value =
-            subcontractor.trade || "Other";
+            "newSubcontractorTradeBox"
+        );
 
 
+    if(box){
+
+        box.style.display = "block";
+
+    }
+
+
+    const input =
         document.getElementById(
-            "subStatus"
-        ).value =
-            subcontractor.status || "Active";
+            "newSubcontractorTrade"
+        );
+
+
+    if(input){
+
+        input.focus();
 
     }
 
 };
 
 
+/* =====================================================
+   SAVE NEW TRADE
+===================================================== */
+
+window.saveNewSubcontractorTrade =
+function(){
+
+    const input =
+        document.getElementById(
+            "newSubcontractorTrade"
+        );
+
+
+    const select =
+        document.getElementById(
+            "subTrade"
+        );
+
+
+    if(!input || !select) return;
+
+
+    const newTrade =
+        input.value.trim();
+
+
+    if(!newTrade){
+
+        alert(
+            "Please enter the new trade name."
+        );
+
+        input.focus();
+
+        return;
+
+    }
+
+
+    const existingOptions =
+        Array.from(
+            select.options
+        ).map(function(option){
+
+            return option.value
+                .trim()
+                .toLowerCase();
+
+        });
+
+
+    if(
+        existingOptions.includes(
+            newTrade.toLowerCase()
+        )
+    ){
+
+        alert(
+            "This trade already exists."
+        );
+
+        input.focus();
+
+        return;
+
+    }
+
+
+    /* =========================
+       SAVE TO LOCAL STORAGE
+    ========================= */
+
+    const customTrades =
+        getCustomSubcontractorTrades();
+
+
+    customTrades.push(
+        newTrade
+    );
+
+
+    localStorage.setItem(
+        "alm_subcontractor_trades",
+        JSON.stringify(customTrades)
+    );
+
+
+    /* =========================
+       ADD TO DROPDOWN
+    ========================= */
+
+    const addOption =
+        select.querySelector(
+            'option[value="__ADD_NEW_TRADE__"]'
+        );
+
+
+    const newOption =
+        document.createElement(
+            "option"
+        );
+
+
+    newOption.value =
+        newTrade;
+
+
+    newOption.textContent =
+        newTrade;
+
+
+    if(addOption){
+
+        select.insertBefore(
+            newOption,
+            addOption
+        );
+
+    }else{
+
+        select.appendChild(
+            newOption
+        );
+
+    }
+
+
+    /* =========================
+       SELECT NEW TRADE
+    ========================= */
+
+    select.value =
+        newTrade;
+
+
+    input.value = "";
+
+
+    const box =
+        document.getElementById(
+            "newSubcontractorTradeBox"
+        );
+
+
+    if(box){
+
+        box.style.display =
+            "none";
+
+    }
+
+};
 window.closeSubcontractorForm = function(){
 
     const modal =
