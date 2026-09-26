@@ -6893,6 +6893,337 @@ function deleteSubcontractor(projectId, subcontractorId){
     );
 
 }
+    /* =====================================================
+   EDIT SUBCONTRACTOR
+   STEP 7C
+===================================================== */
+
+function editSubcontractor(projectId, subcontractorId){
+
+    const project = projects.find(function(p){
+        return String(p.id) === String(projectId);
+    });
+
+    if(!project) return;
+
+    ensureSubcontractors(project);
+
+    const sub = project.subcontractors.find(function(s){
+        return String(s.id) === String(subcontractorId);
+    });
+
+    if(!sub) return;
+
+
+    /* Open the same form */
+
+    openSubcontractorForm(projectId);
+
+
+    /* Change title */
+
+    const title =
+        document.querySelector(
+            "#subcontractorFormModal h2"
+        );
+
+    if(title){
+        title.innerHTML =
+            "✏️ Edit Subcontractor";
+    }
+
+
+    /* Change subtitle */
+
+    const subtitle =
+        document.querySelector(
+            "#subcontractorFormModal h2 + div"
+        );
+
+    if(subtitle){
+        subtitle.innerHTML =
+            "Update subcontractor information";
+    }
+
+
+    /* Fill existing values */
+
+    const trade =
+        document.getElementById("subTrade");
+
+    const name =
+        document.getElementById("subName");
+
+    const contractNo =
+        document.getElementById("subContractNo");
+
+    const contact =
+        document.getElementById("subContact");
+
+    const phone =
+        document.getElementById("subPhone");
+
+    const amount =
+        document.getElementById(
+            "subContractAmount"
+        );
+
+    const startDate =
+        document.getElementById("subStartDate");
+
+    const completionDate =
+        document.getElementById(
+            "subCompletionDate"
+        );
+
+    const status =
+        document.getElementById("subStatus");
+
+
+    if(trade)
+        trade.value = sub.trade || "";
+
+    if(name)
+        name.value = sub.name || "";
+
+    if(contractNo)
+        contractNo.value = sub.contractNo || "";
+
+    if(contact)
+        contact.value =
+            sub.contactPerson || "";
+
+    if(phone)
+        phone.value =
+            sub.phone || "";
+
+    if(amount)
+        amount.value =
+            sub.contractAmount || 0;
+
+    if(startDate)
+        startDate.value =
+            sub.startDate || "";
+
+    if(completionDate)
+        completionDate.value =
+            sub.completionDate || "";
+
+    if(status)
+        status.value =
+            sub.status || "Active";
+
+
+    /* Change Save button to Update */
+
+    const buttons =
+        document.querySelectorAll(
+            "#subcontractorFormModal button"
+        );
+
+    buttons.forEach(function(button){
+
+        if(
+            button.textContent
+                .trim()
+                .includes("Save Subcontractor")
+        ){
+
+            button.textContent =
+                "Update Subcontractor";
+
+            button.onclick = function(){
+
+                updateSubcontractor(
+                    projectId,
+                    subcontractorId
+                );
+
+            };
+
+        }
+
+    });
+
+}
+    /* =====================================================
+   UPDATE SUBCONTRACTOR
+   STEP 7C
+===================================================== */
+
+function updateSubcontractor(
+    projectId,
+    subcontractorId
+){
+
+    const project = projects.find(function(p){
+        return String(p.id) === String(projectId);
+    });
+
+    if(!project) return;
+
+    ensureSubcontractors(project);
+
+    const sub = project.subcontractors.find(
+        function(s){
+            return String(s.id) === String(subcontractorId);
+        }
+    );
+
+    if(!sub) return;
+
+
+    /* Read updated values */
+
+    const trade =
+        document.getElementById(
+            "subTrade"
+        ).value;
+
+    const name =
+        document.getElementById(
+            "subName"
+        ).value.trim();
+
+    const contractNo =
+        document.getElementById(
+            "subContractNo"
+        ).value.trim();
+
+    const contactPerson =
+        document.getElementById(
+            "subContact"
+        ).value.trim();
+
+    const phone =
+        document.getElementById(
+            "subPhone"
+        ).value.trim();
+
+    const contractAmount =
+        Number(
+            document.getElementById(
+                "subContractAmount"
+            ).value || 0
+        );
+
+    const startDate =
+        document.getElementById(
+            "subStartDate"
+        ).value;
+
+    const completionDate =
+        document.getElementById(
+            "subCompletionDate"
+        ).value;
+
+    const status =
+        document.getElementById(
+            "subStatus"
+        ).value;
+
+
+    /* Validation */
+
+    if(!trade){
+
+        alert("Please select a Trade.");
+
+        return;
+
+    }
+
+    if(!name){
+
+        alert(
+            "Please enter the Subcontractor Name."
+        );
+
+        return;
+
+    }
+
+    if(!contractNo){
+
+        alert(
+            "Please enter the Contract No."
+        );
+
+        return;
+
+    }
+
+    if(contractAmount < 0){
+
+        alert(
+            "Contract Amount cannot be negative."
+        );
+
+        return;
+
+    }
+
+
+    /* Update */
+
+    sub.trade =
+        trade;
+
+    sub.name =
+        name;
+
+    sub.contractNo =
+        contractNo;
+
+    sub.contactPerson =
+        contactPerson;
+
+    sub.phone =
+        phone;
+
+    sub.contractAmount =
+        contractAmount;
+
+    sub.startDate =
+        startDate;
+
+    sub.completionDate =
+        completionDate;
+
+    sub.status =
+        status;
+
+
+    /* Keep existing payments/work items */
+
+    sub.totalPaid =
+        Number(sub.totalPaid || 0);
+
+    sub.balance =
+        Math.max(
+            0,
+            contractAmount -
+            sub.totalPaid
+        );
+
+
+    /* Save */
+
+    persist();
+
+
+    /* Close */
+
+    closeSubcontractorForm();
+
+
+    /* Refresh */
+
+    renderSubcontractorsSection(
+        project
+    );
+
+}
 window.renderEquipmentSection = function(project){
 
     ensureEquipment(project);
