@@ -5637,34 +5637,257 @@ function renderSubcontractorsSection(project){
             </thead>
 
 
-            <tbody>
+           <tbody>
 
-                <tr>
+    ${
+        subcontractors.length === 0
 
-                    <td
-                        colspan="11"
-                        style="
-                            padding:45px 20px;
-                            text-align:center;
-                            color:#94a3b8;
-                            font-size:14px;
-                        "
-                    >
+        ?
 
-                        <div style="
-                            font-size:32px;
-                            margin-bottom:8px;
+        `
+        <tr>
+
+            <td
+                colspan="11"
+                style="
+                    padding:45px 20px;
+                    text-align:center;
+                    color:#94a3b8;
+                    font-size:14px;
+                "
+            >
+
+                <div style="
+                    font-size:32px;
+                    margin-bottom:8px;
+                ">
+                    👷‍♂️
+                </div>
+
+                No subcontractors registered yet.
+
+            </td>
+
+        </tr>
+        `
+
+        :
+
+        subcontractors.map(function(sub,index){
+
+            return `
+
+                <tr
+                    style="
+                        border-bottom:1px solid #edf1f5;
+                    "
+                >
+
+                    <td style="
+                        padding:13px 12px;
+                        text-align:center;
+                    ">
+                        ${index + 1}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                    ">
+                        <strong>
+                            ${sub.trade || "-"}
+                        </strong>
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                    ">
+                        ${sub.name || "-"}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                    ">
+                        ${sub.contractNo || "-"}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                    ">
+                        ${sub.contactPerson || "-"}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                    ">
+                        ${sub.phone || "-"}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                        text-align:right;
+                        font-weight:600;
+                    ">
+                        ₦${Number(
+                            sub.contractAmount || 0
+                        ).toLocaleString("en-NG",{
+                            minimumFractionDigits:2,
+                            maximumFractionDigits:2
+                        })}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                        text-align:center;
+                    ">
+                        ${sub.startDate || "-"}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                        text-align:center;
+                    ">
+                        ${sub.completionDate || "-"}
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                        text-align:center;
+                    ">
+
+                        <span style="
+                            display:inline-block;
+                            padding:5px 10px;
+                            border-radius:20px;
+                            font-size:12px;
+                            font-weight:600;
+
+                            ${
+                                sub.status === "Active"
+
+                                ?
+
+                                `
+                                background:#dcfce7;
+                                color:#166534;
+                                `
+
+                                :
+
+                                sub.status === "Completed"
+
+                                ?
+
+                                `
+                                background:#dbeafe;
+                                color:#1d4ed8;
+                                `
+
+                                :
+
+                                `
+                                background:#ffedd5;
+                                color:#c2410c;
+                                `
+                            }
                         ">
-                            👷‍♂️
-                        </div>
+                            ${sub.status || "Active"}
+                        </span>
 
-                        No subcontractors registered yet.
+                    </td>
+
+
+                    <td style="
+                        padding:13px 12px;
+                        text-align:center;
+                        white-space:nowrap;
+                    ">
+
+                        <button
+                            type="button"
+                            title="View"
+                            style="
+                                border:0;
+                                background:#eff6ff;
+                                color:#1976b8;
+                                border-radius:6px;
+                                padding:6px 9px;
+                                cursor:pointer;
+                                margin-right:4px;
+                            "
+                            onclick="
+                                viewSubcontractor(
+                                    '${project.id}',
+                                    '${sub.id}'
+                                )
+                            "
+                        >
+                            👁
+                        </button>
+
+
+                        <button
+                            type="button"
+                            title="Edit"
+                            style="
+                                border:0;
+                                background:#fef3c7;
+                                color:#92400e;
+                                border-radius:6px;
+                                padding:6px 9px;
+                                cursor:pointer;
+                                margin-right:4px;
+                            "
+                            onclick="
+                                editSubcontractor(
+                                    '${project.id}',
+                                    '${sub.id}'
+                                )
+                            "
+                        >
+                            ✏️
+                        </button>
+
+
+                        <button
+                            type="button"
+                            title="Delete"
+                            style="
+                                border:0;
+                                background:#fee2e2;
+                                color:#b91c1c;
+                                border-radius:6px;
+                                padding:6px 9px;
+                                cursor:pointer;
+                            "
+                            onclick="
+                                deleteSubcontractor(
+                                    '${project.id}',
+                                    '${sub.id}'
+                                )
+                            "
+                        >
+                            🗑️
+                        </button>
 
                     </td>
 
                 </tr>
 
-            </tbody>
+            `;
+
+        }).join("")
+    }
+
+</tbody>
 
         </table>
 
