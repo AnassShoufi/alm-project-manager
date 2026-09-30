@@ -3537,7 +3537,17 @@ function renderSubcontractorsSection(project){
                     >
                         + Add Subcontractor
                     </button>
-
+<button
+    type="button"
+    class="btn btn-secondary"
+    onclick="
+        exportSubcontractorRegisterExcel(
+            '${project.id}'
+        );
+    "
+>
+    📊 Export Excel
+</button>
                 </div>
 
             </div>
@@ -8980,6 +8990,610 @@ function(
     );
 
 };
+    /* =====================================================
+   EXPORT SUBCONTRACTOR REGISTER TO EXCEL
+   REGISTER + WORK ITEMS + PROGRESS STAGES
+===================================================== */
+
+function exportSubcontractorRegisterExcel(projectId){
+
+    const project = projects.find(function(p){
+        return String(p.id) === String(projectId);
+    });
+
+    if(!project){
+        alert("Project not found.");
+        return;
+    }
+
+    ensureSubcontractors(project);
+
+    const subcontractors =
+        project.subcontractors || [];
+
+    if(subcontractors.length === 0){
+        alert("No subcontractors available to export.");
+        return;
+    }
+
+    if(typeof XLSX === "undefined"){
+        alert("Excel library is not available.");
+        return;
+    }
+
+
+    /* =================================================
+       REGISTER SHEET
+    ================================================= */
+
+    const registerRows = [
+
+        [
+            "Subcontractor",
+            "Trade",
+            "Contract No.",
+            "Contact Person",
+            "Phone",
+            "Contract Amount",
+            "Executed Value",
+            "Total Paid",
+            "Unpaid Executed Value",
+            "Contract Balance",
+            "Start Date",
+            "Completion Date",
+            "Status"
+        ]
+
+    ];
+
+
+    subcontractors.forEach(function(sub, index){
+
+        const row =
+            index + 2;
+
+        registerRows.push([
+
+            sub.name || "",
+
+            sub.trade || "",
+
+            sub.contractNo || "",
+
+            sub.contactPerson || "",
+
+            sub.phone || "",
+
+            Number(
+                sub.contractAmount || 0
+            ),
+
+            {
+                t:"n",
+                f:
+                    `SUMIFS('Work Items'!$J:$J,'Work Items'!$A:$A,A${row})`,
+                v:0
+            },
+
+            {
+                t:"n",
+                f:
+                    `SUMIFS('Work Items'!$K:$K,'Work Items'!$A:$A,A${row})`,
+                v:0
+            },
+
+            {
+                t:"n",
+                f:
+                    `G${row}-H${row}`,
+                v:0
+            },
+
+            {
+                t:"n",
+                f:
+                    `F${row}-H${row}`,
+                v:0
+            },
+
+            sub.startDate || "",
+
+            sub.completionDate || "",
+
+            sub.status || ""
+
+        ]);
+
+    });
+
+
+    const wsRegister =
+        XLSX.utils.aoa_to_sheet(
+            registerRows
+        );
+
+
+    /* =================================================
+       WORK ITEMS SHEET
+    ================================================= */
+
+    const workItemRows = [
+
+        [
+            "Subcontractor",
+            "Work Item",
+            "Expected Qty",
+            "Unit",
+            "Rate",
+            "Executed Qty",
+            "Remaining Qty",
+            "Amount Due",
+            "Total Paid",
+            "Balance",
+            "Contract No."
+        ]
+
+    ];
+
+
+    let workItemExcelRow = 2;
+
+
+    subcontractors.forEach(function(sub){
+
+        const workItems =
+            Array.isArray(sub.workItems)
+            ? sub.workItems
+            : [];
+
+
+        workItems.forEach(function(item){
+
+            const row =
+                workItemExcelRow;
+
+
+            workItemRows.push([
+
+                sub.name || "",
+
+                item.name || "",
+
+                Number(
+                    item.expectedQty || 0
+                ),
+
+                item.unit || "",
+
+                Number(
+                    item.rate || 0
+                ),
+
+                {
+                    t:"n",
+                    f:
+                        `SUMIFS('Progress Stages'!$I:$I,` +
+                        `'Progress Stages'!$A:$A,A${row},` +
+                        `'Progress Stages'!$D:$D,B${row})`,
+                    v:
+                        Number(
+                            item.executedWork || 0
+                        )
+                },
+
+                {
+                    t:"n",
+                    f:
+                        `C${row}-F${row}`,
+                    v:0
+                },
+
+                {
+                    t:"n",
+                    f:
+                        `F${row}*E${row}`,
+                    v:
+                        Number(
+                            item.executedWork || 0
+                        ) *
+                        Number(
+                            item.rate || 0
+                        )
+                },
+
+                {
+                    t:"n",
+                    f:
+                        `SUMIFS('Progress Stages'!$N:$N,` +
+                        `'Progress Stages'!$A:$A,A${row},` +
+                        `'Progress Stages'!$D:$D,B${row})`,
+                    v:
+                        Number(
+                            item.paid || 0
+                        )
+                },
+
+                {
+                    t:"n",
+                    f:
+                        `H${row}-I${row}`,
+                    v:0
+                },
+
+                sub.contractNo || ""
+
+            ]);
+
+
+            workItemExcelRow++;
+
+        });
+
+    });
+
+
+    const wsWorkItems =
+        XLSX.utils.aoa_to_sheet(
+            workItemRows
+        );
+
+
+    /* =================================================
+       PROGRESS STAGES SHEET
+    ================================================= */
+
+    const progressRows = [
+
+        [
+            "Subcontractor",
+            "Contract No.",
+            "Stage No.",
+            "Work Item",
+            "Date",
+            "Expected Qty",
+            "Unit",
+            "Rate",
+            "Executed Qty",
+            "Cumulative Qty",
+            "Remaining Qty",
+            "Amount Due",
+            "Invoice No.",
+            "Paid",
+            "Balance",
+            "Invoice Attachment"
+        ]
+
+    ];
+
+
+    let progressExcelRow = 2;
+
+
+    subcontractors.forEach(function(sub){
+
+        const workItems =
+            Array.isArray(sub.workItems)
+            ? sub.workItems
+            : [];
+
+
+        workItems.forEach(function(item){
+
+            const stages =
+                Array.isArray(item.progressStages)
+                ? item.progressStages
+                : [];
+
+
+            /*
+               If there are no stages but the old
+               Executed Work value exists, create
+               one initial stage so nothing is lost.
+            */
+
+            if(stages.length === 0){
+
+                if(
+                    Number(item.executedWork || 0) > 0 ||
+                    Number(item.paid || 0) > 0 ||
+                    item.invoice
+                ){
+
+                    const row =
+                        progressExcelRow;
+
+                    progressRows.push([
+
+                        sub.name || "",
+
+                        sub.contractNo || "",
+
+                        1,
+
+                        item.name || "",
+
+                        "",
+
+                        Number(
+                            item.expectedQty || 0
+                        ),
+
+                        item.unit || "",
+
+                        Number(
+                            item.rate || 0
+                        ),
+
+                        Number(
+                            item.executedWork || 0
+                        ),
+
+                        {
+                            t:"n",
+                            f:
+                                `SUMIFS($I$2:I${row},` +
+                                `$A$2:A${row},A${row},` +
+                                `$D$2:D${row},D${row})`,
+                            v:
+                                Number(
+                                    item.executedWork || 0
+                                )
+                        },
+
+                        {
+                            t:"n",
+                            f:
+                                `F${row}-J${row}`,
+                            v:0
+                        },
+
+                        {
+                            t:"n",
+                            f:
+                                `I${row}*H${row}`,
+                            v:
+                                Number(
+                                    item.executedWork || 0
+                                ) *
+                                Number(
+                                    item.rate || 0
+                                )
+                        },
+
+                        item.invoice || "",
+
+                        Number(
+                            item.paid || 0
+                        ),
+
+                        {
+                            t:"n",
+                            f:
+                                `L${row}-N${row}`,
+                            v:0
+                        },
+
+                        ""
+
+                    ]);
+
+                    progressExcelRow++;
+
+                }
+
+                return;
+            }
+
+
+            /* =========================================
+               REAL PROGRESS STAGES
+            ========================================= */
+
+            stages.forEach(function(stage, stageIndex){
+
+                const row =
+                    progressExcelRow;
+
+
+                const executedQty =
+                    Number(
+                        stage.executedQty ||
+                        stage.quantity ||
+                        stage.executedWork ||
+                        0
+                    );
+
+
+                const paid =
+                    Number(
+                        stage.paid ||
+                        stage.paymentReceived ||
+                        stage.received ||
+                        0
+                    );
+
+
+                const invoiceNo =
+                    stage.invoiceNo ||
+                    stage.invoice ||
+                    "";
+
+
+                const stageDate =
+                    stage.date ||
+                    stage.stageDate ||
+                    "";
+
+
+                progressRows.push([
+
+                    sub.name || "",
+
+                    sub.contractNo || "",
+
+                    stage.stageNo ||
+                    stageIndex + 1,
+
+                    item.name || "",
+
+                    stageDate,
+
+                    Number(
+                        item.expectedQty || 0
+                    ),
+
+                    item.unit || "",
+
+                    Number(
+                        item.rate || 0
+                    ),
+
+                    executedQty,
+
+                    {
+                        t:"n",
+                        f:
+                            `SUMIFS($I$2:I${row},` +
+                            `$A$2:A${row},A${row},` +
+                            `$D$2:D${row},D${row})`,
+                        v:executedQty
+                    },
+
+                    {
+                        t:"n",
+                        f:
+                            `F${row}-J${row}`,
+                        v:0
+                    },
+
+                    {
+                        t:"n",
+                        f:
+                            `I${row}*H${row}`,
+                        v:
+                            executedQty *
+                            Number(
+                                item.rate || 0
+                            )
+                    },
+
+                    invoiceNo,
+
+                    paid,
+
+                    {
+                        t:"n",
+                        f:
+                            `L${row}-N${row}`,
+                        v:0
+                    },
+
+                    stage.invoiceAttachment ||
+                    stage.fileName ||
+                    ""
+
+                ]);
+
+
+                progressExcelRow++;
+
+            });
+
+        });
+
+    });
+
+
+    const wsProgress =
+        XLSX.utils.aoa_to_sheet(
+            progressRows
+        );
+
+
+    /* =================================================
+       FORMATTING
+    ================================================= */
+
+    [
+        wsRegister,
+        wsWorkItems,
+        wsProgress
+
+    ].forEach(function(ws){
+
+        ws["!cols"] = [
+
+            {wch:25},
+            {wch:25},
+            {wch:16},
+            {wch:20},
+            {wch:16},
+            {wch:18},
+            {wch:18},
+            {wch:16},
+            {wch:20},
+            {wch:18},
+            {wch:18},
+            {wch:18},
+            {wch:18},
+            {wch:16},
+            {wch:16},
+            {wch:30}
+
+        ];
+
+    });
+
+
+    /* =================================================
+       CREATE WORKBOOK
+    ================================================= */
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        wsRegister,
+        "Register"
+    );
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        wsWorkItems,
+        "Work Items"
+    );
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        wsProgress,
+        "Progress Stages"
+    );
+
+
+    /* =================================================
+       EXPORT
+    ================================================= */
+
+    const safeProjectName =
+        String(
+            project.name || "Project"
+        )
+        .replace(
+            /[\\/:*?"<>|]/g,
+            "_"
+        );
+
+
+    XLSX.writeFile(
+        workbook,
+        `Subcontractor_Register_${safeProjectName}.xlsx`
+    );
+
+}
     /* =====================================================
    EQUIPMENT MODULE
    STEP 5 - SAVE EQUIPMENT
