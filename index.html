@@ -39872,130 +39872,645 @@ async function(
 };
 
 
-/* =====================================================
-   EXPORT VARIATIONS TO EXCEL
-===================================================== */
+/* =========================================================
+   VARIATIONS MODULE - PROFESSIONAL EXCEL EXPORT
+   ExcelJS
+========================================================= */
 
 window.exportVariationsToExcel =
-function(projectId){
-
-    const project =
-        getVariationsProject(
-            projectId
-        );
-
-    if(!project){
-
-        alert(
-            "Project not found."
-        );
-
-        return;
-
-    }
-
-    if(
-        !project.variations ||
-        project.variations.length === 0
-    ){
-
-        alert(
-            "There are no variations to export."
-        );
-
-        return;
-
-    }
-
-    if(
-        typeof XLSX === "undefined"
-    ){
-
-        alert(
-            "Excel export library is not available."
-        );
-
-        return;
-
-    }
+async function(projectId){
 
     try{
 
-        let totalSubmitted = 0;
-        let totalWHT = 0;
-        let totalPayable = 0;
-        let totalReceived = 0;
+        const project =
+            getVariationsProject(
+                projectId
+            );
 
-        project.variations.forEach(
-            function(variation){
+        if(!project){
 
-                totalSubmitted +=
-                    parseVariationMoney(
-                        variation.submittedValue
+            alert(
+                "Project not found."
+            );
+
+            return;
+
+        }
+
+        if(
+            typeof ExcelJS === "undefined"
+        ){
+
+            alert(
+                "ExcelJS library is not loaded."
+            );
+
+            return;
+
+        }
+
+        const variations =
+            Array.isArray(project.variations)
+                ? project.variations
+                : [];
+
+        /* =====================================================
+           HELPERS
+        ===================================================== */
+
+        function money(value){
+
+            const n =
+                Number(value);
+
+            return Number.isFinite(n)
+                ? n
+                : 0;
+
+        }
+
+        function cleanFileName(name){
+
+            return String(
+                name || "Project"
+            )
+            .replace(
+                /[\\\/:*?"<>|]/g,
+                "_"
+            )
+            .trim();
+
+        }
+
+        function getVariationSubmitted(variation){
+
+            return money(
+                variation.submittedValue
+            );
+
+        }
+
+        function getVariationWHT(variation){
+
+            return money(
+                variation.whtAmount
+            );
+
+        }
+
+        function getVariationPayable(variation){
+
+            return Math.max(
+                0,
+                getVariationSubmitted(variation) -
+                getVariationWHT(variation)
+            );
+
+        }
+
+        function getStageInvoice(stage){
+
+            return money(
+                stage.invoiceValue
+            );
+
+        }
+
+        function getStageWHT(stage){
+
+            return money(
+                stage.whtAmount
+            );
+
+        }
+
+        function getStagePayable(stage){
+
+            return Math.max(
+                0,
+                getStageInvoice(stage) -
+                getStageWHT(stage)
+            );
+
+        }
+
+        function getStageReceived(stage){
+
+            return money(
+                stage.paymentReceived
+            );
+
+        }
+
+        function getStageBalance(stage){
+
+            return (
+                getStagePayable(stage) -
+                getStageReceived(stage)
+            );
+
+        }
+
+        function getVariationReceived(variation){
+
+            return (
+                variation.paymentStages || []
+            )
+            .reduce(
+                function(sum, stage){
+
+                    return (
+                        sum +
+                        getStageReceived(stage)
                     );
 
-                totalWHT +=
-                    parseVariationMoney(
-                        variation.whtAmount
-                    );
+                },
+                0
+            );
 
-                totalPayable +=
-                    parseVariationMoney(
-                        variation.payableAmount
-                    );
+        }
 
-                totalReceived +=
-                    parseVariationMoney(
-                        variation.paymentReceived
-                    );
+        function getVariationFinancialStatusExcel(
+            variation
+        ){
+
+            const submitted =
+                getVariationSubmitted(
+                    variation
+                );
+
+            const payable =
+                getVariationPayable(
+                    variation
+                );
+
+            const received =
+                getVariationReceived(
+                    variation
+                );
+
+            const stages =
+                variation.paymentStages || [];
+
+            const stageInvoiced =
+                stages.reduce(
+                    function(sum, stage){
+
+                        return (
+                            sum +
+                            getStageInvoice(stage)
+                        );
+
+                    },
+                    0
+                );
+
+            if(payable <= 0){
+
+                if(submitted > 0){
+                    return "Payable Not Set";
+                }
+
+                return "Not Paid";
+            }
+
+            if(received <= 0){
+
+                if(stageInvoiced > 0){
+                    return "Invoiced";
+                }
+
+                return "Not Paid";
+            }
+
+            if(received > payable){
+                return "Overpaid";
+            }
+
+            if(received >= payable){
+                return "Fully Paid";
+            }
+
+            return "Partially Paid";
+        }
+
+        /* =====================================================
+           COLORS
+        ===================================================== */
+
+        const COLORS = {
+
+            navy: "17365D",
+            blue: "1F4E78",
+            blueLight: "D9EAF7",
+
+            green: "70AD47",
+            greenLight: "E2F0D9",
+
+            orange: "ED7D31",
+            orangeLight: "FCE4D6",
+
+            red: "C00000",
+            redLight: "F4CCCC",
+
+            yellow: "FFC000",
+            yellowLight: "FFF2CC",
+
+            grey: "7F8C8D",
+            greyLight: "F2F2F2",
+
+            dark: "333333",
+            white: "FFFFFF"
+        };
+
+        const currencyFormat =
+            '₦#,##0.00;[Red]-₦#,##0.00';
+
+        /* =====================================================
+           WORKBOOK
+        ===================================================== */
+
+        const workbook =
+            new ExcelJS.Workbook();
+
+        workbook.creator =
+            "ALM Project Manager";
+
+        workbook.lastModifiedBy =
+            "ALM Project Manager";
+
+        workbook.created =
+            new Date();
+
+        workbook.modified =
+            new Date();
+
+        workbook.calcProperties = {
+
+            calcMode: "auto",
+
+            fullCalcOnLoad: true,
+
+            forceFullCalc: true
+
+        };
+
+        /* =====================================================
+           SHEET 1
+           VARIATION SUMMARY
+        ===================================================== */
+
+        const summary =
+            workbook.addWorksheet(
+                "Variation Summary"
+            );
+
+        summary.views = [
+            {
+                state: "frozen",
+                ySplit: 5
+            }
+        ];
+
+        summary.mergeCells("A1:F1");
+
+        summary.getCell("A1").value =
+            "VARIATION SUMMARY";
+
+        summary.getCell("A1").font = {
+
+            name: "Arial",
+
+            size: 20,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.white
+            }
+
+        };
+
+        summary.getCell("A1").fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor: {
+                argb: COLORS.navy
+            }
+
+        };
+
+        summary.getCell("A1").alignment = {
+
+            horizontal: "center",
+
+            vertical: "middle"
+
+        };
+
+        summary.getRow(1).height =
+            36;
+
+        summary.mergeCells("A2:F2");
+
+        summary.getCell("A2").value =
+            project.name ||
+            project.projectName ||
+            "Project";
+
+        summary.getCell("A2").font = {
+
+            name: "Arial",
+
+            size: 13,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.blue
+            }
+
+        };
+
+        summary.getCell("A2").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        summary.mergeCells("A3:F3");
+
+        summary.getCell("A3").value =
+            "Variation Register & Payment Tracking";
+
+        summary.getCell("A3").font = {
+
+            name: "Arial",
+
+            size: 10,
+
+            italic: true,
+
+            color: {
+                argb: COLORS.grey
+            }
+
+        };
+
+        summary.getCell("A3").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        /* =====================================================
+           SUMMARY DATA
+        ===================================================== */
+
+        const summaryItems = [
+
+            [
+                "Total Variations",
+                "count"
+            ],
+
+            [
+                "Total Submitted Value",
+                "submitted"
+            ],
+
+            [
+                "Total WHT",
+                "wht"
+            ],
+
+            [
+                "Total Payable",
+                "payable"
+            ],
+
+            [
+                "Total Stage Invoiced",
+                "stageInvoiced"
+            ],
+
+            [
+                "Total Payment Received",
+                "received"
+            ],
+
+            [
+                "Outstanding Variation Payable",
+                "outstanding"
+            ]
+
+        ];
+
+        const summaryStartRow = 5;
+
+        summaryItems.forEach(
+            function(item, index){
+
+                const rowNumber =
+                    summaryStartRow +
+                    index;
+
+                summary.getCell(
+                    rowNumber,
+                    1
+                ).value =
+                    item[0];
+
+                summary.getCell(
+                    rowNumber,
+                    1
+                ).font = {
+
+                    name: "Arial",
+
+                    size: 11,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.dark
+                    }
+
+                };
+
+                summary.getCell(
+                    rowNumber,
+                    1
+                ).fill = {
+
+                    type: "pattern",
+
+                    pattern: "solid",
+
+                    fgColor: {
+                        argb: COLORS.blueLight
+                    }
+
+                };
+
+                summary.getCell(
+                    rowNumber,
+                    2
+                ).font = {
+
+                    name: "Arial",
+
+                    size: 11,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.dark
+                    }
+
+                };
+
+                summary.getCell(
+                    rowNumber,
+                    2
+                ).alignment = {
+
+                    horizontal: "right",
+
+                    vertical: "middle"
+
+                };
+
+                summary.getRow(
+                    rowNumber
+                ).height = 25;
 
             }
         );
 
-        const rows = [];
+        /* =====================================================
+           VARIATION REGISTER SHEET
+        ===================================================== */
 
-        rows.push([
-            "VARIATION REGISTER & PAYMENT TRACKING"
-        ]);
+        const register =
+            workbook.addWorksheet(
+                "Variation Register"
+            );
 
-        rows.push([
-            "Project",
+        register.views = [
+            {
+                state: "frozen",
+                ySplit: 4
+            }
+        ];
+
+        register.mergeCells("A1:P1");
+
+        register.getCell("A1").value =
+            "VARIATION REGISTER";
+
+        register.getCell("A1").font = {
+
+            name: "Arial",
+
+            size: 18,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.white
+            }
+
+        };
+
+        register.getCell("A1").fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor: {
+                argb: COLORS.navy
+            }
+
+        };
+
+        register.getCell("A1").alignment = {
+
+            horizontal: "center",
+
+            vertical: "middle"
+
+        };
+
+        register.getRow(1).height = 32;
+
+        register.mergeCells("A2:P2");
+
+        register.getCell("A2").value =
             project.name ||
             project.projectName ||
-            ""
-        ]);
+            "Project";
 
-        rows.push([
-            "Total Submitted Variations",
-            totalSubmitted
-        ]);
+        register.getCell("A2").font = {
 
-        rows.push([
-            "Total WHT",
-            totalWHT
-        ]);
+            name: "Arial",
 
-        rows.push([
-            "Total Payable Variations",
-            totalPayable
-        ]);
+            size: 12,
 
-        rows.push([
-            "Total Payment Received",
-            totalReceived
-        ]);
+            bold: true,
 
-        rows.push([
-            "Outstanding Variation Payable",
-            totalPayable -
-            totalReceived
-        ]);
+            color: {
+                argb: COLORS.blue
+            }
 
-        rows.push([]);
+        };
 
-        rows.push([
+        register.getCell("A2").alignment = {
 
-            "ROW TYPE",
+            horizontal: "center"
+
+        };
+
+        register.mergeCells("A3:P3");
+
+        register.getCell("A3").value =
+            "All financial calculations are maintained as Excel formulas.";
+
+        register.getCell("A3").font = {
+
+            name: "Arial",
+
+            size: 10,
+
+            italic: true,
+
+            color: {
+                argb: COLORS.grey
+            }
+
+        };
+
+        register.getCell("A3").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        /* =====================================================
+           REGISTER HEADERS
+        ===================================================== */
+
+        const registerHeaderRow = 4;
+
+        const registerFirstRow = 5;
+
+        const registerHeaders = [
+
+            "REF.",
 
             "VARIATION NO.",
 
@@ -40019,6 +40534,223 @@ function(projectId){
 
             "FINANCIAL STATUS",
 
+            "STAGE INVOICED",
+
+            "STAGE WHT",
+
+            "STAGE PAYABLE",
+
+            "STAGE BALANCE"
+
+        ];
+
+        registerHeaders.forEach(
+            function(header, index){
+
+                const cell =
+                    register.getCell(
+                        registerHeaderRow,
+                        index + 1
+                    );
+
+                cell.value =
+                    header;
+
+                cell.font = {
+
+                    name: "Arial",
+
+                    size: 10,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.white
+                    }
+
+                };
+
+                cell.fill = {
+
+                    type: "pattern",
+
+                    pattern: "solid",
+
+                    fgColor: {
+                        argb: COLORS.blue
+                    }
+
+                };
+
+                cell.alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle",
+
+                    wrapText: true
+
+                };
+
+                cell.border = {
+
+                    top: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    left: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    right: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    }
+
+                };
+
+            }
+        );
+
+        register.getRow(
+            registerHeaderRow
+        ).height = 32;
+
+        /* =====================================================
+           PAYMENT STAGES SHEET
+        ===================================================== */
+
+        const stagesSheet =
+            workbook.addWorksheet(
+                "Payment Stages"
+            );
+
+        stagesSheet.views = [
+            {
+                state: "frozen",
+                ySplit: 4
+            }
+        ];
+
+        stagesSheet.mergeCells("A1:K1");
+
+        stagesSheet.getCell("A1").value =
+            "VARIATION PAYMENT STAGES";
+
+        stagesSheet.getCell("A1").font = {
+
+            name: "Arial",
+
+            size: 18,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.white
+            }
+
+        };
+
+        stagesSheet.getCell("A1").fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor: {
+                argb: COLORS.navy
+            }
+
+        };
+
+        stagesSheet.getCell("A1").alignment = {
+
+            horizontal: "center",
+
+            vertical: "middle"
+
+        };
+
+        stagesSheet.getRow(1).height =
+            32;
+
+        stagesSheet.mergeCells("A2:K2");
+
+        stagesSheet.getCell("A2").value =
+            project.name ||
+            project.projectName ||
+            "Project";
+
+        stagesSheet.getCell("A2").font = {
+
+            name: "Arial",
+
+            size: 12,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.blue
+            }
+
+        };
+
+        stagesSheet.getCell("A2").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        stagesSheet.mergeCells("A3:K3");
+
+        stagesSheet.getCell("A3").value =
+            "Payment Received in the Variation Register is calculated from this sheet.";
+
+        stagesSheet.getCell("A3").font = {
+
+            name: "Arial",
+
+            size: 10,
+
+            italic: true,
+
+            color: {
+                argb: COLORS.grey
+            }
+
+        };
+
+        stagesSheet.getCell("A3").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        const stageHeaderRow = 4;
+
+        const stageFirstRow = 5;
+
+        const stageHeaders = [
+
+            "VARIATION REF.",
+
+            "VARIATION NO.",
+
             "STAGE",
 
             "INVOICE VALUE",
@@ -40037,31 +40769,617 @@ function(projectId){
 
             "INVOICE PDF"
 
-        ]);
+        ];
 
-        project.variations.forEach(
-            function(
-                variation
-            ){
+        stageHeaders.forEach(
+            function(header, index){
 
-                const totals =
-                    getVariationPaymentTotals(
+                const cell =
+                    stagesSheet.getCell(
+                        stageHeaderRow,
+                        index + 1
+                    );
+
+                cell.value =
+                    header;
+
+                cell.font = {
+
+                    name: "Arial",
+
+                    size: 10,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.white
+                    }
+
+                };
+
+                cell.fill = {
+
+                    type: "pattern",
+
+                    pattern: "solid",
+
+                    fgColor: {
+                        argb: COLORS.blue
+                    }
+
+                };
+
+                cell.alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle",
+
+                    wrapText: true
+
+                };
+
+                cell.border = {
+
+                    top: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    left: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    right: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    }
+
+                };
+
+            }
+        );
+
+        stagesSheet.getRow(
+            stageHeaderRow
+        ).height = 32;
+
+        /* =====================================================
+           CREATE PAYMENT STAGE ROWS
+        ===================================================== */
+
+        let stageRowNumber =
+            stageFirstRow;
+
+        const variationRegisterRows = [];
+
+        variations.forEach(
+            function(variation, variationIndex){
+
+                const variationRef =
+                    variationIndex + 1;
+
+                const variationRegisterRow =
+                    registerFirstRow +
+                    variationIndex;
+
+                variationRegisterRows.push(
+                    variationRegisterRow
+                );
+
+                const stages =
+                    Array.isArray(
+                        variation.paymentStages
+                    )
+                        ? variation.paymentStages
+                        : [];
+
+                stages.forEach(
+                    function(stage, stageIndex){
+
+                        const row =
+                            stagesSheet.getRow(
+                                stageRowNumber
+                            );
+
+                        const invoice =
+                            getStageInvoice(
+                                stage
+                            );
+
+                        const stageWHT =
+                            getStageWHT(
+                                stage
+                            );
+
+                        const stagePayable =
+                            getStagePayable(
+                                stage
+                            );
+
+                        const stageReceived =
+                            getStageReceived(
+                                stage
+                            );
+
+                        const stageBalance =
+                            getStageBalance(
+                                stage
+                            );
+
+                        row.values = [
+
+                            variationRef,
+
+                            variation.variationNumber ||
+                            "",
+
+                            stageIndex + 1,
+
+                            invoice,
+
+                            stageWHT,
+
+                            {
+                                formula:
+                                    `MAX(0,D${stageRowNumber}-E${stageRowNumber})`,
+                                result:
+                                    stagePayable
+                            },
+
+                            stageReceived,
+
+                            {
+                                formula:
+                                    `F${stageRowNumber}-G${stageRowNumber}`,
+                                result:
+                                    stageBalance
+                            },
+
+                            stage.invoiceDate ||
+                            "",
+
+                            stage.receivedDate ||
+                            "",
+
+                            stage.fileName ||
+                            ""
+
+                        ];
+
+                        row.eachCell(
+                            function(cell){
+
+                                cell.font = {
+
+                                    name: "Arial",
+
+                                    size: 10,
+
+                                    color: {
+                                        argb:
+                                            COLORS.dark
+                                    }
+
+                                };
+
+                                cell.alignment = {
+
+                                    vertical: "middle"
+
+                                };
+
+                                cell.border = {
+
+                                    bottom: {
+                                        style: "hair",
+                                        color: {
+                                            argb:
+                                                "D9E1F2"
+                                        }
+                                    }
+
+                                };
+
+                            }
+                        );
+
+                        if(
+                            stageIndex % 2 === 1
+                        ){
+
+                            row.eachCell(
+                                function(cell){
+
+                                    cell.fill = {
+
+                                        type: "pattern",
+
+                                        pattern: "solid",
+
+                                        fgColor: {
+                                            argb:
+                                                "F8FBFD"
+                                        }
+
+                                    };
+
+                                }
+                            );
+
+                        }
+
+                        for(
+                            let col = 4;
+                            col <= 8;
+                            col++
+                        ){
+
+                            stagesSheet.getCell(
+                                stageRowNumber,
+                                col
+                            ).numFmt =
+                                currencyFormat;
+
+                            stagesSheet.getCell(
+                                stageRowNumber,
+                                col
+                            ).alignment = {
+
+                                horizontal: "right",
+
+                                vertical: "middle"
+
+                            };
+
+                        }
+
+                        stageRowNumber++;
+
+                    }
+                );
+
+            }
+        );
+
+        const stageLastRow =
+            Math.max(
+                stageFirstRow,
+                stageRowNumber - 1
+            );
+
+        /* =====================================================
+           STAGE TOTAL ROW
+        ===================================================== */
+
+        const stageTotalRow =
+            stageLastRow + 1;
+
+        stagesSheet.getCell(
+            stageTotalRow,
+            3
+        ).value =
+            "TOTAL";
+
+        stagesSheet.getCell(
+            stageTotalRow,
+            4
+        ).value = {
+
+            formula:
+                stageLastRow >= stageFirstRow
+                    ? `SUM(D${stageFirstRow}:D${stageLastRow})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStageInvoice(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            );
+
+                    },
+                    0
+                )
+
+        };
+
+        stagesSheet.getCell(
+            stageTotalRow,
+            5
+        ).value = {
+
+            formula:
+                stageLastRow >= stageFirstRow
+                    ? `SUM(E${stageFirstRow}:E${stageLastRow})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStageWHT(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            );
+
+                    },
+                    0
+                )
+
+        };
+
+        stagesSheet.getCell(
+            stageTotalRow,
+            6
+        ).value = {
+
+            formula:
+                stageLastRow >= stageFirstRow
+                    ? `SUM(F${stageFirstRow}:F${stageLastRow})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStagePayable(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            );
+
+                    },
+                    0
+                )
+
+        };
+
+        stagesSheet.getCell(
+            stageTotalRow,
+            7
+        ).value = {
+
+            formula:
+                stageLastRow >= stageFirstRow
+                    ? `SUM(G${stageFirstRow}:G${stageLastRow})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return sum +
+                            getVariationReceived(
+                                variation
+                            );
+
+                    },
+                    0
+                )
+
+        };
+
+        stagesSheet.getCell(
+            stageTotalRow,
+            8
+        ).value = {
+
+            formula:
+                stageLastRow >= stageFirstRow
+                    ? `SUM(H${stageFirstRow}:H${stageLastRow})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStageBalance(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            );
+
+                    },
+                    0
+                )
+
+        };
+
+        for(
+            let col = 3;
+            col <= 8;
+            col++
+        ){
+
+            const cell =
+                stagesSheet.getCell(
+                    stageTotalRow,
+                    col
+                );
+
+            cell.fill = {
+
+                type: "pattern",
+
+                pattern: "solid",
+
+                fgColor: {
+                    argb: COLORS.navy
+                }
+
+            };
+
+            cell.font = {
+
+                name: "Arial",
+
+                size: 10,
+
+                bold: true,
+
+                color: {
+                    argb: COLORS.white
+                }
+
+            };
+
+            cell.alignment = {
+
+                horizontal:
+                    col >= 4
+                        ? "right"
+                        : "left",
+
+                vertical: "middle"
+
+            };
+
+        }
+
+        for(
+            let col = 4;
+            col <= 8;
+            col++
+        ){
+
+            stagesSheet.getCell(
+                stageTotalRow,
+                col
+            ).numFmt =
+                currencyFormat;
+
+        }
+
+        stagesSheet.getRow(
+            stageTotalRow
+        ).height = 25;
+
+        /* =====================================================
+           VARIATION REGISTER DATA
+        ===================================================== */
+
+        variations.forEach(
+            function(variation, variationIndex){
+
+                const rowNumber =
+                    registerFirstRow +
+                    variationIndex;
+
+                const variationRef =
+                    variationIndex + 1;
+
+                const submitted =
+                    getVariationSubmitted(
+                        variation
+                    );
+
+                const wht =
+                    getVariationWHT(
                         variation
                     );
 
                 const payable =
-                    parseVariationMoney(
-                        variation.payableAmount
+                    getVariationPayable(
+                        variation
                     );
 
                 const received =
-                    parseVariationMoney(
-                        variation.paymentReceived
+                    getVariationReceived(
+                        variation
                     );
 
-                rows.push([
+                const outstanding =
+                    payable -
+                    received;
 
-                    "VARIATION",
+                const workflowStatus =
+                    variation.status ||
+                    "Draft";
+
+                const financialStatus =
+                    getVariationFinancialStatusExcel(
+                        variation
+                    );
+
+                const row =
+                    register.getRow(
+                        rowNumber
+                    );
+
+                row.values = [
+
+                    variationRef,
 
                     variation.variationNumber ||
                     "",
@@ -40075,204 +41393,2065 @@ function(projectId){
                     variation.contractor ||
                     "",
 
-                    parseVariationMoney(
-                        variation.submittedValue
-                    ),
+                    submitted,
 
-                    parseVariationMoney(
-                        variation.whtAmount
-                    ),
+                    wht,
 
-                    payable,
+                    {
+                        formula:
+                            `MAX(0,F${rowNumber}-G${rowNumber})`,
+                        result:
+                            payable
+                    },
 
-                    received,
+                    {
+                        formula:
+                            `SUMIF('Payment Stages'!A${stageFirstRow}:A${stageLastRow},A${rowNumber},'Payment Stages'!G${stageFirstRow}:G${stageLastRow})`,
+                        result:
+                            received
+                    },
 
-                    payable -
-                    received,
+                    {
+                        formula:
+                            `H${rowNumber}-I${rowNumber}`,
+                        result:
+                            outstanding
+                    },
 
-                    variation.status ||
-                    "Draft",
+                    workflowStatus,
 
-                    getVariationFinancialStatus(
-                        variation
-                    ),
+                    {
+                        formula:
+                            `IF(H${rowNumber}<=0,IF(F${rowNumber}>0,"Payable Not Set","Not Paid"),IF(I${rowNumber}<=0,IF(M${rowNumber}>0,"Invoiced","Not Paid"),IF(I${rowNumber}>H${rowNumber},"Overpaid",IF(I${rowNumber}=H${rowNumber},"Fully Paid","Partially Paid"))))`,
+                        result:
+                            financialStatus
+                    },
 
-                    "",
+                    {
+                        formula:
+                            `SUMIF('Payment Stages'!A${stageFirstRow}:A${stageLastRow},A${rowNumber},'Payment Stages'!D${stageFirstRow}:D${stageLastRow})`,
+                        result:
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(sum, stage){
 
-                    totals.invoiced,
+                                    return (
+                                        sum +
+                                        getStageInvoice(
+                                            stage
+                                        )
+                                    );
 
-                    totals.wht,
+                                },
+                                0
+                            )
+                    },
 
-                    totals.payable,
+                    {
+                        formula:
+                            `SUMIF('Payment Stages'!A${stageFirstRow}:A${stageLastRow},A${rowNumber},'Payment Stages'!E${stageFirstRow}:E${stageLastRow})`,
+                        result:
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(sum, stage){
 
-                    totals.received,
+                                    return (
+                                        sum +
+                                        getStageWHT(
+                                            stage
+                                        )
+                                    );
 
-                    totals.outstanding,
+                                },
+                                0
+                            )
+                    },
 
-                    "",
+                    {
+                        formula:
+                            `SUMIF('Payment Stages'!A${stageFirstRow}:A${stageLastRow},A${rowNumber},'Payment Stages'!F${stageFirstRow}:F${stageLastRow})`,
+                        result:
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(sum, stage){
 
-                    "",
+                                    return (
+                                        sum +
+                                        getStagePayable(
+                                            stage
+                                        )
+                                    );
 
-                    ""
+                                },
+                                0
+                            )
+                    },
 
-                ]);
+                    {
+                        formula:
+                            `SUMIF('Payment Stages'!A${stageFirstRow}:A${stageLastRow},A${rowNumber},'Payment Stages'!H${stageFirstRow}:H${stageLastRow})`,
+                        result:
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(sum, stage){
 
-                (
-                    variation.paymentStages ||
-                    []
-                )
-                .forEach(
-                    function(
-                        stage,
-                        stageIndex
-                    ){
+                                    return (
+                                        sum +
+                                        getStageBalance(
+                                            stage
+                                        )
+                                    );
 
-                        const invoice =
-                            parseVariationMoney(
-                                stage.invoiceValue
-                            );
+                                },
+                                0
+                            )
+                    }
 
-                        const stageWHT =
-                            parseVariationMoney(
-                                stage.whtAmount
-                            );
+                ];
 
-                        const stagePayable =
-                            Math.max(
-                                0,
-                                invoice -
-                                stageWHT
-                            );
+                row.eachCell(
+                    function(cell){
 
-                        const stageReceived =
-                            parseVariationMoney(
-                                stage.paymentReceived
-                            );
+                        cell.font = {
 
-                        rows.push([
+                            name: "Arial",
 
-                            "PAYMENT STAGE",
+                            size: 10,
 
-                            variation.variationNumber ||
-                            "",
+                            color: {
+                                argb:
+                                    COLORS.dark
+                            }
 
-                            "",
+                        };
 
-                            "Payment Stage " +
-                            (stageIndex + 1),
+                        cell.alignment = {
 
-                            "",
+                            vertical: "middle"
 
-                            "",
+                        };
 
-                            "",
+                        cell.border = {
 
-                            "",
+                            bottom: {
+                                style: "hair",
+                                color: {
+                                    argb:
+                                        "D9E1F2"
+                                }
+                            }
 
-                            "",
-
-                            "",
-
-                            "",
-
-                            "",
-
-                            stageIndex + 1,
-
-                            invoice,
-
-                            stageWHT,
-
-                            stagePayable,
-
-                            stageReceived,
-
-                            stagePayable -
-                            stageReceived,
-
-                            stage.invoiceDate ||
-                            "",
-
-                            stage.receivedDate ||
-                            "",
-
-                            stage.fileName ||
-                            ""
-
-                        ]);
+                        };
 
                     }
                 );
 
-                rows.push([]);
+                if(
+                    variationIndex % 2 === 1
+                ){
+
+                    row.eachCell(
+                        function(cell){
+
+                            cell.fill = {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        "F8FBFD"
+                                }
+
+                            };
+
+                        }
+                    );
+
+                }
+
+                for(
+                    let col = 6;
+                    col <= 10;
+                    col++
+                ){
+
+                    register.getCell(
+                        rowNumber,
+                        col
+                    ).numFmt =
+                        currencyFormat;
+
+                    register.getCell(
+                        rowNumber,
+                        col
+                    ).alignment = {
+
+                        horizontal: "right",
+
+                        vertical: "middle"
+
+                    };
+
+                }
+
+                for(
+                    let col = 13;
+                    col <= 16;
+                    col++
+                ){
+
+                    register.getCell(
+                        rowNumber,
+                        col
+                    ).numFmt =
+                        currencyFormat;
+
+                    register.getCell(
+                        rowNumber,
+                        col
+                    ).alignment = {
+
+                        horizontal: "right",
+
+                        vertical: "middle"
+
+                    };
+
+                }
+
+                register.getCell(
+                    rowNumber,
+                    11
+                ).alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle"
+
+                };
+
+                register.getCell(
+                    rowNumber,
+                    12
+                ).alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle"
+
+                };
 
             }
         );
 
-        const worksheet =
-            XLSX.utils.aoa_to_sheet(
-                rows
-            );
+        /* =====================================================
+           REGISTER TOTAL ROW
+        ===================================================== */
 
-        worksheet["!cols"] = [
+        const registerTotalRow =
+            registerFirstRow +
+            variations.length;
 
-            {wch:16},
-            {wch:16},
-            {wch:18},
-            {wch:34},
-            {wch:28},
-            {wch:18},
-            {wch:18},
-            {wch:18},
-            {wch:20},
-            {wch:18},
-            {wch:20},
-            {wch:20},
-            {wch:10},
-            {wch:18},
-            {wch:16},
-            {wch:18},
-            {wch:22},
-            {wch:18},
-            {wch:16},
-            {wch:24},
-            {wch:35}
+        register.getCell(
+            registerTotalRow,
+            5
+        ).value =
+            "TOTAL";
+
+        register.getCell(
+            registerTotalRow,
+            6
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(F${registerFirstRow}:F${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            getVariationSubmitted(
+                                variation
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            7
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(G${registerFirstRow}:G${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            getVariationWHT(
+                                variation
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            8
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(H${registerFirstRow}:H${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            getVariationPayable(
+                                variation
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            9
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(I${registerFirstRow}:I${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            getVariationReceived(
+                                variation
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            10
+        ).value = {
+
+            formula:
+                `H${registerTotalRow}-I${registerTotalRow}`,
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            getVariationPayable(
+                                variation
+                            ) -
+                            getVariationReceived(
+                                variation
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            13
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(M${registerFirstRow}:M${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStageInvoice(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            14
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(N${registerFirstRow}:N${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStageWHT(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            15
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(O${registerFirstRow}:O${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStagePayable(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        register.getCell(
+            registerTotalRow,
+            16
+        ).value = {
+
+            formula:
+                variations.length > 0
+                    ? `SUM(P${registerFirstRow}:P${registerTotalRow - 1})`
+                    : "=0",
+
+            result:
+                variations.reduce(
+                    function(sum, variation){
+
+                        return (
+                            sum +
+                            (
+                                variation.paymentStages ||
+                                []
+                            )
+                            .reduce(
+                                function(stageSum, stage){
+
+                                    return (
+                                        stageSum +
+                                        getStageBalance(
+                                            stage
+                                        )
+                                    );
+
+                                },
+                                0
+                            )
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        for(
+            let col = 5;
+            col <= 16;
+            col++
+        ){
+
+            const cell =
+                register.getCell(
+                    registerTotalRow,
+                    col
+                );
+
+            cell.fill = {
+
+                type: "pattern",
+
+                pattern: "solid",
+
+                fgColor: {
+                    argb: COLORS.navy
+                }
+
+            };
+
+            cell.font = {
+
+                name: "Arial",
+
+                size: 10,
+
+                bold: true,
+
+                color: {
+                    argb: COLORS.white
+                }
+
+            };
+
+            cell.alignment = {
+
+                horizontal:
+                    col >= 6
+                        ? "right"
+                        : "left",
+
+                vertical: "middle"
+
+            };
+
+        }
+
+        for(
+            let col = 6;
+            col <= 10;
+            col++
+        ){
+
+            register.getCell(
+                registerTotalRow,
+                col
+            ).numFmt =
+                currencyFormat;
+
+        }
+
+        for(
+            let col = 13;
+            col <= 16;
+            col++
+        ){
+
+            register.getCell(
+                registerTotalRow,
+                col
+            ).numFmt =
+                currencyFormat;
+
+        }
+
+        register.getRow(
+            registerTotalRow
+        ).height = 25;
+
+        /* =====================================================
+           REGISTER COLUMN WIDTHS
+        ===================================================== */
+
+        const registerWidths = [
+
+            8,
+            18,
+            18,
+            38,
+            30,
+            20,
+            18,
+            20,
+            22,
+            20,
+            20,
+            20,
+            20,
+            18,
+            20,
+            20
 
         ];
 
-        const workbook =
-            XLSX.utils.book_new();
+        registerWidths.forEach(
+            function(width, index){
 
-        XLSX.utils.book_append_sheet(
-            workbook,
-            worksheet,
-            "Variations"
+                register.getColumn(
+                    index + 1
+                ).width =
+                    width;
+
+            }
         );
 
+        register.autoFilter = {
+
+            from: "A4",
+
+            to:
+                "P" +
+                Math.max(
+                    registerTotalRow,
+                    registerFirstRow
+                )
+
+        };
+
+        /* =====================================================
+           STAGE COLUMN WIDTHS
+        ===================================================== */
+
+        const stageWidths = [
+
+            14,
+            18,
+            10,
+            18,
+            16,
+            18,
+            24,
+            18,
+            18,
+            24,
+            35
+
+        ];
+
+        stageWidths.forEach(
+            function(width, index){
+
+                stagesSheet.getColumn(
+                    index + 1
+                ).width =
+                    width;
+
+            }
+        );
+
+        stagesSheet.autoFilter = {
+
+            from: "A4",
+
+            to:
+                "K" +
+                Math.max(
+                    stageTotalRow,
+                    stageFirstRow
+                )
+
+        };
+
+        /* =====================================================
+           CONDITIONAL FORMATTING
+        ===================================================== */
+
+        if(variations.length > 0){
+
+            const registerEnd =
+                registerFirstRow +
+                variations.length -
+                1;
+
+            /* Outstanding */
+
+            register.addConditionalFormatting({
+
+                ref:
+                    `J${registerFirstRow}:J${registerEnd}`,
+
+                rules: [
+
+                    {
+
+                        type: "cellIs",
+
+                        operator: "lessThan",
+
+                        formulae: [0],
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.red
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.redLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type: "cellIs",
+
+                        operator: "equal",
+
+                        formulae: [0],
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.green
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.greenLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type: "cellIs",
+
+                        operator: "greaterThan",
+
+                        formulae: [0],
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.orange
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.orangeLight
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                ]
+
+            });
+
+            /* Financial Status */
+
+            register.addConditionalFormatting({
+
+                ref:
+                    `L${registerFirstRow}:L${registerEnd}`,
+
+                rules: [
+
+                    {
+
+                        type: "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Fully Paid",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.green
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.greenLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type: "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Partially Paid",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.orange
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.orangeLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type: "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Overpaid",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.red
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.redLight
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                ]
+
+            });
+
+            /* Stage Balance */
+
+            stagesSheet.addConditionalFormatting({
+
+                ref:
+                    `H${stageFirstRow}:H${stageLastRow}`,
+
+                rules: [
+
+                    {
+
+                        type: "cellIs",
+
+                        operator:
+                            "lessThan",
+
+                        formulae: [0],
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.red
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.redLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type: "cellIs",
+
+                        operator:
+                            "equal",
+
+                        formulae: [0],
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.green
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.greenLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type: "cellIs",
+
+                        operator:
+                            "greaterThan",
+
+                        formulae: [0],
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.orange
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.orangeLight
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                ]
+
+            });
+
+        }
+
+        /* =====================================================
+           SUMMARY FORMULAS
+        ===================================================== */
+
+        const summaryLastRow =
+            Math.max(
+                registerFirstRow,
+                registerTotalRow
+            );
+
+        const totalSubmitted =
+            variations.reduce(
+                function(sum, variation){
+
+                    return (
+                        sum +
+                        getVariationSubmitted(
+                            variation
+                        )
+                    );
+
+                },
+                0
+            );
+
+        const totalWHT =
+            variations.reduce(
+                function(sum, variation){
+
+                    return (
+                        sum +
+                        getVariationWHT(
+                            variation
+                        )
+                    );
+
+                },
+                0
+            );
+
+        const totalPayable =
+            variations.reduce(
+                function(sum, variation){
+
+                    return (
+                        sum +
+                        getVariationPayable(
+                            variation
+                        )
+                    );
+
+                },
+                0
+            );
+
+        const totalReceived =
+            variations.reduce(
+                function(sum, variation){
+
+                    return (
+                        sum +
+                        getVariationReceived(
+                            variation
+                        )
+                    );
+
+                },
+                0
+            );
+
+        const totalStageInvoiced =
+            variations.reduce(
+                function(sum, variation){
+
+                    return (
+                        sum +
+                        (
+                            variation.paymentStages ||
+                            []
+                        )
+                        .reduce(
+                            function(stageSum, stage){
+
+                                return (
+                                    stageSum +
+                                    getStageInvoice(
+                                        stage
+                                    )
+                                );
+
+                            },
+                            0
+                        )
+                    );
+
+                },
+                0
+            );
+
+        const totalOutstanding =
+            totalPayable -
+            totalReceived;
+
+        /* Count */
+
+        summary.getCell("B5").value = {
+
+            formula:
+                `COUNTA('Variation Register'!B${registerFirstRow}:B${registerTotalRow - 1})`,
+
+            result:
+                variations.length
+
+        };
+
+        /* Submitted */
+
+        summary.getCell("B6").value = {
+
+            formula:
+                `SUM('Variation Register'!F${registerFirstRow}:F${registerTotalRow - 1})`,
+
+            result:
+                totalSubmitted
+
+        };
+
+        /* WHT */
+
+        summary.getCell("B7").value = {
+
+            formula:
+                `SUM('Variation Register'!G${registerFirstRow}:G${registerTotalRow - 1})`,
+
+            result:
+                totalWHT
+
+        };
+
+        /* Payable */
+
+        summary.getCell("B8").value = {
+
+            formula:
+                `SUM('Variation Register'!H${registerFirstRow}:H${registerTotalRow - 1})`,
+
+            result:
+                totalPayable
+
+        };
+
+        /* Stage Invoiced */
+
+        summary.getCell("B9").value = {
+
+            formula:
+                `SUM('Variation Register'!M${registerFirstRow}:M${registerTotalRow - 1})`,
+
+            result:
+                totalStageInvoiced
+
+        };
+
+        /* Received */
+
+        summary.getCell("B10").value = {
+
+            formula:
+                `SUM('Variation Register'!I${registerFirstRow}:I${registerTotalRow - 1})`,
+
+            result:
+                totalReceived
+
+        };
+
+        /* Outstanding */
+
+        summary.getCell("B11").value = {
+
+            formula:
+                `B8-B10`,
+
+            result:
+                totalOutstanding
+
+        };
+
+        /* Currency */
+
+        for(
+            let row = 6;
+            row <= 11;
+            row++
+        ){
+
+            summary.getCell(
+                row,
+                2
+            ).numFmt =
+                currencyFormat;
+
+        }
+
+        /* Outstanding highlight */
+
+        summary.getCell(
+            "B11"
+        ).fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor:
+                totalOutstanding > 0
+                    ? {
+                        argb:
+                            COLORS.orangeLight
+                    }
+                    :
+                    totalOutstanding < 0
+                        ? {
+                            argb:
+                                COLORS.redLight
+                        }
+                        :
+                        {
+                            argb:
+                                COLORS.greenLight
+                        }
+
+        };
+
+        summary.getCell(
+            "B11"
+        ).font = {
+
+            name: "Arial",
+
+            size: 12,
+
+            bold: true,
+
+            color:
+                totalOutstanding > 0
+                    ? {
+                        argb:
+                            COLORS.orange
+                    }
+                    :
+                    totalOutstanding < 0
+                        ? {
+                            argb:
+                                COLORS.red
+                        }
+                        :
+                        {
+                            argb:
+                                COLORS.green
+                        }
+
+        };
+
+        /* =====================================================
+           SUMMARY BORDERS
+        ===================================================== */
+
+        for(
+            let row = 5;
+            row <= 11;
+            row++
+        ){
+
+            for(
+                let col = 1;
+                col <= 2;
+                col++
+            ){
+
+                summary.getCell(
+                    row,
+                    col
+                ).border = {
+
+                    top: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    },
+
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    },
+
+                    left: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    },
+
+                    right: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    }
+
+                };
+
+            }
+
+        }
+
+        /* =====================================================
+           SUMMARY NAVIGATION LINKS
+        ===================================================== */
+
+        summary.getCell(
+            "D5"
+        ).value = {
+
+            text:
+                "→ Variation Register",
+
+            hyperlink:
+                "#'Variation Register'!A1"
+
+        };
+
+        summary.getCell(
+            "D6"
+        ).value = {
+
+            text:
+                "→ Payment Stages",
+
+            hyperlink:
+                "#'Payment Stages'!A1"
+
+        };
+
+        summary.getCell(
+            "D7"
+        ).value = {
+
+            text:
+                "→ Formula Guide",
+
+            hyperlink:
+                "#'Formula Guide'!A1"
+
+        };
+
+        for(
+            let row = 5;
+            row <= 7;
+            row++
+        ){
+
+            summary.getCell(
+                row,
+                4
+            ).font = {
+
+                name: "Arial",
+
+                size: 11,
+
+                bold: true,
+
+                color: {
+                    argb:
+                        COLORS.blue
+                },
+
+                underline: true
+
+            };
+
+        }
+
+        /* =====================================================
+           FORMULA GUIDE
+        ===================================================== */
+
+        const guide =
+            workbook.addWorksheet(
+                "Formula Guide"
+            );
+
+        guide.views = [
+
+            {
+
+                state: "frozen",
+
+                ySplit: 4
+
+            }
+
+        ];
+
+        guide.mergeCells(
+            "A1:D1"
+        );
+
+        guide.getCell("A1").value =
+            "VARIATION EXCEL - FORMULA GUIDE";
+
+        guide.getCell("A1").font = {
+
+            name: "Arial",
+
+            size: 18,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.white
+            }
+
+        };
+
+        guide.getCell("A1").fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor: {
+                argb: COLORS.navy
+            }
+
+        };
+
+        guide.getCell("A1").alignment = {
+
+            horizontal: "center",
+
+            vertical: "middle"
+
+        };
+
+        guide.getRow(1).height = 32;
+
+        guide.mergeCells(
+            "A2:D2"
+        );
+
+        guide.getCell("A2").value =
+            "The equations below are the actual formulas used in the workbook.";
+
+        guide.getCell("A2").font = {
+
+            name: "Arial",
+
+            size: 10,
+
+            italic: true,
+
+            color: {
+                argb: COLORS.grey
+            }
+
+        };
+
+        guide.getCell("A2").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        const guideHeaders = [
+
+            "Metric",
+
+            "Location",
+
+            "Formula",
+
+            "Description"
+
+        ];
+
+        guideHeaders.forEach(
+            function(header, index){
+
+                const cell =
+                    guide.getCell(
+                        4,
+                        index + 1
+                    );
+
+                cell.value =
+                    header;
+
+                cell.font = {
+
+                    name: "Arial",
+
+                    size: 10,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.white
+                    }
+
+                };
+
+                cell.fill = {
+
+                    type: "pattern",
+
+                    pattern: "solid",
+
+                    fgColor: {
+                        argb: COLORS.blue
+                    }
+
+                };
+
+                cell.alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle",
+
+                    wrapText: true
+
+                };
+
+            }
+        );
+
+        const guideRows = [
+
+            [
+
+                "Variation Payable",
+
+                "Variation Register - Column H",
+
+                "=MAX(0, Submitted Value - WHT Amount)",
+
+                "Main variation payable after WHT."
+
+            ],
+
+            [
+
+                "Payment Received",
+
+                "Variation Register - Column I",
+
+                "=SUMIF(Payment Stages, Variation Ref, Stage Payment Received)",
+
+                "Total payment received from all payment stages."
+
+            ],
+
+            [
+
+                "Outstanding",
+
+                "Variation Register - Column J",
+
+                "=Payable Amount - Payment Received",
+
+                "Remaining payable amount."
+
+            ],
+
+            [
+
+                "Stage Payable",
+
+                "Payment Stages - Column F",
+
+                "=MAX(0, Invoice Value - Stage WHT)",
+
+                "Amount payable for each payment stage."
+
+            ],
+
+            [
+
+                "Stage Balance",
+
+                "Payment Stages - Column H",
+
+                "=Stage Payable - Stage Payment Received",
+
+                "Outstanding balance for each stage."
+
+            ],
+
+            [
+
+                "Stage Invoiced",
+
+                "Variation Register - Column M",
+
+                "=SUMIF(Payment Stages, Variation Ref, Invoice Value)",
+
+                "Total invoiced amount across all stages."
+
+            ],
+
+            [
+
+                "Stage WHT",
+
+                "Variation Register - Column N",
+
+                "=SUMIF(Payment Stages, Variation Ref, Stage WHT)",
+
+                "Total WHT across all payment stages."
+
+            ],
+
+            [
+
+                "Stage Payable Total",
+
+                "Variation Register - Column O",
+
+                "=SUMIF(Payment Stages, Variation Ref, Stage Payable)",
+
+                "Total payable amount across all payment stages."
+
+            ],
+
+            [
+
+                "Stage Balance Total",
+
+                "Variation Register - Column P",
+
+                "=SUMIF(Payment Stages, Variation Ref, Stage Balance)",
+
+                "Total outstanding balance across all stages."
+
+            ],
+
+            [
+
+                "Financial Status",
+
+                "Variation Register - Column L",
+
+                "Based on Payable Amount and Payment Received",
+
+                "Automatically identifies Not Paid, Invoiced, Partially Paid, Fully Paid, Overpaid or Payable Not Set."
+
+            ],
+
+            [
+
+                "Total Outstanding",
+
+                "Variation Summary - B11",
+
+                "=Total Payable - Total Payment Received",
+
+                "Total outstanding amount for all variations."
+
+            ]
+
+        ];
+
+        guideRows.forEach(
+            function(data, index){
+
+                const rowNumber =
+                    5 + index;
+
+                data.forEach(
+                    function(value, colIndex){
+
+                        const cell =
+                            guide.getCell(
+                                rowNumber,
+                                colIndex + 1
+                            );
+
+                        cell.value =
+                            value;
+
+                        cell.font = {
+
+                            name: "Arial",
+
+                            size: 10,
+
+                            color: {
+                                argb:
+                                    COLORS.dark
+                            }
+
+                        };
+
+                        cell.alignment = {
+
+                            vertical: "top",
+
+                            wrapText: true
+
+                        };
+
+                        cell.border = {
+
+                            bottom: {
+                                style: "hair",
+                                color: {
+                                    argb:
+                                        "D9E1F2"
+                                }
+                            }
+
+                        };
+
+                        if(
+                            index % 2 === 1
+                        ){
+
+                            cell.fill = {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        "F8FBFD"
+                                }
+
+                            };
+
+                        }
+
+                    }
+                );
+
+                guide.getRow(
+                    rowNumber
+                ).height = 38;
+
+            }
+        );
+
+        guide.getColumn(1).width =
+            28;
+
+        guide.getColumn(2).width =
+            36;
+
+        guide.getColumn(3).width =
+            65;
+
+        guide.getColumn(4).width =
+            60;
+
+        /* =====================================================
+           PRINT SETTINGS
+        ===================================================== */
+
+        [
+            summary,
+            register,
+            stagesSheet,
+            guide
+
+        ].forEach(
+            function(sheet){
+
+                sheet.pageSetup = {
+
+                    orientation:
+                        "landscape",
+
+                    fitToPage:
+                        true,
+
+                    fitToWidth:
+                        1,
+
+                    fitToHeight:
+                        0
+
+                };
+
+                sheet.pageMargins = {
+
+                    left:
+                        0.3,
+
+                    right:
+                        0.3,
+
+                    top:
+                        0.5,
+
+                    bottom:
+                        0.5,
+
+                    header:
+                        0.2,
+
+                    footer:
+                        0.2
+
+                };
+
+                sheet.headerFooter.oddFooter =
+                    "ALM Project Manager | Page &P of &N";
+
+                sheet.headerFooter.oddHeader =
+                    project.name ||
+                    "Project";
+
+            }
+        );
+
+        register.pageSetup.printTitlesRow =
+            "1:4";
+
+        stagesSheet.pageSetup.printTitlesRow =
+            "1:4";
+
+        guide.pageSetup.printTitlesRow =
+            "1:4";
+
+        /* =====================================================
+           DOWNLOAD
+        ===================================================== */
+
+        const buffer =
+            await workbook.xlsx.writeBuffer();
+
+        const blob =
+            new Blob(
+                [buffer],
+                {
+                    type:
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
+            );
+
+        const url =
+            window.URL.createObjectURL(
+                blob
+            );
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
         const projectName =
-            (
+            cleanFileName(
                 project.name ||
                 project.projectName ||
                 "Project"
-            )
-            .toString()
-            .replace(
-                /[\\/:*?"<>|]/g,
-                ""
-            )
-            .trim();
+            );
 
-        XLSX.writeFile(
-            workbook,
+        link.href =
+            url;
+
+        link.download =
             projectName +
-            " - Variations Register.xlsx"
+            " - Variations Register.xlsx";
+
+        document.body.appendChild(
+            link
+        );
+
+        link.click();
+
+        document.body.removeChild(
+            link
+        );
+
+        window.URL.revokeObjectURL(
+            url
         );
 
     }
     catch(error){
 
         console.error(
-            "Variation Excel export error:",
+            "Variation Excel Export Error:",
             error
         );
 
@@ -40284,8 +43463,6 @@ function(projectId){
     }
 
 };
-
-
 /* =====================================================
    DELETE VARIATION
 ===================================================== */
