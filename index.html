@@ -11578,114 +11578,2132 @@ if(equipmentOwnershipFilter){
 
 }
 };
-    /* =====================================================
-   EQUIPMENT MODULE
-   STEP 19B - EXCEL EXPORT
-===================================================== */
+ /* =========================================================
+   EQUIPMENT MODULE - PROFESSIONAL EXCEL EXPORT
+   ExcelJS
+========================================================= */
 
-window.exportEquipmentExcel = function(projectId){
+window.exportEquipmentExcel = async function(projectId){
 
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
-        );
+    try{
 
-    if(!project){
-        return;
-    }
+        const project =
+            projects.find(
+                p =>
+                    String(p.id) ===
+                    String(projectId)
+            );
 
-    const equipment =
-        project.equipment || [];
+        if(!project){
 
-    const data =
-        equipment.map(
+            alert(
+                "Project not found."
+            );
+
+            return;
+
+        }
+
+        if(
+            typeof ExcelJS === "undefined"
+        ){
+
+            alert(
+                "ExcelJS library is not loaded."
+            );
+
+            return;
+
+        }
+
+        const equipment =
+            Array.isArray(project.equipment)
+                ? project.equipment
+                : [];
+
+        /* =====================================================
+           HELPERS
+        ===================================================== */
+
+        function cleanFileName(name){
+
+            return String(
+                name || "Project"
+            )
+            .replace(
+                /[\\\/:*?"<>|]/g,
+                "_"
+            )
+            .trim();
+
+        }
+
+        function excelDate(value){
+
+            if(
+                !value ||
+                typeof value !== "string"
+            ){
+                return null;
+            }
+
+            const parts =
+                value.split("-");
+
+            if(parts.length !== 3){
+                return null;
+            }
+
+            const year =
+                Number(parts[0]);
+
+            const month =
+                Number(parts[1]);
+
+            const day =
+                Number(parts[2]);
+
+            if(
+                !year ||
+                !month ||
+                !day
+            ){
+                return null;
+            }
+
+            return new Date(
+                year,
+                month - 1,
+                day
+            );
+
+        }
+
+        function normalizeStatus(value){
+
+            return String(
+                value || ""
+            )
+            .trim()
+            .toLowerCase();
+
+        }
+
+        /* =====================================================
+           COLORS
+        ===================================================== */
+
+        const COLORS = {
+
+            navy: "17365D",
+            blue: "1F4E78",
+            blueLight: "D9EAF7",
+
+            green: "70AD47",
+            greenLight: "E2F0D9",
+
+            orange: "ED7D31",
+            orangeLight: "FCE4D6",
+
+            red: "C00000",
+            redLight: "F4CCCC",
+
+            yellow: "FFC000",
+            yellowLight: "FFF2CC",
+
+            grey: "7F8C8D",
+            greyLight: "F2F2F2",
+
+            dark: "333333",
+            white: "FFFFFF"
+        };
+
+        /* =====================================================
+           WORKBOOK
+        ===================================================== */
+
+        const workbook =
+            new ExcelJS.Workbook();
+
+        workbook.creator =
+            "ALM Project Manager";
+
+        workbook.lastModifiedBy =
+            "ALM Project Manager";
+
+        workbook.created =
+            new Date();
+
+        workbook.modified =
+            new Date();
+
+        workbook.calcProperties = {
+
+            calcMode: "auto",
+
+            fullCalcOnLoad: true,
+
+            forceFullCalc: true
+
+        };
+
+        /* =====================================================
+           EQUIPMENT SUMMARY
+        ===================================================== */
+
+        const summary =
+            workbook.addWorksheet(
+                "Equipment Summary"
+            );
+
+        summary.views = [
+            {
+                state: "frozen",
+                ySplit: 5
+            }
+        ];
+
+        summary.mergeCells("A1:F1");
+
+        summary.getCell("A1").value =
+            "EQUIPMENT SUMMARY";
+
+        summary.getCell("A1").font = {
+
+            name: "Arial",
+
+            size: 20,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.white
+            }
+
+        };
+
+        summary.getCell("A1").fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor: {
+                argb: COLORS.navy
+            }
+
+        };
+
+        summary.getCell("A1").alignment = {
+
+            horizontal: "center",
+
+            vertical: "middle"
+
+        };
+
+        summary.getRow(1).height =
+            36;
+
+        summary.mergeCells("A2:F2");
+
+        summary.getCell("A2").value =
+            project.name ||
+            project.projectName ||
+            "Project";
+
+        summary.getCell("A2").font = {
+
+            name: "Arial",
+
+            size: 13,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.blue
+            }
+
+        };
+
+        summary.getCell("A2").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        summary.mergeCells("A3:F3");
+
+        summary.getCell("A3").value =
+            "Equipment / Plant Register";
+
+        summary.getCell("A3").font = {
+
+            name: "Arial",
+
+            size: 10,
+
+            italic: true,
+
+            color: {
+                argb: COLORS.grey
+            }
+
+        };
+
+        summary.getCell("A3").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        /* =====================================================
+           SUMMARY LABELS
+        ===================================================== */
+
+        const summaryItems = [
+
+            [
+                "Total Equipment",
+                "total"
+            ],
+
+            [
+                "Operational",
+                "operational"
+            ],
+
+            [
+                "Under Maintenance",
+                "maintenance"
+            ],
+
+            [
+                "Out of Service",
+                "outOfService"
+            ],
+
+            [
+                "Available",
+                "available"
+            ],
+
+            [
+                "Deployed",
+                "deployed"
+            ],
+
+            [
+                "Demobilized",
+                "demobilized"
+            ]
+
+        ];
+
+        const summaryStartRow = 5;
+
+        summaryItems.forEach(
             function(item, index){
 
-                return {
+                const rowNumber =
+                    summaryStartRow +
+                    index;
 
-                    "#":
-                        index + 1,
+                summary.getCell(
+                    rowNumber,
+                    1
+                ).value =
+                    item[0];
 
-                    "Equipment ID":
-                        item.id || "",
+                summary.getCell(
+                    rowNumber,
+                    1
+                ).font = {
 
-                    "Equipment / Plant":
-                        item.name || "",
+                    name: "Arial",
 
-                    "Type":
-                        item.type || "",
+                    size: 11,
 
-                    "Brand / Model":
-                        item.brandModel || "",
+                    bold: true,
 
-                    "Ownership":
-                        item.ownership || "",
+                    color: {
+                        argb: COLORS.dark
+                    }
 
-                    "Site Location":
-                        item.location || "",
+                };
 
-                    "Status":
-                        item.status || "",
+                summary.getCell(
+                    rowNumber,
+                    1
+                ).fill = {
 
-                    "Mobilization Date":
-                        item.mobilizationDate || "",
+                    type: "pattern",
 
-                    "Deployment Status":
-                        item.deploymentStatus || "",
+                    pattern: "solid",
 
-                    "Demobilization Date":
-                        item.demobilizationDate || "",
+                    fgColor: {
+                        argb: COLORS.blueLight
+                    }
 
-                    "Notes":
-                        item.notes || ""
+                };
+
+                summary.getCell(
+                    rowNumber,
+                    2
+                ).font = {
+
+                    name: "Arial",
+
+                    size: 11,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.dark
+                    }
+
+                };
+
+                summary.getCell(
+                    rowNumber,
+                    2
+                ).alignment = {
+
+                    horizontal: "right",
+
+                    vertical: "middle"
+
+                };
+
+                summary.getRow(
+                    rowNumber
+                ).height = 25;
+
+            }
+        );
+
+        /* =====================================================
+           EQUIPMENT REGISTER
+        ===================================================== */
+
+        const register =
+            workbook.addWorksheet(
+                "Equipment Register"
+            );
+
+        register.views = [
+
+            {
+                state: "frozen",
+                ySplit: 4
+            }
+
+        ];
+
+        register.mergeCells("A1:M1");
+
+        register.getCell("A1").value =
+            "EQUIPMENT REGISTER";
+
+        register.getCell("A1").font = {
+
+            name: "Arial",
+
+            size: 18,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.white
+            }
+
+        };
+
+        register.getCell("A1").fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor: {
+                argb: COLORS.navy
+            }
+
+        };
+
+        register.getCell("A1").alignment = {
+
+            horizontal: "center",
+
+            vertical: "middle"
+
+        };
+
+        register.getRow(1).height =
+            32;
+
+        register.mergeCells("A2:M2");
+
+        register.getCell("A2").value =
+            project.name ||
+            project.projectName ||
+            "Project";
+
+        register.getCell("A2").font = {
+
+            name: "Arial",
+
+            size: 12,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.blue
+            }
+
+        };
+
+        register.getCell("A2").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        register.mergeCells("A3:M3");
+
+        register.getCell("A3").value =
+            "Equipment deployment and status tracking";
+
+        register.getCell("A3").font = {
+
+            name: "Arial",
+
+            size: 10,
+
+            italic: true,
+
+            color: {
+                argb: COLORS.grey
+            }
+
+        };
+
+        register.getCell("A3").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        /* =====================================================
+           HEADERS
+        ===================================================== */
+
+        const headerRow = 4;
+
+        const firstDataRow = 5;
+
+        const headers = [
+
+            "#",
+
+            "Equipment ID",
+
+            "Equipment / Plant",
+
+            "Type",
+
+            "Brand / Model",
+
+            "Ownership",
+
+            "Site Location",
+
+            "Status",
+
+            "Mobilization Date",
+
+            "Deployment Status",
+
+            "Demobilization Date",
+
+            "Deployment Days",
+
+            "Notes"
+
+        ];
+
+        headers.forEach(
+            function(header, index){
+
+                const cell =
+                    register.getCell(
+                        headerRow,
+                        index + 1
+                    );
+
+                cell.value =
+                    header;
+
+                cell.font = {
+
+                    name: "Arial",
+
+                    size: 10,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.white
+                    }
+
+                };
+
+                cell.fill = {
+
+                    type: "pattern",
+
+                    pattern: "solid",
+
+                    fgColor: {
+                        argb: COLORS.blue
+                    }
+
+                };
+
+                cell.alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle",
+
+                    wrapText: true
+
+                };
+
+                cell.border = {
+
+                    top: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    left: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    },
+
+                    right: {
+                        style: "thin",
+                        color: {
+                            argb: COLORS.white
+                        }
+                    }
 
                 };
 
             }
         );
 
-    const worksheet =
-        XLSX.utils.json_to_sheet(
-            data
+        register.getRow(
+            headerRow
+        ).height = 32;
+
+        /* =====================================================
+           EQUIPMENT DATA
+        ===================================================== */
+
+        equipment.forEach(
+            function(item, index){
+
+                const rowNumber =
+                    firstDataRow +
+                    index;
+
+                const row =
+                    register.getRow(
+                        rowNumber
+                    );
+
+                const mobilizationDate =
+                    excelDate(
+                        item.mobilizationDate
+                    );
+
+                const demobilizationDate =
+                    excelDate(
+                        item.demobilizationDate
+                    );
+
+                let deploymentDays = null;
+
+                if(
+                    mobilizationDate &&
+                    demobilizationDate
+                ){
+
+                    deploymentDays =
+                        Math.round(
+                            (
+                                demobilizationDate -
+                                mobilizationDate
+                            ) /
+                            (
+                                1000 *
+                                60 *
+                                60 *
+                                24
+                            )
+                        ) + 1;
+
+                }
+
+                row.values = [
+
+                    index + 1,
+
+                    item.id || "",
+
+                    item.name || "",
+
+                    item.type || "",
+
+                    item.brandModel || "",
+
+                    item.ownership || "",
+
+                    item.location || "",
+
+                    item.status || "",
+
+                    mobilizationDate,
+
+                    item.deploymentStatus || "",
+
+                    demobilizationDate,
+
+                    (
+                        mobilizationDate &&
+                        demobilizationDate
+                    )
+                        ? {
+
+                            formula:
+                                `IF(OR(I${rowNumber}="",K${rowNumber}=""),"",K${rowNumber}-I${rowNumber}+1)`,
+
+                            result:
+                                deploymentDays
+
+                        }
+                        : "",
+
+                    item.notes || ""
+
+                ];
+
+                row.eachCell(
+                    function(cell){
+
+                        cell.font = {
+
+                            name: "Arial",
+
+                            size: 10,
+
+                            color: {
+                                argb:
+                                    COLORS.dark
+                            }
+
+                        };
+
+                        cell.alignment = {
+
+                            vertical: "middle",
+
+                            wrapText:
+                                cell.column === 13
+
+                        };
+
+                        cell.border = {
+
+                            bottom: {
+                                style: "hair",
+                                color: {
+                                    argb:
+                                        "D9E1F2"
+                                }
+                            }
+
+                        };
+
+                    }
+                );
+
+                if(
+                    index % 2 === 1
+                ){
+
+                    row.eachCell(
+                        function(cell){
+
+                            cell.fill = {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        "F8FBFD"
+                                }
+
+                            };
+
+                        }
+                    );
+
+                }
+
+                /* Dates */
+
+                if(mobilizationDate){
+
+                    register.getCell(
+                        rowNumber,
+                        9
+                    ).numFmt =
+                        "dd-mmm-yyyy";
+
+                }
+
+                if(demobilizationDate){
+
+                    register.getCell(
+                        rowNumber,
+                        11
+                    ).numFmt =
+                        "dd-mmm-yyyy";
+
+                }
+
+                register.getCell(
+                    rowNumber,
+                    12
+                ).alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle"
+
+                };
+
+                register.getCell(
+                    rowNumber,
+                    1
+                ).alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle"
+
+                };
+
+            }
         );
 
-    worksheet["!cols"] = [
+        /* =====================================================
+           TOTAL ROW
+        ===================================================== */
 
-        {wch:6},
-        {wch:16},
-        {wch:24},
-        {wch:20},
-        {wch:20},
-        {wch:18},
-        {wch:20},
-        {wch:20},
-        {wch:20},
-        {wch:20},
-        {wch:22},
-        {wch:40}
+        const totalRow =
+            firstDataRow +
+            equipment.length;
 
-    ];
+        register.getCell(
+            totalRow,
+            3
+        ).value =
+            "TOTAL EQUIPMENT";
 
-    const workbook =
-        XLSX.utils.book_new();
+        register.getCell(
+            totalRow,
+            1
+        ).value = {
 
-    XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Equipment"
-    );
+            formula:
+                equipment.length > 0
+                    ? `COUNTA(B${firstDataRow}:B${totalRow - 1})`
+                    : "=0",
 
-    const projectName =
-        project.name ||
-        project.projectName ||
-        "Project";
+            result:
+                equipment.length
 
-    XLSX.writeFile(
-        workbook,
-        `${projectName}-Equipment.xlsx`
-    );
+        };
+
+        register.getCell(
+            totalRow,
+            12
+        ).value = {
+
+            formula:
+                equipment.length > 0
+                    ? `SUM(L${firstDataRow}:L${totalRow - 1})`
+                    : "=0",
+
+            result:
+                equipment.reduce(
+                    function(sum, item){
+
+                        const start =
+                            excelDate(
+                                item.mobilizationDate
+                            );
+
+                        const end =
+                            excelDate(
+                                item.demobilizationDate
+                            );
+
+                        if(!start || !end){
+                            return sum;
+                        }
+
+                        return (
+                            sum +
+                            Math.round(
+                                (
+                                    end - start
+                                ) /
+                                (
+                                    1000 *
+                                    60 *
+                                    60 *
+                                    24
+                                )
+                            ) +
+                            1
+                        );
+
+                    },
+                    0
+                )
+
+        };
+
+        for(
+            let col = 1;
+            col <= 13;
+            col++
+        ){
+
+            const cell =
+                register.getCell(
+                    totalRow,
+                    col
+                );
+
+            cell.fill = {
+
+                type: "pattern",
+
+                pattern: "solid",
+
+                fgColor: {
+                    argb: COLORS.navy
+                }
+
+            };
+
+            cell.font = {
+
+                name: "Arial",
+
+                size: 10,
+
+                bold: true,
+
+                color: {
+                    argb: COLORS.white
+                }
+
+            };
+
+            cell.alignment = {
+
+                horizontal:
+                    col === 1 ||
+                    col === 12
+                        ? "center"
+                        : "left",
+
+                vertical: "middle"
+
+            };
+
+        }
+
+        register.getRow(
+            totalRow
+        ).height = 25;
+
+        /* =====================================================
+           COLUMN WIDTHS
+        ===================================================== */
+
+        const widths = [
+
+            7,
+
+            18,
+
+            28,
+
+            20,
+
+            22,
+
+            18,
+
+            24,
+
+            22,
+
+            20,
+
+            22,
+
+            22,
+
+            18,
+
+            45
+
+        ];
+
+        widths.forEach(
+            function(width, index){
+
+                register.getColumn(
+                    index + 1
+                ).width =
+                    width;
+
+            }
+        );
+
+        register.autoFilter = {
+
+            from: "A4",
+
+            to:
+                "M" +
+                Math.max(
+                    totalRow,
+                    firstDataRow
+                )
+
+        };
+
+        /* =====================================================
+           CONDITIONAL FORMATTING - STATUS
+        ===================================================== */
+
+        if(equipment.length > 0){
+
+            const endRow =
+                firstDataRow +
+                equipment.length -
+                1;
+
+            register.addConditionalFormatting({
+
+                ref:
+                    `H${firstDataRow}:H${endRow}`,
+
+                rules: [
+
+                    {
+
+                        type:
+                            "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Operational",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.green
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type:
+                                    "pattern",
+
+                                pattern:
+                                    "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.greenLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type:
+                            "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Available",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.blue
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type:
+                                    "pattern",
+
+                                pattern:
+                                    "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.blueLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type:
+                            "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Under Maintenance",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.orange
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type:
+                                    "pattern",
+
+                                pattern:
+                                    "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.orangeLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type:
+                            "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Out of Service",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.red
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type:
+                                    "pattern",
+
+                                pattern:
+                                    "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.redLight
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                ]
+
+            });
+
+            /* Deployment Status */
+
+            register.addConditionalFormatting({
+
+                ref:
+                    `J${firstDataRow}:J${endRow}`,
+
+                rules: [
+
+                    {
+
+                        type:
+                            "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Deployed",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.green
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type:
+                                    "pattern",
+
+                                pattern:
+                                    "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.greenLight
+                                }
+
+                            }
+
+                        }
+
+                    },
+
+                    {
+
+                        type:
+                            "containsText",
+
+                        operator:
+                            "containsText",
+
+                        text:
+                            "Demobilized",
+
+                        style: {
+
+                            font: {
+
+                                color: {
+                                    argb:
+                                        COLORS.grey
+                                },
+
+                                bold: true
+
+                            },
+
+                            fill: {
+
+                                type:
+                                    "pattern",
+
+                                pattern:
+                                    "solid",
+
+                                fgColor: {
+                                    argb:
+                                        COLORS.greyLight
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                ]
+
+            });
+
+        }
+
+        /* =====================================================
+           SUMMARY FORMULAS
+        ===================================================== */
+
+        const registerEndRow =
+            Math.max(
+                firstDataRow,
+                totalRow - 1
+            );
+
+        const totalEquipment =
+            equipment.length;
+
+        const operational =
+            equipment.filter(
+                item =>
+                    normalizeStatus(
+                        item.status
+                    ) ===
+                    "operational"
+            ).length;
+
+        const maintenance =
+            equipment.filter(
+                item =>
+                    normalizeStatus(
+                        item.status
+                    ) ===
+                    "under maintenance"
+            ).length;
+
+        const outOfService =
+            equipment.filter(
+                item =>
+                    normalizeStatus(
+                        item.status
+                    ) ===
+                    "out of service"
+            ).length;
+
+        const available =
+            equipment.filter(
+                item =>
+                    normalizeStatus(
+                        item.status
+                    ) ===
+                    "available"
+            ).length;
+
+        const deployed =
+            equipment.filter(
+                item =>
+                    normalizeStatus(
+                        item.deploymentStatus
+                    ) ===
+                    "deployed"
+            ).length;
+
+        const demobilized =
+            equipment.filter(
+                item =>
+                    normalizeStatus(
+                        item.deploymentStatus
+                    ) ===
+                    "demobilized"
+            ).length;
+
+        /* Total */
+
+        summary.getCell(
+            "B5"
+        ).value = {
+
+            formula:
+                `COUNTA('Equipment Register'!B${firstDataRow}:B${registerEndRow})`,
+
+            result:
+                totalEquipment
+
+        };
+
+        /* Operational */
+
+        summary.getCell(
+            "B6"
+        ).value = {
+
+            formula:
+                `COUNTIF('Equipment Register'!H${firstDataRow}:H${registerEndRow},"Operational")`,
+
+            result:
+                operational
+
+        };
+
+        /* Maintenance */
+
+        summary.getCell(
+            "B7"
+        ).value = {
+
+            formula:
+                `COUNTIF('Equipment Register'!H${firstDataRow}:H${registerEndRow},"Under Maintenance")`,
+
+            result:
+                maintenance
+
+        };
+
+        /* Out of Service */
+
+        summary.getCell(
+            "B8"
+        ).value = {
+
+            formula:
+                `COUNTIF('Equipment Register'!H${firstDataRow}:H${registerEndRow},"Out of Service")`,
+
+            result:
+                outOfService
+
+        };
+
+        /* Available */
+
+        summary.getCell(
+            "B9"
+        ).value = {
+
+            formula:
+                `COUNTIF('Equipment Register'!H${firstDataRow}:H${registerEndRow},"Available")`,
+
+            result:
+                available
+
+        };
+
+        /* Deployed */
+
+        summary.getCell(
+            "B10"
+        ).value = {
+
+            formula:
+                `COUNTIF('Equipment Register'!J${firstDataRow}:J${registerEndRow},"Deployed")`,
+
+            result:
+                deployed
+
+        };
+
+        /* Demobilized */
+
+        summary.getCell(
+            "B11"
+        ).value = {
+
+            formula:
+                `COUNTIF('Equipment Register'!J${firstDataRow}:J${registerEndRow},"Demobilized")`,
+
+            result:
+                demobilized
+
+        };
+
+        /* =====================================================
+           SUMMARY BORDERS
+        ===================================================== */
+
+        for(
+            let row = 5;
+            row <= 11;
+            row++
+        ){
+
+            for(
+                let col = 1;
+                col <= 2;
+                col++
+            ){
+
+                summary.getCell(
+                    row,
+                    col
+                ).border = {
+
+                    top: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    },
+
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    },
+
+                    left: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    },
+
+                    right: {
+                        style: "thin",
+                        color: {
+                            argb:
+                                "D9E1F2"
+                        }
+                    }
+
+                };
+
+            }
+
+        }
+
+        /* =====================================================
+           SUMMARY NAVIGATION
+        ===================================================== */
+
+        summary.getCell(
+            "D5"
+        ).value = {
+
+            text:
+                "→ Equipment Register",
+
+            hyperlink:
+                "#'Equipment Register'!A1"
+
+        };
+
+        summary.getCell(
+            "D6"
+        ).value = {
+
+            text:
+                "→ Formula Guide",
+
+            hyperlink:
+                "#'Formula Guide'!A1"
+
+        };
+
+        summary.getCell(
+            "D5"
+        ).font = {
+
+            name: "Arial",
+
+            size: 11,
+
+            bold: true,
+
+            color: {
+                argb:
+                    COLORS.blue
+            },
+
+            underline: true
+
+        };
+
+        summary.getCell(
+            "D6"
+        ).font = {
+
+            name: "Arial",
+
+            size: 11,
+
+            bold: true,
+
+            color: {
+                argb:
+                    COLORS.blue
+            },
+
+            underline: true
+
+        };
+
+        /* =====================================================
+           SUMMARY COLUMN WIDTHS
+        ===================================================== */
+
+        summary.getColumn(1).width =
+            30;
+
+        summary.getColumn(2).width =
+            18;
+
+        summary.getColumn(3).width =
+            5;
+
+        summary.getColumn(4).width =
+            28;
+
+        summary.getColumn(5).width =
+            20;
+
+        summary.getColumn(6).width =
+            20;
+
+        /* =====================================================
+           FORMULA GUIDE
+        ===================================================== */
+
+        const guide =
+            workbook.addWorksheet(
+                "Formula Guide"
+            );
+
+        guide.views = [
+
+            {
+
+                state: "frozen",
+
+                ySplit: 4
+
+            }
+
+        ];
+
+        guide.mergeCells(
+            "A1:D1"
+        );
+
+        guide.getCell("A1").value =
+            "EQUIPMENT EXCEL - FORMULA GUIDE";
+
+        guide.getCell("A1").font = {
+
+            name: "Arial",
+
+            size: 18,
+
+            bold: true,
+
+            color: {
+                argb: COLORS.white
+            }
+
+        };
+
+        guide.getCell("A1").fill = {
+
+            type: "pattern",
+
+            pattern: "solid",
+
+            fgColor: {
+                argb: COLORS.navy
+            }
+
+        };
+
+        guide.getCell("A1").alignment = {
+
+            horizontal: "center",
+
+            vertical: "middle"
+
+        };
+
+        guide.getRow(1).height =
+            32;
+
+        guide.mergeCells(
+            "A2:D2"
+        );
+
+        guide.getCell("A2").value =
+            "The equations below are the actual formulas used in the workbook.";
+
+        guide.getCell("A2").font = {
+
+            name: "Arial",
+
+            size: 10,
+
+            italic: true,
+
+            color: {
+                argb: COLORS.grey
+            }
+
+        };
+
+        guide.getCell("A2").alignment = {
+
+            horizontal: "center"
+
+        };
+
+        const guideHeaders = [
+
+            "Metric",
+
+            "Location",
+
+            "Formula",
+
+            "Description"
+
+        ];
+
+        guideHeaders.forEach(
+            function(header, index){
+
+                const cell =
+                    guide.getCell(
+                        4,
+                        index + 1
+                    );
+
+                cell.value =
+                    header;
+
+                cell.font = {
+
+                    name: "Arial",
+
+                    size: 10,
+
+                    bold: true,
+
+                    color: {
+                        argb: COLORS.white
+                    }
+
+                };
+
+                cell.fill = {
+
+                    type: "pattern",
+
+                    pattern: "solid",
+
+                    fgColor: {
+                        argb: COLORS.blue
+                    }
+
+                };
+
+                cell.alignment = {
+
+                    horizontal: "center",
+
+                    vertical: "middle",
+
+                    wrapText: true
+
+                };
+
+            }
+        );
+
+        const guideRows = [
+
+            [
+
+                "Deployment Days",
+
+                "Equipment Register - Column L",
+
+                "=IF(OR(Mobilization Date=\"\",Demobilization Date=\"\"),\"\",Demobilization Date-Mobilization Date+1)",
+
+                "Number of calendar days from mobilization through demobilization."
+
+            ],
+
+            [
+
+                "Total Equipment",
+
+                "Equipment Summary - B5",
+
+                "=COUNTA(Equipment Register Equipment ID)",
+
+                "Total number of equipment records."
+
+            ],
+
+            [
+
+                "Operational",
+
+                "Equipment Summary - B6",
+
+                '=COUNTIF(Equipment Register Status,"Operational")',
+
+                "Number of equipment currently marked Operational."
+
+            ],
+
+            [
+
+                "Under Maintenance",
+
+                "Equipment Summary - B7",
+
+                '=COUNTIF(Equipment Register Status,"Under Maintenance")',
+
+                "Number of equipment under maintenance."
+
+            ],
+
+            [
+
+                "Out of Service",
+
+                "Equipment Summary - B8",
+
+                '=COUNTIF(Equipment Register Status,"Out of Service")',
+
+                "Number of equipment out of service."
+
+            ],
+
+            [
+
+                "Available",
+
+                "Equipment Summary - B9",
+
+                '=COUNTIF(Equipment Register Status,"Available")',
+
+                "Number of equipment marked Available."
+
+            ],
+
+            [
+
+                "Deployed",
+
+                "Equipment Summary - B10",
+
+                '=COUNTIF(Equipment Register Deployment Status,"Deployed")',
+
+                "Number of equipment marked Deployed."
+
+            ],
+
+            [
+
+                "Demobilized",
+
+                "Equipment Summary - B11",
+
+                '=COUNTIF(Equipment Register Deployment Status,"Demobilized")',
+
+                "Number of equipment marked Demobilized."
+
+            ]
+
+        ];
+
+        guideRows.forEach(
+            function(data, index){
+
+                const rowNumber =
+                    5 + index;
+
+                data.forEach(
+                    function(value, colIndex){
+
+                        const cell =
+                            guide.getCell(
+                                rowNumber,
+                                colIndex + 1
+                            );
+
+                        cell.value =
+                            value;
+
+                        cell.font = {
+
+                            name: "Arial",
+
+                            size: 10,
+
+                            color: {
+                                argb:
+                                    COLORS.dark
+                            }
+
+                        };
+
+                        cell.alignment = {
+
+                            vertical: "top",
+
+                            wrapText: true
+
+                        };
+
+                        cell.border = {
+
+                            bottom: {
+                                style: "hair",
+                                color: {
+                                    argb:
+                                        "D9E1F2"
+                                }
+                            }
+
+                        };
+
+                        if(
+                            index % 2 === 1
+                        ){
+
+                            cell.fill = {
+
+                                type: "pattern",
+
+                                pattern: "solid",
+
+                                fgColor: {
+                                    argb:
+                                        "F8FBFD"
+                                }
+
+                            };
+
+                        }
+
+                    }
+                );
+
+                guide.getRow(
+                    rowNumber
+                ).height = 40;
+
+            }
+        );
+
+        guide.getColumn(1).width =
+            28;
+
+        guide.getColumn(2).width =
+            36;
+
+        guide.getColumn(3).width =
+            70;
+
+        guide.getColumn(4).width =
+            60;
+
+        /* =====================================================
+           PRINT SETTINGS
+        ===================================================== */
+
+        [
+            summary,
+            register,
+            guide
+
+        ].forEach(
+            function(sheet){
+
+                sheet.pageSetup = {
+
+                    orientation:
+                        "landscape",
+
+                    fitToPage:
+                        true,
+
+                    fitToWidth:
+                        1,
+
+                    fitToHeight:
+                        0
+
+                };
+
+                sheet.pageMargins = {
+
+                    left:
+                        0.3,
+
+                    right:
+                        0.3,
+
+                    top:
+                        0.5,
+
+                    bottom:
+                        0.5,
+
+                    header:
+                        0.2,
+
+                    footer:
+                        0.2
+
+                };
+
+                sheet.headerFooter.oddFooter =
+                    "ALM Project Manager | Page &P of &N";
+
+                sheet.headerFooter.oddHeader =
+                    project.name ||
+                    "Project";
+
+            }
+        );
+
+        register.pageSetup.printTitlesRow =
+            "1:4";
+
+        guide.pageSetup.printTitlesRow =
+            "1:4";
+
+        /* =====================================================
+           DOWNLOAD
+        ===================================================== */
+
+        const buffer =
+            await workbook.xlsx.writeBuffer();
+
+        const blob =
+            new Blob(
+                [buffer],
+                {
+                    type:
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
+            );
+
+        const url =
+            window.URL.createObjectURL(
+                blob
+            );
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+        const projectName =
+            cleanFileName(
+                project.name ||
+                project.projectName ||
+                "Project"
+            );
+
+        link.href =
+            url;
+
+        link.download =
+            projectName +
+            " - Equipment Register.xlsx";
+
+        document.body.appendChild(
+            link
+        );
+
+        link.click();
+
+        document.body.removeChild(
+            link
+        );
+
+        window.URL.revokeObjectURL(
+            url
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Equipment Excel Export Error:",
+            error
+        );
+
+        alert(
+            "Unable to export the Equipment to Excel.\n\n" +
+            error.message
+        );
+
+    }
 
 };
     /* =====================================================
