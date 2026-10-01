@@ -10679,7 +10679,19 @@ window.closeEquipmentViewModal = function(){
     }
 
 };
+function ensureEquipment(project){
 
+    if(!Array.isArray(project.equipment)){
+
+        project.equipment = [];
+
+        persist();
+
+    }
+
+    return project.equipment;
+
+}
 window.renderEquipmentSection = function(project){
 
     ensureEquipment(project);
