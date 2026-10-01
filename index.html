@@ -54550,10 +54550,230 @@ function getNextTenderRevision(
 
 }
 
+/* =====================================================
+   TENDERS FILE DATABASE
+===================================================== */
 
-/* =========================
-   ADD DOCUMENT
-========================= */
+let tenderFileDBPromise = null;
+
+function getTenderFileDB(){
+
+    if(tenderFileDBPromise){
+        return tenderFileDBPromise;
+    }
+
+    tenderFileDBPromise = new Promise(function(resolve,reject){
+
+        if(!window.indexedDB){
+
+            reject(
+                new Error(
+                    "IndexedDB is not available in this browser."
+                )
+            );
+
+            return;
+        }
+
+        const request = indexedDB.open(
+            "ALM_Tenders_Files",
+            1
+        );
+
+        request.onupgradeneeded = function(){
+
+            const db = request.result;
+
+            if(
+                !db.objectStoreNames.contains("files")
+            ){
+
+                db.createObjectStore(
+                    "files"
+                );
+
+            }
+
+        };
+
+        request.onsuccess = function(){
+
+            resolve(
+                request.result
+            );
+
+        };
+
+        request.onerror = function(){
+
+            reject(
+                request.error
+            );
+
+        };
+
+    });
+
+    return tenderFileDBPromise;
+
+}
+
+
+/* =====================================================
+   SAVE TENDER FILE
+===================================================== */
+
+async function saveTenderFile(
+    fileId,
+    file
+){
+
+    const db =
+        await getTenderFileDB();
+
+    return new Promise(function(resolve,reject){
+
+        const transaction =
+            db.transaction(
+                "files",
+                "readwrite"
+            );
+
+        const store =
+            transaction.objectStore(
+                "files"
+            );
+
+        const request =
+            store.put(
+                file,
+                fileId
+            );
+
+        request.onsuccess =
+            function(){
+
+                resolve();
+
+            };
+
+        request.onerror =
+            function(){
+
+                reject(
+                    request.error
+                );
+
+            };
+
+    });
+
+}
+
+
+/* =====================================================
+   GET TENDER FILE
+===================================================== */
+
+async function getTenderFile(fileId){
+
+    const db =
+        await getTenderFileDB();
+
+    return new Promise(function(resolve,reject){
+
+        const transaction =
+            db.transaction(
+                "files",
+                "readonly"
+            );
+
+        const store =
+            transaction.objectStore(
+                "files"
+            );
+
+        const request =
+            store.get(
+                fileId
+            );
+
+        request.onsuccess =
+            function(){
+
+                resolve(
+                    request.result || null
+                );
+
+            };
+
+        request.onerror =
+            function(){
+
+                reject(
+                    request.error
+                );
+
+            };
+
+    });
+
+}
+
+
+/* =====================================================
+   DELETE TENDER FILE
+===================================================== */
+
+async function deleteTenderFile(fileId){
+
+    if(!fileId){
+        return;
+    }
+
+    const db =
+        await getTenderFileDB();
+
+    return new Promise(function(resolve,reject){
+
+        const transaction =
+            db.transaction(
+                "files",
+                "readwrite"
+            );
+
+        const store =
+            transaction.objectStore(
+                "files"
+            );
+
+        const request =
+            store.delete(
+                fileId
+            );
+
+        request.onsuccess =
+            function(){
+
+                resolve();
+
+            };
+
+        request.onerror =
+            function(){
+
+                reject(
+                    request.error
+                );
+
+            };
+
+    });
+
+}
+/* =====================================================
+   ADD TENDER DOCUMENT
+===================================================== */
 
 window.addTenderDocument = function(
     tenderId,
@@ -54569,7 +54789,9 @@ window.addTenderDocument = function(
         });
 
 
-    if(!tender) return;
+    if(!tender){
+        return;
+    }
 
 
     const input =
@@ -54578,13 +54800,16 @@ window.addTenderDocument = function(
     input.type = "file";
 
 
-    input.onchange = function(){
+    input.onchange = async function(){
 
         const file =
+            input.files &&
             input.files[0];
 
 
-        if(!file) return;
+        if(!file){
+            return;
+        }
 
 
         const defaultName =
@@ -54644,9 +54869,7 @@ window.addTenderDocument = function(
 
 
         if(
-            !Number.isInteger(
-                revision
-            ) ||
+            !Number.isInteger(revision) ||
             revision < 0
         ){
 
@@ -54675,6 +54898,23 @@ window.addTenderDocument = function(
         }
 
 
+        /* ---------------------------------------------
+           UNIQUE FILE ID
+        --------------------------------------------- */
+
+        const fileId =
+            "tender-file-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2);
+
+
+        /* ---------------------------------------------
+           DOCUMENT METADATA
+        --------------------------------------------- */
+
         const documentRecord = {
 
             id:
@@ -54683,7 +54923,7 @@ window.addTenderDocument = function(
                 "-" +
                 Math.random()
                     .toString(36)
-                    .slice(2),
+                    .substring(2),
 
             folderId:
                 folderId,
@@ -54711,21 +54951,30 @@ window.addTenderDocument = function(
             fileType:
                 file.type || "",
 
-            fileData:
-                ""
+            fileSize:
+                file.size,
+
+            fileId:
+                fileId
 
         };
 
 
-        const reader =
-            new FileReader();
+        try{
+
+            /* -----------------------------------------
+               SAVE ACTUAL FILE TO INDEXED DB
+            ----------------------------------------- */
+
+            await saveTenderFile(
+                fileId,
+                file
+            );
 
 
-        reader.onload = function(e){
-
-            documentRecord.fileData =
-                e.target.result;
-
+            /* -----------------------------------------
+               SAVE ONLY METADATA TO LOCAL STORAGE
+            ----------------------------------------- */
 
             tender.documents.push(
                 documentRecord
@@ -54735,20 +54984,51 @@ window.addTenderDocument = function(
             persistTenders();
 
 
-            renderTenderFolder(
-                tender,
+            /* -----------------------------------------
+               REFRESH COMMERCIAL TABLE
+            ----------------------------------------- */
+
+            const folder =
                 tender.folders.find(
                     function(f){
+
                         return String(f.id) ===
                                String(folderId);
+
                     }
-                )
+                );
+
+
+            if(folder){
+
+                renderTenderFolder(
+                    tender,
+                    folder
+                );
+
+            }
+
+
+            alert(
+                "Document saved successfully."
             );
 
-        };
+
+        }
+        catch(error){
+
+            console.error(
+                "Tender document save error:",
+                error
+            );
 
 
-        reader.readAsDataURL(file);
+            alert(
+                "The document could not be saved.\n\n" +
+                error.message
+            );
+
+        }
 
     };
 
@@ -54756,7 +55036,6 @@ window.addTenderDocument = function(
     input.click();
 
 };
-
 
 /* =========================
    UPDATE STATUS
@@ -54801,11 +55080,11 @@ window.updateTenderDocumentStatus = function(
 };
 
 
-/* =========================
-   VIEW DOCUMENT
-========================= */
+/* =====================================================
+   VIEW TENDER DOCUMENT
+===================================================== */
 
-window.viewTenderDocument = function(
+window.viewTenderDocument = async function(
     tenderId,
     documentId
 ){
@@ -54819,7 +55098,9 @@ window.viewTenderDocument = function(
         });
 
 
-    if(!tender) return;
+    if(!tender){
+        return;
+    }
 
 
     const doc =
@@ -54831,82 +55112,67 @@ window.viewTenderDocument = function(
         });
 
 
-    if(
-        !doc ||
-        !doc.fileData
-    ){
-
-        alert(
-            "No file is attached to this document."
-        );
-
+    if(!doc){
         return;
-
     }
 
 
-    const newWindow =
+    try{
+
+        const file =
+            await getTenderFile(
+                doc.fileId
+            );
+
+
+        if(!file){
+
+            alert(
+                "The document file was not found."
+            );
+
+            return;
+
+        }
+
+
+        const url =
+            URL.createObjectURL(file);
+
+
         window.open(
-            "",
+            url,
             "_blank"
         );
 
 
-    if(!newWindow){
+        setTimeout(function(){
 
-        alert(
-            "Please allow pop-ups."
+            URL.revokeObjectURL(url);
+
+        },60000);
+
+
+    }
+    catch(error){
+
+        console.error(
+            "Tender document view error:",
+            error
         );
 
-        return;
+        alert(
+            "Unable to open the document."
+        );
 
     }
 
-
-    newWindow.document.write(`
-
-        <html>
-
-        <head>
-
-            <title>
-                ${escapeHTML(
-                    doc.fileName ||
-                    doc.name
-                )}
-            </title>
-
-        </head>
-
-        <body style="
-            margin:0;
-            background:#f1f5f9;
-        ">
-
-            <iframe
-                src="${doc.fileData}"
-                style="
-                    width:100%;
-                    height:100vh;
-                    border:0;
-                    background:#fff;
-                "
-            ></iframe>
-
-        </body>
-
-        </html>
-
-    `);
-
 };
+/* =====================================================
+   DOWNLOAD TENDER DOCUMENT
+===================================================== */
 
-
-/* =========================
-   DOWNLOAD DOCUMENT
-========================= */
-
-window.downloadTenderDocument = function(
+window.downloadTenderDocument = async function(
     tenderId,
     documentId
 ){
@@ -54920,7 +55186,9 @@ window.downloadTenderDocument = function(
         });
 
 
-    if(!tender) return;
+    if(!tender){
+        return;
+    }
 
 
     const doc =
@@ -54932,46 +55200,85 @@ window.downloadTenderDocument = function(
         });
 
 
-    if(
-        !doc ||
-        !doc.fileData
-    ){
-
-        alert(
-            "No file attached."
-        );
-
+    if(!doc){
         return;
-
     }
 
 
-    const link =
-        document.createElement("a");
+    try{
 
-    link.href =
-        doc.fileData;
+        const file =
+            await getTenderFile(
+                doc.fileId
+            );
 
-    link.download =
-        doc.fileName ||
-        doc.name;
 
-    document.body.appendChild(
-        link
-    );
+        if(!file){
 
-    link.click();
+            alert(
+                "The document file was not found."
+            );
 
-    link.remove();
+            return;
+
+        }
+
+
+        const url =
+            URL.createObjectURL(file);
+
+
+        const link =
+            document.createElement("a");
+
+
+        link.href =
+            url;
+
+        link.download =
+            doc.fileName ||
+            doc.name ||
+            "document";
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
+
+
+        setTimeout(function(){
+
+            URL.revokeObjectURL(url);
+
+        },1000);
+
+
+    }
+    catch(error){
+
+        console.error(
+            "Tender document download error:",
+            error
+        );
+
+        alert(
+            "The document could not be downloaded."
+        );
+
+    }
 
 };
+/* =====================================================
+   DELETE TENDER DOCUMENT
+===================================================== */
 
-
-/* =========================
-   DELETE DOCUMENT
-========================= */
-
-window.deleteTenderDocument = function(
+window.deleteTenderDocument = async function(
     tenderId,
     documentId
 ){
@@ -54985,7 +55292,23 @@ window.deleteTenderDocument = function(
         });
 
 
-    if(!tender) return;
+    if(!tender){
+        return;
+    }
+
+
+    const doc =
+        tender.documents.find(function(d){
+
+            return String(d.id) ===
+                   String(documentId);
+
+        });
+
+
+    if(!doc){
+        return;
+    }
 
 
     const confirmed =
@@ -54994,46 +55317,75 @@ window.deleteTenderDocument = function(
         );
 
 
-    if(!confirmed) return;
+    if(!confirmed){
+        return;
+    }
 
 
-    tender.documents =
-        tender.documents.filter(
-            function(doc){
+    try{
 
-                return String(doc.id) !==
-                       String(documentId);
+        /* -----------------------------------------
+           DELETE ACTUAL FILE
+        ----------------------------------------- */
 
-            }
+        await deleteTenderFile(
+            doc.fileId
         );
 
 
-    persistTenders();
+        /* -----------------------------------------
+           DELETE METADATA
+        ----------------------------------------- */
+
+        tender.documents =
+            tender.documents.filter(
+                function(item){
+
+                    return String(item.id) !==
+                           String(documentId);
+
+                }
+            );
 
 
-    const folder =
-        tender.folders.find(
-            function(f){
+        persistTenders();
 
-                return String(f.id) ===
-                       String(currentTenderFolderId);
 
-            }
+        const folder =
+            tender.folders.find(
+                function(f){
+
+                    return String(f.id) ===
+                           String(currentTenderFolderId);
+
+                }
+            );
+
+
+        if(folder){
+
+            renderTenderFolder(
+                tender,
+                folder
+            );
+
+        }
+
+    }
+    catch(error){
+
+        console.error(
+            "Tender document delete error:",
+            error
         );
 
-
-    if(folder){
-
-        renderTenderFolder(
-            tender,
-            folder
+        alert(
+            "The document could not be deleted."
         );
 
     }
 
 };
-
-
 /* =========================
    RENAME TENDER
 ========================= */
