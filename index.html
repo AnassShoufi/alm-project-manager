@@ -1672,6 +1672,7 @@ let manpowerFilters = {
 
 </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
 
 <body>
@@ -34071,122 +34072,1370 @@ window.deletePayment = function(
 };
 
 
-/* =====================================================
-   EXCEL EXPORT
-===================================================== */
+/* =========================================================
+   PAYMENT MODULE - PROFESSIONAL EXCEL EXPORT
+   ExcelJS
+========================================================= */
 
-window.downloadPaymentsExcel = function(
-    projectId
-){
+window.downloadPaymentsExcel = async function(projectId){
 
-    const project =
-        getPaymentsProject(projectId);
+    try {
 
-    if(!project){
-        return;
-    }
+        const project = projects.find(function(p){
+            return String(p.id) === String(projectId);
+        });
 
+        if(!project){
+            alert("Project not found.");
+            return;
+        }
 
-    if(
-        typeof XLSX === "undefined"
-    ){
+        if(typeof ExcelJS === "undefined"){
+            alert("ExcelJS library is not loaded.");
+            return;
+        }
 
-        alert(
-            "Excel library is not loaded."
+        const payments = Array.isArray(project.payments)
+            ? project.payments
+            : [];
+
+        /* =====================================================
+           HELPERS
+        ===================================================== */
+
+        function money(value){
+            const n = Number(value);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function cleanFileName(name){
+            return String(name || "Project")
+                .replace(/[\\\/:*?"<>|]/g, "_")
+                .trim();
+        }
+
+        function paymentStatus(payment){
+
+            const invoice = money(payment.invoiceValue);
+            const wht = money(payment.whtAmount);
+            const payable = invoice - wht;
+            const received = money(payment.paymentReceived);
+            const balance = payable - received;
+
+            if(balance < 0){
+                return "Overpaid";
+            }
+
+            if(balance === 0 && payable > 0){
+                return "Fully Paid";
+            }
+
+            if(received > 0){
+                return "Partially Paid";
+            }
+
+            return "Unpaid";
+        }
+
+        /* =====================================================
+           COLORS
+        ===================================================== */
+
+        const COLORS = {
+
+            navy: "17365D",
+            blue: "1F4E78",
+            blueLight: "D9EAF7",
+
+            green: "70AD47",
+            greenLight: "E2F0D9",
+
+            orange: "ED7D31",
+            orangeLight: "FCE4D6",
+
+            red: "C00000",
+            redLight: "F4CCCC",
+
+            yellow: "FFC000",
+            yellowLight: "FFF2CC",
+
+            grey: "7F8C8D",
+            greyLight: "F2F2F2",
+
+            dark: "333333",
+            white: "FFFFFF"
+        };
+
+        const currencyFormat = '₦#,##0.00;[Red]-₦#,##0.00';
+        const percentageFormat = '0.00%';
+
+        /* =====================================================
+           WORKBOOK
+        ===================================================== */
+
+        const workbook = new ExcelJS.Workbook();
+
+        workbook.creator = "ALM Project Manager";
+        workbook.lastModifiedBy = "ALM Project Manager";
+        workbook.created = new Date();
+        workbook.modified = new Date();
+
+        workbook.calcProperties = {
+            calcMode: "auto",
+            fullCalcOnLoad: true,
+            forceFullCalc: true
+        };
+
+        /* =====================================================
+           PAYMENT REGISTER SHEET
+        ===================================================== */
+
+        const register = workbook.addWorksheet("Payment Register");
+
+        register.views = [
+            {
+                state: "frozen",
+                ySplit: 4
+            }
+        ];
+
+        register.mergeCells("A1:K1");
+
+        register.getCell("A1").value =
+            "PAYMENT REGISTER";
+
+        register.getCell("A1").font = {
+            name: "Arial",
+            size: 18,
+            bold: true,
+            color: {
+                argb: COLORS.white
+            }
+        };
+
+        register.getCell("A1").fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: {
+                argb: COLORS.navy
+            }
+        };
+
+        register.getCell("A1").alignment = {
+            horizontal: "center",
+            vertical: "middle"
+        };
+
+        register.getRow(1).height = 32;
+
+        register.mergeCells("A2:K2");
+
+        register.getCell("A2").value =
+            project.name || "Project";
+
+        register.getCell("A2").font = {
+            name: "Arial",
+            size: 12,
+            bold: true,
+            color: {
+                argb: COLORS.blue
+            }
+        };
+
+        register.getCell("A2").alignment = {
+            horizontal: "center"
+        };
+
+        register.mergeCells("A3:K3");
+
+        register.getCell("A3").value =
+            "All payment calculations are maintained as Excel formulas.";
+
+        register.getCell("A3").font = {
+            name: "Arial",
+            size: 10,
+            italic: true,
+            color: {
+                argb: COLORS.grey
+            }
+        };
+
+        register.getCell("A3").alignment = {
+            horizontal: "center"
+        };
+
+        /* =====================================================
+           HEADERS
+        ===================================================== */
+
+        const headerRow = 4;
+        const firstDataRow = 5;
+
+        const headers = [
+            "Payment Number",
+            "Payment Type",
+            "Contractor",
+            "Invoice Value",
+            "WHT Amount",
+            "Payable Amount",
+            "Payment Received",
+            "Balance",
+            "Payment Date",
+            "Invoice PDF",
+            "Status"
+        ];
+
+        headers.forEach(function(header, index){
+
+            const cell = register.getCell(
+                headerRow,
+                index + 1
+            );
+
+            cell.value = header;
+
+            cell.font = {
+                name: "Arial",
+                size: 10,
+                bold: true,
+                color: {
+                    argb: COLORS.white
+                }
+            };
+
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: {
+                    argb: COLORS.blue
+                }
+            };
+
+            cell.alignment = {
+                horizontal: "center",
+                vertical: "middle",
+                wrapText: true
+            };
+
+            cell.border = {
+                top: {
+                    style: "thin",
+                    color: {
+                        argb: COLORS.white
+                    }
+                },
+                bottom: {
+                    style: "thin",
+                    color: {
+                        argb: COLORS.white
+                    }
+                },
+                left: {
+                    style: "thin",
+                    color: {
+                        argb: COLORS.white
+                    }
+                },
+                right: {
+                    style: "thin",
+                    color: {
+                        argb: COLORS.white
+                    }
+                }
+            };
+        });
+
+        register.getRow(headerRow).height = 28;
+
+        /* =====================================================
+           DATA
+        ===================================================== */
+
+        payments.forEach(function(payment, index){
+
+            const rowNumber = firstDataRow + index;
+
+            const invoice = money(payment.invoiceValue);
+            const wht = money(payment.whtAmount);
+            const payable = invoice - wht;
+            const received = money(payment.paymentReceived);
+            const balance = payable - received;
+
+            const row = register.getRow(rowNumber);
+
+            row.values = [
+                payment.paymentNumber || "",
+                payment.paymentType || "",
+                payment.contractor || "",
+                invoice,
+                wht,
+
+                {
+                    formula: `D${rowNumber}-E${rowNumber}`,
+                    result: payable
+                },
+
+                received,
+
+                {
+                    formula: `F${rowNumber}-G${rowNumber}`,
+                    result: balance
+                },
+
+                payment.paymentDate || "",
+                payment.fileName || "",
+
+                {
+                    formula:
+                        `IF(H${rowNumber}<0,"Overpaid",IF(H${rowNumber}=0,IF(F${rowNumber}>0,"Fully Paid","Unpaid"),IF(G${rowNumber}>0,"Partially Paid","Unpaid")))`,
+                    result: paymentStatus(payment)
+                }
+            ];
+
+            /* -------------------------------------------------
+               Row formatting
+            ------------------------------------------------- */
+
+            row.eachCell(function(cell){
+
+                cell.font = {
+                    name: "Arial",
+                    size: 10,
+                    color: {
+                        argb: COLORS.dark
+                    }
+                };
+
+                cell.alignment = {
+                    vertical: "middle"
+                };
+
+                cell.border = {
+                    bottom: {
+                        style: "hair",
+                        color: {
+                            argb: "D9E1F2"
+                        }
+                    }
+                };
+            });
+
+            if(index % 2 === 1){
+
+                row.eachCell(function(cell){
+
+                    cell.fill = {
+                        type: "pattern",
+                        pattern: "solid",
+                        fgColor: {
+                            argb: "F8FBFD"
+                        }
+                    };
+
+                });
+            }
+
+            /* -------------------------------------------------
+               Number formats
+            ------------------------------------------------- */
+
+            register.getCell(rowNumber, 4).numFmt = currencyFormat;
+            register.getCell(rowNumber, 5).numFmt = currencyFormat;
+            register.getCell(rowNumber, 6).numFmt = currencyFormat;
+            register.getCell(rowNumber, 7).numFmt = currencyFormat;
+            register.getCell(rowNumber, 8).numFmt = currencyFormat;
+
+            register.getCell(rowNumber, 4).alignment = {
+                horizontal: "right"
+            };
+
+            register.getCell(rowNumber, 5).alignment = {
+                horizontal: "right"
+            };
+
+            register.getCell(rowNumber, 6).alignment = {
+                horizontal: "right"
+            };
+
+            register.getCell(rowNumber, 7).alignment = {
+                horizontal: "right"
+            };
+
+            register.getCell(rowNumber, 8).alignment = {
+                horizontal: "right"
+            };
+
+            register.getCell(rowNumber, 11).alignment = {
+                horizontal: "center"
+            };
+
+        });
+
+        /* =====================================================
+           TOTAL ROW
+        ===================================================== */
+
+        const totalRow =
+            payments.length > 0
+                ? firstDataRow + payments.length
+                : firstDataRow;
+
+        register.getCell(totalRow, 3).value = "TOTAL";
+
+        register.getCell(totalRow, 4).value = {
+            formula: payments.length > 0
+                ? `SUM(D${firstDataRow}:D${totalRow - 1})`
+                : "=0",
+            result: payments.reduce(function(sum, p){
+                return sum + money(p.invoiceValue);
+            }, 0)
+        };
+
+        register.getCell(totalRow, 5).value = {
+            formula: payments.length > 0
+                ? `SUM(E${firstDataRow}:E${totalRow - 1})`
+                : "=0",
+            result: payments.reduce(function(sum, p){
+                return sum + money(p.whtAmount);
+            }, 0)
+        };
+
+        register.getCell(totalRow, 6).value = {
+            formula: payments.length > 0
+                ? `SUM(F${firstDataRow}:F${totalRow - 1})`
+                : "=0",
+            result: payments.reduce(function(sum, p){
+                return sum + (
+                    money(p.invoiceValue) -
+                    money(p.whtAmount)
+                );
+            }, 0)
+        };
+
+        register.getCell(totalRow, 7).value = {
+            formula: payments.length > 0
+                ? `SUM(G${firstDataRow}:G${totalRow - 1})`
+                : "=0",
+            result: payments.reduce(function(sum, p){
+                return sum + money(p.paymentReceived);
+            }, 0)
+        };
+
+        register.getCell(totalRow, 8).value = {
+            formula: payments.length > 0
+                ? `SUM(H${firstDataRow}:H${totalRow - 1})`
+                : "=0",
+            result: payments.reduce(function(sum, p){
+
+                return sum +
+                    (
+                        money(p.invoiceValue) -
+                        money(p.whtAmount) -
+                        money(p.paymentReceived)
+                    );
+
+            }, 0)
+        };
+
+        register.getCell(totalRow, 3).font = {
+            name: "Arial",
+            size: 10,
+            bold: true,
+            color: {
+                argb: COLORS.white
+            }
+        };
+
+        for(let col = 3; col <= 8; col++){
+
+            const cell = register.getCell(totalRow, col);
+
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: {
+                    argb: COLORS.navy
+                }
+            };
+
+            cell.font = {
+                name: "Arial",
+                size: 10,
+                bold: true,
+                color: {
+                    argb: COLORS.white
+                }
+            };
+
+            cell.alignment = {
+                horizontal: col >= 4
+                    ? "right"
+                    : "left",
+                vertical: "middle"
+            };
+        }
+
+        for(let col = 4; col <= 8; col++){
+            register.getCell(totalRow, col).numFmt =
+                currencyFormat;
+        }
+
+        register.getRow(totalRow).height = 25;
+
+        /* =====================================================
+           COLUMN WIDTHS
+        ===================================================== */
+
+        const widths = [
+            18,
+            18,
+            28,
+            18,
+            16,
+            18,
+            20,
+            18,
+            18,
+            30,
+            18
+        ];
+
+        widths.forEach(function(width, index){
+            register.getColumn(index + 1).width = width;
+        });
+
+        /* =====================================================
+           FILTER
+        ===================================================== */
+
+        register.autoFilter = {
+            from: "A4",
+            to: "K" + Math.max(totalRow, firstDataRow)
+        };
+
+        /* =====================================================
+           CONDITIONAL FORMATTING
+        ===================================================== */
+
+        if(payments.length > 0){
+
+            const dataEndRow =
+                firstDataRow + payments.length - 1;
+
+            /* Balance */
+
+            register.addConditionalFormatting({
+                ref: `H${firstDataRow}:H${dataEndRow}`,
+                rules: [
+
+                    {
+                        type: "cellIs",
+                        operator: "lessThan",
+                        formulae: [0],
+                        style: {
+                            font: {
+                                color: {
+                                    argb: COLORS.red
+                                },
+                                bold: true
+                            },
+                            fill: {
+                                type: "pattern",
+                                pattern: "solid",
+                                fgColor: {
+                                    argb: COLORS.redLight
+                                }
+                            }
+                        }
+                    },
+
+                    {
+                        type: "cellIs",
+                        operator: "equal",
+                        formulae: [0],
+                        style: {
+                            font: {
+                                color: {
+                                    argb: COLORS.green
+                                },
+                                bold: true
+                            },
+                            fill: {
+                                type: "pattern",
+                                pattern: "solid",
+                                fgColor: {
+                                    argb: COLORS.greenLight
+                                }
+                            }
+                        }
+                    },
+
+                    {
+                        type: "cellIs",
+                        operator: "greaterThan",
+                        formulae: [0],
+                        style: {
+                            font: {
+                                color: {
+                                    argb: COLORS.orange
+                                },
+                                bold: true
+                            },
+                            fill: {
+                                type: "pattern",
+                                pattern: "solid",
+                                fgColor: {
+                                    argb: COLORS.orangeLight
+                                }
+                            }
+                        }
+                    }
+                ]
+            });
+
+            /* Status */
+
+            register.addConditionalFormatting({
+                ref: `K${firstDataRow}:K${dataEndRow}`,
+                rules: [
+
+                    {
+                        type: "containsText",
+                        operator: "containsText",
+                        text: "Fully Paid",
+                        style: {
+                            font: {
+                                color: {
+                                    argb: COLORS.green
+                                },
+                                bold: true
+                            },
+                            fill: {
+                                type: "pattern",
+                                pattern: "solid",
+                                fgColor: {
+                                    argb: COLORS.greenLight
+                                }
+                            }
+                        }
+                    },
+
+                    {
+                        type: "containsText",
+                        operator: "containsText",
+                        text: "Partially Paid",
+                        style: {
+                            font: {
+                                color: {
+                                    argb: COLORS.orange
+                                },
+                                bold: true
+                            },
+                            fill: {
+                                type: "pattern",
+                                pattern: "solid",
+                                fgColor: {
+                                    argb: COLORS.orangeLight
+                                }
+                            }
+                        }
+                    },
+
+                    {
+                        type: "containsText",
+                        operator: "containsText",
+                        text: "Overpaid",
+                        style: {
+                            font: {
+                                color: {
+                                    argb: COLORS.red
+                                },
+                                bold: true
+                            },
+                            fill: {
+                                type: "pattern",
+                                pattern: "solid",
+                                fgColor: {
+                                    argb: COLORS.redLight
+                                }
+                            }
+                        }
+                    }
+                ]
+            });
+        }
+
+        /* =====================================================
+           PAYMENT SUMMARY SHEET
+        ===================================================== */
+
+        const summary = workbook.addWorksheet("Payment Summary");
+
+        summary.views = [
+            {
+                state: "frozen",
+                ySplit: 5
+            }
+        ];
+
+        summary.mergeCells("A1:F1");
+
+        summary.getCell("A1").value =
+            "PAYMENT SUMMARY";
+
+        summary.getCell("A1").font = {
+            name: "Arial",
+            size: 20,
+            bold: true,
+            color: {
+                argb: COLORS.white
+            }
+        };
+
+        summary.getCell("A1").fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: {
+                argb: COLORS.navy
+            }
+        };
+
+        summary.getCell("A1").alignment = {
+            horizontal: "center",
+            vertical: "middle"
+        };
+
+        summary.getRow(1).height = 36;
+
+        summary.mergeCells("A2:F2");
+
+        summary.getCell("A2").value =
+            project.name || "Project";
+
+        summary.getCell("A2").font = {
+            name: "Arial",
+            size: 13,
+            bold: true,
+            color: {
+                argb: COLORS.blue
+            }
+        };
+
+        summary.getCell("A2").alignment = {
+            horizontal: "center"
+        };
+
+        summary.mergeCells("A3:F3");
+
+        summary.getCell("A3").value =
+            "Financial overview based on the Payment Register";
+
+        summary.getCell("A3").font = {
+            name: "Arial",
+            size: 10,
+            italic: true,
+            color: {
+                argb: COLORS.grey
+            }
+        };
+
+        summary.getCell("A3").alignment = {
+            horizontal: "center"
+        };
+
+        /* -----------------------------------------------------
+           Summary labels
+        ----------------------------------------------------- */
+
+        const summaryItems = [
+            ["Contract Value", "contract"],
+            ["Total Invoiced", "invoiced"],
+            ["Total WHT", "wht"],
+            ["Total Payable", "payable"],
+            ["Total Received", "received"],
+            ["Outstanding Balance", "balance"],
+            ["Invoiced % of Contract", "invoicePercent"],
+            ["Paid % of Contract", "paidPercent"]
+        ];
+
+        const summaryStartRow = 5;
+
+        summaryItems.forEach(function(item, index){
+
+            const rowNumber =
+                summaryStartRow + index;
+
+            summary.getCell(rowNumber, 1).value =
+                item[0];
+
+            summary.getCell(rowNumber, 1).font = {
+                name: "Arial",
+                size: 11,
+                bold: true,
+                color: {
+                    argb: COLORS.dark
+                }
+            };
+
+            summary.getCell(rowNumber, 1).fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: {
+                    argb: COLORS.blueLight
+                }
+            };
+
+            summary.getCell(rowNumber, 1).alignment = {
+                vertical: "middle"
+            };
+
+            summary.getCell(rowNumber, 2).font = {
+                name: "Arial",
+                size: 11,
+                bold: true,
+                color: {
+                    argb: COLORS.dark
+                }
+            };
+
+            summary.getCell(rowNumber, 2).alignment = {
+                horizontal: "right",
+                vertical: "middle"
+            };
+
+            summary.getRow(rowNumber).height = 25;
+        });
+
+        /* -----------------------------------------------------
+           Summary formulas
+        ----------------------------------------------------- */
+
+        const lastPaymentRow =
+            payments.length > 0
+                ? firstDataRow + payments.length - 1
+                : firstDataRow;
+
+        const contractValue =
+            money(getPaymentContractValue(project));
+
+        const totalInvoiced =
+            payments.reduce(function(sum, p){
+                return sum + money(p.invoiceValue);
+            }, 0);
+
+        const totalWHT =
+            payments.reduce(function(sum, p){
+                return sum + money(p.whtAmount);
+            }, 0);
+
+        const totalPayable =
+            payments.reduce(function(sum, p){
+                return sum +
+                    (
+                        money(p.invoiceValue) -
+                        money(p.whtAmount)
+                    );
+            }, 0);
+
+        const totalReceived =
+            payments.reduce(function(sum, p){
+                return sum + money(p.paymentReceived);
+            }, 0);
+
+        const totalBalance =
+            totalPayable - totalReceived;
+
+        /* Contract Value */
+
+        summary.getCell("B5").value = contractValue;
+
+        /* Total Invoiced */
+
+        summary.getCell("B6").value = {
+            formula:
+                `SUM('Payment Register'!D${firstDataRow}:D${lastPaymentRow})`,
+            result: totalInvoiced
+        };
+
+        /* Total WHT */
+
+        summary.getCell("B7").value = {
+            formula:
+                `SUM('Payment Register'!E${firstDataRow}:E${lastPaymentRow})`,
+            result: totalWHT
+        };
+
+        /* Total Payable */
+
+        summary.getCell("B8").value = {
+            formula:
+                `SUM('Payment Register'!F${firstDataRow}:F${lastPaymentRow})`,
+            result: totalPayable
+        };
+
+        /* Total Received */
+
+        summary.getCell("B9").value = {
+            formula:
+                `SUM('Payment Register'!G${firstDataRow}:G${lastPaymentRow})`,
+            result: totalReceived
+        };
+
+        /* Outstanding */
+
+        summary.getCell("B10").value = {
+            formula:
+                `B8-B9`,
+            result: totalBalance
+        };
+
+        /* Invoiced % */
+
+        summary.getCell("B11").value = {
+            formula:
+                `IF(B5=0,0,B6/B5)`,
+            result:
+                contractValue === 0
+                    ? 0
+                    : totalInvoiced / contractValue
+        };
+
+        /* Paid % */
+
+        summary.getCell("B12").value = {
+            formula:
+                `IF(B5=0,0,B9/B5)`,
+            result:
+                contractValue === 0
+                    ? 0
+                    : totalReceived / contractValue
+        };
+
+        /* -----------------------------------------------------
+           Number formats
+        ----------------------------------------------------- */
+
+        for(let row = 5; row <= 10; row++){
+            summary.getCell(row, 2).numFmt =
+                currencyFormat;
+        }
+
+        summary.getCell("B11").numFmt =
+            percentageFormat;
+
+        summary.getCell("B12").numFmt =
+            percentageFormat;
+
+        /* -----------------------------------------------------
+           Outstanding balance highlight
+        ----------------------------------------------------- */
+
+        summary.getCell("B10").fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: {
+                argb:
+                    totalBalance > 0
+                        ? COLORS.orangeLight
+                        : totalBalance < 0
+                            ? COLORS.redLight
+                            : COLORS.greenLight
+            }
+        };
+
+        summary.getCell("B10").font = {
+            name: "Arial",
+            size: 12,
+            bold: true,
+            color: {
+                argb:
+                    totalBalance > 0
+                        ? COLORS.orange
+                        : totalBalance < 0
+                            ? COLORS.red
+                            : COLORS.green
+            }
+        };
+
+        /* -----------------------------------------------------
+           Summary borders
+        ----------------------------------------------------- */
+
+        for(let row = 5; row <= 12; row++){
+
+            for(let col = 1; col <= 2; col++){
+
+                summary.getCell(row, col).border = {
+                    top: {
+                        style: "thin",
+                        color: {
+                            argb: "D9E1F2"
+                        }
+                    },
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            argb: "D9E1F2"
+                        }
+                    },
+                    left: {
+                        style: "thin",
+                        color: {
+                            argb: "D9E1F2"
+                        }
+                    },
+                    right: {
+                        style: "thin",
+                        color: {
+                            argb: "D9E1F2"
+                        }
+                    }
+                };
+            }
+        }
+
+        /* -----------------------------------------------------
+           Navigation links
+        ----------------------------------------------------- */
+
+        summary.getCell("D5").value = {
+            text: "→ Payment Register",
+            hyperlink: "#'Payment Register'!A1"
+        };
+
+        summary.getCell("D6").value = {
+            text: "→ Formula Guide",
+            hyperlink: "#'Formula Guide'!A1"
+        };
+
+        summary.getCell("D5").font = {
+            name: "Arial",
+            size: 11,
+            bold: true,
+            color: {
+                argb: COLORS.blue
+            },
+            underline: true
+        };
+
+        summary.getCell("D6").font = {
+            name: "Arial",
+            size: 11,
+            bold: true,
+            color: {
+                argb: COLORS.blue
+            },
+            underline: true
+        };
+
+        /* =====================================================
+           FORMULA GUIDE
+        ===================================================== */
+
+        const guide = workbook.addWorksheet("Formula Guide");
+
+        guide.views = [
+            {
+                state: "frozen",
+                ySplit: 4
+            }
+        ];
+
+        guide.mergeCells("A1:D1");
+
+        guide.getCell("A1").value =
+            "PAYMENT EXCEL - FORMULA GUIDE";
+
+        guide.getCell("A1").font = {
+            name: "Arial",
+            size: 18,
+            bold: true,
+            color: {
+                argb: COLORS.white
+            }
+        };
+
+        guide.getCell("A1").fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: {
+                argb: COLORS.navy
+            }
+        };
+
+        guide.getCell("A1").alignment = {
+            horizontal: "center",
+            vertical: "middle"
+        };
+
+        guide.getRow(1).height = 32;
+
+        guide.mergeCells("A2:D2");
+
+        guide.getCell("A2").value =
+            "The equations below are the actual formulas used in the workbook.";
+
+        guide.getCell("A2").font = {
+            name: "Arial",
+            size: 10,
+            italic: true,
+            color: {
+                argb: COLORS.grey
+            }
+        };
+
+        guide.getCell("A2").alignment = {
+            horizontal: "center"
+        };
+
+        const guideHeaders = [
+            "Metric",
+            "Location",
+            "Formula",
+            "Description"
+        ];
+
+        guideHeaders.forEach(function(header, index){
+
+            const cell =
+                guide.getCell(4, index + 1);
+
+            cell.value = header;
+
+            cell.font = {
+                name: "Arial",
+                size: 10,
+                bold: true,
+                color: {
+                    argb: COLORS.white
+                }
+            };
+
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: {
+                    argb: COLORS.blue
+                }
+            };
+
+            cell.alignment = {
+                horizontal: "center",
+                vertical: "middle"
+            };
+        });
+
+        const guideRows = [
+
+            [
+                "Payable Amount",
+                "Payment Register - Column F",
+                "= Invoice Value - WHT Amount",
+                "Amount payable after withholding tax."
+            ],
+
+            [
+                "Balance",
+                "Payment Register - Column H",
+                "= Payable Amount - Payment Received",
+                "Remaining amount after payments received."
+            ],
+
+            [
+                "Payment Status",
+                "Payment Register - Column K",
+                'IF(Balance<0,"Overpaid",IF(Balance=0,"Fully Paid",IF(Payment Received>0,"Partially Paid","Unpaid")))',
+                "Automatically identifies the payment status."
+            ],
+
+            [
+                "Total Invoiced",
+                "Payment Summary - B6",
+                "=SUM(Payment Register Invoice Value)",
+                "Total invoice value of all payments."
+            ],
+
+            [
+                "Total WHT",
+                "Payment Summary - B7",
+                "=SUM(Payment Register WHT Amount)",
+                "Total withholding tax."
+            ],
+
+            [
+                "Total Payable",
+                "Payment Summary - B8",
+                "=SUM(Payment Register Payable Amount)",
+                "Total amount payable after WHT."
+            ],
+
+            [
+                "Total Received",
+                "Payment Summary - B9",
+                "=SUM(Payment Register Payment Received)",
+                "Total payments received."
+            ],
+
+            [
+                "Outstanding Balance",
+                "Payment Summary - B10",
+                "= Total Payable - Total Received",
+                "Remaining amount outstanding."
+            ],
+
+            [
+                "Invoiced % of Contract",
+                "Payment Summary - B11",
+                "= Total Invoiced / Contract Value",
+                "Percentage of contract value invoiced."
+            ],
+
+            [
+                "Paid % of Contract",
+                "Payment Summary - B12",
+                "= Total Received / Contract Value",
+                "Percentage of contract value already received."
+            ]
+        ];
+
+        guideRows.forEach(function(data, index){
+
+            const rowNumber = 5 + index;
+
+            data.forEach(function(value, colIndex){
+
+                const cell =
+                    guide.getCell(
+                        rowNumber,
+                        colIndex + 1
+                    );
+
+                cell.value = value;
+
+                cell.font = {
+                    name: "Arial",
+                    size: 10,
+                    color: {
+                        argb: COLORS.dark
+                    }
+                };
+
+                cell.alignment = {
+                    vertical: "top",
+                    wrapText: true
+                };
+
+                cell.border = {
+                    bottom: {
+                        style: "hair",
+                        color: {
+                            argb: "D9E1F2"
+                        }
+                    }
+                };
+
+                if(index % 2 === 1){
+
+                    cell.fill = {
+                        type: "pattern",
+                        pattern: "solid",
+                        fgColor: {
+                            argb: "F8FBFD"
+                        }
+                    };
+                }
+            });
+
+            guide.getRow(rowNumber).height = 34;
+        });
+
+        guide.getColumn(1).width = 28;
+        guide.getColumn(2).width = 32;
+        guide.getColumn(3).width = 65;
+        guide.getColumn(4).width = 55;
+
+        /* =====================================================
+           PRINT SETTINGS
+        ===================================================== */
+
+        [register, summary, guide].forEach(function(sheet){
+
+            sheet.pageSetup = {
+                orientation: "landscape",
+                fitToPage: true,
+                fitToWidth: 1,
+                fitToHeight: 0
+            };
+
+            sheet.pageMargins = {
+                left: 0.3,
+                right: 0.3,
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.2,
+                footer: 0.2
+            };
+
+            sheet.headerFooter.oddFooter =
+                "ALM Project Manager | Page &P of &N";
+
+            sheet.headerFooter.oddHeader =
+                project.name || "Project";
+        });
+
+        register.pageSetup.printTitlesRow = "1:4";
+        guide.pageSetup.printTitlesRow = "1:4";
+
+        /* =====================================================
+           DOWNLOAD
+        ===================================================== */
+
+        const buffer =
+            await workbook.xlsx.writeBuffer();
+
+        const blob = new Blob(
+            [buffer],
+            {
+                type:
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            }
         );
 
-        return;
+        const url =
+            window.URL.createObjectURL(blob);
+
+        const a =
+            document.createElement("a");
+
+        const safeProjectName =
+            cleanFileName(project.name || "Project");
+
+        a.href = url;
+
+        a.download =
+            safeProjectName +
+            "_Payment_Register.xlsx";
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        document.body.removeChild(a);
+
+        window.URL.revokeObjectURL(url);
+
+    } catch(error){
+
+        console.error(
+            "Payment Excel Export Error:",
+            error
+        );
+
+        alert(
+            "Unable to export Payment Excel.\n\n" +
+            error.message
+        );
     }
-
-
-    const rows =
-        (project.payments || []).map(payment => ({
-
-            "Payment Number":
-                payment.paymentNumber || "",
-
-            "Payment Type":
-                payment.paymentType || "",
-
-            "Contractor":
-                payment.contractor || "",
-
-            "Invoice Value":
-                parsePaymentMoney(
-                    payment.invoiceValue
-                ),
-            "WHT Amount":
-    parsePaymentMoney(
-        payment.whtAmount
-    ),
-
-"Payable Amount":
-    getPaymentPayableAmount(
-        payment
-    ),
-
-            "Payment Received":
-                parsePaymentMoney(
-                    payment.paymentReceived
-                ),
-
-           "Balance":
-    getPaymentPayableAmount(
-        payment
-    ) -
-    parsePaymentMoney(
-        payment.paymentReceived
-    ),
-
-            "Date of Payment Received":
-                payment.paymentDate || "",
-
-            "Invoice PDF":
-                payment.fileName || ""
-
-        }));
-
-
-    const worksheet =
-        XLSX.utils.json_to_sheet(rows);
-
-
-    worksheet["!cols"] = [
-
-        {wch:18},
-        {wch:22},
-        {wch:30},
-        {wch:18},
-        {wch:20},
-        {wch:18},
-        {wch:28},
-        {wch:35}
-
-    ];
-
-
-    const workbook =
-        XLSX.utils.book_new();
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Payments"
-    );
-
-
-    const projectName =
-        project.name ||
-        project.projectName ||
-        "Project";
-
-
-    XLSX.writeFile(
-        workbook,
-        `${projectName}-Payments.xlsx`
-    );
-
 };
 /* =====================================================
    VARIATIONS MODULE
