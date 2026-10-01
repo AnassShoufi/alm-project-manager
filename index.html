@@ -1709,6 +1709,7 @@ let manpowerFilters = {
         <nav class="menu">
             <button class="active" onclick="showDashboard()">▦ Dashboard</button>
             <button onclick="showProjects()">▣ Projects</button>
+            <button onclick="showTenders()">📑 Tenders</button>
             <button>☑ Tasks</button>
             <button>▤ Documents</button>
             <button>🛒 Procurement</button>
@@ -53494,7 +53495,1715 @@ document.addEventListener(
 
     }
 );
+/* =====================================================
+   TENDERS MODULE
+   INDEPENDENT FROM PROJECTS
+===================================================== */
 
+let tenders = JSON.parse(
+    localStorage.getItem("alm_tenders") || "[]"
+);
+
+let currentTenderId = null;
+let currentTenderFolderId = null;
+
+
+/* =========================
+   TENDERS STORAGE
+========================= */
+
+function persistTenders(){
+
+    localStorage.setItem(
+        "alm_tenders",
+        JSON.stringify(tenders)
+    );
+
+}
+
+
+/* =========================
+   CREATE DEFAULT FOLDERS
+========================= */
+
+function createTenderFolders(){
+
+    const fromClientId =
+        "folder-" + Date.now() + "-client";
+
+    const almId =
+        "folder-" + Date.now() + "-alm";
+
+    const commercialId =
+        "folder-" + Date.now() + "-commercial";
+
+    return [
+
+        {
+            id: fromClientId,
+            name: "From Client",
+            parentId: null,
+            type: "client"
+        },
+
+        {
+            id: almId,
+            name: "ALM Submittal",
+            parentId: null,
+            type: "alm"
+        },
+
+        {
+            id: commercialId,
+            name: "Commercial",
+            parentId: almId,
+            type: "commercial"
+        }
+
+    ];
+
+}
+
+
+/* =========================
+   SHOW TENDERS
+========================= */
+
+window.showTenders = function(){
+
+    document
+        .querySelectorAll(".menu button")
+        .forEach(function(btn){
+            btn.classList.remove("active");
+        });
+
+    const page =
+        document.getElementById("pageContent");
+
+    if(!page) return;
+
+    page.innerHTML = `
+
+        <div class="page-title">
+
+            <div>
+
+                <h1>📑 Tenders</h1>
+
+                <p>
+                    Tender Management
+                </p>
+
+            </div>
+
+            <button
+                class="btn btn-primary"
+                onclick="addNewTender()"
+            >
+                + New Tender
+            </button>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <h2>Active Tenders</h2>
+
+            </div>
+
+
+            ${
+                tenders.length === 0
+
+                ?
+
+                `
+                <div class="empty">
+
+                    No tenders found.
+
+                    <div style="
+                        margin-top:15px;
+                    ">
+
+                        <button
+                            class="btn btn-primary"
+                            onclick="addNewTender()"
+                        >
+                            + Create First Tender
+                        </button>
+
+                    </div>
+
+                </div>
+                `
+
+                :
+
+                `
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>S/N</th>
+
+                                <th>Tender / Project</th>
+
+                                <th>Created Date</th>
+
+                                <th>Documents</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            ${
+                                tenders.map(function(tender,index){
+
+                                    return `
+
+                                    <tr>
+
+                                        <td>
+                                            ${index + 1}
+                                        </td>
+
+
+                                        <td>
+
+                                            <strong>
+                                                ${escapeHTML(
+                                                    tender.name
+                                                )}
+                                            </strong>
+
+                                        </td>
+
+
+                                        <td>
+                                            ${escapeHTML(
+                                                tender.createdDate || "-"
+                                            )}
+                                        </td>
+
+
+                                        <td>
+                                            ${
+                                                Array.isArray(
+                                                    tender.documents
+                                                )
+                                                ?
+                                                tender.documents.length
+                                                :
+                                                0
+                                            }
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="actions">
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        openTender(
+                                                            '${tender.id}'
+                                                        );
+                                                    "
+                                                >
+                                                    Open
+                                                </button>
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        renameTender(
+                                                            '${tender.id}'
+                                                        );
+                                                    "
+                                                >
+                                                    Rename
+                                                </button>
+
+
+                                                <button
+                                                    class="action-btn"
+                                                    onclick="
+                                                        deleteTender(
+                                                            '${tender.id}'
+                                                        );
+                                                    "
+                                                >
+                                                    Delete
+                                                </button>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                    `;
+
+                                }).join("")
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                `
+
+            }
+
+        </div>
+
+    `;
+
+};
+
+
+/* =========================
+   ADD NEW TENDER
+========================= */
+
+window.addNewTender = function(){
+
+    const name = prompt(
+        "Enter Tender / Project Name:"
+    );
+
+    if(!name || !name.trim()){
+
+        return;
+
+    }
+
+
+    const folders =
+        createTenderFolders();
+
+
+    const tender = {
+
+        id:
+            "tender-" +
+            Date.now(),
+
+        name:
+            name.trim(),
+
+        createdDate:
+            new Date().toISOString().split("T")[0],
+
+        folders:
+            folders,
+
+        documents: [],
+
+        technicalSubmissionLink:
+            "",
+
+        clientDriveLink:
+            ""
+
+    };
+
+
+    tenders.push(tender);
+
+    persistTenders();
+
+    openTender(tender.id);
+
+};
+
+
+/* =========================
+   OPEN TENDER
+========================= */
+
+window.openTender = function(tenderId){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    currentTenderId =
+        tender.id;
+
+
+    currentTenderFolderId =
+        null;
+
+
+    renderTender(tender);
+
+};
+
+
+/* =========================
+   RENDER TENDER
+========================= */
+
+function renderTender(tender){
+
+    const page =
+        document.getElementById(
+            "pageContent"
+        );
+
+    if(!page) return;
+
+
+    const fromClient =
+        tender.folders.find(function(folder){
+
+            return folder.type === "client";
+
+        });
+
+
+    const almSubmittal =
+        tender.folders.find(function(folder){
+
+            return folder.type === "alm";
+
+        });
+
+
+    const commercial =
+        tender.folders.find(function(folder){
+
+            return folder.type === "commercial";
+
+        });
+
+
+    page.innerHTML = `
+
+        <div class="page-title">
+
+            <div>
+
+                <h1>
+                    📑 ${escapeHTML(tender.name)}
+                </h1>
+
+                <p>
+                    Tender Management
+                </p>
+
+            </div>
+
+
+            <button
+                class="btn btn-secondary"
+                onclick="showTenders()"
+            >
+                ← Back to Tenders
+            </button>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <h2>From Client</h2>
+
+            </div>
+
+
+            <div style="padding:20px">
+
+                <div style="
+                    display:flex;
+                    gap:10px;
+                    align-items:center;
+                    flex-wrap:wrap;
+                ">
+
+                    <input
+                        id="tenderClientDrive"
+                        type="url"
+                        value="${escapeHTML(
+                            tender.clientDriveLink || ""
+                        )}"
+                        placeholder="https://drive.google.com/..."
+                        style="
+                            flex:1;
+                            min-width:300px;
+                        "
+                    >
+
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="
+                            saveTenderClientDrive(
+                                '${tender.id}'
+                            );
+                        "
+                    >
+                        Save Google Drive Link
+                    </button>
+
+
+                    ${
+                        tender.clientDriveLink
+
+                        ?
+
+                        `
+                        <a
+                            href="${escapeHTML(
+                                tender.clientDriveLink
+                            )}"
+                            target="_blank"
+                            class="btn btn-secondary"
+                        >
+                            Open Drive
+                        </a>
+                        `
+
+                        :
+
+                        ""
+
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel" style="margin-top:20px">
+
+            <div class="panel-header">
+
+                <h2>ALM Submittal</h2>
+
+            </div>
+
+
+            <div style="
+                padding:20px;
+            ">
+
+
+                <!-- COMMERCIAL -->
+
+                <div class="tender-folder-card">
+
+                    <div class="tender-folder-icon">
+                        📁
+                    </div>
+
+                    <div style="flex:1">
+
+                        <strong>
+                            Commercial
+                        </strong>
+
+                        <div style="
+                            font-size:12px;
+                            color:#64748b;
+                            margin-top:4px;
+                        ">
+                            Commercial documents and revisions
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="
+                            openTenderFolder(
+                                '${tender.id}',
+                                '${commercial.id}'
+                            );
+                        "
+                    >
+                        Open
+                    </button>
+
+                </div>
+
+
+                <!-- TECHNICAL -->
+
+                <div class="tender-folder-card">
+
+                    <div class="tender-folder-icon">
+                        📐
+                    </div>
+
+                    <div style="flex:1">
+
+                        <strong>
+                            Technical Submission
+                        </strong>
+
+                        <div style="
+                            font-size:12px;
+                            color:#64748b;
+                            margin-top:4px;
+                        ">
+                            Google Drive Submission Folder
+                        </div>
+
+                    </div>
+
+
+                    <input
+                        id="tenderTechnicalDrive"
+                        type="url"
+                        value="${escapeHTML(
+                            tender.technicalSubmissionLink || ""
+                        )}"
+                        placeholder="Google Drive link"
+                        style="
+                            min-width:300px;
+                        "
+                    >
+
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="
+                            saveTenderTechnicalDrive(
+                                '${tender.id}'
+                            );
+                        "
+                    >
+                        Save
+                    </button>
+
+
+                    ${
+                        tender.technicalSubmissionLink
+
+                        ?
+
+                        `
+                        <a
+                            href="${escapeHTML(
+                                tender.technicalSubmissionLink
+                            )}"
+                            target="_blank"
+                            class="btn btn-secondary"
+                        >
+                            Open
+                        </a>
+                        `
+
+                        :
+
+                        ""
+
+                    }
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="tenderFolderArea"
+            style="margin-top:20px"
+        ></div>
+
+    `;
+
+}
+
+
+/* =========================
+   OPEN FOLDER
+========================= */
+
+window.openTenderFolder = function(
+    tenderId,
+    folderId
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const folder =
+        tender.folders.find(function(f){
+
+            return String(f.id) ===
+                   String(folderId);
+
+        });
+
+
+    if(!folder) return;
+
+
+    currentTenderId =
+        tenderId;
+
+    currentTenderFolderId =
+        folderId;
+
+
+    renderTenderFolder(
+        tender,
+        folder
+    );
+
+};
+
+
+/* =========================
+   RENDER COMMERCIAL TABLE
+========================= */
+
+function renderTenderFolder(
+    tender,
+    folder
+){
+
+    const area =
+        document.getElementById(
+            "tenderFolderArea"
+        );
+
+
+    if(!area) return;
+
+
+    const documents =
+        tender.documents.filter(function(doc){
+
+            return String(doc.folderId) ===
+                   String(folder.id);
+
+        });
+
+
+    area.innerHTML = `
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        📁 ${escapeHTML(folder.name)}
+                    </h2>
+
+                    <p>
+                        ${documents.length}
+                        document(s)
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="btn btn-primary"
+                    onclick="
+                        addTenderDocument(
+                            '${tender.id}',
+                            '${folder.id}'
+                        );
+                    "
+                >
+                    + Add Document
+                </button>
+
+            </div>
+
+
+            <div style="padding:0">
+
+                ${
+                    documents.length === 0
+
+                    ?
+
+                    `
+                    <div class="empty">
+                        No documents uploaded yet.
+                    </div>
+                    `
+
+                    :
+
+                    `
+
+                    <div style="
+                        overflow-x:auto;
+                    ">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>S/N</th>
+
+                                    <th>
+                                        Document Name
+                                    </th>
+
+                                    <th>
+                                        Revision
+                                    </th>
+
+                                    <th>
+                                        Date
+                                    </th>
+
+                                    <th>
+                                        Uploaded By
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Actions
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                ${
+                                    documents.map(
+                                        function(
+                                            doc,
+                                            index
+                                        ){
+
+                                            return `
+
+                                            <tr>
+
+                                                <td>
+                                                    ${index + 1}
+                                                </td>
+
+
+                                                <td>
+
+                                                    <strong>
+                                                        ${escapeHTML(
+                                                            doc.name
+                                                        )}
+                                                    </strong>
+
+                                                    <div style="
+                                                        font-size:11px;
+                                                        color:#64748b;
+                                                        margin-top:3px;
+                                                    ">
+                                                        ${escapeHTML(
+                                                            doc.fileName || ""
+                                                        )}
+                                                    </div>
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    <span style="
+                                                        display:inline-block;
+                                                        padding:4px 9px;
+                                                        border-radius:6px;
+                                                        background:#eff6ff;
+                                                        color:#1d4ed8;
+                                                        font-weight:700;
+                                                    ">
+                                                        Rev ${doc.revision}
+                                                    </span>
+
+                                                </td>
+
+
+                                                <td>
+                                                    ${escapeHTML(
+                                                        doc.date || "-"
+                                                    )}
+                                                </td>
+
+
+                                                <td>
+                                                    ${escapeHTML(
+                                                        doc.uploadedBy || "-"
+                                                    )}
+                                                </td>
+
+
+                                                <td>
+
+                                                    <select
+                                                        onchange="
+                                                            updateTenderDocumentStatus(
+                                                                '${tender.id}',
+                                                                '${doc.id}',
+                                                                this.value
+                                                            );
+                                                        "
+                                                    >
+
+                                                        <option
+                                                            value="Submitted"
+                                                            ${doc.status === "Submitted" ? "selected" : ""}
+                                                        >
+                                                            Submitted
+                                                        </option>
+
+                                                        <option
+                                                            value="Under Review"
+                                                            ${doc.status === "Under Review" ? "selected" : ""}
+                                                        >
+                                                            Under Review
+                                                        </option>
+
+                                                    </select>
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    <div class="actions">
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                viewTenderDocument(
+                                                                    '${tender.id}',
+                                                                    '${doc.id}'
+                                                                );
+                                                            "
+                                                        >
+                                                            View
+                                                        </button>
+
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                downloadTenderDocument(
+                                                                    '${tender.id}',
+                                                                    '${doc.id}'
+                                                                );
+                                                            "
+                                                        >
+                                                            Download
+                                                        </button>
+
+
+                                                        <button
+                                                            class="action-btn"
+                                                            onclick="
+                                                                deleteTenderDocument(
+                                                                    '${tender.id}',
+                                                                    '${doc.id}'
+                                                                );
+                                                            "
+                                                        >
+                                                            Delete
+                                                        </button>
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+
+                                            `;
+
+                                        }
+                                    ).join("")
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    `
+
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================
+   NEXT REVISION
+========================= */
+
+function getNextTenderRevision(
+    tender,
+    folderId,
+    documentName
+){
+
+    const normalizedName =
+        documentName
+            .trim()
+            .toLowerCase();
+
+
+    const revisions =
+        tender.documents
+
+            .filter(function(doc){
+
+                return String(doc.folderId) ===
+                       String(folderId) &&
+
+                       String(doc.name || "")
+                           .trim()
+                           .toLowerCase() ===
+                       normalizedName;
+
+            })
+
+            .map(function(doc){
+
+                return Number(doc.revision);
+
+            })
+
+            .filter(function(value){
+
+                return Number.isFinite(value);
+
+            });
+
+
+    if(revisions.length === 0){
+
+        return 0;
+
+    }
+
+
+    return Math.max.apply(
+        null,
+        revisions
+    ) + 1;
+
+}
+
+
+/* =========================
+   ADD DOCUMENT
+========================= */
+
+window.addTenderDocument = function(
+    tenderId,
+    folderId
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const input =
+        document.createElement("input");
+
+    input.type = "file";
+
+
+    input.onchange = function(){
+
+        const file =
+            input.files[0];
+
+
+        if(!file) return;
+
+
+        const defaultName =
+            file.name.replace(
+                /\.[^/.]+$/,
+                ""
+            );
+
+
+        const documentName =
+            prompt(
+                "Document Name:",
+                defaultName
+            );
+
+
+        if(
+            !documentName ||
+            !documentName.trim()
+        ){
+
+            return;
+
+        }
+
+
+        const suggestedRevision =
+            getNextTenderRevision(
+                tender,
+                folderId,
+                documentName
+            );
+
+
+        const revisionInput =
+            prompt(
+                "Revision:",
+                String(
+                    suggestedRevision
+                )
+            );
+
+
+        if(
+            revisionInput === null
+        ){
+
+            return;
+
+        }
+
+
+        const revision =
+            Number(
+                revisionInput
+            );
+
+
+        if(
+            !Number.isInteger(
+                revision
+            ) ||
+            revision < 0
+        ){
+
+            alert(
+                "Revision must be a whole number starting from 0."
+            );
+
+            return;
+
+        }
+
+
+        const uploadedBy =
+            prompt(
+                "Uploaded By:",
+                "Project Manager"
+            );
+
+
+        if(
+            uploadedBy === null
+        ){
+
+            return;
+
+        }
+
+
+        const documentRecord = {
+
+            id:
+                "doc-" +
+                Date.now() +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .slice(2),
+
+            folderId:
+                folderId,
+
+            name:
+                documentName.trim(),
+
+            revision:
+                revision,
+
+            date:
+                new Date()
+                    .toISOString()
+                    .split("T")[0],
+
+            uploadedBy:
+                uploadedBy.trim(),
+
+            status:
+                "Submitted",
+
+            fileName:
+                file.name,
+
+            fileType:
+                file.type || "",
+
+            fileData:
+                ""
+
+        };
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload = function(e){
+
+            documentRecord.fileData =
+                e.target.result;
+
+
+            tender.documents.push(
+                documentRecord
+            );
+
+
+            persistTenders();
+
+
+            renderTenderFolder(
+                tender,
+                tender.folders.find(
+                    function(f){
+                        return String(f.id) ===
+                               String(folderId);
+                    }
+                )
+            );
+
+        };
+
+
+        reader.readAsDataURL(file);
+
+    };
+
+
+    input.click();
+
+};
+
+
+/* =========================
+   UPDATE STATUS
+========================= */
+
+window.updateTenderDocumentStatus = function(
+    tenderId,
+    documentId,
+    status
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const documentRecord =
+        tender.documents.find(function(doc){
+
+            return String(doc.id) ===
+                   String(documentId);
+
+        });
+
+
+    if(!documentRecord) return;
+
+
+    documentRecord.status =
+        status;
+
+
+    persistTenders();
+
+};
+
+
+/* =========================
+   VIEW DOCUMENT
+========================= */
+
+window.viewTenderDocument = function(
+    tenderId,
+    documentId
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const doc =
+        tender.documents.find(function(d){
+
+            return String(d.id) ===
+                   String(documentId);
+
+        });
+
+
+    if(
+        !doc ||
+        !doc.fileData
+    ){
+
+        alert(
+            "No file is attached to this document."
+        );
+
+        return;
+
+    }
+
+
+    const newWindow =
+        window.open(
+            "",
+            "_blank"
+        );
+
+
+    if(!newWindow){
+
+        alert(
+            "Please allow pop-ups."
+        );
+
+        return;
+
+    }
+
+
+    newWindow.document.write(`
+
+        <html>
+
+        <head>
+
+            <title>
+                ${escapeHTML(
+                    doc.fileName ||
+                    doc.name
+                )}
+            </title>
+
+        </head>
+
+        <body style="
+            margin:0;
+            background:#f1f5f9;
+        ">
+
+            <iframe
+                src="${doc.fileData}"
+                style="
+                    width:100%;
+                    height:100vh;
+                    border:0;
+                    background:#fff;
+                "
+            ></iframe>
+
+        </body>
+
+        </html>
+
+    `);
+
+};
+
+
+/* =========================
+   DOWNLOAD DOCUMENT
+========================= */
+
+window.downloadTenderDocument = function(
+    tenderId,
+    documentId
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const doc =
+        tender.documents.find(function(d){
+
+            return String(d.id) ===
+                   String(documentId);
+
+        });
+
+
+    if(
+        !doc ||
+        !doc.fileData
+    ){
+
+        alert(
+            "No file attached."
+        );
+
+        return;
+
+    }
+
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        doc.fileData;
+
+    link.download =
+        doc.fileName ||
+        doc.name;
+
+    document.body.appendChild(
+        link
+    );
+
+    link.click();
+
+    link.remove();
+
+};
+
+
+/* =========================
+   DELETE DOCUMENT
+========================= */
+
+window.deleteTenderDocument = function(
+    tenderId,
+    documentId
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this document?"
+        );
+
+
+    if(!confirmed) return;
+
+
+    tender.documents =
+        tender.documents.filter(
+            function(doc){
+
+                return String(doc.id) !==
+                       String(documentId);
+
+            }
+        );
+
+
+    persistTenders();
+
+
+    const folder =
+        tender.folders.find(
+            function(f){
+
+                return String(f.id) ===
+                       String(currentTenderFolderId);
+
+            }
+        );
+
+
+    if(folder){
+
+        renderTenderFolder(
+            tender,
+            folder
+        );
+
+    }
+
+};
+
+
+/* =========================
+   RENAME TENDER
+========================= */
+
+window.renameTender = function(tenderId){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const newName =
+        prompt(
+            "Tender / Project Name:",
+            tender.name
+        );
+
+
+    if(
+        !newName ||
+        !newName.trim()
+    ){
+
+        return;
+
+    }
+
+
+    tender.name =
+        newName.trim();
+
+
+    persistTenders();
+
+
+    showTenders();
+
+};
+
+
+/* =========================
+   DELETE TENDER
+========================= */
+
+window.deleteTender = function(tenderId){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const confirmed =
+        confirm(
+            `Delete tender "${tender.name}"?`
+        );
+
+
+    if(!confirmed) return;
+
+
+    tenders =
+        tenders.filter(function(t){
+
+            return String(t.id) !==
+                   String(tenderId);
+
+        });
+
+
+    persistTenders();
+
+    showTenders();
+
+};
+
+
+/* =========================
+   SAVE CLIENT DRIVE
+========================= */
+
+window.saveTenderClientDrive = function(
+    tenderId
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const input =
+        document.getElementById(
+            "tenderClientDrive"
+        );
+
+
+    tender.clientDriveLink =
+        input
+        ?
+        input.value.trim()
+        :
+        "";
+
+
+    persistTenders();
+
+    renderTender(tender);
+
+};
+
+
+/* =========================
+   SAVE TECHNICAL DRIVE
+========================= */
+
+window.saveTenderTechnicalDrive = function(
+    tenderId
+){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const input =
+        document.getElementById(
+            "tenderTechnicalDrive"
+        );
+
+
+    tender.technicalSubmissionLink =
+        input
+        ?
+        input.value.trim()
+        :
+        "";
+
+
+    persistTenders();
+
+    renderTender(tender);
+
+};
 </script>
 </body>
 </html>
