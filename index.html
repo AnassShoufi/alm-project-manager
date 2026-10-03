@@ -53509,6 +53509,34 @@ let currentTenderFolderId = null;
 
 
 /* =========================
+   TENDER INFORMATION DEFAULTS
+========================= */
+
+function ensureTenderInfo(tender){
+
+    if(!tender) return;
+
+    if(tender.reference === undefined){
+        tender.reference = "";
+    }
+
+    if(tender.client === undefined){
+        tender.client = "";
+    }
+
+    if(tender.submissionDeadline === undefined){
+        tender.submissionDeadline = "";
+    }
+
+    if(!tender.status){
+        tender.status = "New";
+    }
+
+    return tender;
+}
+
+
+/* =========================
    TENDERS STORAGE
 ========================= */
 
@@ -53570,6 +53598,10 @@ function createTenderFolders(){
 ========================= */
 
 window.showTenders = function(){
+
+    tenders.forEach(function(tender){
+        ensureTenderInfo(tender);
+    });
 
     document
         .querySelectorAll(".menu button")
@@ -53657,7 +53689,13 @@ window.showTenders = function(){
 
                                 <th>Tender / Project</th>
 
-                                <th>Created Date</th>
+                                <th>Reference</th>
+
+                                <th>Client</th>
+
+                                <th>Submission Deadline</th>
+
+                                <th>Status</th>
 
                                 <th>Documents</th>
 
@@ -53695,8 +53733,37 @@ window.showTenders = function(){
 
                                         <td>
                                             ${escapeHTML(
-                                                tender.createdDate || "-"
+                                                tender.reference || "-"
                                             )}
+                                        </td>
+
+
+                                        <td>
+                                            ${escapeHTML(
+                                                tender.client || "-"
+                                            )}
+                                        </td>
+
+
+                                        <td>
+                                            ${escapeHTML(
+                                                tender.submissionDeadline || "-"
+                                            )}
+                                        </td>
+
+
+                                        <td>
+                                            <span style="
+                                                display:inline-block;
+                                                padding:4px 9px;
+                                                border-radius:6px;
+                                                background:#f1f5f9;
+                                                font-weight:700;
+                                            ">
+                                                ${escapeHTML(
+                                                    tender.status || "New"
+                                                )}
+                                            </span>
                                         </td>
 
 
@@ -53797,6 +53864,61 @@ window.addNewTender = function(){
     }
 
 
+    const referenceInput = prompt(
+        "Tender Reference (optional):",
+        ""
+    );
+
+    if(referenceInput === null){
+        return;
+    }
+
+
+    const clientInput = prompt(
+        "Client (optional):",
+        ""
+    );
+
+    if(clientInput === null){
+        return;
+    }
+
+
+    const deadlineInput = prompt(
+        "Submission Deadline (YYYY-MM-DD, optional):",
+        ""
+    );
+
+    if(deadlineInput === null){
+        return;
+    }
+
+
+    const statusInput = prompt(
+        "Tender Status:\nNew / Under Preparation / Submitted / Under Review / Won / Lost",
+        "New"
+    );
+
+    if(statusInput === null){
+        return;
+    }
+
+
+    const allowedStatuses = [
+        "New",
+        "Under Preparation",
+        "Submitted",
+        "Under Review",
+        "Won",
+        "Lost"
+    ];
+
+    const selectedStatus =
+        allowedStatuses.indexOf(statusInput.trim()) !== -1
+        ? statusInput.trim()
+        : "New";
+
+
     const folders =
         createTenderFolders();
 
@@ -53809,6 +53931,18 @@ window.addNewTender = function(){
 
         name:
             name.trim(),
+
+        reference:
+            referenceInput.trim(),
+
+        client:
+            clientInput.trim(),
+
+        submissionDeadline:
+            deadlineInput.trim(),
+
+        status:
+            selectedStatus,
 
         createdDate:
             new Date().toISOString().split("T")[0],
@@ -53853,6 +53987,8 @@ window.openTender = function(tenderId){
 
     if(!tender) return;
 
+    ensureTenderInfo(tender);
+
 
     currentTenderId =
         tender.id;
@@ -53872,6 +54008,8 @@ window.openTender = function(tenderId){
 ========================= */
 
 function renderTender(tender){
+
+    ensureTenderInfo(tender);
 
     const page =
         document.getElementById(
@@ -53933,6 +54071,65 @@ function renderTender(tender){
 
 
         <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h2>Tender Information</h2>
+                    <p>Basic tender details</p>
+                </div>
+
+                <button
+                    class="btn btn-secondary"
+                    onclick="editTenderInfo('${tender.id}')"
+                >
+                    Edit Information
+                </button>
+
+            </div>
+
+
+            <div style="
+                padding:20px;
+                display:grid;
+                grid-template-columns:repeat(4,minmax(160px,1fr));
+                gap:16px;
+            ">
+
+                <div>
+                    <div style="font-size:11px;color:#64748b;margin-bottom:5px;">Tender Reference</div>
+                    <strong>${escapeHTML(tender.reference || "-")}</strong>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#64748b;margin-bottom:5px;">Client</div>
+                    <strong>${escapeHTML(tender.client || "-")}</strong>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#64748b;margin-bottom:5px;">Submission Deadline</div>
+                    <strong>${escapeHTML(tender.submissionDeadline || "-")}</strong>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#64748b;margin-bottom:5px;">Status</div>
+                    <span style="
+                        display:inline-block;
+                        padding:5px 10px;
+                        border-radius:6px;
+                        background:#f1f5f9;
+                        font-weight:700;
+                    ">
+                        ${escapeHTML(tender.status || "New")}
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel" style="margin-top:20px">
 
             <div class="panel-header">
 
@@ -54495,7 +54692,6 @@ function renderTenderFolder(
 /* =========================
    NEXT REVISION
 ========================= */
-
 function getNextTenderRevision(
     tender,
     folderId,
@@ -55386,6 +55582,84 @@ window.deleteTenderDocument = async function(
     }
 
 };
+/* =========================
+   EDIT TENDER INFORMATION
+========================= */
+
+window.editTenderInfo = function(tenderId){
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    ensureTenderInfo(tender);
+
+
+    const referenceInput = prompt(
+        "Tender Reference (optional):",
+        tender.reference || ""
+    );
+
+    if(referenceInput === null) return;
+
+
+    const clientInput = prompt(
+        "Client (optional):",
+        tender.client || ""
+    );
+
+    if(clientInput === null) return;
+
+
+    const deadlineInput = prompt(
+        "Submission Deadline (YYYY-MM-DD, optional):",
+        tender.submissionDeadline || ""
+    );
+
+    if(deadlineInput === null) return;
+
+
+    const allowedStatuses = [
+        "New",
+        "Under Preparation",
+        "Submitted",
+        "Under Review",
+        "Won",
+        "Lost"
+    ];
+
+    const statusInput = prompt(
+        "Tender Status:\nNew / Under Preparation / Submitted / Under Review / Won / Lost",
+        tender.status || "New"
+    );
+
+    if(statusInput === null) return;
+
+
+    tender.reference = referenceInput.trim();
+    tender.client = clientInput.trim();
+    tender.submissionDeadline = deadlineInput.trim();
+    tender.status =
+        allowedStatuses.indexOf(statusInput.trim()) !== -1
+        ? statusInput.trim()
+        : tender.status || "New";
+
+
+    persistTenders();
+
+    renderTender(tender);
+
+};
+
+
 /* =========================
    RENAME TENDER
 ========================= */
