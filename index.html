@@ -55831,5 +55831,439 @@ window.saveTenderTechnicalDrive = function(
 
 };
 </script>
+    /* =====================================================
+   MANAGEMENT TASKS MODULE
+   INDEPENDENT FROM PROJECTS
+   MANAGEMENT TASKS + MEETINGS / SCHEDULE
+===================================================== */
+
+const MANAGEMENT_USERS = [
+    "Anass Shoufi (GM)",
+    "Wael Mansour (MD)",
+    "Karim Mansour (OM)"
+];
+
+let managementTasks = JSON.parse(localStorage.getItem("alm_management_tasks") || "[]");
+let managementMeetings = JSON.parse(localStorage.getItem("alm_management_meetings") || "[]");
+let currentManagementTab = "tasks";
+
+function persistManagement(){
+    localStorage.setItem("alm_management_tasks", JSON.stringify(managementTasks));
+    localStorage.setItem("alm_management_meetings", JSON.stringify(managementMeetings));
+}
+
+function managementToday(){
+    return new Date().toISOString().split("T")[0];
+}
+
+function managementDate(value){
+    if(!value) return "-";
+    const p = String(value).split("-");
+    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : value;
+}
+
+function managementOverdue(task){
+    return task.dueDate && task.status !== "Completed" && task.dueDate < managementToday();
+}
+
+function managementPriorityBadge(value){
+    let cls = "badge-active";
+    if(value === "Low") cls = "badge-completed";
+    if(value === "High") cls = "badge-onhold";
+    if(value === "Critical") cls = "badge-overdue";
+    return `<span class="status-badge ${cls}">${escapeHTML(value || "Medium")}</span>`;
+}
+
+function managementStatusBadge(value){
+    if(value === "Completed") return `<span class="status-badge badge-completed">Completed</span>`;
+    if(value === "In Progress") return `<span class="status-badge badge-active">In Progress</span>`;
+    if(value === "Overdue") return `<span class="status-badge badge-overdue">Overdue</span>`;
+    return `<span class="status-badge badge-onhold">${escapeHTML(value || "Pending")}</span>`;
+}
+
+function managementMeetingBadge(value){
+    if(value === "Completed") return `<span class="status-badge badge-completed">Completed</span>`;
+    if(value === "Cancelled") return `<span class="status-badge badge-overdue">Cancelled</span>`;
+    return `<span class="status-badge badge-active">Scheduled</span>`;
+}
+
+window.showManagementTasks = function(){
+    document.querySelectorAll(".menu button").forEach(function(btn){ btn.classList.remove("active"); });
+    currentManagementTab = "tasks";
+    renderManagementModule();
+};
+
+function renderManagementModule(){
+    const page = document.getElementById("pageContent");
+    if(!page) return;
+
+    const total = managementTasks.length;
+    const pending = managementTasks.filter(t => t.status === "Pending" && !managementOverdue(t)).length;
+    const progress = managementTasks.filter(t => t.status === "In Progress").length;
+    const overdue = managementTasks.filter(t => managementOverdue(t)).length;
+    const completed = managementTasks.filter(t => t.status === "Completed").length;
+    const upcoming = managementMeetings.filter(m => m.status === "Scheduled" && m.date >= managementToday()).length;
+
+    page.innerHTML = `
+        <div class="page-title">
+            <div>
+                <h1>☑ Management Tasks</h1>
+                <p>Management tasks, schedules and meetings</p>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="createManagementTask()">+ New Task</button>
+                <button class="btn btn-secondary" onclick="createManagementMeeting()">+ Schedule Meeting</button>
+            </div>
+        </div>
+
+        <div class="management-kpi-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:20px">
+            ${managementKpi("Total Tasks", total)}
+            ${managementKpi("Pending", pending)}
+            ${managementKpi("In Progress", progress)}
+            ${managementKpi("Overdue", overdue)}
+            ${managementKpi("Completed", completed)}
+            ${managementKpi("Upcoming Meetings", upcoming)}
+        </div>
+
+        <div class="panel" style="padding:0;overflow:hidden">
+            <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+                <button onclick="switchManagementTab('tasks')" style="border:0;background:${currentManagementTab === "tasks" ? "#fff" : "transparent"};padding:15px 24px;font-weight:700;cursor:pointer;color:#17243a;border-bottom:3px solid ${currentManagementTab === "tasks" ? "#2563eb" : "transparent"}">☑ Tasks</button>
+                <button onclick="switchManagementTab('meetings')" style="border:0;background:${currentManagementTab === "meetings" ? "#fff" : "transparent"};padding:15px 24px;font-weight:700;cursor:pointer;color:#17243a;border-bottom:3px solid ${currentManagementTab === "meetings" ? "#2563eb" : "transparent"}">📅 Meetings</button>
+            </div>
+            <div id="managementTabContent" style="padding:20px"></div>
+        </div>
+    `;
+
+    if(currentManagementTab === "meetings") renderManagementMeetings();
+    else renderManagementTasks();
+}
+
+function managementKpi(title, value){
+    return `<div class="panel" style="margin:0;padding:18px"><div style="color:#64748b;font-size:12px">${title}</div><div style="font-size:27px;font-weight:700;margin-top:5px">${value}</div></div>`;
+}
+
+window.switchManagementTab = function(tab){
+    currentManagementTab = tab === "meetings" ? "meetings" : "tasks";
+    renderManagementModule();
+};
+
+/* =====================================================
+   TASKS
+===================================================== */
+
+function renderManagementTasks(){
+    const area = document.getElementById("managementTabContent");
+    if(!area) return;
+
+    const filter = document.getElementById("managementTaskFilter")?.value || "All";
+    let tasks = managementTasks.slice();
+    if(filter !== "All") tasks = tasks.filter(t => t.assignedTo === filter);
+
+    tasks.sort((a,b) => (a.dueDate || "9999-12-31").localeCompare(b.dueDate || "9999-12-31"));
+
+    area.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:20px">
+            <div><h2>Management Tasks</h2><p style="color:#64748b;font-size:13px;margin-top:4px">Tasks assigned to the management team</p></div>
+            <select id="managementTaskFilter" onchange="renderManagementTasks()" style="min-width:220px">
+                <option value="All">All Managers</option>
+                ${MANAGEMENT_USERS.map(u => `<option value="${escapeHTML(u)}" ${u === filter ? "selected" : ""}>${escapeHTML(u)}</option>`).join("")}
+            </select>
+        </div>
+
+        ${tasks.length === 0 ? `
+            <div class="empty"><div style="font-size:45px">☑</div><h3>No management tasks</h3><p>Create the first management task.</p></div>
+        ` : `
+            <div style="overflow-x:auto">
+                <table>
+                    <thead><tr><th>Task</th><th>Assigned To</th><th>Priority</th><th>Status</th><th>Start Date</th><th>Due Date</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        ${tasks.map(task => {
+                            const overdue = managementOverdue(task);
+                            return `<tr>
+                                <td><strong>${escapeHTML(task.title || "-")}</strong>${task.description ? `<div style="margin-top:4px;color:#64748b;font-size:13px">${escapeHTML(task.description)}</div>` : ""}</td>
+                                <td>${escapeHTML(task.assignedTo || "-")}</td>
+                                <td>${managementPriorityBadge(task.priority)}</td>
+                                <td>${overdue ? managementStatusBadge("Overdue") : managementStatusBadge(task.status)}</td>
+                                <td>${managementDate(task.startDate)}</td>
+                                <td><span style="${overdue ? "color:#dc2626;font-weight:700" : ""}">${managementDate(task.dueDate)}</span></td>
+                                <td><div class="actions">
+                                    <button class="action-btn" onclick="editManagementTask('${task.id}')">Edit</button>
+                                    ${task.status !== "Completed" ? `<button class="action-btn" onclick="completeManagementTask('${task.id}')">Complete</button>` : ""}
+                                    <button class="action-btn" onclick="deleteManagementTask('${task.id}')">Delete</button>
+                                </div></td>
+                            </tr>`;
+                        }).join("")}
+                    </tbody>
+                </table>
+            </div>
+        `}
+    `;
+}
+
+window.createManagementTask = function(){
+    const title = prompt("Task Title:");
+    if(title === null) return;
+    if(!title.trim()){ alert("Task title is required."); return; }
+
+    const description = prompt("Description:", "");
+    if(description === null) return;
+
+    const assignedTo = prompt("Assigned To:\n\n1. Anass Shoufi (GM)\n2. Wael Mansour (MD)\n3. Karim Mansour (OM)\n\nEnter 1, 2 or 3:", "1");
+    if(assignedTo === null) return;
+    const userMap = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]};
+    const manager = userMap[String(assignedTo).trim()];
+    if(!manager){ alert("Please select 1, 2 or 3."); return; }
+
+    const priority = prompt("Priority:\nLow / Medium / High / Critical", "Medium");
+    if(priority === null) return;
+    const status = prompt("Status:\nPending / In Progress / Completed / On Hold", "Pending");
+    if(status === null) return;
+    const startDate = prompt("Start Date (YYYY-MM-DD):", managementToday());
+    if(startDate === null) return;
+    const dueDate = prompt("Due Date (YYYY-MM-DD):", "");
+    if(dueDate === null) return;
+    const remarks = prompt("Remarks:", "");
+    if(remarks === null) return;
+
+    managementTasks.push({
+        id:"mtask-" + Date.now() + "-" + Math.random().toString(36).substring(2,8),
+        title:title.trim(), description:description.trim(), assignedTo:manager,
+        priority:priority.trim(), status:status.trim(), startDate:startDate.trim(),
+        dueDate:dueDate.trim(), remarks:remarks.trim(), createdDate:managementToday(), completedDate:""
+    });
+
+    persistManagement();
+    renderManagementModule();
+};
+
+window.editManagementTask = function(id){
+    const task = managementTasks.find(t => String(t.id) === String(id));
+    if(!task) return;
+
+    const title = prompt("Task Title:", task.title || "");
+    if(title === null) return;
+    if(!title.trim()){ alert("Task title is required."); return; }
+    const description = prompt("Description:", task.description || "");
+    if(description === null) return;
+    const currentManager = MANAGEMENT_USERS.indexOf(task.assignedTo) + 1;
+    const assignedTo = prompt("Assigned To:\n\n1. Anass Shoufi (GM)\n2. Wael Mansour (MD)\n3. Karim Mansour (OM)\n\nEnter 1, 2 or 3:", String(currentManager || 1));
+    if(assignedTo === null) return;
+    const userMap = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]};
+    if(!userMap[String(assignedTo).trim()]){ alert("Please select 1, 2 or 3."); return; }
+    const priority = prompt("Priority:\nLow / Medium / High / Critical", task.priority || "Medium");
+    if(priority === null) return;
+    const status = prompt("Status:\nPending / In Progress / Completed / On Hold", task.status || "Pending");
+    if(status === null) return;
+    const startDate = prompt("Start Date (YYYY-MM-DD):", task.startDate || "");
+    if(startDate === null) return;
+    const dueDate = prompt("Due Date (YYYY-MM-DD):", task.dueDate || "");
+    if(dueDate === null) return;
+    const remarks = prompt("Remarks:", task.remarks || "");
+    if(remarks === null) return;
+
+    task.title = title.trim();
+    task.description = description.trim();
+    task.assignedTo = userMap[String(assignedTo).trim()];
+    task.priority = priority.trim();
+    task.status = status.trim();
+    task.startDate = startDate.trim();
+    task.dueDate = dueDate.trim();
+    task.remarks = remarks.trim();
+    task.completedDate = task.status === "Completed" ? (task.completedDate || managementToday()) : "";
+
+    persistManagement();
+    renderManagementModule();
+};
+
+window.completeManagementTask = function(id){
+    const task = managementTasks.find(t => String(t.id) === String(id));
+    if(!task) return;
+    task.status = "Completed";
+    task.completedDate = managementToday();
+    persistManagement();
+    renderManagementModule();
+};
+
+window.deleteManagementTask = function(id){
+    const task = managementTasks.find(t => String(t.id) === String(id));
+    if(!task) return;
+    if(!confirm(`Delete task "${task.title}"?`)) return;
+    managementTasks = managementTasks.filter(t => String(t.id) !== String(id));
+    persistManagement();
+    renderManagementModule();
+};
+
+/* =====================================================
+   MEETINGS / SCHEDULE
+===================================================== */
+
+function renderManagementMeetings(){
+    const area = document.getElementById("managementTabContent");
+    if(!area) return;
+
+    const filter = document.getElementById("managementMeetingFilter")?.value || "All";
+    let meetings = managementMeetings.slice();
+    if(filter !== "All") meetings = meetings.filter(m => m.organizer === filter || (m.attendees || []).includes(filter));
+    meetings.sort((a,b) => `${a.date} ${a.time || ""}`.localeCompare(`${b.date} ${b.time || ""}`));
+
+    area.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:20px">
+            <div><h2>📅 Meetings & Schedule</h2><p style="color:#64748b;font-size:13px;margin-top:4px">Management meetings and scheduled appointments</p></div>
+            <select id="managementMeetingFilter" onchange="renderManagementMeetings()" style="min-width:220px">
+                <option value="All">All Managers</option>
+                ${MANAGEMENT_USERS.map(u => `<option value="${escapeHTML(u)}" ${u === filter ? "selected" : ""}>${escapeHTML(u)}</option>`).join("")}
+            </select>
+        </div>
+
+        ${meetings.length === 0 ? `
+            <div class="empty"><div style="font-size:45px">📅</div><h3>No meetings scheduled</h3><p>Schedule the first management meeting.</p></div>
+        ` : `
+            <div style="overflow-x:auto">
+                <table>
+                    <thead><tr><th>Meeting</th><th>Date</th><th>Time</th><th>Organizer</th><th>Attendees</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        ${meetings.map(m => `<tr>
+                            <td><strong>${escapeHTML(m.title || "-")}</strong>${m.agenda ? `<div style="margin-top:4px;color:#64748b;font-size:13px">${escapeHTML(m.agenda)}</div>` : ""}</td>
+                            <td>${managementDate(m.date)}</td>
+                            <td>${escapeHTML(m.time || "-")}</td>
+                            <td>${escapeHTML(m.organizer || "-")}</td>
+                            <td>${(m.attendees || []).map(a => escapeHTML(a)).join("<br>")}</td>
+                            <td>${escapeHTML(m.location || "-")}</td>
+                            <td>${managementMeetingBadge(m.status)}</td>
+                            <td><div class="actions">
+                                <button class="action-btn" onclick="editManagementMeeting('${m.id}')">Edit</button>
+                                ${m.status === "Scheduled" ? `<button class="action-btn" onclick="completeManagementMeeting('${m.id}')">Complete</button>` : ""}
+                                <button class="action-btn" onclick="deleteManagementMeeting('${m.id}')">Delete</button>
+                            </div></td>
+                        </tr>`).join("")}
+                    </tbody>
+                </table>
+            </div>
+        `}
+    `;
+}
+
+function managementMeetingInputList(defaultValue){
+    return prompt(
+        "Attendees:\n\n1 = Anass Shoufi (GM)\n2 = Wael Mansour (MD)\n3 = Karim Mansour (OM)\n\nEnter numbers separated by commas:",
+        defaultValue || "1,2,3"
+    );
+}
+
+function managementMeetingPeople(input){
+    const map = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]};
+    return String(input || "").split(",").map(v => map[v.trim()]).filter((v,i,a) => v && a.indexOf(v) === i);
+}
+
+window.createManagementMeeting = function(){
+    const title = prompt("Meeting Title:");
+    if(title === null) return;
+    if(!title.trim()){ alert("Meeting title is required."); return; }
+    const date = prompt("Meeting Date (YYYY-MM-DD):", managementToday());
+    if(date === null) return;
+    const time = prompt("Meeting Time (HH:MM):", "09:00");
+    if(time === null) return;
+    const organizerNo = prompt("Organizer:\n\n1. Anass Shoufi (GM)\n2. Wael Mansour (MD)\n3. Karim Mansour (OM)\n\nEnter 1, 2 or 3:", "1");
+    if(organizerNo === null) return;
+    const organizer = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]}[String(organizerNo).trim()];
+    if(!organizer){ alert("Please select 1, 2 or 3."); return; }
+    const attendeesInput = managementMeetingInputList("1,2,3");
+    if(attendeesInput === null) return;
+    const attendees = managementMeetingPeople(attendeesInput);
+    if(!attendees.length){ alert("Please select at least one attendee."); return; }
+    const location = prompt("Location / Meeting Link:", "");
+    if(location === null) return;
+    const agenda = prompt("Agenda:", "");
+    if(agenda === null) return;
+    const remarks = prompt("Remarks:", "");
+    if(remarks === null) return;
+
+    managementMeetings.push({
+        id:"meeting-" + Date.now() + "-" + Math.random().toString(36).substring(2,8),
+        title:title.trim(), date:date.trim(), time:time.trim(), organizer,
+        attendees, location:location.trim(), agenda:agenda.trim(), status:"Scheduled",
+        remarks:remarks.trim(), createdDate:managementToday()
+    });
+
+    persistManagement();
+    currentManagementTab = "meetings";
+    renderManagementModule();
+};
+
+window.editManagementMeeting = function(id){
+    const meeting = managementMeetings.find(m => String(m.id) === String(id));
+    if(!meeting) return;
+
+    const title = prompt("Meeting Title:", meeting.title || "");
+    if(title === null) return;
+    if(!title.trim()){ alert("Meeting title is required."); return; }
+    const date = prompt("Meeting Date (YYYY-MM-DD):", meeting.date || "");
+    if(date === null) return;
+    const time = prompt("Meeting Time (HH:MM):", meeting.time || "");
+    if(time === null) return;
+    const currentOrganizer = MANAGEMENT_USERS.indexOf(meeting.organizer) + 1;
+    const organizerNo = prompt("Organizer:\n\n1. Anass Shoufi (GM)\n2. Wael Mansour (MD)\n3. Karim Mansour (OM)\n\nEnter 1, 2 or 3:", String(currentOrganizer || 1));
+    if(organizerNo === null) return;
+    const organizer = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]}[String(organizerNo).trim()];
+    if(!organizer){ alert("Please select 1, 2 or 3."); return; }
+
+    const currentNumbers = (meeting.attendees || []).map(a => String(MANAGEMENT_USERS.indexOf(a) + 1)).filter(n => n !== "0").join(",");
+    const attendeesInput = managementMeetingInputList(currentNumbers || "1,2,3");
+    if(attendeesInput === null) return;
+    const attendees = managementMeetingPeople(attendeesInput);
+    if(!attendees.length){ alert("Please select at least one attendee."); return; }
+
+    const location = prompt("Location / Meeting Link:", meeting.location || "");
+    if(location === null) return;
+    const agenda = prompt("Agenda:", meeting.agenda || "");
+    if(agenda === null) return;
+    const status = prompt("Status:\nScheduled / Completed / Cancelled", meeting.status || "Scheduled");
+    if(status === null) return;
+    const remarks = prompt("Remarks:", meeting.remarks || "");
+    if(remarks === null) return;
+
+    Object.assign(meeting, {
+        title:title.trim(), date:date.trim(), time:time.trim(), organizer,
+        attendees, location:location.trim(), agenda:agenda.trim(), status:status.trim(), remarks:remarks.trim()
+    });
+
+    persistManagement();
+    currentManagementTab = "meetings";
+    renderManagementModule();
+};
+
+window.completeManagementMeeting = function(id){
+    const meeting = managementMeetings.find(m => String(m.id) === String(id));
+    if(!meeting) return;
+    meeting.status = "Completed";
+    persistManagement();
+    renderManagementModule();
+};
+
+window.deleteManagementMeeting = function(id){
+    const meeting = managementMeetings.find(m => String(m.id) === String(id));
+    if(!meeting) return;
+    if(!confirm(`Delete meeting "${meeting.title}"?`)) return;
+    managementMeetings = managementMeetings.filter(m => String(m.id) !== String(id));
+    persistManagement();
+    renderManagementModule();
+};
+
+window.getUpcomingManagementMeetings = function(){
+    return managementMeetings.filter(m => m.status === "Scheduled" && m.date >= managementToday()).sort((a,b) => `${a.date} ${a.time || ""}`.localeCompare(`${b.date} ${b.time || ""}`));
+};
+
+(function(){
+    if(document.getElementById("managementTasksResponsiveStyle")) return;
+    const style = document.createElement("style");
+    style.id = "managementTasksResponsiveStyle";
+    style.innerHTML = `
+        @media(max-width:1150px){#pageContent .management-kpi-grid{grid-template-columns:repeat(3,1fr)!important}}
+        @media(max-width:700px){#pageContent .management-kpi-grid{grid-template-columns:repeat(2,1fr)!important}}
+        @media(max-width:480px){#pageContent .management-kpi-grid{grid-template-columns:1fr!important}}
+    `;
+    document.head.appendChild(style);
+})();
+
 </body>
 </html>
