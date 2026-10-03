@@ -56287,7 +56287,57 @@ function managementMeetingPeople(input){
     const map = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]};
     return String(input || "").split(",").map(v => map[v.trim()]).filter((v,i,a) => v && a.indexOf(v) === i);
 }
+function managementMeetingAttendeesCheckboxes(selectedAttendees = []){
 
+    return `
+        <div style="
+            border:1px solid #d1d5db;
+            border-radius:8px;
+            padding:12px;
+            background:#f8fafc;
+        ">
+
+            ${MANAGEMENT_USERS.map(function(user){
+
+                const checked =
+                    selectedAttendees.includes(user)
+                        ? "checked"
+                        : "";
+
+                return `
+                    <label style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                        padding:8px 5px;
+                        cursor:pointer;
+                        font-weight:600;
+                    ">
+
+                        <input
+                            type="checkbox"
+                            name="managementMeetingAttendee"
+                            value="${escapeHTML(user)}"
+                            ${checked}
+                            style="
+                                width:18px;
+                                height:18px;
+                                cursor:pointer;
+                            "
+                        >
+
+                        <span>
+                            ${escapeHTML(user)}
+                        </span>
+
+                    </label>
+                `;
+
+            }).join("")}
+
+        </div>
+    `;
+}
 window.createManagementMeeting = function(){
     const title = prompt("Meeting Title:");
     if(title === null) return;
@@ -56300,10 +56350,7 @@ window.createManagementMeeting = function(){
     if(organizerNo === null) return;
     const organizer = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]}[String(organizerNo).trim()];
     if(!organizer){ alert("Please select 1, 2 or 3."); return; }
-    const attendeesInput = managementMeetingInputList("1,2,3");
-    if(attendeesInput === null) return;
-    const attendees = managementMeetingPeople(attendeesInput);
-    if(!attendees.length){ alert("Please select at least one attendee."); return; }
+   const attendees = [];
     const location = prompt("Location / Meeting Link:", "");
     if(location === null) return;
     const agenda = prompt("Agenda:", "");
