@@ -55831,7 +55831,7 @@ window.saveTenderTechnicalDrive = function(
 
 };
 
-    /* =====================================================
+  /* =====================================================
    MANAGEMENT TASKS MODULE
    INDEPENDENT FROM PROJECTS
    MANAGEMENT TASKS + MEETINGS / SCHEDULE
@@ -55850,6 +55850,109 @@ let currentManagementTab = "tasks";
 function persistManagement(){
     localStorage.setItem("alm_management_tasks", JSON.stringify(managementTasks));
     localStorage.setItem("alm_management_meetings", JSON.stringify(managementMeetings));
+}
+
+/* =====================================================
+   MEETING REMINDERS / RED IN-ERP NOTIFICATIONS
+   24 HOURS + 2 HOURS BEFORE MEETING
+===================================================== */
+
+const MANAGEMENT_NOTIFICATION_USER_KEY = "alm_management_notification_user";
+const MANAGEMENT_REMINDER_WINDOW_MS = 30 * 60 * 1000;
+
+function getManagementNotificationUser(){
+    return localStorage.getItem(MANAGEMENT_NOTIFICATION_USER_KEY) || MANAGEMENT_USERS[0];
+}
+
+window.setManagementNotificationUser = function(user){
+    if(!MANAGEMENT_USERS.includes(user)) return;
+    localStorage.setItem(MANAGEMENT_NOTIFICATION_USER_KEY, user);
+    renderManagementModule();
+};
+
+function managementMeetingTimestamp(meeting){
+    if(!meeting || !meeting.date) return null;
+
+    const parts = String(meeting.date).split("-").map(Number);
+    if(parts.length !== 3 || parts.some(Number.isNaN)) return null;
+
+    const timeParts = String(meeting.time || "00:00").split(":").map(Number);
+    const hour = Number.isFinite(timeParts[0]) ? timeParts[0] : 0;
+    const minute = Number.isFinite(timeParts[1]) ? timeParts[1] : 0;
+
+    const dt = new Date(parts[0], parts[1] - 1, parts[2], hour, minute, 0, 0);
+    return Number.isNaN(dt.getTime()) ? null : dt.getTime();
+}
+
+function managementMeetingReminder(meeting){
+    if(!meeting || meeting.status !== "Scheduled") return "";
+
+    const currentUser = getManagementNotificationUser();
+    const attendees = Array.isArray(meeting.attendees) ? meeting.attendees : [];
+
+    if(meeting.organizer !== currentUser && !attendees.includes(currentUser)){
+        return "";
+    }
+
+    const meetingTime = managementMeetingTimestamp(meeting);
+    if(!meetingTime) return "";
+
+    const remaining = meetingTime - Date.now();
+    if(remaining <= 0) return "";
+
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const twoHours = 2 * 60 * 60 * 1000;
+
+    if(remaining <= twentyFourHours && remaining > twentyFourHours - MANAGEMENT_REMINDER_WINDOW_MS){
+        return `🔴 Meeting Reminder: This meeting is tomorrow at ${meeting.time || "-"}`;
+    }
+
+    if(remaining <= twoHours && remaining > twoHours - MANAGEMENT_REMINDER_WINDOW_MS){
+        return `🔴 Meeting Reminder: This meeting starts in 2 hours at ${meeting.time || "-"}`;
+    }
+
+    return "";
+}
+
+function managementMeetingReminderClass(meeting){
+    return managementMeetingReminder(meeting) ? "management-meeting-reminder-active" : "";
+}
+
+function managementMeetingReminderBadge(meeting){
+    const message = managementMeetingReminder(meeting);
+    if(!message) return "";
+
+    return `
+        <div class="management-meeting-reminder">
+            ${escapeHTML(message)}
+        </div>
+    `;
+}
+
+function managementMeetingNotificationOptions(){
+    const current = getManagementNotificationUser();
+    return MANAGEMENT_USERS.map(function(user){
+        return `<option value="${escapeHTML(user)}" ${user === current ? "selected" : ""}>${escapeHTML(user)}</option>`;
+    }).join("");
+}
+
+function managementReminderStatusText(){
+    const current = getManagementNotificationUser();
+    return `Notifications for: <strong>${escapeHTML(current)}</strong>`;
+}
+
+function startManagementMeetingReminderWatcher(){
+    if(window.__almManagementReminderWatcherStarted) return;
+    window.__almManagementReminderWatcherStarted = true;
+
+    const run = function(){
+        if(typeof renderManagementMeetings === "function" && currentManagementTab === "meetings"){
+            renderManagementMeetings();
+        }
+    };
+
+    run();
+    setInterval(run, 60000);
 }
 
 function managementToday(){
@@ -55903,6 +56006,9 @@ function renderManagementModule(){
     const overdue = managementTasks.filter(t => managementOverdue(t)).length;
     const completed = managementTasks.filter(t => t.status === "Completed").length;
     const upcoming = managementMeetings.filter(m => m.status === "Scheduled" && m.date >= managementToday()).length;
+    const activeMeetingReminders = managementMeetings.filter(function(m){
+        return managementMeetingReminder(m);
+    });
 
     page.innerHTML = `
         <div class="page-title">
@@ -55910,11 +56016,26 @@ function renderManagementModule(){
                 <h1>☑ Management Tasks</h1>
                 <p>Management tasks, schedules and meetings</p>
             </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <select onchange="setManagementNotificationUser(this.value)" style="min-width:220px" title="Select the manager using this ERP/browser">
+                    ${managementMeetingNotificationOptions()}
+                </select>
                 <button class="btn btn-primary" onclick="createManagementTask()">+ New Task</button>
                 <button class="btn btn-secondary" onclick="createManagementMeeting()">+ Schedule Meeting</button>
             </div>
         </div>
+
+        ${activeMeetingReminders.length ? `
+            <div class="management-main-meeting-alert">
+                <div class="management-main-meeting-alert-title">🔴 MEETING REMINDER</div>
+                ${activeMeetingReminders.map(function(m){
+                    return `<div class="management-main-meeting-alert-row">
+                        <strong>${escapeHTML(m.title || "Meeting")}</strong> — ${managementDate(m.date)} at ${escapeHTML(m.time || "-")}
+                        <span>${escapeHTML(managementMeetingReminder(m))}</span>
+                    </div>`;
+                }).join("")}
+            </div>
+        ` : ""}
 
         <div class="management-kpi-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:20px">
             ${managementKpi("Total Tasks", total)}
@@ -56108,8 +56229,16 @@ function renderManagementMeetings(){
 
     area.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:20px">
-            <div><h2>📅 Meetings & Schedule</h2><p style="color:#64748b;font-size:13px;margin-top:4px">Management meetings and scheduled appointments</p></div>
-            <select id="managementMeetingFilter" onchange="renderManagementMeetings()" style="min-width:220px">
+            <div>
+                <h2>📅 Meetings & Schedule</h2>
+                <p style="color:#64748b;font-size:13px;margin-top:4px">Management meetings and scheduled appointments</p>
+                <div style="margin-top:8px;font-size:12px;color:#64748b">${managementReminderStatusText()}</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <select id="managementNotificationUser" onchange="setManagementNotificationUser(this.value)" style="min-width:220px" title="Select the manager using this ERP/browser">
+                    ${managementMeetingNotificationOptions()}
+                </select>
+                <select id="managementMeetingFilter" onchange="renderManagementMeetings()" style="min-width:220px">
                 <option value="All">All Managers</option>
                 ${MANAGEMENT_USERS.map(u => `<option value="${escapeHTML(u)}" ${u === filter ? "selected" : ""}>${escapeHTML(u)}</option>`).join("")}
             </select>
@@ -56123,7 +56252,11 @@ function renderManagementMeetings(){
                     <thead><tr><th>Meeting</th><th>Date</th><th>Time</th><th>Organizer</th><th>Attendees</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         ${meetings.map(m => `<tr>
-                            <td><strong>${escapeHTML(m.title || "-")}</strong>${m.agenda ? `<div style="margin-top:4px;color:#64748b;font-size:13px">${escapeHTML(m.agenda)}</div>` : ""}</td>
+                            <td class="${managementMeetingReminderClass(m)}">
+                                <strong>${escapeHTML(m.title || "-")}</strong>
+                                ${m.agenda ? `<div style="margin-top:4px;color:#64748b;font-size:13px">${escapeHTML(m.agenda)}</div>` : ""}
+                                ${managementMeetingReminderBadge(m)}
+                            </td>
                             <td>${managementDate(m.date)}</td>
                             <td>${escapeHTML(m.time || "-")}</td>
                             <td>${escapeHTML(m.organizer || "-")}</td>
@@ -56182,7 +56315,8 @@ window.createManagementMeeting = function(){
         id:"meeting-" + Date.now() + "-" + Math.random().toString(36).substring(2,8),
         title:title.trim(), date:date.trim(), time:time.trim(), organizer,
         attendees, location:location.trim(), agenda:agenda.trim(), status:"Scheduled",
-        remarks:remarks.trim(), createdDate:managementToday()
+        remarks:remarks.trim(), createdDate:managementToday(),
+        notification24Sent:false, notification2Sent:false
     });
 
     persistManagement();
@@ -56222,10 +56356,21 @@ window.editManagementMeeting = function(id){
     const remarks = prompt("Remarks:", meeting.remarks || "");
     if(remarks === null) return;
 
+    const oldSchedule = `${meeting.date || ""}|${meeting.time || ""}`;
+    const newSchedule = `${date.trim()}|${time.trim()}`;
+    const oldAttendees = JSON.stringify(meeting.attendees || []);
+    const newAttendees = JSON.stringify(attendees);
+    const oldStatus = meeting.status || "";
+
     Object.assign(meeting, {
         title:title.trim(), date:date.trim(), time:time.trim(), organizer,
         attendees, location:location.trim(), agenda:agenda.trim(), status:status.trim(), remarks:remarks.trim()
     });
+
+    if(oldSchedule !== newSchedule || oldAttendees !== newAttendees || oldStatus !== meeting.status){
+        meeting.notification24Sent = false;
+        meeting.notification2Sent = false;
+    }
 
     persistManagement();
     currentManagementTab = "meetings";
@@ -56254,6 +56399,57 @@ window.getUpcomingManagementMeetings = function(){
 };
 
 (function(){
+    if(document.getElementById("managementMeetingReminderStyle")) return;
+    const style = document.createElement("style");
+    style.id = "managementMeetingReminderStyle";
+    style.innerHTML = `
+        .management-meeting-reminder{
+            margin-top:8px;
+            padding:8px 10px;
+            border-radius:6px;
+            background:#fef2f2;
+            border:1px solid #fecaca;
+            color:#b91c1c;
+            font-weight:800;
+            font-size:12px;
+            line-height:1.4;
+        }
+        .management-meeting-reminder-active{
+            background:#fffafa;
+        }
+        .management-main-meeting-alert{
+            margin:0 0 20px 0;
+            padding:14px 16px;
+            border-left:5px solid #dc2626;
+            background:#fef2f2;
+            border-top:1px solid #fecaca;
+            border-right:1px solid #fecaca;
+            border-bottom:1px solid #fecaca;
+            border-radius:8px;
+            color:#991b1b;
+        }
+        .management-main-meeting-alert-title{
+            font-weight:900;
+            font-size:14px;
+            margin-bottom:7px;
+        }
+        .management-main-meeting-alert-row{
+            padding:7px 0;
+            border-top:1px solid #fee2e2;
+            font-size:13px;
+        }
+        .management-main-meeting-alert-row span{
+            display:block;
+            margin-top:3px;
+            font-weight:700;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+startManagementMeetingReminderWatcher();
+
+(function(){
     if(document.getElementById("managementTasksResponsiveStyle")) return;
     const style = document.createElement("style");
     style.id = "managementTasksResponsiveStyle";
@@ -56264,6 +56460,7 @@ window.getUpcomingManagementMeetings = function(){
     `;
     document.head.appendChild(style);
 })();
+
 </script>
 </body>
 </html>
