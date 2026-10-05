@@ -3551,6 +3551,672 @@ textarea{
     }
 
 }
+    /* =========================================================
+   ALM PREMIUM PROJECTS PAGE
+========================================================= */
+
+.alm-projects-page{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+
+/* PAGE HERO */
+
+.alm-projects-hero{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:24px 26px;
+
+    border-radius:16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0B1736 0%,
+            #122B5D 65%,
+            #1D4ED8 100%
+        );
+
+    color:white;
+
+    box-shadow:
+        0 10px 30px rgba(11,23,54,.15);
+}
+
+
+.alm-projects-hero h1{
+
+    margin:0;
+
+    color:white;
+
+    font-size:25px;
+
+    font-weight:800;
+
+    letter-spacing:-.5px;
+}
+
+
+.alm-projects-hero p{
+
+    margin:
+        6px 0 0;
+
+    color:#CBD8F0;
+
+    font-size:12px;
+}
+
+
+/* SUMMARY */
+
+.alm-project-summary{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:14px;
+}
+
+
+.alm-project-summary-card{
+
+    position:relative;
+
+    background:white;
+
+    border:
+        1px solid #E5EAF2;
+
+    border-radius:13px;
+
+    padding:17px 19px;
+
+    box-shadow:
+        0 4px 15px rgba(15,23,42,.05);
+
+    overflow:hidden;
+
+    transition:
+        all .2s ease;
+}
+
+
+.alm-project-summary-card:hover{
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 10px 25px rgba(15,23,42,.09);
+}
+
+
+.alm-project-summary-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+    bottom:0;
+
+    width:4px;
+
+    background:
+        var(--project-summary-color,#2563EB);
+}
+
+
+.alm-project-summary-label{
+
+    color:#718096;
+
+    font-size:10px;
+
+    font-weight:800;
+
+    text-transform:uppercase;
+
+    letter-spacing:.6px;
+}
+
+
+.alm-project-summary-value{
+
+    margin-top:5px;
+
+    color:#0B1736;
+
+    font-size:25px;
+
+    font-weight:850;
+}
+
+
+.alm-project-summary-small{
+
+    margin-top:3px;
+
+    color:#94A3B8;
+
+    font-size:10px;
+}
+
+
+/* FILTER BAR */
+
+.alm-project-filter{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:14px;
+
+    background:white;
+
+    border:
+        1px solid #E5EAF2;
+
+    border-radius:13px;
+
+    box-shadow:
+        0 4px 15px rgba(15,23,42,.045);
+}
+
+
+.alm-project-search{
+
+    flex:1;
+
+    min-width:220px;
+
+    height:40px;
+
+    padding:
+        0 13px;
+
+    border:
+        1px solid #DCE3ED;
+
+    border-radius:9px;
+
+    background:#FAFBFD;
+
+    font-size:12px;
+
+    color:#1E293B;
+
+    transition:
+        all .18s ease;
+}
+
+
+.alm-project-search:focus{
+
+    outline:none;
+
+    background:white;
+
+    border-color:#2563EB;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.08);
+}
+
+
+.alm-project-filter select{
+
+    height:40px;
+
+    min-width:145px;
+
+    padding:
+        0 11px;
+
+    border:
+        1px solid #DCE3ED;
+
+    border-radius:9px;
+
+    background:#FAFBFD;
+
+    color:#334155;
+
+    font-size:12px;
+
+    cursor:pointer;
+}
+
+
+.alm-project-filter select:focus{
+
+    outline:none;
+
+    border-color:#2563EB;
+}
+
+
+/* PORTFOLIO PANEL */
+
+.alm-project-portfolio{
+
+    background:white;
+
+    border:
+        1px solid #E5EAF2;
+
+    border-radius:15px;
+
+    box-shadow:
+        0 5px 18px rgba(15,23,42,.055);
+
+    overflow:hidden;
+}
+
+
+.alm-project-portfolio-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:
+        18px 20px;
+
+    border-bottom:
+        1px solid #E9EEF5;
+}
+
+
+.alm-project-portfolio-title{
+
+    color:#0B1736;
+
+    font-size:15px;
+
+    font-weight:800;
+}
+
+
+.alm-project-portfolio-subtitle{
+
+    margin-top:3px;
+
+    color:#94A3B8;
+
+    font-size:11px;
+}
+
+
+/* PROJECT TABLE */
+
+.alm-projects-table{
+
+    width:100%;
+
+    border-collapse:
+        separate;
+
+    border-spacing:0;
+}
+
+
+.alm-projects-table th{
+
+    padding:
+        12px 16px;
+
+    background:#F8FAFD;
+
+    color:#64748B;
+
+    font-size:10px;
+
+    font-weight:800;
+
+    text-transform:uppercase;
+
+    letter-spacing:.55px;
+
+    border-bottom:
+        1px solid #E8EDF4;
+}
+
+
+.alm-projects-table td{
+
+    padding:
+        15px 16px;
+
+    border-bottom:
+        1px solid #EDF1F6;
+
+    color:#334155;
+
+    font-size:12px;
+
+    vertical-align:middle;
+}
+
+
+.alm-projects-table tbody tr{
+
+    transition:
+        all .15s ease;
+}
+
+
+.alm-projects-table tbody tr:hover td{
+
+    background:
+        #F8FAFF;
+}
+
+
+.alm-projects-table tbody tr:last-child td{
+
+    border-bottom:0;
+}
+
+
+/* PROJECT NAME */
+
+.alm-project-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    cursor:pointer;
+}
+
+
+.alm-project-icon{
+
+    width:35px;
+    height:35px;
+
+    flex-shrink:0;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    border-radius:9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #EFF6FF,
+            #DBEAFE
+        );
+
+    color:#2563EB;
+
+    font-size:15px;
+}
+
+
+.alm-project-name{
+
+    color:#0B1736;
+
+    font-size:12px;
+
+    font-weight:800;
+
+    transition:
+        color .15s ease;
+}
+
+
+.alm-project-title:hover
+.alm-project-name{
+
+    color:#2563EB;
+}
+
+
+.alm-project-code{
+
+    display:block;
+
+    margin-top:3px;
+
+    color:#94A3B8;
+
+    font-size:9px;
+
+    font-weight:600;
+}
+
+
+/* CLIENT */
+
+.alm-project-client{
+
+    color:#475569;
+
+    font-size:11px;
+
+    font-weight:600;
+}
+
+
+.alm-project-manager{
+
+    color:#64748B;
+
+    font-size:11px;
+}
+
+
+/* PROGRESS */
+
+.alm-project-progress-box{
+
+    min-width:150px;
+}
+
+
+.alm-project-progress-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:6px;
+}
+
+
+.alm-project-progress-number{
+
+    color:#1E293B;
+
+    font-size:10px;
+
+    font-weight:800;
+}
+
+
+.alm-project-progress-track{
+
+    width:100%;
+
+    height:7px;
+
+    background:#E8EDF4;
+
+    border-radius:999px;
+
+    overflow:hidden;
+}
+
+
+.alm-project-progress-fill{
+
+    height:100%;
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #2563EB,
+            #60A5FA
+        );
+
+    transition:
+        width .5s ease;
+}
+
+
+/* STATUS */
+
+.alm-project-status{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:5px;
+
+    padding:
+        5px 9px;
+
+    border-radius:999px;
+
+    font-size:10px;
+
+    font-weight:800;
+}
+
+
+.alm-project-status-dot{
+
+    width:5px;
+    height:5px;
+
+    border-radius:50%;
+
+    background:currentColor;
+}
+
+
+.alm-project-status.active{
+
+    color:#15803D;
+
+    background:#DCFCE7;
+}
+
+
+.alm-project-status.delayed{
+
+    color:#B45309;
+
+    background:#FEF3C7;
+}
+
+
+.alm-project-status.completed{
+
+    color:#1D4ED8;
+
+    background:#DBEAFE;
+}
+
+
+.alm-project-status.onhold{
+
+    color:#64748B;
+
+    background:#F1F5F9;
+}
+
+
+/* EMPTY */
+
+.alm-project-empty{
+
+    padding:55px 20px;
+
+    text-align:center;
+
+    color:#94A3B8;
+
+    font-size:13px;
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width:1000px){
+
+    .alm-project-summary{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+    .alm-project-filter{
+
+        flex-wrap:wrap;
+
+    }
+
+    .alm-project-search{
+
+        flex-basis:100%;
+
+    }
+
+}
+
+
+@media(max-width:650px){
+
+    .alm-project-summary{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .alm-projects-table{
+
+        min-width:850px;
+
+    }
+
+    .alm-project-portfolio{
+
+        overflow-x:auto;
+
+    }
+
+}
 </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -4615,34 +5281,776 @@ function showDashboard(){
 /* =========================
    PROJECTS PAGE
 ========================= */
-
 function showProjects(){
 
     document.getElementById("pageContent").innerHTML = `
 
-        <div class="page-title">
+        <div class="alm-projects-page">
 
-            <div>
-                <h1>Projects</h1>
-                <p>Manage all ALM projects</p>
+
+            <!-- HERO -->
+
+            <div class="alm-projects-hero">
+
+                <div>
+
+                    <h1>
+                        Project Portfolio
+                    </h1>
+
+                    <p>
+                        Manage, monitor and control
+                        all ALM projects
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="btn btn-primary"
+                    onclick="openNewProject()"
+                    style="
+                        background:#F5A623;
+                        color:#0B1736;
+                    "
+                >
+                    + New Project
+                </button>
+
             </div>
 
-            <button class="btn btn-primary" onclick="openNewProject()">
-                + New Project
-            </button>
+
+            <!-- SUMMARY -->
+
+            <div class="alm-project-summary">
+
+
+                <div
+                    class="alm-project-summary-card"
+                    style="
+                        --project-summary-color:#2563EB;
+                    "
+                >
+
+                    <div class="alm-project-summary-label">
+                        Total Projects
+                    </div>
+
+                    <div class="alm-project-summary-value">
+                        ${projects.length}
+                    </div>
+
+                    <div class="alm-project-summary-small">
+                        Entire project portfolio
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="alm-project-summary-card"
+                    style="
+                        --project-summary-color:#16A34A;
+                    "
+                >
+
+                    <div class="alm-project-summary-label">
+                        Active
+                    </div>
+
+                    <div class="alm-project-summary-value">
+                        ${
+                            projects.filter(
+                                p =>
+                                    p.status === "Active"
+                            ).length
+                        }
+                    </div>
+
+                    <div class="alm-project-summary-small">
+                        Currently progressing
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="alm-project-summary-card"
+                    style="
+                        --project-summary-color:#F59E0B;
+                    "
+                >
+
+                    <div class="alm-project-summary-label">
+                        Delayed
+                    </div>
+
+                    <div class="alm-project-summary-value">
+                        ${
+                            projects.filter(
+                                p =>
+                                    p.status === "Delayed"
+                            ).length
+                        }
+                    </div>
+
+                    <div class="alm-project-summary-small">
+                        Require attention
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="alm-project-summary-card"
+                    style="
+                        --project-summary-color:#7C3AED;
+                    "
+                >
+
+                    <div class="alm-project-summary-label">
+                        Average Progress
+                    </div>
+
+                    <div class="alm-project-summary-value">
+                        ${
+                            projects.length
+                            ? Math.round(
+                                projects.reduce(
+                                    (sum,p) =>
+                                        sum +
+                                        Number(
+                                            p.progress || 0
+                                        ),
+                                    0
+                                ) /
+                                projects.length
+                              )
+                            : 0
+                        }%
+                    </div>
+
+                    <div class="alm-project-summary-small">
+                        Across all projects
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- FILTERS -->
+
+            <div class="alm-project-filter">
+
+
+                <input
+                    id="almProjectSearch"
+                    class="alm-project-search"
+                    type="text"
+                    placeholder="Search project, client or manager..."
+                    oninput="filterALMProjects()"
+                >
+
+
+                <select
+                    id="almProjectStatusFilter"
+                    onchange="filterALMProjects()"
+                >
+
+                    <option value="">
+                        All Statuses
+                    </option>
+
+                    <option value="Active">
+                        Active
+                    </option>
+
+                    <option value="Delayed">
+                        Delayed
+                    </option>
+
+                    <option value="Completed">
+                        Completed
+                    </option>
+
+                    <option value="On Hold">
+                        On Hold
+                    </option>
+
+                </select>
+
+
+                <select
+                    id="almProjectManagerFilter"
+                    onchange="filterALMProjects()"
+                >
+
+                    <option value="">
+                        All Managers
+                    </option>
+
+                    ${
+                        [
+                            ...new Set(
+                                projects
+                                .map(
+                                    p =>
+                                        p.manager
+                                )
+                                .filter(Boolean)
+                            )
+                        ]
+                        .sort()
+                        .map(
+                            manager => `
+                                <option
+                                    value="${escapeHTML(
+                                        manager
+                                    )}"
+                                >
+                                    ${escapeHTML(
+                                        manager
+                                    )}
+                                </option>
+                            `
+                        )
+                        .join("")
+                    }
+
+                </select>
+
+
+                <button
+                    class="btn btn-secondary"
+                    onclick="resetALMProjectFilters()"
+                >
+                    Reset
+                </button>
+
+
+            </div>
+
+
+            <!-- PORTFOLIO -->
+
+            <div class="alm-project-portfolio">
+
+
+                <div
+                    class="alm-project-portfolio-header"
+                >
+
+                    <div>
+
+                        <div
+                            class="alm-project-portfolio-title"
+                        >
+                            All Projects
+                        </div>
+
+                        <div
+                            class="alm-project-portfolio-subtitle"
+                        >
+                            Complete ALM project portfolio
+                        </div>
+
+                    </div>
+
+
+                    <span
+                        id="almProjectResultCount"
+                        style="
+                            color:#64748B;
+                            font-size:11px;
+                            font-weight:700;
+                        "
+                    >
+                        ${projects.length} Projects
+                    </span>
+
+                </div>
+
+
+                <div id="almProjectsTableContainer">
+
+                    ${renderALMProjectsTable(projects)}
+
+                </div>
+
+
+            </div>
+
 
         </div>
 
-        <div class="panel">
-
-            <div class="panel-header">
-                <h2>All Projects</h2>
-            </div>
-
-            ${projectTable()}
-
-        </div>
     `;
+}
+    function renderALMProjectsTable(list){
+
+    if(!list.length){
+
+        return `
+
+            <div class="alm-project-empty">
+
+                No projects match your search.
+
+            </div>
+
+        `;
+
+    }
+
+
+    return `
+
+        <table class="alm-projects-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Project
+                    </th>
+
+                    <th>
+                        Client
+                    </th>
+
+                    <th>
+                        Manager
+                    </th>
+
+                    <th>
+                        Progress
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                ${
+                    list.map(
+                        project => {
+
+                            const status =
+                                String(
+                                    project.status ||
+                                    ""
+                                ).toLowerCase();
+
+
+                            let statusClass =
+                                "active";
+
+
+                            if(
+                                status === "delayed"
+                            ){
+
+                                statusClass =
+                                    "delayed";
+
+                            }
+                            else if(
+                                status === "completed"
+                            ){
+
+                                statusClass =
+                                    "completed";
+
+                            }
+                            else if(
+                                status === "on hold"
+                            ){
+
+                                statusClass =
+                                    "onhold";
+
+                            }
+
+
+                            const progress =
+                                Number(
+                                    project.progress ||
+                                    0
+                                );
+
+
+                            return `
+
+                                <tr>
+
+
+                                    <!-- PROJECT -->
+
+                                    <td>
+
+                                        <div
+                                            class="alm-project-title"
+                                            onclick="
+                                                openProject(
+                                                    ${project.id}
+                                                )
+                                            "
+                                        >
+
+                                            <div
+                                                class="
+                                                    alm-project-icon
+                                                "
+                                            >
+                                                ◈
+                                            </div>
+
+
+                                            <div>
+
+                                                <div
+                                                    class="
+                                                        alm-project-name
+                                                    "
+                                                >
+                                                    ${escapeHTML(
+                                                        project.name ||
+                                                        "Unnamed Project"
+                                                    )}
+                                                </div>
+
+
+                                                <span
+                                                    class="
+                                                        alm-project-code
+                                                    "
+                                                >
+                                                    ${escapeHTML(
+                                                        project.code ||
+                                                        ""
+                                                    )}
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- CLIENT -->
+
+                                    <td>
+
+                                        <div
+                                            class="
+                                                alm-project-client
+                                            "
+                                        >
+                                            ${escapeHTML(
+                                                project.client ||
+                                                "-"
+                                            )}
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- MANAGER -->
+
+                                    <td>
+
+                                        <div
+                                            class="
+                                                alm-project-manager
+                                            "
+                                        >
+                                            ${escapeHTML(
+                                                project.manager ||
+                                                "-"
+                                            )}
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- PROGRESS -->
+
+                                    <td>
+
+                                        <div
+                                            class="
+                                                alm-project-progress-box
+                                            "
+                                        >
+
+                                            <div
+                                                class="
+                                                    alm-project-progress-top
+                                                "
+                                            >
+
+                                                <span
+                                                    class="
+                                                        alm-project-progress-number
+                                                    "
+                                                >
+                                                    ${progress}%
+                                                </span>
+
+                                            </div>
+
+
+                                            <div
+                                                class="
+                                                    alm-project-progress-track
+                                                "
+                                            >
+
+                                                <div
+                                                    class="
+                                                        alm-project-progress-fill
+                                                    "
+                                                    style="
+                                                        width:${progress}%;
+                                                    "
+                                                ></div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- STATUS -->
+
+                                    <td>
+
+                                        <span
+                                            class="
+                                                alm-project-status
+                                                ${statusClass}
+                                            "
+                                        >
+
+                                            <span
+                                                class="
+                                                    alm-project-status-dot
+                                                "
+                                            ></span>
+
+                                            ${escapeHTML(
+                                                project.status ||
+                                                "Active"
+                                            )}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- ACTIONS -->
+
+                                    <td>
+
+                                        <div
+                                            class="actions"
+                                        >
+
+                                            <button
+                                                class="action-btn"
+                                                onclick="
+                                                    openProject(
+                                                        ${project.id}
+                                                    )
+                                                "
+                                            >
+                                                Open
+                                            </button>
+
+
+                                            <button
+                                                class="action-btn"
+                                                onclick="
+                                                    editProject(
+                                                        ${project.id}
+                                                    )
+                                                "
+                                            >
+                                                Edit
+                                            </button>
+
+
+                                            <button
+                                                class="action-btn"
+                                                onclick="
+                                                    deleteProject(
+                                                        ${project.id}
+                                                    )
+                                                "
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+
+                                </tr>
+
+                            `;
+
+                        }
+                    ).join("")
+                }
+
+            </tbody>
+
+        </table>
+
+    `;
+}
+
+    function filterALMProjects(){
+
+    const search =
+        (
+            document.getElementById(
+                "almProjectSearch"
+            )?.value || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    const status =
+        document.getElementById(
+            "almProjectStatusFilter"
+        )?.value || "";
+
+
+    const manager =
+        document.getElementById(
+            "almProjectManagerFilter"
+        )?.value || "";
+
+
+    const filtered =
+        projects.filter(
+            function(project){
+
+                const searchable =
+                    [
+                        project.name,
+                        project.code,
+                        project.client,
+                        project.manager
+                    ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    searchable.includes(search);
+
+
+                const matchesStatus =
+                    !status ||
+                    project.status === status;
+
+
+                const matchesManager =
+                    !manager ||
+                    project.manager === manager;
+
+
+                return (
+                    matchesSearch &&
+                    matchesStatus &&
+                    matchesManager
+                );
+
+            }
+        );
+
+
+    const container =
+        document.getElementById(
+            "almProjectsTableContainer"
+        );
+
+
+    if(container){
+
+        container.innerHTML =
+            renderALMProjectsTable(
+                filtered
+            );
+
+    }
+
+
+    const counter =
+        document.getElementById(
+            "almProjectResultCount"
+        );
+
+
+    if(counter){
+
+        counter.textContent =
+            `${filtered.length} Projects`;
+
+    }
+
+}
+
+
+function resetALMProjectFilters(){
+
+    const search =
+        document.getElementById(
+            "almProjectSearch"
+        );
+
+
+    const status =
+        document.getElementById(
+            "almProjectStatusFilter"
+        );
+
+
+    const manager =
+        document.getElementById(
+            "almProjectManagerFilter"
+        );
+
+
+    if(search) search.value = "";
+
+    if(status) status.value = "";
+
+    if(manager) manager.value = "";
+
+
+    filterALMProjects();
+
 }
 
 
