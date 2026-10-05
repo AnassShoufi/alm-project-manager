@@ -5459,9 +5459,603 @@ div[style*="grid-template-columns"]{
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <style id="alm-premium-project-workspace">
+   <style id="alm-management-premium-style">
+
+/* =========================================================
+   ALM MANAGEMENT TASKS & MEETINGS
+   PREMIUM COLORFUL UI
+   PRESENTATION ONLY — NO LOGIC CHANGES
+========================================================= */
 
 
+/* =========================================================
+   MANAGEMENT KPI CARDS
+========================================================= */
+
+#pageContent .management-kpi-grid{
+    gap:15px !important;
+    margin-bottom:20px !important;
+}
+
+#pageContent .management-kpi-grid > .panel{
+
+    position:relative !important;
+
+    overflow:hidden !important;
+
+    min-height:105px !important;
+
+    padding:18px 18px 18px 22px !important;
+
+    border:1px solid #e2e8f0 !important;
+
+    border-radius:16px !important;
+
+    background:#ffffff !important;
+
+    box-shadow:
+        0 6px 20px rgba(15,23,42,.07) !important;
+
+    transition:
+        transform .20s ease,
+        box-shadow .20s ease !important;
+}
+
+#pageContent .management-kpi-grid > .panel:hover{
+
+    transform:translateY(-4px) !important;
+
+    box-shadow:
+        0 12px 28px rgba(15,23,42,.12) !important;
+}
+
+
+/* KPI colored left strip */
+
+#pageContent .management-kpi-grid > .panel::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+    bottom:0;
+
+    width:5px;
+
+    background:#2563eb;
+}
+
+
+/* Total */
+
+#pageContent .management-kpi-grid > .panel:nth-child(1)::before{
+    background:#2563eb;
+}
+
+/* Pending */
+
+#pageContent .management-kpi-grid > .panel:nth-child(2)::before{
+    background:#f59e0b;
+}
+
+/* In Progress */
+
+#pageContent .management-kpi-grid > .panel:nth-child(3)::before{
+    background:#3b82f6;
+}
+
+/* Overdue */
+
+#pageContent .management-kpi-grid > .panel:nth-child(4)::before{
+    background:#ef4444;
+}
+
+/* Completed */
+
+#pageContent .management-kpi-grid > .panel:nth-child(5)::before{
+    background:#10b981;
+}
+
+/* Meetings */
+
+#pageContent .management-kpi-grid > .panel:nth-child(6)::before{
+    background:#8b5cf6;
+}
+
+
+/* KPI labels */
+
+#pageContent .management-kpi-grid > .panel > div:first-child{
+
+    color:#64748b !important;
+
+    font-size:11px !important;
+
+    font-weight:700 !important;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+}
+
+
+/* KPI numbers */
+
+#pageContent .management-kpi-grid > .panel > div:last-child{
+
+    color:#102044 !important;
+
+    font-size:28px !important;
+
+    font-weight:900 !important;
+
+    margin-top:7px !important;
+}
+
+
+/* =========================================================
+   MANAGEMENT MAIN PANEL
+========================================================= */
+
+#pageContent .management-kpi-grid + .panel{
+
+    border:
+        1px solid #dfe7f2 !important;
+
+    border-radius:
+        18px !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        0 8px 28px rgba(15,23,42,.07) !important;
+
+    overflow:
+        hidden !important;
+}
+
+
+/* =========================================================
+   TASK / MEETING TABS
+========================================================= */
+
+#pageContent .management-kpi-grid + .panel > div:first-child{
+
+    background:
+        linear-gradient(
+            90deg,
+            #f8fbff,
+            #eef5ff
+        ) !important;
+
+    border-bottom:
+        1px solid #dbe5f1 !important;
+}
+
+#pageContent .management-kpi-grid + .panel > div:first-child button{
+
+    position:relative;
+
+    transition:
+        all .20s ease !important;
+}
+
+#pageContent .management-kpi-grid + .panel > div:first-child button:hover{
+
+    background:#ffffff !important;
+
+    color:#2563eb !important;
+}
+
+
+/* =========================================================
+   MEETING REMINDER — RED
+========================================================= */
+
+#pageContent .management-main-meeting-alert{
+
+    margin-bottom:18px !important;
+
+    padding:17px 20px !important;
+
+    border:
+        1px solid #fecaca !important;
+
+    border-left:
+        5px solid #ef4444 !important;
+
+    border-radius:
+        14px !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7f7,
+            #fff1f2
+        ) !important;
+
+    box-shadow:
+        0 6px 20px rgba(239,68,68,.10) !important;
+}
+
+#pageContent .management-main-meeting-alert-title{
+
+    color:#b91c1c !important;
+
+    font-size:12px !important;
+
+    font-weight:900 !important;
+
+    letter-spacing:.7px !important;
+
+    margin-bottom:10px !important;
+}
+
+#pageContent .management-main-meeting-alert-row{
+
+    padding:
+        10px 0 !important;
+
+    border-top:
+        1px solid #fecaca !important;
+
+    color:#475569 !important;
+
+    font-size:12px !important;
+}
+
+#pageContent .management-main-meeting-alert-row strong{
+
+    color:#991b1b !important;
+
+    font-weight:850 !important;
+}
+
+#pageContent .management-main-meeting-alert-row span{
+
+    float:right;
+
+    color:#dc2626 !important;
+
+    font-weight:850 !important;
+}
+
+
+/* =========================================================
+   MANAGEMENT TABLE
+========================================================= */
+
+#pageContent .management-table{
+
+    width:100% !important;
+
+    border-collapse:collapse !important;
+
+    background:#ffffff !important;
+}
+
+#pageContent .management-table th{
+
+    padding:
+        13px 11px !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f1f5fb,
+            #e8eef7
+        ) !important;
+
+    color:#475569 !important;
+
+    font-size:10px !important;
+
+    font-weight:850 !important;
+
+    text-transform:uppercase !important;
+
+    letter-spacing:.45px !important;
+
+    border-bottom:
+        2px solid #d8e2ef !important;
+}
+
+#pageContent .management-table td{
+
+    padding:
+        12px 11px !important;
+
+    border-bottom:
+        1px solid #edf1f6 !important;
+
+    color:#334155 !important;
+
+    font-size:12px !important;
+}
+
+#pageContent .management-table tbody tr{
+
+    transition:
+        all .15s ease !important;
+}
+
+#pageContent .management-table tbody tr:hover{
+
+    background:
+        #f7fbff !important;
+
+    box-shadow:
+        inset 4px 0 0 #3b82f6 !important;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+#pageContent .status-badge{
+
+    display:inline-flex !important;
+
+    align-items:center !important;
+
+    justify-content:center !important;
+
+    min-width:78px !important;
+
+    padding:
+        5px 10px !important;
+
+    border-radius:
+        20px !important;
+
+    font-size:
+        10px !important;
+
+    font-weight:
+        850 !important;
+
+    border:
+        1px solid transparent !important;
+}
+
+
+/* Completed */
+
+#pageContent .badge-completed{
+
+    background:
+        #dcfce7 !important;
+
+    color:
+        #15803d !important;
+
+    border-color:
+        #bbf7d0 !important;
+}
+
+
+/* Active / In Progress / Scheduled */
+
+#pageContent .badge-active{
+
+    background:
+        #dbeafe !important;
+
+    color:
+        #1d4ed8 !important;
+
+    border-color:
+        #bfdbfe !important;
+}
+
+
+/* Pending / On Hold */
+
+#pageContent .badge-onhold{
+
+    background:
+        #fef3c7 !important;
+
+    color:
+        #b45309 !important;
+
+    border-color:
+        #fde68a !important;
+}
+
+
+/* Overdue / Cancelled */
+
+#pageContent .badge-overdue{
+
+    background:
+        #fee2e2 !important;
+
+    color:
+        #b91c1c !important;
+
+    border-color:
+        #fecaca !important;
+}
+
+
+/* =========================================================
+   FILTER / DROPDOWN
+========================================================= */
+
+#pageContent select{
+
+    border:
+        1px solid #d7e0ec !important;
+
+    border-radius:
+        9px !important;
+
+    background:
+        #ffffff !important;
+
+    color:
+        #26364f !important;
+
+    padding:
+        9px 12px !important;
+
+    font-weight:
+        600 !important;
+
+    outline:none !important;
+
+    transition:
+        all .20s ease !important;
+}
+
+#pageContent select:hover{
+
+    border-color:
+        #93c5fd !important;
+}
+
+#pageContent select:focus{
+
+    border-color:
+        #60a5fa !important;
+
+    box-shadow:
+        0 0 0 3px rgba(37,99,235,.10) !important;
+}
+
+
+/* =========================================================
+   MANAGEMENT BUTTONS
+========================================================= */
+
+#pageContent .btn-primary{
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        ) !important;
+
+    border:
+        0 !important;
+
+    border-radius:
+        9px !important;
+
+    box-shadow:
+        0 5px 14px rgba(37,99,235,.20) !important;
+
+    transition:
+        all .20s ease !important;
+}
+
+#pageContent .btn-primary:hover{
+
+    transform:
+        translateY(-2px) !important;
+
+    box-shadow:
+        0 9px 20px rgba(37,99,235,.28) !important;
+}
+
+#pageContent .btn-secondary{
+
+    border-radius:
+        9px !important;
+
+    transition:
+        all .20s ease !important;
+}
+
+#pageContent .btn-secondary:hover{
+
+    transform:
+        translateY(-2px) !important;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+#pageContent .management-table button{
+
+    border:
+        1px solid #dbe3ef !important;
+
+    border-radius:
+        7px !important;
+
+    background:
+        #ffffff !important;
+
+    padding:
+        5px 9px !important;
+
+    font-size:
+        10px !important;
+
+    font-weight:
+        700 !important;
+
+    cursor:pointer !important;
+
+    transition:
+        all .15s ease !important;
+}
+
+#pageContent .management-table button:hover{
+
+    background:
+        #eff6ff !important;
+
+    border-color:
+        #93c5fd !important;
+
+    color:
+        #1d4ed8 !important;
+
+    transform:
+        translateY(-1px);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:1100px){
+
+    #pageContent .management-kpi-grid{
+
+        grid-template-columns:
+            repeat(3,1fr) !important;
+    }
+}
+
+@media(max-width:700px){
+
+    #pageContent .management-kpi-grid{
+
+        grid-template-columns:
+            repeat(2,1fr) !important;
+    }
+
+    #pageContent .management-main-meeting-alert-row span{
+
+        float:none !important;
+
+        display:block;
+
+        margin-top:5px;
+    }
+}
 
 </style>
 </head>
