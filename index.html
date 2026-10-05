@@ -6058,6 +6058,701 @@ div[style*="grid-template-columns"]{
 }
 
 </style>
+    <style id="alm-management-executive-style">
+
+/* =========================================================
+   ALM MANAGEMENT — EXECUTIVE / CEO PRESENTATION
+   VISUAL ONLY — NO LOGIC CHANGES
+========================================================= */
+
+
+/* =========================================================
+   1. MANAGEMENT HEADER — EXECUTIVE LOOK
+========================================================= */
+
+#pageContent .management-header,
+#pageContent .management-hero{
+
+    box-shadow:
+        0 12px 35px rgba(15,23,42,.16) !important;
+
+    border:
+        1px solid rgba(255,255,255,.18) !important;
+}
+
+
+/* =========================================================
+   2. KPI CARDS — MORE PREMIUM
+========================================================= */
+
+#pageContent .management-kpi-grid > .panel{
+
+    min-height:125px !important;
+
+    display:flex !important;
+
+    flex-direction:column !important;
+
+    justify-content:center !important;
+
+    padding:
+        20px 20px 20px 28px !important;
+
+    position:relative !important;
+
+    overflow:hidden !important;
+}
+
+
+/* Large background number effect */
+
+#pageContent .management-kpi-grid > .panel::after{
+
+    content:"";
+
+    position:absolute;
+
+    right:-18px;
+    bottom:-28px;
+
+    width:90px;
+    height:90px;
+
+    border-radius:50%;
+
+    background:
+        rgba(37,99,235,.045);
+
+    pointer-events:none;
+}
+
+
+/* KPI labels */
+
+#pageContent .management-kpi-grid > .panel > div:first-child{
+
+    position:relative;
+
+    z-index:2;
+
+    font-size:
+        10px !important;
+
+    letter-spacing:
+        .8px !important;
+
+    color:
+        #64748b !important;
+}
+
+
+/* KPI number */
+
+#pageContent .management-kpi-grid > .panel > div:last-child{
+
+    position:relative;
+
+    z-index:2;
+
+    font-size:
+        34px !important;
+
+    line-height:
+        1 !important;
+
+    margin-top:
+        10px !important;
+
+    color:
+        #0b1f44 !important;
+}
+
+
+/* =========================================================
+   3. KPI INDIVIDUAL COLORS
+========================================================= */
+
+#pageContent .management-kpi-grid > .panel:nth-child(1){
+    background:
+        linear-gradient(135deg,#ffffff,#f8fbff) !important;
+}
+
+#pageContent .management-kpi-grid > .panel:nth-child(2){
+    background:
+        linear-gradient(135deg,#ffffff,#fffaf0) !important;
+}
+
+#pageContent .management-kpi-grid > .panel:nth-child(3){
+    background:
+        linear-gradient(135deg,#ffffff,#f5f9ff) !important;
+}
+
+#pageContent .management-kpi-grid > .panel:nth-child(4){
+    background:
+        linear-gradient(135deg,#ffffff,#fff7f7) !important;
+}
+
+#pageContent .management-kpi-grid > .panel:nth-child(5){
+    background:
+        linear-gradient(135deg,#ffffff,#f5fcf8) !important;
+}
+
+#pageContent .management-kpi-grid > .panel:nth-child(6){
+    background:
+        linear-gradient(135deg,#ffffff,#faf7ff) !important;
+}
+
+
+/* =========================================================
+   4. KPI HOVER
+========================================================= */
+
+#pageContent .management-kpi-grid > .panel:hover{
+
+    transform:
+        translateY(-5px) scale(1.015) !important;
+
+    box-shadow:
+        0 16px 34px rgba(15,23,42,.14) !important;
+}
+
+
+/* =========================================================
+   5. MAIN MANAGEMENT CONTAINER
+========================================================= */
+
+#pageContent .management-kpi-grid + .panel{
+
+    box-shadow:
+        0 12px 35px rgba(15,23,42,.09) !important;
+
+    border:
+        1px solid #dce5f0 !important;
+}
+
+
+/* =========================================================
+   6. TABS — EXECUTIVE STYLE
+========================================================= */
+
+#pageContent .management-kpi-grid + .panel > div:first-child button{
+
+    padding:
+        15px 20px !important;
+
+    font-size:
+        13px !important;
+
+    font-weight:
+        800 !important;
+
+    border-radius:
+        0 !important;
+}
+
+#pageContent .management-kpi-grid + .panel > div:first-child button:hover{
+
+    color:
+        #1d4ed8 !important;
+
+    background:
+        #ffffff !important;
+}
+
+
+/* =========================================================
+   7. TABLE — EXECUTIVE STYLE
+========================================================= */
+
+#pageContent .management-table{
+
+    border:
+        1px solid #e2e8f0 !important;
+
+    border-radius:
+        12px !important;
+
+    overflow:
+        hidden !important;
+}
+
+
+/* Header */
+
+#pageContent .management-table thead th{
+
+    height:
+        44px !important;
+
+    padding:
+        12px 14px !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f8fafc,
+            #edf2f7
+        ) !important;
+
+    color:
+        #334155 !important;
+
+    font-size:
+        10px !important;
+
+    font-weight:
+        900 !important;
+
+    letter-spacing:
+        .7px !important;
+}
+
+
+/* Body */
+
+#pageContent .management-table tbody td{
+
+    padding:
+        14px !important;
+
+    font-size:
+        12px !important;
+
+    vertical-align:
+        middle !important;
+}
+
+
+/* Row */
+
+#pageContent .management-table tbody tr{
+
+    background:
+        #ffffff !important;
+
+    transition:
+        all .18s ease !important;
+}
+
+#pageContent .management-table tbody tr:hover{
+
+    background:
+        #f8fbff !important;
+
+    transform:
+        translateX(2px) !important;
+}
+
+
+/* =========================================================
+   8. TASK NAME — STRONGER
+========================================================= */
+
+#pageContent .management-table td:first-child{
+
+    font-weight:
+        650 !important;
+
+    color:
+        #172554 !important;
+}
+
+#pageContent .management-table td:first-child strong{
+
+    font-weight:
+        850 !important;
+
+    color:
+        #0f2347 !important;
+}
+
+
+/* =========================================================
+   9. PRIORITY COLORS
+   Based on table column
+========================================================= */
+
+#pageContent .management-table td:nth-child(3){
+
+    font-weight:
+        800 !important;
+}
+
+
+/* High */
+
+#pageContent .management-table td:nth-child(3):has(*){
+
+    font-weight:
+        800 !important;
+}
+
+
+/* =========================================================
+   10. STATUS — PREMIUM BADGES
+========================================================= */
+
+#pageContent .management-table td:nth-child(4){
+
+    font-weight:
+        750 !important;
+}
+
+
+/* Existing badge classes */
+
+#pageContent .management-table .status-badge{
+
+    min-width:
+        88px !important;
+
+    padding:
+        6px 12px !important;
+
+    font-size:
+        10px !important;
+
+    letter-spacing:
+        .2px !important;
+
+    box-shadow:
+        0 2px 6px rgba(15,23,42,.06) !important;
+}
+
+
+/* =========================================================
+   11. DATE COLUMNS
+========================================================= */
+
+#pageContent .management-table td:nth-child(5),
+#pageContent .management-table td:nth-child(6){
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif !important;
+
+    font-weight:
+        650 !important;
+
+    color:
+        #475569 !important;
+
+    white-space:
+        nowrap !important;
+}
+
+
+/* =========================================================
+   12. ACTION BUTTONS
+========================================================= */
+
+#pageContent .management-table td:last-child{
+
+    white-space:
+        nowrap !important;
+}
+
+
+/* Edit */
+
+#pageContent .management-table td:last-child button:first-child{
+
+    color:
+        #1d4ed8 !important;
+
+    background:
+        #eff6ff !important;
+
+    border-color:
+        #bfdbfe !important;
+}
+
+
+/* Complete */
+
+#pageContent .management-table td:last-child button:nth-child(2){
+
+    color:
+        #15803d !important;
+
+    background:
+        #f0fdf4 !important;
+
+    border-color:
+        #bbf7d0 !important;
+}
+
+
+/* Delete */
+
+#pageContent .management-table td:last-child button:last-child{
+
+    color:
+        #b91c1c !important;
+
+    background:
+        #fff7f7 !important;
+
+    border-color:
+        #fecaca !important;
+}
+
+
+/* Hover actions */
+
+#pageContent .management-table td:last-child button:hover{
+
+    transform:
+        translateY(-2px) !important;
+
+    box-shadow:
+        0 4px 10px rgba(15,23,42,.10) !important;
+}
+
+
+/* =========================================================
+   13. MEETING TABLE
+========================================================= */
+
+#pageContent .management-table td:nth-child(2),
+#pageContent .management-table td:nth-child(3){
+
+    white-space:
+        nowrap !important;
+}
+
+
+/* Meeting title */
+
+#pageContent .management-table td:first-child{
+
+    line-height:
+        1.45 !important;
+}
+
+
+/* =========================================================
+   14. MEETING SCHEDULE STATUS
+========================================================= */
+
+#pageContent .management-table .badge-active{
+
+    background:
+        linear-gradient(
+            135deg,
+            #dbeafe,
+            #eff6ff
+        ) !important;
+
+    color:
+        #1d4ed8 !important;
+
+    border-color:
+        #93c5fd !important;
+}
+
+
+/* Completed */
+
+#pageContent .management-table .badge-completed{
+
+    background:
+        linear-gradient(
+            135deg,
+            #dcfce7,
+            #f0fdf4
+        ) !important;
+
+    color:
+        #15803d !important;
+}
+
+
+/* Overdue */
+
+#pageContent .management-table .badge-overdue{
+
+    background:
+        linear-gradient(
+            135deg,
+            #fee2e2,
+            #fff1f2
+        ) !important;
+
+    color:
+        #b91c1c !important;
+
+    animation:
+        almManagementPulse 2s infinite;
+}
+
+
+/* =========================================================
+   15. RED ALERT ANIMATION
+========================================================= */
+
+@keyframes almManagementPulse{
+
+    0%,100%{
+        box-shadow:
+            0 0 0 0 rgba(239,68,68,.10);
+    }
+
+    50%{
+        box-shadow:
+            0 0 0 5px rgba(239,68,68,.08);
+    }
+
+}
+
+
+/* =========================================================
+   16. MEETING ALERT
+========================================================= */
+
+#pageContent .management-main-meeting-alert{
+
+    position:
+        relative !important;
+
+    overflow:
+        hidden !important;
+
+    box-shadow:
+        0 8px 25px rgba(239,68,68,.12) !important;
+}
+
+#pageContent .management-main-meeting-alert::after{
+
+    content:"";
+
+    position:absolute;
+
+    right:-35px;
+    top:-35px;
+
+    width:110px;
+    height:110px;
+
+    border-radius:50%;
+
+    background:
+        rgba(239,68,68,.06);
+
+    pointer-events:none;
+}
+
+
+/* =========================================================
+   17. FILTERS
+========================================================= */
+
+#pageContent select{
+
+    min-height:
+        42px !important;
+
+    font-size:
+        12px !important;
+
+    box-shadow:
+        0 2px 8px rgba(15,23,42,.04) !important;
+}
+
+
+/* =========================================================
+   18. MANAGEMENT SECTION TITLES
+========================================================= */
+
+#pageContent .management-kpi-grid + .panel h2{
+
+    color:
+        #102044 !important;
+
+    font-weight:
+        900 !important;
+
+    letter-spacing:
+        -.3px !important;
+}
+
+
+/* =========================================================
+   19. EMPTY STATE
+========================================================= */
+
+#pageContent .management-table tbody:empty::after{
+
+    content:
+        "No records available";
+
+    display:
+        block;
+
+    padding:
+        35px;
+
+    text-align:
+        center;
+
+    color:
+        #94a3b8;
+
+    font-size:
+        13px;
+
+    font-weight:
+        650;
+}
+
+
+/* =========================================================
+   20. RESPONSIVE
+========================================================= */
+
+@media(max-width:900px){
+
+    #pageContent .management-kpi-grid{
+
+        grid-template-columns:
+            repeat(3,1fr) !important;
+    }
+
+    #pageContent .management-table{
+
+        font-size:
+            11px !important;
+    }
+}
+
+
+@media(max-width:650px){
+
+    #pageContent .management-kpi-grid{
+
+        grid-template-columns:
+            repeat(2,1fr) !important;
+    }
+
+    #pageContent .management-table{
+
+        display:
+            block !important;
+
+        overflow-x:
+            auto !important;
+    }
+
+    #pageContent .management-table td,
+    #pageContent .management-table th{
+
+        white-space:
+            nowrap !important;
+    }
+}
+
+</style>
 </head>
 
 <body>
