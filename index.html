@@ -56157,43 +56157,683 @@ window.createManagementTask = function(){
     renderManagementModule();
 };
 
-window.editManagementTask = function(id){
-    const task = managementTasks.find(t => String(t.id) === String(id));
-    if(!task) return;
+/* =====================================================
+   MANAGEMENT TASK FORM
+===================================================== */
 
-    const title = prompt("Task Title:", task.title || "");
-    if(title === null) return;
-    if(!title.trim()){ alert("Task title is required."); return; }
-    const description = prompt("Description:", task.description || "");
-    if(description === null) return;
-    const currentManager = MANAGEMENT_USERS.indexOf(task.assignedTo) + 1;
-    const assignedTo = prompt("Assigned To:\n\n1. Anass Shoufi (GM)\n2. Wael Mansour (MD)\n3. Karim Mansour (OM)\n\nEnter 1, 2 or 3:", String(currentManager || 1));
-    if(assignedTo === null) return;
-    const userMap = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]};
-    if(!userMap[String(assignedTo).trim()]){ alert("Please select 1, 2 or 3."); return; }
-    const priority = prompt("Priority:\nLow / Medium / High / Critical", task.priority || "Medium");
-    if(priority === null) return;
-    const status = prompt("Status:\nPending / In Progress / Completed / On Hold", task.status || "Pending");
-    if(status === null) return;
-    const startDate = prompt("Start Date (YYYY-MM-DD):", task.startDate || "");
-    if(startDate === null) return;
-    const dueDate = prompt("Due Date (YYYY-MM-DD):", task.dueDate || "");
-    if(dueDate === null) return;
-    const remarks = prompt("Remarks:", task.remarks || "");
-    if(remarks === null) return;
+function openManagementTaskForm(task = null){
 
-    task.title = title.trim();
-    task.description = description.trim();
-    task.assignedTo = userMap[String(assignedTo).trim()];
-    task.priority = priority.trim();
-    task.status = status.trim();
-    task.startDate = startDate.trim();
-    task.dueDate = dueDate.trim();
-    task.remarks = remarks.trim();
-    task.completedDate = task.status === "Completed" ? (task.completedDate || managementToday()) : "";
+    const isEdit = !!task;
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "managementTaskModal";
+
+    modal.className =
+        "modal-overlay";
+
+    modal.style.display =
+        "flex";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                max-width:850px;
+                width:95%;
+            "
+        >
+
+            <div class="modal-header">
+
+                <h2>
+
+                    ${
+                        isEdit
+                        ? "✏️ Edit Management Task"
+                        : "☑ New Management Task"
+                    }
+
+                </h2>
+
+                <button
+                    class="close"
+                    type="button"
+                    onclick="
+                        closeManagementTaskForm()
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                onsubmit="
+                    saveManagementTaskForm(
+                        event,
+                        ${isEdit ? `'${task.id}'` : "null"}
+                    )
+                "
+            >
+
+                <div class="modal-body">
+
+                    <div class="form-grid">
+
+
+                        <!-- TASK TITLE -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Task Title *
+                            </label>
+
+                            <input
+                                id="managementTaskTitle"
+                                type="text"
+                                required
+                                value="${escapeHTML(
+                                    task?.title || ""
+                                )}"
+                                placeholder="
+                                    Enter task title
+                                "
+                            >
+
+                        </div>
+
+
+                        <!-- DESCRIPTION -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Description
+                            </label>
+
+                            <textarea
+                                id="managementTaskDescription"
+                                rows="4"
+                                placeholder="
+                                    Describe the task
+                                "
+                            >${escapeHTML(
+                                task?.description || ""
+                            )}</textarea>
+
+                        </div>
+
+
+                        <!-- ASSIGNED TO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Assigned To *
+                            </label>
+
+                            <select
+                                id="managementTaskAssignedTo"
+                                required
+                            >
+
+                                ${MANAGEMENT_USERS.map(
+                                    function(user){
+
+                                        return `
+                                            <option
+                                                value="${escapeHTML(user)}"
+                                                ${
+                                                    (
+                                                        task?.assignedTo ||
+                                                        MANAGEMENT_USERS[0]
+                                                    ) === user
+                                                    ? "selected"
+                                                    : ""
+                                                }
+                                            >
+                                                ${escapeHTML(user)}
+                                            </option>
+                                        `;
+
+                                    }
+                                ).join("")}
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- PRIORITY -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Priority
+                            </label>
+
+                            <select
+                                id="managementTaskPriority"
+                            >
+
+                                <option
+                                    value="Low"
+                                    ${
+                                        task?.priority === "Low"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Low
+                                </option>
+
+                                <option
+                                    value="Medium"
+                                    ${
+                                        !task ||
+                                        task.priority === "Medium"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Medium
+                                </option>
+
+                                <option
+                                    value="High"
+                                    ${
+                                        task?.priority === "High"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    High
+                                </option>
+
+                                <option
+                                    value="Critical"
+                                    ${
+                                        task?.priority === "Critical"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Critical
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Status
+                            </label>
+
+                            <select
+                                id="managementTaskStatus"
+                            >
+
+                                <option
+                                    value="Pending"
+                                    ${
+                                        !task ||
+                                        task.status === "Pending"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Pending
+                                </option>
+
+                                <option
+                                    value="In Progress"
+                                    ${
+                                        task?.status === "In Progress"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    In Progress
+                                </option>
+
+                                <option
+                                    value="Completed"
+                                    ${
+                                        task?.status === "Completed"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Completed
+                                </option>
+
+                                <option
+                                    value="On Hold"
+                                    ${
+                                        task?.status === "On Hold"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    On Hold
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- START DATE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Start Date
+                            </label>
+
+                            <input
+                                id="managementTaskStartDate"
+                                type="date"
+                                value="${escapeHTML(
+                                    task?.startDate || ""
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- DUE DATE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Due Date
+                            </label>
+
+                            <input
+                                id="managementTaskDueDate"
+                                type="date"
+                                value="${escapeHTML(
+                                    task?.dueDate || ""
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- REMARKS -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Remarks
+                            </label>
+
+                            <textarea
+                                id="managementTaskRemarks"
+                                rows="4"
+                                placeholder="
+                                    Additional remarks...
+                                "
+                            >${escapeHTML(
+                                task?.remarks || ""
+                            )}</textarea>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="
+                            closeManagementTaskForm()
+                        "
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        ${
+                            isEdit
+                            ? "Save Changes"
+                            : "Create Task"
+                        }
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(modal);
+
+
+    modal.addEventListener(
+        "click",
+        function(event){
+
+            if(event.target === modal){
+
+                closeManagementTaskForm();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   CLOSE TASK FORM
+===================================================== */
+
+window.closeManagementTaskForm = function(){
+
+    const modal =
+        document.getElementById(
+            "managementTaskModal"
+        );
+
+    if(modal){
+
+        modal.remove();
+
+    }
+
+};
+
+
+/* =====================================================
+   CREATE TASK
+===================================================== */
+
+window.createManagementTask = function(){
+
+    openManagementTaskForm();
+
+};
+
+
+/* =====================================================
+   SAVE TASK
+===================================================== */
+
+window.saveManagementTaskForm = function(
+    event,
+    taskId
+){
+
+    event.preventDefault();
+
+
+    const title =
+        document
+            .getElementById(
+                "managementTaskTitle"
+            )
+            .value
+            .trim();
+
+
+    const description =
+        document
+            .getElementById(
+                "managementTaskDescription"
+            )
+            .value
+            .trim();
+
+
+    const assignedTo =
+        document
+            .getElementById(
+                "managementTaskAssignedTo"
+            )
+            .value;
+
+
+    const priority =
+        document
+            .getElementById(
+                "managementTaskPriority"
+            )
+            .value;
+
+
+    const status =
+        document
+            .getElementById(
+                "managementTaskStatus"
+            )
+            .value;
+
+
+    const startDate =
+        document
+            .getElementById(
+                "managementTaskStartDate"
+            )
+            .value;
+
+
+    const dueDate =
+        document
+            .getElementById(
+                "managementTaskDueDate"
+            )
+            .value;
+
+
+    const remarks =
+        document
+            .getElementById(
+                "managementTaskRemarks"
+            )
+            .value
+            .trim();
+
+
+    /* =========================
+       VALIDATION
+    ========================= */
+
+    if(!title){
+
+        alert(
+            "Task title is required."
+        );
+
+        return;
+
+    }
+
+
+    /* =========================
+       CREATE NEW TASK
+    ========================= */
+
+    if(!taskId){
+
+        managementTasks.push({
+
+            id:
+                "mtask-" +
+                Date.now() +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .substring(2,8),
+
+            title,
+
+            description,
+
+            assignedTo,
+
+            priority,
+
+            status,
+
+            startDate,
+
+            dueDate,
+
+            remarks,
+
+            createdDate:
+                managementToday(),
+
+            completedDate:
+                status === "Completed"
+                ? managementToday()
+                : ""
+
+        });
+
+    }
+
+
+    /* =========================
+       EDIT EXISTING TASK
+    ========================= */
+
+    else{
+
+        const task =
+            managementTasks.find(
+                function(item){
+
+                    return String(item.id) ===
+                           String(taskId);
+
+                }
+            );
+
+
+        if(!task){
+
+            alert(
+                "Task not found."
+            );
+
+            return;
+
+        }
+
+
+        Object.assign(
+            task,
+            {
+
+                title,
+
+                description,
+
+                assignedTo,
+
+                priority,
+
+                status,
+
+                startDate,
+
+                dueDate,
+
+                remarks
+
+            }
+        );
+
+
+        if(status === "Completed"){
+
+            task.completedDate =
+                task.completedDate ||
+                managementToday();
+
+        }
+        else{
+
+            task.completedDate = "";
+
+        }
+
+    }
+
 
     persistManagement();
+
+    closeManagementTaskForm();
+
+    currentManagementTab =
+        "tasks";
+
     renderManagementModule();
+
+};
+
+
+/* =====================================================
+   EDIT TASK
+===================================================== */
+
+window.editManagementTask = function(id){
+
+    const task =
+        managementTasks.find(
+            function(item){
+
+                return String(item.id) ===
+                       String(id);
+
+            }
+        );
+
+
+    if(!task){
+
+        alert(
+            "Task not found."
+        );
+
+        return;
+
+    }
+
+
+    openManagementTaskForm(
+        task
+    );
+
 };
 
 window.completeManagementTask = function(id){
