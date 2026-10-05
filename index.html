@@ -53782,44 +53782,56 @@ window.showTenders = function(){
 
                                         <td>
 
-                                            <div class="actions">
+                                        <div class="actions">
 
-                                                <button
-                                                    class="action-btn"
-                                                    onclick="
-                                                        openTender(
-                                                            '${tender.id}'
-                                                        );
-                                                    "
-                                                >
-                                                    Open
-                                                </button>
-
-
-                                                <button
-                                                    class="action-btn"
-                                                    onclick="
-                                                        renameTender(
-                                                            '${tender.id}'
-                                                        );
-                                                    "
-                                                >
-                                                    Rename
-                                                </button>
+    <button
+        class="action-btn"
+        onclick="
+            openTender(
+                '${tender.id}'
+            );
+        "
+    >
+        Open
+    </button>
 
 
-                                                <button
-                                                    class="action-btn"
-                                                    onclick="
-                                                        deleteTender(
-                                                            '${tender.id}'
-                                                        );
-                                                    "
-                                                >
-                                                    Delete
-                                                </button>
+    <button
+        class="action-btn"
+        onclick="
+            editTenderInfo(
+                '${tender.id}'
+            );
+        "
+    >
+        Edit
+    </button>
 
-                                            </div>
+
+    <button
+        class="action-btn"
+        onclick="
+            renameTender(
+                '${tender.id}'
+            );
+        "
+    >
+        Rename
+    </button>
+
+
+    <button
+        class="action-btn"
+        onclick="
+            deleteTender(
+                '${tender.id}'
+            );
+        "
+    >
+        Delete
+    </button>
+
+</div>
 
                                         </td>
 
@@ -55603,63 +55615,404 @@ window.editTenderInfo = function(tenderId){
     ensureTenderInfo(tender);
 
 
-    const referenceInput = prompt(
-        "Tender Reference (optional):",
-        tender.reference || ""
+    const modal =
+        document.createElement("div");
+
+
+    modal.id =
+        "editTenderModal";
+
+
+    modal.className =
+        "modal-overlay";
+
+
+    modal.style.display =
+        "flex";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                max-width:800px;
+                width:95%;
+            "
+        >
+
+            <div class="modal-header">
+
+                <h2>
+                    ✏️ Edit Tender
+                </h2>
+
+                <button
+                    class="close"
+                    type="button"
+                    onclick="
+                        closeEditTenderModal()
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                onsubmit="
+                    saveEditedTender(
+                        event,
+                        '${tender.id}'
+                    )
+                "
+            >
+
+                <div class="modal-body">
+
+                    <div class="form-grid">
+
+
+                        <!-- TENDER / PROJECT NAME -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Tender / Project Name *
+                            </label>
+
+                            <input
+                                id="editTenderName"
+                                type="text"
+                                required
+                                value="${escapeHTML(
+                                    tender.name || ""
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- REFERENCE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Tender Reference
+                            </label>
+
+                            <input
+                                id="editTenderReference"
+                                type="text"
+                                value="${escapeHTML(
+                                    tender.reference || ""
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- CLIENT -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Client
+                            </label>
+
+                            <input
+                                id="editTenderClient"
+                                type="text"
+                                value="${escapeHTML(
+                                    tender.client || ""
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- SUBMISSION DEADLINE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Submission Deadline
+                            </label>
+
+                            <input
+                                id="editTenderDeadline"
+                                type="date"
+                                value="${escapeHTML(
+                                    tender.submissionDeadline || ""
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Status
+                            </label>
+
+                            <select
+                                id="editTenderStatus"
+                            >
+
+                                <option
+                                    value="New"
+                                    ${
+                                        tender.status === "New"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    New
+                                </option>
+
+                                <option
+                                    value="Under Preparation"
+                                    ${
+                                        tender.status ===
+                                        "Under Preparation"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Under Preparation
+                                </option>
+
+                                <option
+                                    value="Submitted"
+                                    ${
+                                        tender.status === "Submitted"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Submitted
+                                </option>
+
+                                <option
+                                    value="Under Review"
+                                    ${
+                                        tender.status ===
+                                        "Under Review"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Under Review
+                                </option>
+
+                                <option
+                                    value="Won"
+                                    ${
+                                        tender.status === "Won"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Won
+                                </option>
+
+                                <option
+                                    value="Lost"
+                                    ${
+                                        tender.status === "Lost"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Lost
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="
+                            closeEditTenderModal()
+                        "
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Save Changes
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(modal);
+
+
+    modal.addEventListener(
+        "click",
+        function(event){
+
+            if(event.target === modal){
+
+                closeEditTenderModal();
+
+            }
+
+        }
     );
-
-    if(referenceInput === null) return;
-
-
-    const clientInput = prompt(
-        "Client (optional):",
-        tender.client || ""
-    );
-
-    if(clientInput === null) return;
-
-
-    const deadlineInput = prompt(
-        "Submission Deadline (YYYY-MM-DD, optional):",
-        tender.submissionDeadline || ""
-    );
-
-    if(deadlineInput === null) return;
-
-
-    const allowedStatuses = [
-        "New",
-        "Under Preparation",
-        "Submitted",
-        "Under Review",
-        "Won",
-        "Lost"
-    ];
-
-    const statusInput = prompt(
-        "Tender Status:\nNew / Under Preparation / Submitted / Under Review / Won / Lost",
-        tender.status || "New"
-    );
-
-    if(statusInput === null) return;
-
-
-    tender.reference = referenceInput.trim();
-    tender.client = clientInput.trim();
-    tender.submissionDeadline = deadlineInput.trim();
-    tender.status =
-        allowedStatuses.indexOf(statusInput.trim()) !== -1
-        ? statusInput.trim()
-        : tender.status || "New";
-
-
-    persistTenders();
-
-    renderTender(tender);
 
 };
 
 
+/* =========================
+   CLOSE EDIT TENDER MODAL
+========================= */
+
+window.closeEditTenderModal = function(){
+
+    const modal =
+        document.getElementById(
+            "editTenderModal"
+        );
+
+
+    if(modal){
+
+        modal.remove();
+
+    }
+
+};
+
+
+/* =========================
+   SAVE EDITED TENDER
+========================= */
+
+window.saveEditedTender = function(
+    event,
+    tenderId
+){
+
+    event.preventDefault();
+
+
+    const tender =
+        tenders.find(function(t){
+
+            return String(t.id) ===
+                   String(tenderId);
+
+        });
+
+
+    if(!tender) return;
+
+
+    const name =
+        document
+            .getElementById(
+                "editTenderName"
+            )
+            .value
+            .trim();
+
+
+    const reference =
+        document
+            .getElementById(
+                "editTenderReference"
+            )
+            .value
+            .trim();
+
+
+    const client =
+        document
+            .getElementById(
+                "editTenderClient"
+            )
+            .value
+            .trim();
+
+
+    const deadline =
+        document
+            .getElementById(
+                "editTenderDeadline"
+            )
+            .value;
+
+
+    const status =
+        document
+            .getElementById(
+                "editTenderStatus"
+            )
+            .value;
+
+
+    if(!name){
+
+        alert(
+            "Tender / Project Name is required."
+        );
+
+        return;
+
+    }
+
+
+    tender.name =
+        name;
+
+    tender.reference =
+        reference;
+
+    tender.client =
+        client;
+
+    tender.submissionDeadline =
+        deadline;
+
+    tender.status =
+        status;
+
+
+    persistTenders();
+
+
+    closeEditTenderModal();
+
+
+    showTenders();
+
+};
 /* =========================
    RENAME TENDER
 ========================= */
