@@ -5407,6 +5407,434 @@ div[style*="grid-template-columns"] .btn:hover{
 }
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <style id="alm-premium-project-workspace">
+
+/* =========================================================
+   ALM PREMIUM PROJECT WORKSPACE
+========================================================= */
+
+#pageContent{
+    background:linear-gradient(
+        180deg,
+        #f4f7fc 0%,
+        #edf2f9 100%
+    ) !important;
+}
+
+
+/* =========================================================
+   PROJECT HEADER
+========================================================= */
+
+#pageContent > .page-title{
+
+    position:relative;
+
+    margin-bottom:20px !important;
+
+    padding:26px 30px !important;
+
+    min-height:115px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    overflow:hidden;
+
+    border-radius:18px !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #071632 0%,
+            #102b61 48%,
+            #1d4ed8 100%
+        ) !important;
+
+    box-shadow:
+        0 14px 35px rgba(15,35,80,.20) !important;
+}
+
+
+/* Decorative circles */
+
+#pageContent > .page-title::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:320px;
+    height:320px;
+
+    right:-120px;
+    top:-190px;
+
+    border-radius:50%;
+
+    background:
+        rgba(255,255,255,.08);
+}
+
+
+#pageContent > .page-title::after{
+
+    content:"";
+
+    position:absolute;
+
+    width:190px;
+    height:190px;
+
+    right:100px;
+    bottom:-135px;
+
+    border-radius:50%;
+
+    background:
+        rgba(255,255,255,.06);
+}
+
+
+/* Header content */
+
+#pageContent > .page-title > div{
+
+    position:relative;
+
+    z-index:2;
+}
+
+
+/* Project title */
+
+#pageContent > .page-title h1{
+
+    margin:0 !important;
+
+    color:#ffffff !important;
+
+    font-size:28px !important;
+
+    font-weight:850 !important;
+
+    letter-spacing:-.5px;
+}
+
+
+/* Project subtitle */
+
+#pageContent > .page-title p{
+
+    margin-top:7px !important;
+
+    color:#c7d5ee !important;
+
+    font-size:12px !important;
+}
+
+
+/* Back button */
+
+#pageContent > .page-title .btn-secondary{
+
+    position:relative;
+
+    z-index:5;
+
+    color:#ffffff !important;
+
+    background:
+        rgba(255,255,255,.10) !important;
+
+    border:
+        1px solid rgba(255,255,255,.25) !important;
+
+    border-radius:
+        9px !important;
+
+    font-weight:
+        700 !important;
+
+    backdrop-filter:
+        blur(8px);
+}
+
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+#pageContent .panel{
+
+    border:
+        1px solid #e2e8f2 !important;
+
+    border-radius:
+        16px !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        0 8px 25px rgba(15,23,42,.06) !important;
+
+    overflow:hidden;
+}
+
+
+/* Panel header */
+
+#pageContent .panel-header{
+
+    min-height:
+        58px;
+
+    padding:
+        17px 21px !important;
+
+    border-bottom:
+        1px solid #e8edf5 !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #f8faff
+        ) !important;
+}
+
+
+#pageContent .panel-header h2{
+
+    color:
+        #102044 !important;
+
+    font-size:
+        14px !important;
+
+    font-weight:
+        800 !important;
+}
+
+
+/* =========================================================
+   PROJECT MODULE GRID
+========================================================= */
+
+#pageContent .panel-header +
+div[style*="grid-template-columns"]{
+
+    display:grid !important;
+
+    grid-template-columns:
+        repeat(4,minmax(0,1fr)) !important;
+
+    gap:
+        12px !important;
+
+    padding:
+        18px !important;
+
+    background:
+        #f8faff !important;
+}
+
+
+/* =========================================================
+   MODULE CARDS
+========================================================= */
+
+#pageContent .panel-header +
+div[style*="grid-template-columns"] .btn{
+
+    position:relative;
+
+    min-height:
+        58px !important;
+
+    border:
+        1px solid #e0e7f0 !important;
+
+    border-radius:
+        12px !important;
+
+    background:
+        #ffffff !important;
+
+    color:
+        #26364f !important;
+
+    font-size:
+        11px !important;
+
+    font-weight:
+        750 !important;
+
+    box-shadow:
+        0 3px 10px rgba(15,23,42,.04) !important;
+
+    transition:
+        all .20s ease !important;
+}
+
+
+/* Blue accent */
+
+#pageContent .panel-header +
+div[style*="grid-template-columns"] .btn::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    top:12px;
+
+    bottom:12px;
+
+    width:3px;
+
+    border-radius:
+        0 4px 4px 0;
+
+    background:
+        #2563eb;
+}
+
+
+/* Hover */
+
+#pageContent .panel-header +
+div[style*="grid-template-columns"] .btn:hover{
+
+    transform:
+        translateY(-3px);
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #eef5ff
+        ) !important;
+
+    border-color:
+        #b8cff5 !important;
+
+    color:
+        #1747a6 !important;
+
+    box-shadow:
+        0 10px 22px rgba(37,99,235,.12) !important;
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+#pageContent table th{
+
+    background:
+        #f7f9fc !important;
+
+    color:
+        #64748b !important;
+
+    font-size:
+        9px !important;
+
+    font-weight:
+        800 !important;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        .4px;
+}
+
+
+#pageContent table tbody tr{
+
+    transition:
+        background .15s ease;
+}
+
+
+#pageContent table tbody tr:hover{
+
+    background:
+        #f8fbff !important;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTONS
+========================================================= */
+
+#pageContent .btn-primary{
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        ) !important;
+
+    border:
+        0 !important;
+
+    box-shadow:
+        0 5px 14px rgba(37,99,235,.20);
+
+    transition:
+        all .20s ease;
+}
+
+
+#pageContent .btn-primary:hover{
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(37,99,235,.28);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:1000px){
+
+    #pageContent .panel-header +
+    div[style*="grid-template-columns"]{
+
+        grid-template-columns:
+            repeat(3,1fr) !important;
+    }
+
+}
+
+
+@media(max-width:700px){
+
+    #pageContent .panel-header +
+    div[style*="grid-template-columns"]{
+
+        grid-template-columns:
+            repeat(2,1fr) !important;
+    }
+
+}
+
+</style>
 </head>
 
 <body>
