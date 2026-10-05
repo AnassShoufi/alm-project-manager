@@ -56338,90 +56338,927 @@ function managementMeetingAttendeesCheckboxes(selectedAttendees = []){
         </div>
     `;
 }
-window.createManagementMeeting = function(){
-    const title = prompt("Meeting Title:");
-    if(title === null) return;
-    if(!title.trim()){ alert("Meeting title is required."); return; }
-    const date = prompt("Meeting Date (YYYY-MM-DD):", managementToday());
-    if(date === null) return;
-    const time = prompt("Meeting Time (HH:MM):", "09:00");
-    if(time === null) return;
-    const organizerNo = prompt("Organizer:\n\n1. Anass Shoufi (GM)\n2. Wael Mansour (MD)\n3. Karim Mansour (OM)\n\nEnter 1, 2 or 3:", "1");
-    if(organizerNo === null) return;
-    const organizer = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]}[String(organizerNo).trim()];
-    if(!organizer){ alert("Please select 1, 2 or 3."); return; }
-   const attendees = [];
-    const location = prompt("Location / Meeting Link:", "");
-    if(location === null) return;
-    const agenda = prompt("Agenda:", "");
-    if(agenda === null) return;
-    const remarks = prompt("Remarks:", "");
-    if(remarks === null) return;
+/* =====================================================
+   MANAGEMENT MEETING FORM
+===================================================== */
 
-    managementMeetings.push({
-        id:"meeting-" + Date.now() + "-" + Math.random().toString(36).substring(2,8),
-        title:title.trim(), date:date.trim(), time:time.trim(), organizer,
-        attendees, location:location.trim(), agenda:agenda.trim(), status:"Scheduled",
-        remarks:remarks.trim(), createdDate:managementToday(),
-        notification24Sent:false, notification2Sent:false
-    });
+function managementMeetingAttendeeOptions(selectedAttendees = []){
 
-    persistManagement();
-    currentManagementTab = "meetings";
-    renderManagementModule();
-};
+    return MANAGEMENT_USERS.map(function(user){
 
-window.editManagementMeeting = function(id){
-    const meeting = managementMeetings.find(m => String(m.id) === String(id));
-    if(!meeting) return;
+        const selected =
+            selectedAttendees.includes(user)
+                ? "selected"
+                : "";
 
-    const title = prompt("Meeting Title:", meeting.title || "");
-    if(title === null) return;
-    if(!title.trim()){ alert("Meeting title is required."); return; }
-    const date = prompt("Meeting Date (YYYY-MM-DD):", meeting.date || "");
-    if(date === null) return;
-    const time = prompt("Meeting Time (HH:MM):", meeting.time || "");
-    if(time === null) return;
-    const currentOrganizer = MANAGEMENT_USERS.indexOf(meeting.organizer) + 1;
-    const organizerNo = prompt("Organizer:\n\n1. Anass Shoufi (GM)\n2. Wael Mansour (MD)\n3. Karim Mansour (OM)\n\nEnter 1, 2 or 3:", String(currentOrganizer || 1));
-    if(organizerNo === null) return;
-    const organizer = {"1":MANAGEMENT_USERS[0],"2":MANAGEMENT_USERS[1],"3":MANAGEMENT_USERS[2]}[String(organizerNo).trim()];
-    if(!organizer){ alert("Please select 1, 2 or 3."); return; }
+        return `
+            <option value="${escapeHTML(user)}" ${selected}>
+                ${escapeHTML(user)}
+            </option>
+        `;
 
-    const currentNumbers = (meeting.attendees || []).map(a => String(MANAGEMENT_USERS.indexOf(a) + 1)).filter(n => n !== "0").join(",");
-    const attendeesInput = managementMeetingInputList(currentNumbers || "1,2,3");
-    if(attendeesInput === null) return;
-    const attendees = managementMeetingPeople(attendeesInput);
-    if(!attendees.length){ alert("Please select at least one attendee."); return; }
+    }).join("");
+}
 
-    const location = prompt("Location / Meeting Link:", meeting.location || "");
-    if(location === null) return;
-    const agenda = prompt("Agenda:", meeting.agenda || "");
-    if(agenda === null) return;
-    const status = prompt("Status:\nScheduled / Completed / Cancelled", meeting.status || "Scheduled");
-    if(status === null) return;
-    const remarks = prompt("Remarks:", meeting.remarks || "");
-    if(remarks === null) return;
 
-    const oldSchedule = `${meeting.date || ""}|${meeting.time || ""}`;
-    const newSchedule = `${date.trim()}|${time.trim()}`;
-    const oldAttendees = JSON.stringify(meeting.attendees || []);
-    const newAttendees = JSON.stringify(attendees);
-    const oldStatus = meeting.status || "";
+/* =====================================================
+   OPEN MEETING FORM
+===================================================== */
 
-    Object.assign(meeting, {
-        title:title.trim(), date:date.trim(), time:time.trim(), organizer,
-        attendees, location:location.trim(), agenda:agenda.trim(), status:status.trim(), remarks:remarks.trim()
-    });
+function openManagementMeetingForm(meeting = null){
 
-    if(oldSchedule !== newSchedule || oldAttendees !== newAttendees || oldStatus !== meeting.status){
-        meeting.notification24Sent = false;
-        meeting.notification2Sent = false;
+    const isEdit = !!meeting;
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "managementMeetingModal";
+
+    modal.className =
+        "modal-overlay";
+
+    modal.style.display =
+        "flex";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="modal"
+            style="
+                max-width:850px;
+                width:95%;
+            "
+        >
+
+            <div class="modal-header">
+
+                <h2>
+                    ${
+                        isEdit
+                        ? "✏️ Edit Management Meeting"
+                        : "📅 Schedule Management Meeting"
+                    }
+                </h2>
+
+                <button
+                    class="close"
+                    type="button"
+                    onclick="closeManagementMeetingForm()"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                onsubmit="
+                    saveManagementMeetingForm(
+                        event,
+                        ${isEdit ? `'${meeting.id}'` : "null"}
+                    )
+                "
+            >
+
+                <div class="modal-body">
+
+                    <div class="form-grid">
+
+
+                        <!-- MEETING TITLE -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Meeting Title *
+                            </label>
+
+                            <input
+                                id="managementMeetingTitle"
+                                type="text"
+                                required
+                                value="${escapeHTML(
+                                    meeting?.title || ""
+                                )}"
+                                placeholder="Enter meeting title"
+                            >
+
+                        </div>
+
+
+                        <!-- DATE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Meeting Date *
+                            </label>
+
+                            <input
+                                id="managementMeetingDate"
+                                type="date"
+                                required
+                                value="${escapeHTML(
+                                    meeting?.date ||
+                                    managementToday()
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- TIME -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Meeting Time *
+                            </label>
+
+                            <input
+                                id="managementMeetingTime"
+                                type="time"
+                                required
+                                value="${escapeHTML(
+                                    meeting?.time ||
+                                    "09:00"
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <!-- ORGANIZER -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Organizer *
+                            </label>
+
+                            <select
+                                id="managementMeetingOrganizer"
+                                required
+                            >
+
+                                ${managementMeetingAttendeeOptions(
+                                    meeting?.organizer
+                                    ? [meeting.organizer]
+                                    : [MANAGEMENT_USERS[0]]
+                                )}
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- ATTENDEES -->
+
+                       <div class="form-group">
+
+    <label>
+        Attendees *
+    </label>
+
+    <div
+        id="managementAttendeesDropdown"
+        style="
+            position:relative;
+            width:100%;
+        "
+    >
+
+        <button
+            type="button"
+            id="managementAttendeesButton"
+            onclick="toggleManagementAttendeesDropdown()"
+            style="
+                width:100%;
+                min-height:42px;
+                padding:10px 12px;
+                border:1px solid #d1d5db;
+                border-radius:7px;
+                background:#ffffff;
+                color:#334155;
+                text-align:left;
+                cursor:pointer;
+                font-size:13px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+            "
+        >
+
+            <span id="managementAttendeesSelectedText">
+                Select attendees
+            </span>
+
+            <span>
+                ▾
+            </span>
+
+        </button>
+
+
+        <div
+            id="managementAttendeesOptions"
+            style="
+                display:none;
+                position:absolute;
+                z-index:9999;
+                top:100%;
+                left:0;
+                right:0;
+                margin-top:4px;
+                background:#ffffff;
+                border:1px solid #d1d5db;
+                border-radius:7px;
+                box-shadow:0 8px 20px rgba(0,0,0,0.12);
+                padding:6px;
+            "
+        >
+
+            ${MANAGEMENT_USERS.map(function(user){
+
+                const checked =
+                    (meeting?.attendees || [])
+                    .includes(user)
+                    ? "checked"
+                    : "";
+
+                return `
+
+                    <label
+                        style="
+                            display:flex;
+                            align-items:center;
+                            gap:10px;
+                            padding:10px 8px;
+                            border-radius:6px;
+                            cursor:pointer;
+                            font-size:13px;
+                            font-weight:600;
+                        "
+                        onmouseover="
+                            this.style.background='#f1f5f9'
+                        "
+                        onmouseout="
+                            this.style.background='transparent'
+                        "
+                    >
+
+                        <input
+                            type="checkbox"
+                            class="management-attendee-checkbox"
+                            value="${escapeHTML(user)}"
+                            ${checked}
+                            onchange="updateManagementAttendeesText()"
+                            style="
+                                width:17px;
+                                height:17px;
+                                cursor:pointer;
+                            "
+                        >
+
+                        <span>
+                            ${escapeHTML(user)}
+                        </span>
+
+                    </label>
+
+                `;
+
+            }).join("")}
+
+        </div>
+
+    </div>
+
+</div>
+
+                        <!-- LOCATION -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Location / Meeting Link
+                            </label>
+
+                            <input
+                                id="managementMeetingLocation"
+                                type="text"
+                                value="${escapeHTML(
+                                    meeting?.location || ""
+                                )}"
+                                placeholder="Meeting room or meeting link"
+                            >
+
+                        </div>
+
+
+                        <!-- AGENDA -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Agenda
+                            </label>
+
+                            <textarea
+                                id="managementMeetingAgenda"
+                                rows="4"
+                                placeholder="Meeting agenda..."
+                            >${escapeHTML(
+                                meeting?.agenda || ""
+                            )}</textarea>
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Status
+                            </label>
+
+                            <select
+                                id="managementMeetingStatus"
+                            >
+
+                                <option
+                                    value="Scheduled"
+                                    ${
+                                        !meeting ||
+                                        meeting.status === "Scheduled"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Scheduled
+                                </option>
+
+                                <option
+                                    value="Completed"
+                                    ${
+                                        meeting?.status === "Completed"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Completed
+                                </option>
+
+                                <option
+                                    value="Cancelled"
+                                    ${
+                                        meeting?.status === "Cancelled"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    Cancelled
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- REMARKS -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Remarks
+                            </label>
+
+                            <textarea
+                                id="managementMeetingRemarks"
+                                rows="3"
+                                placeholder="Additional remarks..."
+                            >${escapeHTML(
+                                meeting?.remarks || ""
+                            )}</textarea>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="closeManagementMeetingForm()"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        ${
+                            isEdit
+                            ? "Save Changes"
+                            : "Schedule Meeting"
+                        }
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(modal);
+    updateManagementAttendeesText();
+
+
+    modal.addEventListener(
+        "click",
+        function(event){
+
+            if(event.target === modal){
+
+                closeManagementMeetingForm();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   CLOSE MEETING FORM
+===================================================== */
+
+window.closeManagementMeetingForm = function(){
+
+    const modal =
+        document.getElementById(
+            "managementMeetingModal"
+        );
+
+    if(modal){
+
+        modal.remove();
+
     }
 
+};
+
+
+/* =====================================================
+   CREATE MEETING
+===================================================== */
+
+window.createManagementMeeting = function(){
+
+    openManagementMeetingForm();
+
+};
+        /* =====================================================
+   ATTENDEES DROPDOWN
+===================================================== */
+
+window.toggleManagementAttendeesDropdown = function(){
+
+    const dropdown =
+        document.getElementById(
+            "managementAttendeesOptions"
+        );
+
+    if(!dropdown) return;
+
+    dropdown.style.display =
+        dropdown.style.display === "none"
+            ? "block"
+            : "none";
+
+};
+
+
+/* =====================================================
+   UPDATE SELECTED ATTENDEES TEXT
+===================================================== */
+
+window.updateManagementAttendeesText = function(){
+
+    const checkboxes =
+        document.querySelectorAll(
+            ".management-attendee-checkbox:checked"
+        );
+
+    const selected =
+        Array.from(checkboxes).map(function(cb){
+
+            return cb.value;
+
+        });
+
+
+    const text =
+        document.getElementById(
+            "managementAttendeesSelectedText"
+        );
+
+    if(!text) return;
+
+
+    if(selected.length === 0){
+
+        text.textContent =
+            "Select attendees";
+
+        text.style.color =
+            "#94a3b8";
+
+        return;
+
+    }
+
+
+    if(selected.length === 1){
+
+        text.textContent =
+            selected[0];
+
+    }
+    else{
+
+        text.textContent =
+            selected.length +
+            " Attendees Selected";
+
+    }
+
+    text.style.color =
+        "#334155";
+
+};
+
+
+/* =====================================================
+   GET SELECTED ATTENDEES
+===================================================== */
+
+function getManagementSelectedAttendees(){
+
+    return Array.from(
+        document.querySelectorAll(
+            ".management-attendee-checkbox:checked"
+        )
+    ).map(function(cb){
+
+        return cb.value;
+
+    });
+
+}
+
+
+/* =====================================================
+   SAVE MEETING
+===================================================== */
+
+window.saveManagementMeetingForm = function(
+    event,
+    meetingId
+){
+
+    event.preventDefault();
+
+
+    const title =
+        document
+            .getElementById(
+                "managementMeetingTitle"
+            )
+            .value
+            .trim();
+
+
+    const date =
+        document
+            .getElementById(
+                "managementMeetingDate"
+            )
+            .value;
+
+
+    const time =
+        document
+            .getElementById(
+                "managementMeetingTime"
+            )
+            .value;
+
+
+    const organizer =
+        document
+            .getElementById(
+                "managementMeetingOrganizer"
+            )
+            .value;
+
+
+   const attendees =
+    getManagementSelectedAttendees();
+
+
+    const location =
+        document
+            .getElementById(
+                "managementMeetingLocation"
+            )
+            .value
+            .trim();
+
+
+    const agenda =
+        document
+            .getElementById(
+                "managementMeetingAgenda"
+            )
+            .value
+            .trim();
+
+
+    const status =
+        document
+            .getElementById(
+                "managementMeetingStatus"
+            )
+            .value;
+
+
+    const remarks =
+        document
+            .getElementById(
+                "managementMeetingRemarks"
+            )
+            .value
+            .trim();
+
+
+    /* =========================
+       VALIDATION
+    ========================= */
+
+    if(!title){
+
+        alert(
+            "Meeting title is required."
+        );
+
+        return;
+
+    }
+
+
+    if(!date){
+
+        alert(
+            "Meeting date is required."
+        );
+
+        return;
+
+    }
+
+
+    if(!time){
+
+        alert(
+            "Meeting time is required."
+        );
+
+        return;
+
+    }
+
+
+    if(!attendees.length){
+
+        alert(
+            "Please select at least one attendee."
+        );
+
+        return;
+
+    }
+
+
+    /* =========================
+       NEW MEETING
+    ========================= */
+
+    if(!meetingId){
+
+        managementMeetings.push({
+
+            id:
+                "meeting-" +
+                Date.now() +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .substring(2,8),
+
+            title,
+
+            date,
+
+            time,
+
+            organizer,
+
+            attendees,
+
+            location,
+
+            agenda,
+
+            status,
+
+            remarks,
+
+            createdDate:
+                managementToday(),
+
+            notification24SentAt:
+                "",
+
+            notification2SentAt:
+                ""
+
+        });
+
+    }
+
+
+    /* =========================
+       EDIT EXISTING MEETING
+    ========================= */
+
+    else{
+
+        const meeting =
+            managementMeetings.find(
+                function(item){
+
+                    return String(item.id) ===
+                           String(meetingId);
+
+                }
+            );
+
+
+        if(!meeting){
+
+            alert(
+                "Meeting not found."
+            );
+
+            return;
+
+        }
+
+
+        const oldDate =
+            meeting.date;
+
+        const oldTime =
+            meeting.time;
+
+        const oldStatus =
+            meeting.status;
+
+
+        Object.assign(
+            meeting,
+            {
+
+                title,
+
+                date,
+
+                time,
+
+                organizer,
+
+                attendees,
+
+                location,
+
+                agenda,
+
+                status,
+
+                remarks
+
+            }
+        );
+
+
+        /*
+           RESET NOTIFICATIONS
+           IF DATE OR TIME CHANGED
+        */
+
+        if(
+            oldDate !== date ||
+            oldTime !== time
+        ){
+
+            meeting.notification24SentAt =
+                "";
+
+            meeting.notification2SentAt =
+                "";
+
+        }
+
+
+        /*
+           RESET NOTIFICATIONS
+           IF CANCELLED/COMPLETED
+           BECOMES SCHEDULED
+        */
+
+        if(
+            oldStatus !== "Scheduled" &&
+            status === "Scheduled"
+        ){
+
+            meeting.notification24SentAt =
+                "";
+
+            meeting.notification2SentAt =
+                "";
+
+        }
+
+    }
+
+
     persistManagement();
-    currentManagementTab = "meetings";
+
+    closeManagementMeetingForm();
+
+    currentManagementTab =
+        "meetings";
+
     renderManagementModule();
+
+};
+
+
+/* =====================================================
+   EDIT MEETING
+===================================================== */
+
+window.editManagementMeeting = function(id){
+
+    const meeting =
+        managementMeetings.find(
+            function(item){
+
+                return String(item.id) ===
+                       String(id);
+
+            }
+        );
+
+
+    if(!meeting){
+
+        alert(
+            "Meeting not found."
+        );
+
+        return;
+
+    }
+
+
+    openManagementMeetingForm(
+        meeting
+    );
+
 };
 
 window.completeManagementMeeting = function(id){
