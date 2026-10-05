@@ -2939,6 +2939,618 @@ textarea{
     }
 
 }
+    /* =========================================================
+   ALM PREMIUM DASHBOARD
+========================================================= */
+
+.alm-dashboard{
+
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+}
+
+
+/* HERO */
+
+.alm-dashboard-hero{
+
+    position:relative;
+
+    min-height:145px;
+
+    padding:28px 30px;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    color:white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0B1736 0%,
+            #122B5D 55%,
+            #1D4ED8 100%
+        );
+
+    box-shadow:
+        0 14px 35px rgba(11,23,54,.18);
+}
+
+
+.alm-dashboard-hero::after{
+
+    content:"";
+
+    position:absolute;
+
+    width:280px;
+    height:280px;
+
+    right:-80px;
+    top:-150px;
+
+    border-radius:50%;
+
+    background:
+        rgba(245,166,35,.13);
+}
+
+
+.alm-dashboard-hero-content{
+
+    position:relative;
+
+    z-index:2;
+}
+
+
+.alm-dashboard-hero h1{
+
+    margin:0;
+
+    color:white;
+
+    font-size:28px;
+
+    font-weight:800;
+
+    letter-spacing:-.6px;
+}
+
+
+.alm-dashboard-hero p{
+
+    margin:
+        7px 0 0;
+
+    color:#CBD8F0;
+
+    font-size:13px;
+}
+
+
+.alm-dashboard-hero .hero-sub{
+
+    margin-top:18px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    color:#E5EDFF;
+
+    font-size:12px;
+}
+
+
+.alm-status-dot{
+
+    width:8px;
+    height:8px;
+
+    border-radius:50%;
+
+    background:#4ADE80;
+
+    box-shadow:
+        0 0 10px rgba(74,222,128,.8);
+}
+
+
+/* KPI GRID */
+
+.alm-kpi-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:16px;
+}
+
+
+.alm-kpi{
+
+    position:relative;
+
+    background:white;
+
+    border:
+        1px solid #E5EAF2;
+
+    border-radius:15px;
+
+    padding:20px;
+
+    box-shadow:
+        0 5px 18px rgba(15,23,42,.055);
+
+    overflow:hidden;
+
+    transition:
+        all .22s ease;
+}
+
+
+.alm-kpi:hover{
+
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 14px 30px rgba(15,23,42,.11);
+}
+
+
+.alm-kpi::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+    bottom:0;
+
+    width:4px;
+
+    background:
+        var(--kpi-color,#2563EB);
+}
+
+
+.alm-kpi-icon{
+
+    width:38px;
+    height:38px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    border-radius:10px;
+
+    background:
+        var(--kpi-bg,#EFF6FF);
+
+    color:
+        var(--kpi-color,#2563EB);
+
+    font-size:17px;
+
+    margin-bottom:15px;
+}
+
+
+.alm-kpi-label{
+
+    color:#718096;
+
+    font-size:10px;
+
+    font-weight:800;
+
+    text-transform:uppercase;
+
+    letter-spacing:.8px;
+}
+
+
+.alm-kpi-number{
+
+    margin-top:5px;
+
+    color:#0B1736;
+
+    font-size:30px;
+
+    font-weight:850;
+
+    letter-spacing:-1px;
+}
+
+
+.alm-kpi-footer{
+
+    margin-top:8px;
+
+    color:#94A3B8;
+
+    font-size:11px;
+}
+
+
+/* MAIN DASHBOARD GRID */
+
+.alm-dashboard-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        minmax(0,2fr)
+        minmax(280px,1fr);
+
+    gap:18px;
+
+    align-items:start;
+}
+
+
+/* DASHBOARD PANEL */
+
+.alm-dash-panel{
+
+    background:white;
+
+    border:
+        1px solid #E5EAF2;
+
+    border-radius:15px;
+
+    box-shadow:
+        0 5px 18px rgba(15,23,42,.055);
+
+    overflow:hidden;
+}
+
+
+.alm-dash-panel-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:
+        17px 20px;
+
+    border-bottom:
+        1px solid #E9EEF5;
+}
+
+
+.alm-dash-panel-title{
+
+    color:#0B1736;
+
+    font-size:15px;
+
+    font-weight:800;
+}
+
+
+.alm-dash-panel-subtitle{
+
+    margin-top:3px;
+
+    color:#94A3B8;
+
+    font-size:11px;
+}
+
+
+/* PROJECT PERFORMANCE */
+
+.alm-project-performance{
+
+    padding:20px;
+}
+
+
+.alm-project-row{
+
+    padding:
+        13px 0;
+
+    border-bottom:
+        1px solid #EEF2F7;
+}
+
+
+.alm-project-row:last-child{
+
+    border-bottom:0;
+}
+
+
+.alm-project-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:8px;
+}
+
+
+.alm-project-name{
+
+    color:#1E293B;
+
+    font-size:12px;
+
+    font-weight:750;
+}
+
+
+.alm-project-percent{
+
+    color:#64748B;
+
+    font-size:11px;
+
+    font-weight:750;
+}
+
+
+.alm-project-progress{
+
+    height:7px;
+
+    background:#E9EEF5;
+
+    border-radius:999px;
+
+    overflow:hidden;
+}
+
+
+.alm-project-progress span{
+
+    display:block;
+
+    height:100%;
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #2563EB,
+            #60A5FA
+        );
+}
+
+
+/* QUICK ACTIONS */
+
+.alm-quick-actions{
+
+    padding:14px;
+}
+
+
+.alm-quick-action{
+
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:13px 14px;
+
+    margin-bottom:7px;
+
+    border:1px solid #E8EDF4;
+
+    border-radius:10px;
+
+    background:#FAFBFD;
+
+    color:#334155;
+
+    text-align:left;
+
+    cursor:pointer;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    transition:
+        all .18s ease;
+}
+
+
+.alm-quick-action:last-child{
+
+    margin-bottom:0;
+}
+
+
+.alm-quick-action:hover{
+
+    background:#EFF6FF;
+
+    border-color:#BFDBFE;
+
+    color:#1D4ED8;
+
+    transform:
+        translateX(3px);
+}
+
+
+.alm-quick-icon{
+
+    width:31px;
+    height:31px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    border-radius:8px;
+
+    background:#EAF1FF;
+
+    color:#2563EB;
+
+    font-size:14px;
+}
+
+
+/* PROJECT TABLE HEADER */
+
+.alm-project-table-wrap{
+
+    overflow:auto;
+}
+
+
+.alm-project-table{
+
+    width:100%;
+
+    min-width:700px;
+}
+
+
+.alm-project-table th{
+
+    background:#F8FAFD;
+
+}
+
+
+.alm-project-table td{
+
+    padding:
+        13px 16px;
+}
+
+
+.alm-project-code{
+
+    display:block;
+
+    margin-top:2px;
+
+    color:#94A3B8;
+
+    font-size:9px;
+
+    font-weight:600;
+}
+
+
+/* STATUS */
+
+.alm-status{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:5px;
+
+    padding:
+        5px 9px;
+
+    border-radius:999px;
+
+    font-size:10px;
+
+    font-weight:800;
+}
+
+
+.alm-status.active{
+
+    color:#15803D;
+
+    background:#DCFCE7;
+}
+
+
+.alm-status.delayed{
+
+    color:#B45309;
+
+    background:#FEF3C7;
+}
+
+
+.alm-status-dot-small{
+
+    width:5px;
+    height:5px;
+
+    border-radius:50%;
+
+    background:currentColor;
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width:1050px){
+
+    .alm-kpi-grid{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+    .alm-dashboard-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+
+@media(max-width:650px){
+
+    .alm-kpi-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .alm-dashboard-hero{
+
+        padding:22px;
+
+    }
+
+}
 </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -3416,62 +4028,586 @@ function persist(){
 
 function showDashboard(){
 
-    const active = projects.filter(p => p.status === "Active").length;
+    const active =
+        projects.filter(
+            p => p.status === "Active"
+        ).length;
 
-    const delayed = projects.filter(p => p.status === "Delayed").length;
 
-    document.getElementById("pageContent").innerHTML = `
+    const delayed =
+        projects.filter(
+            p => p.status === "Delayed"
+        ).length;
 
-        <div class="page-title">
-            <div>
-                <h1>Dashboard</h1>
-                <p>ALM Engineering & Contracting</p>
+
+    const totalProjects =
+        projects.length;
+
+
+    const averageProgress =
+        totalProjects
+            ? Math.round(
+                projects.reduce(
+                    (sum,p) =>
+                        sum + Number(p.progress || 0),
+                    0
+                ) / totalProjects
+              )
+            : 0;
+
+
+    const projectRows =
+        projects
+        .map(function(project){
+
+            const progress =
+                Number(project.progress || 0);
+
+            const status =
+                String(
+                    project.status || ""
+                ).toLowerCase();
+
+
+            return `
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+                            ${escapeHTML(
+                                project.name || "Unnamed Project"
+                            )}
+                        </strong>
+
+                        <span class="alm-project-code">
+                            ${escapeHTML(
+                                project.code || ""
+                            )}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+                        ${escapeHTML(
+                            project.client || "-"
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHTML(
+                            project.manager || "-"
+                        )}
+                    </td>
+
+
+                    <td style="min-width:150px;">
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            margin-bottom:5px;
+                        ">
+
+                            <span style="
+                                font-size:10px;
+                                color:#64748B;
+                            ">
+                                Progress
+                            </span>
+
+                            <strong style="
+                                font-size:10px;
+                                color:#1E293B;
+                            ">
+                                ${progress}%
+                            </strong>
+
+                        </div>
+
+
+                        <div class="alm-project-progress">
+
+                            <span
+                                style="
+                                    width:${progress}%;
+                                "
+                            ></span>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="
+                                alm-status
+                                ${
+                                    status === "delayed"
+                                    ? "delayed"
+                                    : "active"
+                                }
+                            "
+                        >
+
+                            <span
+                                class="alm-status-dot-small"
+                            ></span>
+
+                            ${escapeHTML(
+                                project.status || "Active"
+                            )}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <button
+                            class="action-btn"
+                            onclick="
+                                openProject(
+                                    '${project.id}'
+                                )
+                            "
+                        >
+                            Open
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        })
+        .join("");
+
+
+    const performanceProjects =
+        projects
+        .slice()
+        .sort(
+            (a,b) =>
+                Number(b.progress || 0) -
+                Number(a.progress || 0)
+        )
+        .slice(0,5);
+
+
+    const performanceHTML =
+        performanceProjects
+        .map(function(project){
+
+            const progress =
+                Number(project.progress || 0);
+
+            return `
+
+                <div class="alm-project-row">
+
+                    <div class="alm-project-top">
+
+                        <span class="alm-project-name">
+                            ${escapeHTML(
+                                project.name || "Project"
+                            )}
+                        </span>
+
+                        <span class="alm-project-percent">
+                            ${progress}%
+                        </span>
+
+                    </div>
+
+
+                    <div class="alm-project-progress">
+
+                        <span
+                            style="
+                                width:${progress}%;
+                            "
+                        ></span>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        })
+        .join("");
+
+
+    document.getElementById(
+        "pageContent"
+    ).innerHTML = `
+
+
+        <div class="alm-dashboard">
+
+
+            <!-- HERO -->
+
+            <div class="alm-dashboard-hero">
+
+                <div class="alm-dashboard-hero-content">
+
+                    <h1>
+                        Good Morning, Anass
+                    </h1>
+
+                    <p>
+                        ALM Engineering & Contracting
+                        — Executive Project Overview
+                    </p>
+
+                    <div class="alm-dashboard-hero hero-sub">
+
+                        <span
+                            class="alm-status-dot"
+                        ></span>
+
+                        ALM Project Manager
+                        is running normally
+
+                    </div>
+
+                </div>
+
             </div>
 
-            <button class="btn btn-primary" onclick="openNewProject()">
-                + New Project
-            </button>
+
+            <!-- KPI -->
+
+            <div class="alm-kpi-grid">
+
+
+                <div
+                    class="alm-kpi"
+                    style="
+                        --kpi-color:#2563EB;
+                        --kpi-bg:#EFF6FF;
+                    "
+                >
+
+                    <div class="alm-kpi-icon">
+                        ◈
+                    </div>
+
+                    <div class="alm-kpi-label">
+                        Active Projects
+                    </div>
+
+                    <div class="alm-kpi-number">
+                        ${active}
+                    </div>
+
+                    <div class="alm-kpi-footer">
+                        ${totalProjects}
+                        total projects
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="alm-kpi"
+                    style="
+                        --kpi-color:#7C3AED;
+                        --kpi-bg:#F3E8FF;
+                    "
+                >
+
+                    <div class="alm-kpi-icon">
+                        ✓
+                    </div>
+
+                    <div class="alm-kpi-label">
+                        Open Tasks
+                    </div>
+
+                    <div class="alm-kpi-number">
+                        18
+                    </div>
+
+                    <div class="alm-kpi-footer">
+                        Management & project tasks
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="alm-kpi"
+                    style="
+                        --kpi-color:#0891B2;
+                        --kpi-bg:#ECFEFF;
+                    "
+                >
+
+                    <div class="alm-kpi-icon">
+                        ▣
+                    </div>
+
+                    <div class="alm-kpi-label">
+                        Pending Documents
+                    </div>
+
+                    <div class="alm-kpi-number">
+                        7
+                    </div>
+
+                    <div class="alm-kpi-footer">
+                        Require attention
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="alm-kpi"
+                    style="
+                        --kpi-color:#DC2626;
+                        --kpi-bg:#FEF2F2;
+                    "
+                >
+
+                    <div class="alm-kpi-icon">
+                        !
+                    </div>
+
+                    <div class="alm-kpi-label">
+                        Delayed Items
+                    </div>
+
+                    <div class="alm-kpi-number">
+                        ${delayed}
+                    </div>
+
+                    <div class="alm-kpi-footer">
+                        Projects requiring attention
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- PERFORMANCE + QUICK ACTIONS -->
+
+            <div class="alm-dashboard-grid">
+
+
+                <div class="alm-dash-panel">
+
+                    <div class="alm-dash-panel-header">
+
+                        <div>
+
+                            <div class="alm-dash-panel-title">
+                                Project Performance
+                            </div>
+
+                            <div class="alm-dash-panel-subtitle">
+                                Current progress across your portfolio
+                            </div>
+
+                        </div>
+
+                        <strong style="
+                            color:#2563EB;
+                            font-size:18px;
+                        ">
+                            ${averageProgress}%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="alm-project-performance">
+
+                        ${performanceHTML}
+
+                    </div>
+
+                </div>
+
+
+                <div class="alm-dash-panel">
+
+                    <div class="alm-dash-panel-header">
+
+                        <div>
+
+                            <div class="alm-dash-panel-title">
+                                Quick Actions
+                            </div>
+
+                            <div class="alm-dash-panel-subtitle">
+                                Frequently used areas
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="alm-quick-actions">
+
+
+                        <button
+                            class="alm-quick-action"
+                            onclick="openNewProject()"
+                        >
+
+                            <span class="alm-quick-icon">
+                                +
+                            </span>
+
+                            New Project
+
+                        </button>
+
+
+                        <button
+                            class="alm-quick-action"
+                            onclick="showProjects()"
+                        >
+
+                            <span class="alm-quick-icon">
+                                ◈
+                            </span>
+
+                            View Projects
+
+                        </button>
+
+
+                        <button
+                            class="alm-quick-action"
+                            onclick="showTenders()"
+                        >
+
+                            <span class="alm-quick-icon">
+                                ▤
+                            </span>
+
+                            Tender Management
+
+                        </button>
+
+
+                        <button
+                            class="alm-quick-action"
+                            onclick="showManagementTasks()"
+                        >
+
+                            <span class="alm-quick-icon">
+                                ✓
+                            </span>
+
+                            Management Tasks
+
+                        </button>
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- PROJECT TABLE -->
+
+            <div class="alm-dash-panel">
+
+                <div class="alm-dash-panel-header">
+
+                    <div>
+
+                        <div class="alm-dash-panel-title">
+                            Project Portfolio
+                        </div>
+
+                        <div class="alm-dash-panel-subtitle">
+                            Overview of all active ALM projects
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="showProjects()"
+                    >
+                        View All Projects →
+                    </button>
+
+                </div>
+
+
+                <div class="alm-project-table-wrap">
+
+                    <table class="alm-project-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Project
+                                </th>
+
+                                <th>
+                                    Client
+                                </th>
+
+                                <th>
+                                    Manager
+                                </th>
+
+                                <th>
+                                    Progress
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${projectRows}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
         </div>
 
-        <div class="stats">
-
-            <div class="stat-card">
-                <div class="label">Active Projects</div>
-                <div class="number">${active}</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="label">Open Tasks</div>
-                <div class="number">18</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="label">Pending Documents</div>
-                <div class="number">7</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="label">Delayed Items</div>
-                <div class="number">${delayed}</div>
-            </div>
-
-        </div>
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <h2>Projects</h2>
-
-                <button class="btn btn-primary" onclick="openNewProject()">
-                    + Add Project
-                </button>
-
-            </div>
-
-            ${projectTable()}
-
-        </div>
     `;
 }
 
