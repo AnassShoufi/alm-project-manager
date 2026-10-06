@@ -5455,6 +5455,58 @@ div[style*="grid-template-columns"]{
         gap:15px !important;
     }
 }
+    /* =====================================================
+   FLAGSHIP BUILDING IMAGE
+===================================================== */
+
+.alm-dashboard-hero{
+    position:relative;
+    overflow:hidden;
+}
+
+.alm-welcome-building{
+
+    position:absolute;
+
+    right:0;
+    top:0;
+
+    width:40%;
+    height:100%;
+
+    object-fit:cover;
+
+    object-position:center;
+
+    opacity:.96;
+
+    z-index:1;
+
+    pointer-events:none;
+
+    -webkit-mask-image:
+        linear-gradient(
+            to right,
+            transparent 0%,
+            rgba(0,0,0,.20) 18%,
+            #000 48%
+        );
+
+    mask-image:
+        linear-gradient(
+            to right,
+            transparent 0%,
+            rgba(0,0,0,.20) 18%,
+            #000 48%
+        );
+}
+
+.alm-dashboard-hero-content{
+
+    position:relative;
+
+    z-index:3;
+}
 </style>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -7457,11 +7509,18 @@ function showDashboard(){
             <!-- HERO -->
 
             <div class="alm-dashboard-hero">
-<img
-    src="alm-flagship-building.png"
-    class="alm-welcome-building"
-    alt="ALM Flagship Building"
->
+${getFlagshipImage()
+    ?
+    `
+    <img
+        src="${getFlagshipImage()}"
+        class="alm-welcome-building"
+        alt="ALM Flagship Building"
+    >
+    `
+    :
+    ``
+}
                 <div class="alm-dashboard-hero-content">
 
                     <h1>
@@ -7723,7 +7782,33 @@ function showDashboard(){
 
                         </button>
 
+${currentUser.name === "Anass Shoufi"
+    ?
+    `
+    <button
+        class="alm-quick-action"
+        onclick="document.getElementById('flagshipImageInput').click()"
+    >
 
+        <span class="alm-quick-icon">
+            🏢
+        </span>
+
+        Change Flagship Building
+
+    </button>
+
+    <input
+        type="file"
+        id="flagshipImageInput"
+        accept="image/*"
+        style="display:none;"
+        onchange="handleFlagshipImageUpload(this)"
+    >
+    `
+    :
+    ``
+}
                     </div>
 
                 </div>
@@ -22809,7 +22894,215 @@ const currentUser = {
     role: "GM"
 
 };
+/* =====================================================
+   FLAGSHIP BUILDING IMAGE
+   ADMIN ONLY — ANASS SHOUFI
+===================================================== */
 
+const FLAGSHIP_IMAGE_KEY =
+    "alm_flagship_building_image";
+
+
+function canChangeFlagshipImage(){
+
+    return (
+        currentUser &&
+        currentUser.name === "Anass Shoufi"
+    );
+
+}
+
+
+function getFlagshipImage(){
+
+    return localStorage.getItem(
+        FLAGSHIP_IMAGE_KEY
+    ) || "";
+
+}
+
+
+/* =====================================================
+   UPLOAD / SAVE FLAGSHIP IMAGE
+===================================================== */
+
+window.handleFlagshipImageUpload =
+function(input){
+
+    if(!canChangeFlagshipImage()){
+
+        alert(
+            "Only Anass Shoufi can change the Flagship Building image."
+        );
+
+        if(input){
+            input.value = "";
+        }
+
+        return;
+    }
+
+
+    if(
+        !input ||
+        !input.files ||
+        !input.files[0]
+    ){
+
+        return;
+    }
+
+
+    const file = input.files[0];
+
+
+    if(!file.type.startsWith("image/")){
+
+        alert(
+            "Please select a valid image file."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+    function(event){
+
+        const source =
+            event.target.result;
+
+
+        const image =
+            new Image();
+
+
+        image.onload =
+        function(){
+
+            /*
+               Compress the image before storing it.
+               This keeps localStorage small.
+            */
+
+            const maxWidth = 1400;
+            const maxHeight = 800;
+
+
+            const scale =
+                Math.min(
+                    1,
+                    maxWidth / image.naturalWidth,
+                    maxHeight / image.naturalHeight
+                );
+
+
+            const canvas =
+                document.createElement(
+                    "canvas"
+                );
+
+
+            canvas.width =
+                Math.max(
+                    1,
+                    Math.round(
+                        image.naturalWidth * scale
+                    )
+                );
+
+
+            canvas.height =
+                Math.max(
+                    1,
+                    Math.round(
+                        image.naturalHeight * scale
+                    )
+                );
+
+
+            const ctx =
+                canvas.getContext("2d");
+
+
+            ctx.drawImage(
+                image,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+
+            const compressedImage =
+                canvas.toDataURL(
+                    "image/jpeg",
+                    0.82
+                );
+
+
+            try{
+
+                localStorage.setItem(
+                    FLAGSHIP_IMAGE_KEY,
+                    compressedImage
+                );
+
+            }catch(error){
+
+                alert(
+                    "The Flagship Building image could not be saved. Please use a smaller image."
+                );
+
+                input.value = "";
+
+                return;
+            }
+
+
+            /*
+               Refresh Dashboard immediately.
+            */
+
+            showDashboard();
+
+
+            /*
+               Clear the file input so the
+               same image can be selected again.
+            */
+
+            input.value = "";
+
+        };
+
+
+        image.onerror =
+        function(){
+
+            alert(
+                "The selected image could not be loaded."
+            );
+
+            input.value = "";
+
+        };
+
+
+        image.src = source;
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+};
 
 /* =========================
    OPEN DRAWINGS
