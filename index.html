@@ -5527,6 +5527,125 @@ textarea{
     font-size:11px !important;
     font-weight:600 !important;
 }
+    /* =========================================================
+   DOCUMENTS - PROFESSIONAL FOLDER CARDS
+========================================================= */
+
+.alm-doc-folder-card{
+    position:relative;
+    min-height:190px;
+    padding:22px 18px 16px !important;
+
+    border:1px solid #E1E8F1 !important;
+    border-radius:15px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #FFFFFF 0%,
+            #F8FAFD 100%
+        ) !important;
+
+    box-shadow:
+        0 4px 14px
+        rgba(15,23,42,.045);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease;
+}
+
+.alm-doc-folder-card:hover{
+    transform:translateY(-4px);
+
+    border-color:#C7D8F5 !important;
+
+    box-shadow:
+        0 12px 28px
+        rgba(37,99,235,.10);
+}
+
+
+/* FOLDER ICON AREA */
+
+.alm-doc-folder-card > div:first-child{
+    padding:8px 8px 14px;
+    border-radius:12px;
+
+    transition:
+        background .2s ease,
+        transform .2s ease;
+}
+
+.alm-doc-folder-card:hover > div:first-child{
+    background:#F1F6FF;
+    transform:translateY(-2px);
+}
+
+
+/* FOLDER ICON */
+
+.alm-doc-folder-card > div:first-child > div{
+    font-size:44px !important;
+    margin-bottom:12px !important;
+}
+
+
+/* FOLDER NAME */
+
+.alm-doc-folder-card strong{
+    display:block;
+
+    color:#10254A !important;
+
+    font-size:15px !important;
+    font-weight:850 !important;
+
+    letter-spacing:-.15px;
+}
+
+
+/* ACTION AREA */
+
+.alm-doc-folder-card > div:nth-child(2){
+    margin-top:18px !important;
+
+    padding-top:13px;
+
+    border-top:1px solid #EDF1F6;
+}
+
+
+/* EDIT / DELETE BUTTONS */
+
+.alm-doc-folder-card button{
+    min-height:32px;
+
+    padding:7px 12px !important;
+
+    border-radius:8px !important;
+
+    font-size:11px !important;
+    font-weight:750 !important;
+
+    box-shadow:none;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        filter .18s ease;
+}
+
+.alm-doc-folder-card button:hover{
+    transform:translateY(-1px);
+
+    filter:brightness(.97);
+
+    box-shadow:
+        0 5px 12px
+        rgba(15,23,42,.10);
+}
 /* =========================================================
    OVERVIEW INFORMATION CARDS
 ========================================================= */
@@ -25359,8 +25478,9 @@ function renderDocumentsSection(project){
                     visibleFolders.map(
                         folder => `
 
-                        <div
-                            style="
+                       <div
+    class="alm-doc-folder-card"
+    style="
                                 border:1px solid #e1e5ea;
                                 border-radius:10px;
                                 padding:20px;
