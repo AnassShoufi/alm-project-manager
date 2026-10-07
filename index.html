@@ -32306,14 +32306,17 @@ window.weeklyEquipmentOptions = [
 
     modal.innerHTML = `
 
-        <div
-            class="modal"
-            style="
-                width:900px;
-                max-width:95%;
-                max-height:92vh;
-            "
-        >
+       <div
+    class="modal"
+    style="
+        width:900px;
+        max-width:95%;
+        max-height:92vh;
+        overflow:hidden;
+        display:flex;
+        flex-direction:column;
+    "
+>
 
 
             <div class="modal-header">
@@ -32372,13 +32375,14 @@ window.weeklyEquipmentOptions = [
             >
 
 
-                <div
-                    class="modal-body"
-                    style="
-                        max-height:72vh;
-                        overflow-y:auto;
-                    "
-                >
+               <div
+    class="modal-body"
+    style="
+        flex:1;
+        min-height:0;
+        overflow-y:auto;
+    "
+>
 
 
                     <!-- REPORT INFORMATION -->
@@ -34984,9 +34988,18 @@ window.weeklyEquipmentOptions = [
     `;
 
 
-   document.body.appendChild(
+ document.body.appendChild(
     modal
 );
+
+modal.scrollTop = 0;
+
+const weeklyModalBody =
+    modal.querySelector(".modal-body");
+
+if(weeklyModalBody){
+    weeklyModalBody.scrollTop = 0;
+}
 
 window.updateWeeklyEquipmentDeploymentSummary();
 window.updateWeeklyManpowerDeploymentSummary();
