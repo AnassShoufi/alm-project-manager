@@ -6478,6 +6478,172 @@ div[style*="grid-template-columns"]{
     background:rgba(255,255,255,.16) !important;
     border-color:rgba(255,255,255,.35) !important;
 }
+    /* =========================================================
+   EXECUTIVE PROJECT MODULES
+========================================================= */
+
+/* MODULE GRID */
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]{
+    background:
+        linear-gradient(
+            180deg,
+            #F8FAFD 0%,
+            #F3F6FA 100%
+        ) !important;
+
+    padding:20px !important;
+    gap:12px !important;
+}
+
+
+/* MODULE BUTTON */
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary{
+
+    position:relative;
+
+    min-height:58px !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    border:1px solid #E1E8F1 !important;
+    border-radius:12px !important;
+
+    background:#FFFFFF !important;
+
+    color:#17315D !important;
+
+    font-size:11px !important;
+    font-weight:800 !important;
+
+    box-shadow:
+        0 3px 10px rgba(15,35,70,.045);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease,
+        background .2s ease !important;
+}
+
+
+/* BLUE ACCENT */
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:10px;
+    bottom:10px;
+
+    width:3px;
+
+    border-radius:
+        0 4px 4px 0;
+
+    background:
+        linear-gradient(
+            180deg,
+            #2563EB,
+            #60A5FA
+        );
+
+    opacity:.45;
+
+    transition:
+        opacity .2s ease,
+        width .2s ease;
+}
+
+
+/* HOVER */
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:hover{
+
+    transform:translateY(-2px) !important;
+
+    background:#F8FBFF !important;
+
+    border-color:#C7D8F5 !important;
+
+    color:#0B1736 !important;
+
+    box-shadow:
+        0 9px 20px rgba(37,99,235,.10) !important;
+}
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:hover::before{
+
+    opacity:1;
+    width:4px;
+}
+
+
+/* =========================================================
+   MODULE GROUP ACCENTS
+========================================================= */
+
+/* BOQ / FINANCIAL */
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(3),
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(9),
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(10){
+
+    border-top-color:#93C5FD !important;
+}
+
+
+/* REPORTING / CONTROL */
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(5),
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(6),
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(7){
+
+    border-top-color:#86EFAC !important;
+}
+
+
+/* SITE RESOURCES */
+
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(11),
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(12),
+#pageContent .panel-header
++ div[style*="grid-template-columns"]
+> .btn-secondary:nth-child(13){
+
+    border-top-color:#FBBF24 !important;
+}
     /* =====================================================
    FLAGSHIP BUILDING IMAGE
 ===================================================== */
