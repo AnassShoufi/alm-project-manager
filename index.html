@@ -1746,7 +1746,159 @@ let manpowerFilters = {
         0 8px 18px
         rgba(15,23,42,.14) !important;
 } 
+/* =========================================================
+   BOQ - PROFESSIONAL FOLDER CARDS
+========================================================= */
 
+.boq-page .boq-folder-card{
+    position:relative;
+
+    min-height:175px !important;
+
+    padding:22px !important;
+
+    border:1px solid #E1E8F1 !important;
+    border-radius:15px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #FFFFFF 0%,
+            #F8FAFD 100%
+        ) !important;
+
+    box-shadow:
+        0 4px 14px
+        rgba(15,23,42,.045) !important;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease !important;
+}
+
+.boq-page .boq-folder-card:hover{
+    transform:translateY(-4px) !important;
+
+    border-color:#C7D8F5 !important;
+
+    box-shadow:
+        0 12px 28px
+        rgba(37,99,235,.10) !important;
+}
+
+
+/* FOLDER ICON */
+
+.boq-page .boq-folder-card .folder-icon{
+    font-size:44px !important;
+
+    margin-bottom:13px !important;
+
+    transition:
+        transform .2s ease;
+}
+
+.boq-page .boq-folder-card:hover .folder-icon{
+    transform:translateY(-2px);
+}
+
+
+/* FOLDER NAME */
+
+.boq-page .boq-folder-card strong,
+.boq-page .boq-folder-card h3,
+.boq-page .boq-folder-card > div:first-child > div:last-child{
+    color:#10254A !important;
+
+    font-size:15px !important;
+
+    font-weight:850 !important;
+
+    letter-spacing:-.15px;
+}
+
+
+/* ACTION AREA */
+
+.boq-page .boq-folder-card > div:last-child{
+    margin-top:18px !important;
+
+    padding-top:13px;
+
+    border-top:1px solid #EDF1F6;
+}
+
+
+/* ALL FOLDER BUTTONS */
+
+.boq-page .boq-folder-card button{
+    min-height:32px !important;
+
+    padding:7px 12px !important;
+
+    border-radius:8px !important;
+
+    font-size:11px !important;
+    font-weight:800 !important;
+
+    box-shadow:none !important;
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease,
+        background .16s ease;
+}
+
+
+/* RENAME */
+
+.boq-page .boq-folder-card .boq-rename-btn{
+    color:#1D4ED8 !important;
+
+    border:1px solid #BFDBFE !important;
+
+    background:#EFF6FF !important;
+}
+
+.boq-page .boq-folder-card .boq-rename-btn:hover{
+    color:#1E40AF !important;
+
+    background:#DBEAFE !important;
+
+    border-color:#93C5FD !important;
+
+    transform:translateY(-1px);
+
+    box-shadow:
+        0 5px 10px
+        rgba(37,99,235,.10) !important;
+}
+
+
+/* DELETE */
+
+.boq-page .boq-folder-card .boq-delete-btn{
+    color:#DC2626 !important;
+
+    border:1px solid #FECACA !important;
+
+    background:#FEF2F2 !important;
+}
+
+.boq-page .boq-folder-card .boq-delete-btn:hover{
+    color:#B91C1C !important;
+
+    background:#FEE2E2 !important;
+
+    border-color:#FCA5A5 !important;
+
+    transform:translateY(-1px);
+
+    box-shadow:
+        0 5px 10px
+        rgba(220,38,38,.10) !important;
+}
 .boq-page .boq-folder-card{
     position:relative;
 }
