@@ -7420,6 +7420,63 @@ div[style*="grid-template-columns"]{
 
     width:58%;
 }
+    /* =========================================================
+   BOQ - FINAL FOLDER CARD OVERRIDE
+========================================================= */
+
+.boq-page .boq-folder-card{
+    background:#FFFFFF !important;
+    border:1px solid #E1E8F1 !important;
+    border-radius:15px !important;
+
+    padding:22px !important;
+    min-height:175px !important;
+
+    box-shadow:
+        0 4px 14px rgba(15,23,42,.06) !important;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease !important;
+}
+
+.boq-page .boq-folder-card:hover{
+    transform:translateY(-4px) !important;
+
+    border-color:#C7D8F5 !important;
+
+    box-shadow:
+        0 12px 28px rgba(37,99,235,.12) !important;
+}
+
+.boq-page .boq-folder-card .folder-icon{
+    font-size:44px !important;
+    margin-bottom:13px !important;
+}
+
+.boq-page .boq-folder-card button{
+    min-height:32px !important;
+
+    padding:7px 12px !important;
+
+    border-radius:8px !important;
+
+    font-size:11px !important;
+    font-weight:800 !important;
+}
+
+.boq-page .boq-folder-card .boq-rename-btn{
+    color:#1D4ED8 !important;
+    background:#EFF6FF !important;
+    border:1px solid #BFDBFE !important;
+}
+
+.boq-page .boq-folder-card .boq-delete-btn{
+    color:#DC2626 !important;
+    background:#FEF2F2 !important;
+    border:1px solid #FECACA !important;
+}
 </style>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
