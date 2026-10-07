@@ -3566,6 +3566,149 @@ textarea{
 
 }
     /* =========================================================
+   ALM EXECUTIVE KPI CARDS — DASHBOARD
+========================================================= */
+
+.alm-kpi{
+
+    min-height:170px;
+
+    padding:22px 22px 20px !important;
+
+    border-radius:17px !important;
+
+    border:1px solid #E6EBF3 !important;
+
+    box-shadow:
+        0 8px 24px rgba(15,23,42,.065) !important;
+
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease !important;
+}
+
+
+.alm-kpi:hover{
+
+    transform:
+        translateY(-6px) !important;
+
+    box-shadow:
+        0 18px 38px rgba(15,23,42,.13) !important;
+}
+
+
+/* LEFT ACCENT */
+
+.alm-kpi::before{
+
+    width:5px !important;
+
+    border-radius:
+        0 5px 5px 0;
+}
+
+
+/* ICON */
+
+.alm-kpi-icon{
+
+    width:44px !important;
+    height:44px !important;
+
+    border-radius:12px !important;
+
+    font-size:19px !important;
+
+    font-weight:800;
+
+    margin-bottom:17px !important;
+
+    box-shadow:
+        0 5px 12px rgba(15,23,42,.06);
+}
+
+
+/* LABEL */
+
+.alm-kpi-label{
+
+    font-size:10px !important;
+
+    font-weight:850 !important;
+
+    letter-spacing:1px !important;
+
+    color:#64748B !important;
+}
+
+
+/* NUMBER */
+
+.alm-kpi-number{
+
+    margin-top:7px !important;
+
+    font-size:36px !important;
+
+    line-height:1 !important;
+
+    font-weight:900 !important;
+
+    letter-spacing:-1.5px !important;
+
+    color:#0B1736 !important;
+}
+
+
+/* FOOTER */
+
+.alm-kpi-footer{
+
+    margin-top:10px !important;
+
+    font-size:11px !important;
+
+    color:#94A3B8 !important;
+
+    font-weight:500;
+}
+
+
+/* SUBTLE INTERNAL GLOW */
+
+.alm-kpi::after{
+
+    content:"";
+
+    position:absolute;
+
+    width:100px;
+    height:100px;
+
+    right:-45px;
+    bottom:-45px;
+
+    border-radius:50%;
+
+    background:
+        var(--kpi-bg,#EFF6FF);
+
+    opacity:.55;
+
+    pointer-events:none;
+}
+
+
+/* KEEP CONTENT ABOVE GLOW */
+
+.alm-kpi > *{
+
+    position:relative;
+
+    z-index:2;
+}
+    /* =========================================================
    ALM PREMIUM PROJECTS PAGE
 ========================================================= */
 
