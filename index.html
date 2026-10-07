@@ -22789,7 +22789,7 @@ function openProject(id){
      FINANCIAL OVERVIEW
 ===================================================== -->
 
-<div class="panel alm-financial-overview" style="margin-top:20px;">
+<div class="panel" style="margin-top:20px;">
 
     <div class="panel-header">
         <h2>Financial Overview</h2>
@@ -22801,7 +22801,7 @@ function openProject(id){
         </span>
     </div>
 
-   <div class="alm-financial-grid" style="
+   <div style="
     padding:20px;
     display:grid;
         grid-template-columns:
@@ -24218,149 +24218,7 @@ const currentUser = {
     role: "GM"
 
 };
-    /* =========================================================
-   EXECUTIVE FINANCIAL OVERVIEW
-========================================================= */
-
-.alm-financial-overview{
-    border-radius:18px !important;
-    border:1px solid #E1E7F0 !important;
-
-    box-shadow:
-        0 8px 26px rgba(15,35,70,.06) !important;
-
-    overflow:hidden !important;
-}
-
-.alm-financial-overview .panel-header{
-    min-height:62px !important;
-    padding:17px 22px !important;
-
-    background:
-        linear-gradient(
-            180deg,
-            #FFFFFF 0%,
-            #F8FAFD 100%
-        ) !important;
-
-    border-bottom:1px solid #E5EAF2 !important;
-}
-
-.alm-financial-overview .panel-header h2{
-    color:#0B1736 !important;
-    font-size:15px !important;
-    font-weight:850 !important;
-}
-
-.alm-financial-overview .panel-header span{
-    color:#7B8799 !important;
-    font-size:10px !important;
-    font-weight:700 !important;
-}
-
-
-/* FINANCIAL GRID */
-
-.alm-financial-grid{
-    gap:13px !important;
-    background:#F8FAFD;
-}
-
-
-/* FINANCIAL CARD */
-
-.alm-financial-grid > div{
-    position:relative;
-
-    min-height:88px;
-
-    padding:17px 18px !important;
-
-    background:#FFFFFF !important;
-
-    border:1px solid #E2E8F0 !important;
-    border-radius:12px !important;
-
-    box-shadow:
-        0 3px 10px rgba(15,23,42,.035);
-
-    transition:
-        transform .18s ease,
-        box-shadow .18s ease,
-        border-color .18s ease;
-}
-
-.alm-financial-grid > div:hover{
-    transform:translateY(-2px);
-
-    border-color:#CBD8EA !important;
-
-    box-shadow:
-        0 8px 20px rgba(15,23,42,.075);
-}
-
-
-/* LABEL */
-
-.alm-financial-grid > div > div:first-child{
-    color:#64748B !important;
-
-    font-size:9px !important;
-    font-weight:800 !important;
-
-    text-transform:uppercase;
-    letter-spacing:.65px;
-
-    margin-bottom:7px !important;
-}
-
-
-/* VALUE */
-
-.alm-financial-grid > div > div:nth-child(2){
-    color:#0B1736 !important;
-
-    font-size:21px !important;
-    font-weight:850 !important;
-
-    letter-spacing:-.4px;
-}
-
-
-/* OUTSTANDING — RED */
-
-.alm-financial-grid > div[style*="#fff1f1"]{
-    background:#FFF7F7 !important;
-    border-color:#FECACA !important;
-}
-
-.alm-financial-grid > div[style*="#fff1f1"]
-> div:first-child{
-    color:#DC2626 !important;
-}
-
-.alm-financial-grid > div[style*="#fff1f1"]
-> div:nth-child(2){
-    color:#DC2626 !important;
-}
-
-
-/* VARIATION OUTSTANDING — BLUE */
-
-.alm-financial-grid > div[style*="#eff6ff"]{
-    background:#F5F9FF !important;
-    border-color:#BFDBFE !important;
-}
-
-.alm-financial-grid > div[style*="#eff6ff"]
-> div:first-child{
-    color:#2563EB !important;
-}
-
-.alm-financial-grid > div[style*="#eff6ff"]
-> div:nth-child(2){
-    color:#2563EB !important;
-}
+  
 /* =====================================================
    FLAGSHIP BUILDING IMAGE
    ADMIN ONLY — ANASS SHOUFI
