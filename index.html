@@ -3354,7 +3354,171 @@ textarea{
             #60A5FA
         );
 }
+/* =========================================================
+   EXECUTIVE PROJECT PERFORMANCE
+========================================================= */
 
+.alm-project-performance{
+
+    padding:22px 22px 20px !important;
+}
+
+
+/* PROJECT ROW */
+
+.alm-project-row{
+
+    position:relative;
+
+    padding:16px 0 !important;
+
+    border-bottom:
+        1px solid #EDF1F6 !important;
+
+    transition:
+        all .2s ease;
+}
+
+
+.alm-project-row:last-child{
+
+    border-bottom:0 !important;
+
+    padding-bottom:4px !important;
+}
+
+
+.alm-project-row:hover{
+
+    padding-left:6px !important;
+
+    padding-right:6px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            #F8FAFF,
+            transparent
+        );
+
+    border-radius:10px;
+}
+
+
+/* PROJECT TOP */
+
+.alm-project-top{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    margin-bottom:9px !important;
+}
+
+
+/* PROJECT NAME */
+
+.alm-project-name{
+
+    color:#0B1736 !important;
+
+    font-size:13px !important;
+
+    font-weight:800 !important;
+
+    letter-spacing:-.1px;
+}
+
+
+/* PERCENTAGE */
+
+.alm-project-percent{
+
+    min-width:42px;
+
+    text-align:right;
+
+    color:#2563EB !important;
+
+    font-size:12px !important;
+
+    font-weight:850 !important;
+}
+
+
+/* PROGRESS TRACK */
+
+.alm-project-progress{
+
+    position:relative;
+
+    width:100%;
+
+    height:9px !important;
+
+    background:#E9EEF5 !important;
+
+    border-radius:999px !important;
+
+    overflow:hidden;
+
+    box-shadow:
+        inset 0 1px 2px rgba(15,23,42,.05);
+}
+
+
+/* PROGRESS FILL */
+
+.alm-project-progress span{
+
+    position:relative;
+
+    display:block;
+
+    height:100% !important;
+
+    border-radius:999px !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            #1D4ED8 0%,
+            #3B82F6 55%,
+            #60A5FA 100%
+        ) !important;
+
+    box-shadow:
+        0 2px 7px rgba(37,99,235,.25);
+
+    transition:
+        width .7s ease;
+}
+
+
+/* SHINE EFFECT */
+
+.alm-project-progress span::after{
+
+    content:"";
+
+    position:absolute;
+
+    top:1px;
+    left:0;
+
+    width:100%;
+    height:2px;
+
+    border-radius:999px;
+
+    background:
+        rgba(255,255,255,.38);
+
+    opacity:.8;
+}
 
 /* QUICK ACTIONS */
 
