@@ -1612,6 +1612,140 @@ let manpowerFilters = {
     transform:translateY(-1px);
     box-shadow:0 5px 12px rgba(15,23,42,.18);
 }
+   /* =========================================================
+   BOQ - EXECUTIVE HEADER OVERRIDE
+========================================================= */
+
+.boq-page{
+    padding:28px !important;
+    background:#F5F8FC !important;
+    border-radius:20px !important;
+}
+
+
+/* HEADER */
+
+.boq-page > div:first-child{
+    min-height:120px;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+
+    gap:25px;
+
+    padding:24px 28px !important;
+
+    margin-bottom:18px !important;
+
+    border-radius:18px !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #071632 0%,
+            #102B61 55%,
+            #285DDB 100%
+        ) !important;
+
+    box-shadow:
+        0 12px 30px
+        rgba(15,35,80,.18) !important;
+}
+
+
+/* TITLE */
+
+.boq-page h2{
+    margin:0 !important;
+
+    color:#FFFFFF !important;
+
+    font-size:27px !important;
+    font-weight:900 !important;
+
+    letter-spacing:-.6px !important;
+}
+
+
+/* SUBTITLE */
+
+.boq-page p{
+    margin:6px 0 0 !important;
+
+    color:#C8D6ED !important;
+
+    font-size:12px !important;
+    font-weight:650 !important;
+}
+
+
+/* ACTION AREA */
+
+.boq-page > div:first-child + div{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+
+    gap:10px !important;
+
+    margin-top:-5px !important;
+    margin-bottom:20px !important;
+}
+
+
+/* ADD FOLDER */
+
+.boq-page .boq-add-folder-btn{
+    min-height:42px !important;
+
+    padding:0 17px !important;
+
+    border-radius:10px !important;
+
+    background:#2563EB !important;
+    color:#FFFFFF !important;
+
+    font-size:11px !important;
+    font-weight:800 !important;
+
+    box-shadow:
+        0 4px 10px
+        rgba(37,99,235,.16) !important;
+}
+
+
+/* ADD BOQ */
+
+.boq-page .boq-add-file-btn{
+    min-height:42px !important;
+
+    padding:0 17px !important;
+
+    border-radius:10px !important;
+
+    background:#16A34A !important;
+    color:#FFFFFF !important;
+
+    font-size:11px !important;
+    font-weight:800 !important;
+
+    box-shadow:
+        0 4px 10px
+        rgba(22,163,74,.16) !important;
+}
+
+
+/* BUTTON HOVER */
+
+.boq-page .boq-add-folder-btn:hover,
+.boq-page .boq-add-file-btn:hover{
+    transform:translateY(-2px) !important;
+
+    box-shadow:
+        0 8px 18px
+        rgba(15,23,42,.14) !important;
+} 
 
 .boq-page .boq-folder-card{
     position:relative;
