@@ -6307,6 +6307,177 @@ div[style*="grid-template-columns"]{
         gap:15px !important;
     }
 }
+    /* =========================================================
+   EXECUTIVE PROJECT WORKSPACE HERO
+========================================================= */
+
+#pageContent > .page-title{
+    min-height:145px !important;
+    padding:24px 28px !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:25px;
+
+    border-radius:20px !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #071632 0%,
+            #102B61 52%,
+            #285DDB 100%
+        ) !important;
+
+    box-shadow:
+        0 14px 35px rgba(15,35,80,.20) !important;
+}
+
+.project-hero-main{
+    position:relative;
+    z-index:2;
+    min-width:250px;
+}
+
+.project-hero-eyebrow{
+    margin-bottom:6px;
+
+    color:#8FA7D2;
+    font-size:9px;
+    font-weight:850;
+    letter-spacing:1.4px;
+}
+
+.project-hero-title-row{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+#pageContent > .page-title h1{
+    margin:0 !important;
+
+    color:#FFFFFF !important;
+    font-size:27px !important;
+    font-weight:900 !important;
+    letter-spacing:-.7px !important;
+}
+
+#pageContent > .page-title p{
+    margin:5px 0 0 !important;
+
+    color:#C8D6ED !important;
+    font-size:11px !important;
+    font-weight:650 !important;
+}
+
+.project-hero-status{
+    display:flex;
+    align-items:center;
+}
+
+.project-hero-status .alm-status{
+    padding:7px 11px !important;
+}
+
+/* RIGHT SIDE */
+
+.project-hero-meta{
+    position:relative;
+    z-index:3;
+
+    display:flex;
+    align-items:center;
+    gap:18px;
+
+    padding:12px 14px;
+
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:12px;
+
+    background:rgba(255,255,255,.07);
+
+    backdrop-filter:blur(8px);
+}
+
+.project-hero-meta-item{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+
+    min-width:105px;
+}
+
+.project-hero-meta-item span{
+    color:#8FA7D2;
+
+    font-size:8px;
+    font-weight:800;
+
+    text-transform:uppercase;
+    letter-spacing:.7px;
+}
+
+.project-hero-meta-item strong{
+    color:#FFFFFF;
+
+    font-size:11px;
+    font-weight:750;
+
+    white-space:nowrap;
+}
+
+.project-hero-progress{
+    width:105px;
+}
+
+.project-hero-progress-track{
+    width:100%;
+    height:7px;
+
+    background:rgba(255,255,255,.16);
+
+    border-radius:999px;
+    overflow:hidden;
+}
+
+.project-hero-progress-fill{
+    height:100%;
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #60A5FA,
+            #93C5FD
+        );
+
+    box-shadow:
+        0 0 8px rgba(147,197,253,.35);
+}
+
+.project-hero-meta .btn{
+    min-height:36px !important;
+    padding:0 13px !important;
+
+    border:1px solid rgba(255,255,255,.22) !important;
+    border-radius:9px !important;
+
+    background:rgba(255,255,255,.08) !important;
+    color:#FFFFFF !important;
+
+    font-size:10px !important;
+    font-weight:800 !important;
+
+    white-space:nowrap;
+}
+
+.project-hero-meta .btn:hover{
+    background:rgba(255,255,255,.16) !important;
+    border-color:rgba(255,255,255,.35) !important;
+}
     /* =====================================================
    FLAGSHIP BUILDING IMAGE
 ===================================================== */
@@ -22028,20 +22199,118 @@ function openProject(id){
 
     document.getElementById("pageContent").innerHTML = `
 
-        <div class="page-title">
+      <div class="page-title">
+
+    <div class="project-hero-main">
+
+        <div class="project-hero-title-row">
 
             <div>
-                <h1>${escapeHTML(project.name)}</h1>
-                <p>${escapeHTML(project.code || "")}</p>
+
+                <div class="project-hero-eyebrow">
+                    PROJECT WORKSPACE
+                </div>
+
+                <h1>
+                    ${escapeHTML(project.name)}
+                </h1>
+
+                <p>
+                    ${escapeHTML(project.code || "")}
+                </p>
+
             </div>
 
-            <button
-                class="btn btn-secondary"
-                onclick="showProjects()">
-                ← Back to Projects
-            </button>
+            <div class="project-hero-status">
+
+                ${statusBadge(
+                    project.status || "Active"
+                )}
+
+            </div>
 
         </div>
+
+    </div>
+
+
+    <div class="project-hero-meta">
+
+        <div class="project-hero-meta-item">
+
+            <span>
+                Client
+            </span>
+
+            <strong>
+                ${escapeHTML(
+                    project.client || "-"
+                )}
+            </strong>
+
+        </div>
+
+
+        <div class="project-hero-meta-item">
+
+            <span>
+                Project Manager
+            </span>
+
+            <strong>
+                ${escapeHTML(
+                    project.manager || "-"
+                )}
+            </strong>
+
+        </div>
+
+
+        <div class="project-hero-meta-item">
+
+            <span>
+                Progress
+            </span>
+
+            <strong>
+                ${overviewData.progress}%
+            </strong>
+
+        </div>
+
+
+        <div class="project-hero-progress">
+
+            <div class="project-hero-progress-track">
+
+                <div
+                    class="project-hero-progress-fill"
+                    style="
+                        width:${Math.min(
+                            100,
+                            Math.max(
+                                0,
+                                overviewData.progress
+                            )
+                        )}%;
+                    "
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="btn btn-secondary"
+            onclick="showProjects()"
+        >
+            ← Back to Projects
+        </button>
+
+    </div>
+
+</div>
 
     <div class="panel">
 
