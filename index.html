@@ -11094,6 +11094,11 @@ function openProject(id){
     👷‍♂️ Subcontractors
 </button>
 
+<button
+    class="btn btn-secondary"
+    onclick="showProjectSection('progressPictures', ${project.id}, this)">
+    📸 Progress Pictures
+</button>
                     <button
                         class="project-menu-btn"
                         onclick="showProjectSection('tasks', ${project.id}, this)">
@@ -11302,7 +11307,362 @@ function projectOverviewHTML(project){
     `;
 }
 
+/* =====================================================
+   PROGRESS PICTURES - GOOGLE DRIVE
+===================================================== */
 
+function renderProgressPicturesSection(project){
+
+    const content =
+        document.getElementById(
+            "projectSectionContent"
+        );
+
+    if(!content){
+        return;
+    }
+
+    const driveUrl =
+        project.progressPicturesDriveUrl || "";
+
+    content.innerHTML = `
+
+        <div class="project-section">
+
+            <div class="project-section-header">
+
+                <div>
+
+                    <h3>
+                        Progress Pictures
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(project.name)}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div style="
+                padding:30px;
+                background:#FFFFFF;
+                border:1px solid #E1E8F1;
+                border-radius:15px;
+                box-shadow:0 5px 18px rgba(15,23,42,.05);
+            ">
+
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    gap:15px;
+                    margin-bottom:22px;
+                ">
+
+                    <div style="
+                        width:48px;
+                        height:48px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        border-radius:12px;
+                        background:#EFF6FF;
+                        font-size:23px;
+                    ">
+                        📸
+                    </div>
+
+                    <div>
+
+                        <div style="
+                            color:#10254A;
+                            font-size:17px;
+                            font-weight:850;
+                        ">
+                            Project Progress Pictures
+                        </div>
+
+                        <div style="
+                            margin-top:4px;
+                            color:#64748B;
+                            font-size:11px;
+                        ">
+                            Store and access project progress photos
+                            through a dedicated Google Drive folder.
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <label style="
+                    display:block;
+                    margin-bottom:8px;
+                    color:#334155;
+                    font-size:11px;
+                    font-weight:800;
+                ">
+                    Google Drive Folder Link
+                </label>
+
+
+                <input
+                    id="progressPicturesDriveUrl"
+                    type="url"
+                    value="${escapeHTML(driveUrl)}"
+                    placeholder="https://drive.google.com/drive/folders/..."
+                    style="
+                        width:100%;
+                        min-height:46px;
+                        box-sizing:border-box;
+                        padding:0 14px;
+                        border:1px solid #D8E0EA;
+                        border-radius:10px;
+                        background:#FFFFFF;
+                        color:#172033;
+                        font-size:12px;
+                        outline:none;
+                    "
+                >
+
+
+                <div style="
+                    display:flex;
+                    gap:10px;
+                    flex-wrap:wrap;
+                    margin-top:18px;
+                ">
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="
+                            saveProgressPicturesLink(
+                                '${project.id}'
+                            )
+                        "
+                    >
+                        💾 Save Link
+                    </button>
+
+
+                    ${
+                        driveUrl
+                        ?
+                        `
+                        <button
+                            class="btn btn-secondary"
+                            onclick="
+                                window.open(
+                                    '${escapeHTML(driveUrl)}',
+                                    '_blank',
+                                    'noopener,noreferrer'
+                                )
+                            "
+                        >
+                            🔗 Open Google Drive
+                        </button>
+
+                        <button
+                            class="btn btn-secondary"
+                            onclick="
+                                removeProgressPicturesLink(
+                                    '${project.id}'
+                                )
+                            "
+                        >
+                            🗑 Remove Link
+                        </button>
+                        `
+                        :
+                        ""
+                    }
+
+                </div>
+
+
+                ${
+                    driveUrl
+                    ?
+                    `
+                    <div style="
+                        margin-top:20px;
+                        padding:13px 15px;
+                        background:#F0FDF4;
+                        border:1px solid #BBF7D0;
+                        border-radius:10px;
+                        color:#166534;
+                        font-size:11px;
+                        font-weight:700;
+                    ">
+                        ✓ Google Drive folder is connected to this project.
+                    </div>
+                    `
+                    :
+                    `
+                    <div style="
+                        margin-top:20px;
+                        padding:13px 15px;
+                        background:#F8FAFC;
+                        border:1px solid #E2E8F0;
+                        border-radius:10px;
+                        color:#64748B;
+                        font-size:11px;
+                    ">
+                        No Google Drive folder has been connected yet.
+                    </div>
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
+}
+
+
+/* =====================================================
+   SAVE PROGRESS PICTURES LINK
+===================================================== */
+
+window.saveProgressPicturesLink =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    const input =
+        document.getElementById(
+            "progressPicturesDriveUrl"
+        );
+
+    if(!input){
+        return;
+    }
+
+
+    const value =
+        input.value.trim();
+
+
+    if(value === ""){
+
+        project.progressPicturesDriveUrl = "";
+
+        persist();
+
+        renderProgressPicturesSection(
+            project
+        );
+
+        return;
+    }
+
+
+    let parsedUrl;
+
+    try{
+
+        parsedUrl =
+            new URL(value);
+
+    }catch(error){
+
+        alert(
+            "Please enter a valid Google Drive URL."
+        );
+
+        return;
+    }
+
+
+    const hostname =
+        parsedUrl.hostname
+            .toLowerCase();
+
+
+    if(
+        hostname !== "drive.google.com"
+        &&
+        hostname !== "docs.google.com"
+    ){
+
+        alert(
+            "Please enter a Google Drive URL."
+        );
+
+        return;
+    }
+
+
+    project.progressPicturesDriveUrl =
+        value;
+
+
+    persist();
+
+
+    renderProgressPicturesSection(
+        project
+    );
+
+};
+
+
+/* =====================================================
+   REMOVE PROGRESS PICTURES LINK
+===================================================== */
+
+window.removeProgressPicturesLink =
+function(projectId){
+
+    const project =
+        projects.find(
+            p =>
+                String(p.id) ===
+                String(projectId)
+        );
+
+    if(!project){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "Remove the Google Drive link for Progress Pictures?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    project.progressPicturesDriveUrl =
+        "";
+
+
+    persist();
+
+
+    renderProgressPicturesSection(
+        project
+    );
+
+};
 /* =========================
    PROJECT SECTIONS
 ========================= */
@@ -11517,8 +11877,17 @@ if(section === "tasks"){
     renderSubcontractorsSection(project);
 
     return;
+        
 
 }
+
+if(section === "progressPictures"){
+
+    renderProgressPicturesSection(project);
+
+    return;
+
+}  
 const titles = {
 
     documents: "Documents",
@@ -11528,6 +11897,7 @@ const titles = {
     drawings: "Drawings",
 
     reports: "Reports",
+    progressPictures: "Progress Pictures",
 
     procurement: "Procurement",
 
