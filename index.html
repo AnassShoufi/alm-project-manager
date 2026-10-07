@@ -32088,32 +32088,84 @@ function(projectId){
         null,
         {
 
-            weekNumber,
+          {
+    weekNumber,
 
-            reportDate:today,
+    reportDate: today,
 
-            startDate:saturday,
+    startDate: saturday,
 
-            endDate:friday,
+    endDate: friday,
 
-            projectManager:
-                project.manager || "",
+    projectManager:
+        project.manager || "",
 
-            projectStartDate:
-                project.startDate || "",
+    projectStartDate:
+        project.startDate || "",
 
-            rainStoppageHours:0,
+    rainStoppageHours: 0,
 
-            overallWeather:"",
+    overallWeather: "",
 
-            weather:{},
-materials:
-    previousMaterials
+    weather: {},
 
+    workProgress: [
+        {
+            activity: "",
+            location: "",
+            progress: "",
+            remarks: ""
+        },
+        {
+            activity: "",
+            location: "",
+            progress: "",
+            remarks: ""
+        },
+        {
+            activity: "",
+            location: "",
+            progress: "",
+            remarks: ""
+        },
+        {
+            activity: "",
+            location: "",
+            progress: "",
+            remarks: ""
+        },
+        {
+            activity: "",
+            location: "",
+            progress: "",
+            remarks: ""
         }
-    );
+    ],
 
-};
+    manpower: [],
+
+    equipment: [],
+
+    materials:
+        previousMaterials,
+
+    siteIssues: [],
+
+    hse: {
+        status: "Good",
+        incidents: [],
+        observations: [],
+        correctiveActions: []
+    },
+
+    reviewApproval: {
+        preparedBy: {},
+        reviewedBy: {},
+        approvedBy: {}
+    },
+
+    progressPhotos: []
+}
 /* =====================================================
    EDIT WEEKLY REPORT
 ===================================================== */
