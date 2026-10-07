@@ -34984,14 +34984,27 @@ window.weeklyEquipmentOptions = [
     `;
 
 
-    document.body.appendChild(
-        modal
-    );
+   document.body.appendChild(
+    modal
+);
+
 window.updateWeeklyEquipmentDeploymentSummary();
-    window.updateWeeklyManpowerDeploymentSummary();
+window.updateWeeklyManpowerDeploymentSummary();
 
-    renderWeeklyProgressPhotoCards();
+renderWeeklyProgressPhotoCards();
 
+requestAnimationFrame(() => {
+
+    const weeklyModalBody =
+        modal.querySelector(".modal-body");
+
+    if(weeklyModalBody){
+
+        weeklyModalBody.scrollTop = 0;
+
+    }
+
+});
 
     modal.addEventListener(
         "click",
