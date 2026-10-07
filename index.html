@@ -5786,6 +5786,87 @@ textarea{
 .alm-doc-table tbody tr:hover{
     background:#F8FBFF !important;
 }
+    /* =========================================================
+   DOCUMENTS - ACTION BUTTONS
+========================================================= */
+
+.alm-doc-table td:last-child{
+    white-space:nowrap;
+}
+
+
+/* ALL ACTION BUTTONS */
+
+.alm-doc-table td:last-child button{
+    min-height:34px !important;
+
+    padding:7px 11px !important;
+
+    border:none !important;
+    border-radius:8px !important;
+
+    font-size:11px !important;
+    font-weight:800 !important;
+
+    line-height:1 !important;
+
+    box-shadow:
+        0 2px 5px
+        rgba(15,23,42,.08);
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease,
+        filter .16s ease;
+}
+
+
+/* HOVER */
+
+.alm-doc-table td:last-child button:hover{
+    transform:translateY(-2px);
+
+    filter:brightness(.97);
+
+    box-shadow:
+        0 6px 12px
+        rgba(15,23,42,.13);
+}
+
+
+/* VIEW */
+
+.alm-doc-table td:last-child button:nth-child(1){
+    background:#2563EB !important;
+}
+
+
+/* DOWNLOAD */
+
+.alm-doc-table td:last-child button:nth-child(2){
+    background:#475569 !important;
+}
+
+
+/* EDIT */
+
+.alm-doc-table td:last-child button:nth-child(3){
+    background:#F59E0B !important;
+}
+
+
+/* DELETE */
+
+.alm-doc-table td:last-child button:nth-child(4){
+    background:#DC2626 !important;
+}
+
+
+/* UPLOAD */
+
+.alm-doc-table td:last-child button:nth-child(5){
+    background:#16A34A !important;
+}
 /* =========================================================
    OVERVIEW INFORMATION CARDS
 ========================================================= */
