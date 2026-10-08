@@ -61577,6 +61577,229 @@ tbody tr:nth-child(even){
     }
 
 }
+/* =====================================================
+   TO-DO LIST — PREMIUM REGISTER DETAILS
+===================================================== */
+
+/* Priority badges */
+.todo-list-section .priority-badge{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    min-width:58px !important;
+    min-height:24px !important;
+
+    padding:0 9px !important;
+
+    border-radius:999px !important;
+
+    font-size:9px !important;
+    font-weight:850 !important;
+
+    border:1px solid transparent !important;
+}
+
+
+/* Date / metadata */
+.todo-list-section .todo-date,
+.todo-list-section .todo-meta{
+    color:#718096 !important;
+    font-size:10px !important;
+    font-weight:600 !important;
+}
+
+
+/* Assigned person */
+.todo-list-section .todo-assignee{
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:6px !important;
+
+    color:#334155 !important;
+
+    font-size:10px !important;
+    font-weight:750 !important;
+}
+
+
+/* Small avatar */
+.todo-list-section .todo-assignee::before{
+    content:"";
+
+    width:24px;
+    height:24px;
+
+    flex-shrink:0;
+
+    border-radius:50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #DBEAFE,
+            #EFF6FF
+        );
+
+    border:1px solid #C9DCF7;
+}
+
+
+/* Status column */
+.todo-list-section td .todo-status{
+    display:inline-flex !important;
+
+    align-items:center !important;
+
+    min-height:25px !important;
+
+    padding:0 10px !important;
+
+    border-radius:999px !important;
+
+    font-size:9px !important;
+    font-weight:850 !important;
+
+    white-space:nowrap !important;
+}
+
+
+/* Action group */
+.todo-list-section td:last-child{
+    white-space:nowrap !important;
+}
+
+
+/* Better table spacing */
+.todo-list-section > .panel table{
+    table-layout:auto !important;
+}
+
+
+/* First column */
+.todo-list-section > .panel table th:first-child,
+.todo-list-section > .panel table td:first-child{
+    padding-left:18px !important;
+}
+
+
+/* Last column */
+.todo-list-section > .panel table th:last-child,
+.todo-list-section > .panel table td:last-child{
+    padding-right:18px !important;
+}
+
+
+/* Stronger row hover */
+.todo-list-section > .panel table tbody tr:hover td{
+    background:#F8FBFF !important;
+}
+
+
+/* Left accent on hovered row */
+.todo-list-section > .panel table tbody tr{
+    position:relative;
+}
+
+
+.todo-list-section > .panel table tbody tr:hover td:first-child{
+    box-shadow:
+        inset 3px 0 0 #2563EB;
+}
+
+
+/* Completed rows */
+.todo-list-section > .panel table tbody tr.todo-completed{
+    opacity:.72;
+}
+
+
+.todo-list-section > .panel table tbody tr.todo-completed td{
+    background:#FAFCFE !important;
+}
+
+
+/* Empty table message */
+.todo-list-section .no-data{
+    padding:55px 20px !important;
+
+    text-align:center !important;
+
+    color:#7A8799 !important;
+
+    font-size:11px !important;
+}
+
+
+/* =====================================================
+   TO-DO FILTER / TOOLBAR IF PRESENT
+===================================================== */
+
+.todo-list-section .todo-toolbar{
+    display:flex !important;
+
+    align-items:center !important;
+
+    justify-content:space-between !important;
+
+    gap:12px !important;
+
+    padding:14px 16px !important;
+
+    border-bottom:1px solid #E8EDF3 !important;
+
+    background:#FBFCFE !important;
+}
+
+
+.todo-list-section .todo-toolbar input,
+.todo-list-section .todo-toolbar select{
+    min-height:38px !important;
+
+    padding:0 11px !important;
+
+    border:1px solid #D9E2EC !important;
+
+    border-radius:8px !important;
+
+    background:#FFFFFF !important;
+
+    color:#334155 !important;
+
+    font-size:10px !important;
+
+    outline:none !important;
+}
+
+
+.todo-list-section .todo-toolbar input:focus,
+.todo-list-section .todo-toolbar select:focus{
+    border-color:#93B4E8 !important;
+
+    box-shadow:
+        0 0 0 3px rgba(37,99,235,.08) !important;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media(max-width:850px){
+
+    .todo-list-section > .panel{
+        overflow-x:auto !important;
+    }
+
+    .todo-list-section > .panel table{
+        min-width:850px !important;
+    }
+
+    .todo-list-section .todo-toolbar{
+        flex-wrap:wrap !important;
+    }
+
+}
 </style>
 
 </head>
