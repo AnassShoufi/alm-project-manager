@@ -32361,6 +32361,13 @@ window.weeklyEquipmentOptions = [
     modal.style.display =
         "flex";
 
+    /* Keep the page behind the modal fixed.
+       Only the weekly report body is allowed to scroll. */
+    window.weeklyReportPreviousBodyOverflow =
+        document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.weeklyReportActiveProjectId = project.id;
+
 
     modal.innerHTML = `
 
@@ -32370,6 +32377,7 @@ window.weeklyEquipmentOptions = [
         width:900px;
         max-width:95%;
         max-height:92vh;
+        height:92vh;
         overflow:hidden;
         display:flex;
         flex-direction:column;
@@ -32436,9 +32444,12 @@ window.weeklyEquipmentOptions = [
                <div
     class="modal-body"
     style="
-        flex:1;
+        flex:1 1 auto;
         min-height:0;
         overflow-y:auto;
+        overflow-x:hidden;
+        overscroll-behavior:contain;
+        -webkit-overflow-scrolling:touch;
     "
 >
 
@@ -32626,7 +32637,7 @@ window.weeklyEquipmentOptions = [
                                 </thead>
 
 
-                                <tbody>
+                                <tbody id="weeklyWeatherRows">
 
                                     ${
                                         days
@@ -35050,6 +35061,9 @@ window.weeklyEquipmentOptions = [
     modal
 );
 
+/* Initialize derived values after the form is in the DOM. */
+updateWeeklyOverallWeather();
+
 modal.scrollTop = 0;
 
 const weeklyModalBody =
@@ -35242,7 +35256,7 @@ function(input){
         projects.find(
             p =>
                 String(p.id) ===
-                String(currentProjectId)
+                String(window.weeklyReportActiveProjectId)
         );
 
     if(!project){
@@ -35378,7 +35392,7 @@ function(){
         projects.find(
             p =>
                 String(p.id) ===
-                String(currentProjectId)
+                String(window.weeklyReportActiveProjectId)
         );
 
     if(!project){
@@ -35606,7 +35620,7 @@ const project =
     projects.find(
         p =>
             String(p.id) ===
-            String(currentProjectId)
+            String(window.weeklyReportActiveProjectId)
     );
 
 if(!project){
@@ -35775,145 +35789,23 @@ if(!project){
 window.validateWeeklyEquipmentActual =
 function(input){
 
-    if(!input){
-        return;
-    }
+    /* Equipment quantities are intentionally NOT capped by the
+       Equipment Register. Plant deployment may change during the
+       reporting month and the Weekly Report is a historical record. */
 
-    const row =
-        input.closest("tr");
-
-    if(!row){
-        return;
-    }
-
-    const nameSelect =
-        row.querySelector(
-            'select[id^="weeklyEquipmentName_"]'
-        );
-
-    const name =
-        nameSelect
-        ? nameSelect.value.trim()
-        : "";
-
-    let error =
-        row.querySelector(
-            ".weekly-equipment-actual-error"
-        );
-
-    if(!error){
-
-        error =
-            document.createElement("div");
-
-        error.className =
-            "weekly-equipment-actual-error";
-
-        error.style.cssText = `
-            color:#dc2626;
-            font-size:12px;
-            margin-top:5px;
-            font-weight:600;
-        `;
-
-        input.parentElement.appendChild(
-            error
-        );
-    }
-
-    error.textContent = "";
-
-    input.style.borderColor =
-        "#d4dae2";
-
-    if(!name || input.value === ""){
-        return;
-    }
-
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(currentProjectId)
-        );
-
-    if(!project){
-        return;
-    }
-
-    const available =
-        (project.equipment || [])
-            .filter(item =>
-                String(item.name || "").trim() === name &&
-                String(
-                    item.deploymentStatus || ""
-                ).toLowerCase() === "on site"
-            )
-            .length;
-
-    let otherActual = 0;
-
-    document
-        .querySelectorAll(
-            '#weeklyEquipmentRows input[id^="weeklyEquipmentActual_"]'
-        )
-        .forEach(otherInput => {
-
-            if(otherInput === input){
-                return;
-            }
-
-            const otherRow =
-                otherInput.closest("tr");
-
-            if(!otherRow){
-                return;
-            }
-
-            const otherNameSelect =
-                otherRow.querySelector(
-                    'select[id^="weeklyEquipmentName_"]'
-                );
-
-            const otherName =
-                otherNameSelect
-                ? otherNameSelect.value.trim()
-                : "";
-
-            if(otherName === name){
-
-                otherActual +=
-                    Number(
-                        otherInput.value || 0
-                    );
-            }
-
-        });
-
-    const maxAllowed =
-        Math.max(
-            0,
-            available - otherActual
-        );
-
-    const entered =
-        Number(input.value || 0);
-
-    if(entered > maxAllowed){
-
-        input.value =
-            maxAllowed;
-
-        input.style.borderColor =
-            "#dc2626";
-
-        error.textContent =
-            "You have exceeded the available equipment number.";
-
+    if(input){
+        input.style.borderColor = "#d4dae2";
+        const row = input.closest("tr");
+        const error = row
+            ? row.querySelector(".weekly-equipment-actual-error")
+            : null;
+        if(error){
+            error.textContent = "";
+        }
     }
 
 };
-    /* =====================================================
+/* =====================================================
    WEEKLY EQUIPMENT DEPLOYMENT SUMMARY
 ===================================================== */
 
@@ -35933,7 +35825,7 @@ function(){
         projects.find(
             p =>
                 String(p.id) ===
-                String(currentProjectId)
+                String(window.weeklyReportActiveProjectId)
         );
 
     if(!project){
@@ -36109,7 +36001,7 @@ const project =
     projects.find(
         p =>
             String(p.id) ===
-            String(currentProjectId)
+            String(window.weeklyReportActiveProjectId)
     );
 
 if(!project){
@@ -36263,8 +36155,6 @@ if(!project){
             <button
                 type="button"
               onclick="this.closest('tr').remove(); window.updateWeeklyEquipmentDeploymentSummary();"
-    window.updateWeeklyEquipmentDeploymentSummary();
-"
                 style="
                     border:none;
                     background:#f3f4f6;
@@ -36425,33 +36315,48 @@ window.updateWeeklyReportDates =
 function(){
 
     const startInput =
-        document.getElementById(
-            "weeklyReportStartDate"
-        );
+        document.getElementById("weeklyReportStartDate");
 
     const endInput =
-        document.getElementById(
-            "weeklyReportEndDate"
-        );
+        document.getElementById("weeklyReportEndDate");
 
-
-    if(
-        !startInput ||
-        !endInput ||
-        !startInput.value
-    ){
-
+    if(!startInput || !endInput || !startInput.value){
         return;
-
     }
 
+    const newStart = getWeeklyReportSaturday(startInput.value);
 
-    endInput.value =
-        getWeeklyReportFriday(
-            startInput.value
-        );
+    /* Always normalize the reporting period to Saturday-Friday. */
+    startInput.value = newStart;
+    endInput.value = getWeeklyReportFriday(newStart);
+
+    const weatherRows =
+        document.getElementById("weeklyWeatherRows");
+
+    if(weatherRows){
+
+        const savedWeather = {};
+
+        ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday"]
+            .forEach(day => {
+                const input = document.getElementById("weeklyWeather_" + day);
+                savedWeather[day] = input ? input.value : "";
+            });
+
+        weatherRows.innerHTML =
+            getWeeklyWeatherDays(newStart)
+                .map(day => weeklyWeatherRow(
+                    day.name,
+                    day.date,
+                    savedWeather[day.name] || ""
+                ))
+                .join("");
+
+        updateWeeklyOverallWeather();
+    }
 
 };
+
 /* =====================================================
    ADD WEEKLY MATERIAL ROW
 ===================================================== */
@@ -37492,29 +37397,6 @@ const equipmentRows =
     document.querySelectorAll(
         "#weeklyEquipmentRows tr"
     );
-const equipmentLimits = {};
-
-(project.equipment || []).forEach(item => {
-
-    const name =
-        String(item.name || "").trim();
-
-    const deploymentStatus =
-        String(
-            item.deploymentStatus || ""
-        ).toLowerCase();
-
-    if(
-        name &&
-        deploymentStatus === "on site"
-    ){
-
-        equipmentLimits[name] =
-            (equipmentLimits[name] || 0) + 1;
-
-    }
-
-});
 equipmentRows.forEach(row => {
 
     const nameInput =
@@ -37556,30 +37438,6 @@ equipmentRows.forEach(row => {
         remarksInput
         ? remarksInput.value.trim()
         : "";
-if(name && actual !== ""){
-
-    const actualNumber =
-        Number(actual);
-
-    const availableQuantity =
-        equipmentLimits[name] || 0;
-
-    if(
-        actualNumber >
-        availableQuantity
-    ){
-
-        alert(
-            `Actual quantity for "${name}" cannot exceed ${availableQuantity}.`
-        );
-
-        throw new Error(
-            "Equipment quantity limit exceeded."
-        );
-
-    }
-
-}
     if(
         name ||
         planned !== "" ||
@@ -37667,6 +37525,16 @@ materialRows.forEach(row => {
         ? unitInput.value
         : "";
 
+    const availableInput =
+        row.querySelector(
+            'input[id^="weeklyMaterialAvailable_"]'
+        );
+
+    const availableFromPreviousWeek =
+        availableInput
+        ? availableInput.value
+        : "0";
+
     const planned =
         plannedInput
         ? plannedInput.value
@@ -37706,6 +37574,11 @@ materialRows.forEach(row => {
             name,
 
             unit,
+
+            availableFromPreviousWeek:
+                availableFromPreviousWeek === ""
+                ? 0
+                : Number(availableFromPreviousWeek),
 
             planned:
                 planned === ""
@@ -38812,10 +38685,18 @@ function(){
         );
 
     if(modal){
-
         modal.remove();
-
     }
+
+    if(window.weeklyReportPreviousBodyOverflow !== undefined){
+        document.body.style.overflow =
+            window.weeklyReportPreviousBodyOverflow;
+        delete window.weeklyReportPreviousBodyOverflow;
+    }else{
+        document.body.style.overflow = "";
+    }
+
+    delete window.weeklyReportActiveProjectId;
 
 };
 
@@ -38894,94 +38775,6 @@ function(
    END WEEKLY REPORTS MODULE - STEP 1
 ===================================================== */
 
-window.closeWeeklyReportModal =
-function(){
-
-    const modal =
-        document.getElementById(
-            "weeklyReportModal"
-        );
-
-    if(modal){
-
-        modal.remove();
-
-    }
-
-};
-
-
-/* =====================================================
-   DELETE WEEKLY REPORT
-===================================================== */
-
-window.deleteWeeklyReport =
-function(
-    projectId,
-    index
-){
-
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
-        );
-
-
-    if(!project){
-
-        return;
-
-    }
-
-
-    ensureWeeklyReports(project);
-
-
-    const report =
-        project.weeklyReports[index];
-
-
-    if(!report){
-
-        return;
-
-    }
-
-
-    const confirmed =
-        confirm(
-            `Are you sure you want to delete Week ${report.weekNumber}?`
-        );
-
-
-    if(!confirmed){
-
-        return;
-
-    }
-
-
-    project.weeklyReports.splice(
-        index,
-        1
-    );
-
-
-    persist();
-
-
-    renderWeeklyReportsSection(
-        project
-    );
-
-};
-
-
-/* =====================================================
-   END WEEKLY REPORTS MODULE - STEP 1
-===================================================== */
 
 /* =====================================================
    REPORTS MODULE
