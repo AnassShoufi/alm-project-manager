@@ -66354,6 +66354,11 @@ function renderManagementModule(){
             <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc">
                 <button onclick="switchManagementTab('tasks')" style="border:0;background:${currentManagementTab === "tasks" ? "#fff" : "transparent"};padding:15px 24px;font-weight:700;cursor:pointer;color:#17243a;border-bottom:3px solid ${currentManagementTab === "tasks" ? "#2563eb" : "transparent"}">☑ Tasks</button>
                 <button onclick="switchManagementTab('meetings')" style="border:0;background:${currentManagementTab === "meetings" ? "#fff" : "transparent"};padding:15px 24px;font-weight:700;cursor:pointer;color:#17243a;border-bottom:3px solid ${currentManagementTab === "meetings" ? "#2563eb" : "transparent"}">📅 Meetings</button>
+            <button
+    onclick="switchManagementTab('instructions')"
+    style="border:0;background:${currentManagementTab === 'instructions' ? '#fff' : 'transparent'};padding:15px 24px;font-weight:700;cursor:pointer;color:#17243a;border-bottom:3px solid ${currentManagementTab === 'instructions' ? '#2563eb' : 'transparent'};">
+    📢 Requests & Instructions
+</button>
             </div>
             <div id="managementTabContent" style="padding:20px"></div>
         </div>
@@ -66368,10 +66373,18 @@ function managementKpi(title, value){
 }
 
 window.switchManagementTab = function(tab){
-    currentManagementTab = tab === "meetings" ? "meetings" : "tasks";
+    const allowedTabs = [
+        "tasks",
+        "meetings",
+        "instructions"
+    ];
+
+    currentManagementTab = allowedTabs.includes(tab)
+        ? tab
+        : "tasks";
+
     renderManagementModule();
 };
-
 /* =====================================================
    TASKS
 ===================================================== */
