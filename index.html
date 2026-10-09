@@ -66149,11 +66149,20 @@ const MANAGEMENT_USERS = [
 
 let managementTasks = JSON.parse(localStorage.getItem("alm_management_tasks") || "[]");
 let managementMeetings = JSON.parse(localStorage.getItem("alm_management_meetings") || "[]");
+        
+let managementInstructions = JSON.parse(
+    localStorage.getItem("alm_management_instructions") || "[]"
+);
+
 let currentManagementTab = "tasks";
 
 function persistManagement(){
     localStorage.setItem("alm_management_tasks", JSON.stringify(managementTasks));
     localStorage.setItem("alm_management_meetings", JSON.stringify(managementMeetings));
+    localStorage.setItem(
+    "alm_management_instructions",
+    JSON.stringify(managementInstructions)
+);
 }
 
 /* =====================================================
