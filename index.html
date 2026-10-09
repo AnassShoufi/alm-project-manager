@@ -66542,13 +66542,19 @@ window.openManagementInstructionForm = function(){
                     </div>
 
                     <div class="form-group">
-                        <label>Assigned To *</label>
-                        <select id="instructionTo" required
-                            onchange="updateManagementInstructionType()">
-                            ${MANAGEMENT_USERS.map(u =>
-                                `<option value="${escapeHTML(u)}">${escapeHTML(u)}</option>`
-                            ).join("")}
-                        </select>
+                       
+<label>Assigned To *</label>
+<select id="instructionTo" multiple required
+    onchange="updateManagementInstructionType()"
+    style="min-height:110px;padding:10px">
+    ${MANAGEMENT_USERS.map(u =>
+        `<option value="${escapeHTML(u)}">${escapeHTML(u)}</option>`
+    ).join("")}
+</select>
+<small style="color:#64748B">
+    Hold Ctrl (Windows) to select multiple managers.
+</small>
+
                     </div>
 
                     <div class="form-group">
