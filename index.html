@@ -66390,121 +66390,287 @@ function managementKpi(title, value){
    MANAGEMENT REQUESTS & INSTRUCTIONS
 ===================================================== */
 
+function getManagementInstructionType(from, to){
+    const wael = "Wael Mansour (MD)";
+    const karim = "Karim Mansour (OM)";
+    const anass = "Anass Shoufi (GM)";
+
+    if(from === to){
+        return null;
+    }
+
+    if(from === anass && (to === karim || to === wael)){
+        return "Request";
+    }
+
+    if(from === wael && (to === karim || to === anass)){
+        return "Instruction";
+    }
+
+    if(from === karim && to === anass){
+        return "Instruction";
+    }
+
+    if(from === karim && to === wael){
+        return "Request";
+    }
+
+    return "Request";
+}
+
+
 function renderManagementInstructions(){
 
-    const container = document.getElementById(
-        "managementTabContent"
-    );
-
+    const container = document.getElementById("managementTabContent");
     if(!container) return;
 
+    const total = managementInstructions.length;
+    const pending = managementInstructions.filter(
+        item => item.acknowledgement === "Pending"
+    ).length;
+    const completed = managementInstructions.filter(
+        item => item.status === "Completed"
+    ).length;
+
+    const esc = value => escapeHTML(String(value ?? ""));
+
+    const rows = managementInstructions.length
+        ? [...managementInstructions].reverse().map(item => `
+            <tr>
+                <td>${esc(item.id)}</td>
+                <td>${esc(item.type)}</td>
+                <td>${esc(item.title)}</td>
+                <td>${esc(item.from)}</td>
+                <td>${esc(item.to)}</td>
+                <td>${esc(item.priority)}</td>
+                <td>${esc(item.dueDate)}</td>
+                <td>${esc(item.status)}</td>
+                <td>${esc(item.acknowledgement)}</td>
+            </tr>
+        `).join("")
+        : `
+            <tr>
+                <td colspan="9" style="text-align:center;padding:28px;color:#64748B">
+                    No requests or instructions yet.
+                </td>
+            </tr>
+        `;
+
     container.innerHTML = `
-        <div style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:16px;
-            flex-wrap:wrap;
-            margin-bottom:22px;
-        ">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px">
             <div>
-                <h2 style="
-                    margin:0 0 6px;
-                    color:#10254A;
-                    font-size:23px;
-                    font-weight:850;
-                ">
+                <h2 style="margin:0 0 6px;color:#10254A;font-size:23px;font-weight:850">
                     📢 Requests & Instructions
                 </h2>
-
-                <p style="
-                    margin:0;
-                    color:#64748B;
-                    font-size:13px;
-                ">
-                    Official management requests, instructions
-                    and acknowledgements.
+                <p style="margin:0;color:#64748B;font-size:13px">
+                    Official management requests, instructions and acknowledgements.
                 </p>
             </div>
-
-            <button
-                class="btn btn-primary"
-                onclick="openManagementInstructionForm()"
-            >
+            <button class="btn btn-primary" onclick="openManagementInstructionForm()">
                 + New Request / Instruction
             </button>
         </div>
 
-        <div style="
-            display:grid;
-            grid-template-columns:repeat(3,minmax(0,1fr));
-            gap:14px;
-            margin-bottom:22px;
-        ">
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px">
             <div class="panel" style="padding:18px;margin:0">
-                <div style="color:#64748B;font-size:11px;font-weight:800">
-                    TOTAL
-                </div>
-                <div id="instructionTotal"
-                     style="font-size:28px;font-weight:850;color:#10254A">
-                    0
-                </div>
+                <div style="color:#64748B;font-size:11px;font-weight:800">TOTAL</div>
+                <div style="font-size:28px;font-weight:850;color:#10254A">${total}</div>
             </div>
-
             <div class="panel" style="padding:18px;margin:0">
-                <div style="color:#64748B;font-size:11px;font-weight:800">
-                    AWAITING ACKNOWLEDGEMENT
-                </div>
-                <div id="instructionPending"
-                     style="font-size:28px;font-weight:850;color:#D97706">
-                    0
-                </div>
+                <div style="color:#64748B;font-size:11px;font-weight:800">AWAITING ACKNOWLEDGEMENT</div>
+                <div style="font-size:28px;font-weight:850;color:#D97706">${pending}</div>
             </div>
-
             <div class="panel" style="padding:18px;margin:0">
-                <div style="color:#64748B;font-size:11px;font-weight:800">
-                    COMPLETED
-                </div>
-                <div id="instructionCompleted"
-                     style="font-size:28px;font-weight:850;color:#15803D">
-                    0
-                </div>
+                <div style="color:#64748B;font-size:11px;font-weight:800">COMPLETED</div>
+                <div style="font-size:28px;font-weight:850;color:#15803D">${completed}</div>
             </div>
         </div>
 
         <div class="panel" style="padding:22px;margin:0">
-            <div style="
-                color:#10254A;
-                font-size:17px;
-                font-weight:850;
-                margin-bottom:6px;
-            ">
+            <div style="color:#10254A;font-size:17px;font-weight:850;margin-bottom:14px">
                 Management Register
             </div>
-
-            <p style="color:#64748B;font-size:12px;margin:0">
-                Requests and instructions will appear here.
-            </p>
-
-            <div id="managementInstructionsRegister"
-                 style="margin-top:18px">
-                <div style="
-                    padding:32px 15px;
-                    text-align:center;
-                    color:#64748B;
-                    background:#F8FAFC;
-                    border:1px dashed #CBD5E1;
-                    border-radius:12px;
-                ">
-                    <div style="font-size:30px;margin-bottom:10px">
-                        📭
-                    </div>
-                    No requests or instructions yet.
-                </div>
+            <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;min-width:1000px">
+                    <thead>
+                        <tr style="background:#F1F5F9;text-align:left">
+                            <th style="padding:12px">ID</th>
+                            <th style="padding:12px">Type</th>
+                            <th style="padding:12px">Title</th>
+                            <th style="padding:12px">Issued By</th>
+                            <th style="padding:12px">Assigned To</th>
+                            <th style="padding:12px">Priority</th>
+                            <th style="padding:12px">Due Date</th>
+                            <th style="padding:12px">Status</th>
+                            <th style="padding:12px">Acknowledgement</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
             </div>
         </div>
     `;
 }
+
+        
+window.openManagementInstructionForm = function(){
+
+    const modal = document.createElement("div");
+    modal.id = "managementInstructionModal";
+    modal.className = "modal-overlay";
+    modal.style.display = "flex";
+
+    modal.innerHTML = `
+        <div class="modal" style="max-width:800px;width:95%">
+            <div class="modal-header">
+                <h2>New Request / Instruction</h2>
+                <button type="button" class="close"
+                    onclick="closeManagementInstructionForm()">×</button>
+            </div>
+
+            <form onsubmit="saveManagementInstruction(event)">
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label>Issued By *</label>
+                        <select id="instructionFrom" required
+                            onchange="updateManagementInstructionType()">
+                            ${MANAGEMENT_USERS.map(u =>
+                                `<option value="${escapeHTML(u)}">${escapeHTML(u)}</option>`
+                            ).join("")}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Assigned To *</label>
+                        <select id="instructionTo" required
+                            onchange="updateManagementInstructionType()">
+                            ${MANAGEMENT_USERS.map(u =>
+                                `<option value="${escapeHTML(u)}">${escapeHTML(u)}</option>`
+                            ).join("")}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Message Type</label>
+                        <input id="instructionType" readonly
+                            style="font-weight:800;background:#F1F5F9">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input id="instructionTitle" required
+                            maxlength="200"
+                            placeholder="Enter request or instruction title">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description / Details *</label>
+                        <textarea id="instructionDescription" required rows="5"
+                            placeholder="Explain what is required"></textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="instructionPriority">
+                                <option>Medium</option>
+                                <option>High</option>
+                                <option>Low</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Due Date *</label>
+                            <input id="instructionDueDate" type="date" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeManagementInstructionForm()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        Save Request / Instruction
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener("click", function(e){
+        if(e.target === modal) closeManagementInstructionForm();
+    });
+
+    updateManagementInstructionType();
+};
+
+window.closeManagementInstructionForm = function(){
+    document.getElementById("managementInstructionModal")?.remove();
+};
+
+window.updateManagementInstructionType = function(){
+    const from = document.getElementById("instructionFrom")?.value;
+    const to = document.getElementById("instructionTo")?.value;
+    const typeInput = document.getElementById("instructionType");
+
+    if(!typeInput) return;
+
+    const type = getManagementInstructionType(from, to);
+
+    typeInput.value = type || "Select a different recipient";
+};
+        
+window.saveManagementInstruction = function(event){
+
+    event.preventDefault();
+
+    const from = document.getElementById("instructionFrom").value;
+    const to = document.getElementById("instructionTo").value;
+    const type = getManagementInstructionType(from, to);
+
+    if(!type){
+        alert("The sender and recipient cannot be the same.");
+        return;
+    }
+
+    const title = document.getElementById("instructionTitle").value.trim();
+    const description = document.getElementById("instructionDescription").value.trim();
+    const priority = document.getElementById("instructionPriority").value;
+    const dueDate = document.getElementById("instructionDueDate").value;
+
+    if(!title || !description || !dueDate){
+        alert("Please complete all required fields.");
+        return;
+    }
+
+    const instruction = {
+        id: Date.now(),
+        from: from,
+        to: to,
+        type: type,
+        title: title,
+        description: description,
+        priority: priority,
+        dueDate: dueDate,
+        status: "Pending",
+        acknowledgement: "Pending",
+        createdAt: new Date().toISOString()
+    };
+
+    managementInstructions.push(instruction);
+
+    persistManagement();
+
+    closeManagementInstructionForm();
+    renderManagementInstructions();
+
+    alert("Request / Instruction saved successfully.");
+};
+
+
 window.switchManagementTab = function(tab){
     const allowedTabs = [
         "tasks",
