@@ -66364,14 +66364,138 @@ function renderManagementModule(){
         </div>
     `;
 
-    if(currentManagementTab === "meetings") renderManagementMeetings();
-    else renderManagementTasks();
+   if(currentManagementTab === "meetings"){
+    renderManagementMeetings();
+}
+else if(currentManagementTab === "instructions"){
+    renderManagementInstructions();
+}
+else{
+    renderManagementTasks();
 }
 
 function managementKpi(title, value){
     return `<div class="panel" style="margin:0;padding:18px"><div style="color:#64748b;font-size:12px">${title}</div><div style="font-size:27px;font-weight:700;margin-top:5px">${value}</div></div>`;
 }
+/* =====================================================
+   MANAGEMENT REQUESTS & INSTRUCTIONS
+===================================================== */
 
+function renderManagementInstructions(){
+
+    const container = document.getElementById(
+        "managementTabContent"
+    );
+
+    if(!container) return;
+
+    container.innerHTML = `
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:22px;
+        ">
+            <div>
+                <h2 style="
+                    margin:0 0 6px;
+                    color:#10254A;
+                    font-size:23px;
+                    font-weight:850;
+                ">
+                    📢 Requests & Instructions
+                </h2>
+
+                <p style="
+                    margin:0;
+                    color:#64748B;
+                    font-size:13px;
+                ">
+                    Official management requests, instructions
+                    and acknowledgements.
+                </p>
+            </div>
+
+            <button
+                class="btn btn-primary"
+                onclick="openManagementInstructionForm()"
+            >
+                + New Request / Instruction
+            </button>
+        </div>
+
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:14px;
+            margin-bottom:22px;
+        ">
+            <div class="panel" style="padding:18px;margin:0">
+                <div style="color:#64748B;font-size:11px;font-weight:800">
+                    TOTAL
+                </div>
+                <div id="instructionTotal"
+                     style="font-size:28px;font-weight:850;color:#10254A">
+                    0
+                </div>
+            </div>
+
+            <div class="panel" style="padding:18px;margin:0">
+                <div style="color:#64748B;font-size:11px;font-weight:800">
+                    AWAITING ACKNOWLEDGEMENT
+                </div>
+                <div id="instructionPending"
+                     style="font-size:28px;font-weight:850;color:#D97706">
+                    0
+                </div>
+            </div>
+
+            <div class="panel" style="padding:18px;margin:0">
+                <div style="color:#64748B;font-size:11px;font-weight:800">
+                    COMPLETED
+                </div>
+                <div id="instructionCompleted"
+                     style="font-size:28px;font-weight:850;color:#15803D">
+                    0
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" style="padding:22px;margin:0">
+            <div style="
+                color:#10254A;
+                font-size:17px;
+                font-weight:850;
+                margin-bottom:6px;
+            ">
+                Management Register
+            </div>
+
+            <p style="color:#64748B;font-size:12px;margin:0">
+                Requests and instructions will appear here.
+            </p>
+
+            <div id="managementInstructionsRegister"
+                 style="margin-top:18px">
+                <div style="
+                    padding:32px 15px;
+                    text-align:center;
+                    color:#64748B;
+                    background:#F8FAFC;
+                    border:1px dashed #CBD5E1;
+                    border-radius:12px;
+                ">
+                    <div style="font-size:30px;margin-bottom:10px">
+                        📭
+                    </div>
+                    No requests or instructions yet.
+                </div>
+            </div>
+        </div>
+    `;
+}
 window.switchManagementTab = function(tab){
     const allowedTabs = [
         "tasks",
