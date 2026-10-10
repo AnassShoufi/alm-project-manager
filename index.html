@@ -66518,7 +66518,7 @@ const completed = managementInstructions.reduce((count, item) => {
 <td>
     ${
         Array.isArray(item.recipients)
-            ? item.recipients.map(r => `
+            ? item.recipients.map((r, recipientIndex) => `
                 <div style="
                     display:flex;
                     align-items:center;
