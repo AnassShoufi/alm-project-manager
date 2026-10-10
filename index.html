@@ -66458,11 +66458,45 @@ function renderManagementInstructions(){
                 <td>${esc(item.type)}</td>
                 <td>${esc(item.title)}</td>
                 <td>${esc(item.from)}</td>
-                <td>${esc(item.to)}</td>
+               
+<td>
+    ${
+        Array.isArray(item.recipients)
+            ? item.recipients.map(r => `
+                <div style="margin-bottom:6px;white-space:nowrap">
+                    ${esc(r.name)}
+                </div>
+            `).join("")
+            : esc(item.to)
+    }
+</td>
+
                 <td>${esc(item.priority)}</td>
                 <td>${esc(item.dueDate)}</td>
-                <td>${esc(item.status)}</td>
-                <td>${esc(item.acknowledgement)}</td>
+                
+<td>
+    ${
+        Array.isArray(item.recipients)
+            ? item.recipients.map(r => `
+                <div style="margin-bottom:6px">
+                    ${esc(r.status)}
+                </div>
+            `).join("")
+            : esc(item.status)
+    }
+</td>
+<td>
+    ${
+        Array.isArray(item.recipients)
+            ? item.recipients.map(r => `
+                <div style="margin-bottom:6px">
+                    ${esc(r.acknowledgement)}
+                </div>
+            `).join("")
+            : esc(item.acknowledgement)
+    }
+</td>
+
             </tr>
         `).join("")
         : `
