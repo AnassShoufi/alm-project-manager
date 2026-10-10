@@ -66459,17 +66459,37 @@ function renderManagementInstructions(){
                 <td>${esc(item.title)}</td>
                 <td>${esc(item.from)}</td>
                
+
 <td>
     ${
         Array.isArray(item.recipients)
             ? item.recipients.map(r => `
-                <div style="margin-bottom:6px;white-space:nowrap">
-                    ${esc(r.name)}
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    gap:7px;
+                    padding:5px 8px;
+                    margin-bottom:5px;
+                    background:#F1F5F9;
+                    border:1px solid #E2E8F0;
+                    border-radius:6px;
+                    white-space:nowrap;
+                    font-size:12px;
+                ">
+                    <span style="
+                        width:7px;
+                        height:7px;
+                        border-radius:50%;
+                        background:#2563EB;
+                        flex-shrink:0;
+                    "></span>
+                    <span>${esc(r.name)}</span>
                 </div>
             `).join("")
             : esc(item.to)
     }
 </td>
+
 
                 <td>${esc(item.priority)}</td>
                 <td>${esc(item.dueDate)}</td>
