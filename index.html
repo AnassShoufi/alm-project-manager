@@ -66441,10 +66441,33 @@ function renderManagementInstructions(){
     const container = document.getElementById("managementTabContent");
     if(!container) return;
 
-    const total = managementInstructions.length;
-    const pending = managementInstructions.filter(
-        item => item.acknowledgement === "Pending"
-    ).length;
+   
+const total = managementInstructions.length;
+
+const pending = managementInstructions.reduce((count, item) => {
+    if(Array.isArray(item.recipients)){
+        return count + item.recipients.filter(
+            r => r.acknowledgement !== "Acknowledged"
+        ).length;
+    }
+
+    return count + (
+        item.acknowledgement === "Acknowledged" ? 0 : 1
+    );
+}, 0);
+
+const completed = managementInstructions.reduce((count, item) => {
+    if(Array.isArray(item.recipients)){
+        return count + item.recipients.filter(
+            r => r.status === "Completed"
+        ).length;
+    }
+
+    return count + (
+        item.status === "Completed" ? 1 : 0
+    );
+}, 0);
+
     const completed = managementInstructions.filter(
         item => item.status === "Completed"
     ).length;
