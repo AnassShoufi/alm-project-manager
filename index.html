@@ -66957,6 +66957,7 @@ window.acknowledgeManagementInstruction = function(instructionId, recipientIndex
     renderManagementInstructions();
 };
 
+
 window.completeManagementInstruction = function(instructionId, recipientIndex){
 
     const instruction = managementInstructions.find(
@@ -66985,20 +66986,112 @@ window.completeManagementInstruction = function(instructionId, recipientIndex){
         return;
     }
 
-    const confirmed = confirm(
-        "Mark the task assigned to " + recipient.name + " as completed?"
-    );
+    const modal = document.createElement("div");
+    modal.id = "completionDecisionModal";
+    modal.className = "modal-overlay";
+    modal.style.display = "flex";
 
-    if(!confirmed) return;
+    const multipleRecipients = instruction.recipients.length > 1;
 
-    recipient.status = "Completed";
+    modal.innerHTML = `
+        <div class="modal" style="max-width:650px;width:95%;max-height:90vh;overflow-y:auto">
+            <div class="modal-header">
+                <h2>Complete Assigned Task</h2>
+                <button type="button" class="close"
+                    onclick="document.getElementById('completionDecisionModal')?.remove()">×</button>
+            </div>
 
-    instruction.status = instruction.recipients.every(
-        r => r.status === "Completed"
-    ) ? "Completed" : "Pending";
+            <form id="completionDecisionForm">
+                <div class="modal-body">
 
-    persistManagement();
-    renderManagementInstructions();
+                    <div style="margin-bottom:16px;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px">
+                        <div style="font-size:12px;color:#64748B;margin-bottom:4px">TASK</div>
+                        <div style="font-weight:800;color:#10254A">${escapeHTML(instruction.title || "")}</div>
+                        <div style="font-size:13px;margin-top:6px">Completed by: ${escapeHTML(recipient.name)}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Completion Type *</label>
+                        <select id="completionType" required
+                            style="width:100%"
+                            onchange="updateCompletionReasonLabel()">
+                            <option value="Independent Completion">Independent Completion — no further input required</option>
+                            <option value="Joint Completion">Joint Completion — other managers' input is still required</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="completionReasonLabel">Reason for independent completion *</label>
+                        <textarea id="completionReason" required rows="4"
+                            placeholder="Explain why the other assigned managers' input is not required."
+                            style="width:100%"></textarea>
+                    </div>
+
+                    ${multipleRecipients ? `
+                        <div style="font-size:12px;color:#64748B;padding:10px;background:#F8FAFC;border-radius:8px">
+                            Other recipients' statuses will remain unchanged. If you select Independent Completion, your reason will be recorded for management review.
+                        </div>
+                    ` : ""}
+                </div>
+
+                <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('completionDecisionModal')?.remove()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        Confirm Completion
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById("completionDecisionForm").onsubmit = function(event){
+        event.preventDefault();
+
+        const completionType = document.getElementById("completionType").value;
+        const reason = document.getElementById("completionReason").value.trim();
+
+        if(!reason){
+            alert("Please provide the completion reason.");
+            return;
+        }
+
+        recipient.status = "Completed";
+        recipient.completedBy = recipient.name;
+        recipient.completedAt = new Date().toISOString();
+        recipient.completionType = completionType;
+        recipient.completionReason = reason;
+
+        instruction.status = instruction.recipients.every(
+            r => r.status === "Completed"
+        ) ? "Completed" : "Pending";
+
+        persistManagement();
+
+        modal.remove();
+        renderManagementInstructions();
+
+        alert("Completion recorded successfully.");
+    };
+};
+
+window.updateCompletionReasonLabel = function(){
+
+    const type = document.getElementById("completionType")?.value;
+    const label = document.getElementById("completionReasonLabel");
+    const textarea = document.getElementById("completionReason");
+
+    if(!label || !textarea) return;
+
+    if(type === "Independent Completion"){
+        label.textContent = "Reason why other managers' input is not required *";
+        textarea.placeholder = "Explain why the task is complete and why no further input from the other assigned managers is needed.";
+    }else{
+        label.textContent = "Completed work and remaining coordination *";
+        textarea.placeholder = "Describe the part you completed and what input is still required from the other managers.";
+    }
 };
 
 
