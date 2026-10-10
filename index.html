@@ -66518,17 +66518,31 @@ function renderManagementInstructions(){
             : esc(item.status)
     }
 </td>
+
 <td>
     ${
         Array.isArray(item.recipients)
             ? item.recipients.map(r => `
-                <div style="margin-bottom:6px">
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    padding:6px 8px;
+                    margin-bottom:5px;
+                    border:1px solid #E2E8F0;
+                    border-radius:7px;
+                    background:#F8FAFC;
+                    color:${r.acknowledgement === "Acknowledged" ? "#15803D" : "#64748B"};
+                    font-size:12px;
+                    font-weight:700;
+                    white-space:nowrap;
+                ">
                     ${esc(r.acknowledgement)}
                 </div>
             `).join("")
             : esc(item.acknowledgement)
     }
 </td>
+
 
             </tr>
         `).join("")
