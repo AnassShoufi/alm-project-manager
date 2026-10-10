@@ -66536,7 +66536,32 @@ function renderManagementInstructions(){
                     font-weight:700;
                     white-space:nowrap;
                 ">
-                    ${esc(r.acknowledgement)}
+                    
+${
+    r.acknowledgement === "Acknowledged"
+        ? `<span style="
+            display:inline-block;
+            padding:6px 8px;
+            border-radius:7px;
+            border:1px solid #BBF7D0;
+            background:#F0FDF4;
+            color:#15803D;
+            font-size:12px;
+            font-weight:700;
+            white-space:nowrap;
+        ">Acknowledged</span>`
+        : `<button
+            type="button"
+            class="btn btn-primary"
+            style="
+                padding:6px 9px;
+                font-size:11px;
+                white-space:nowrap;
+            "
+            onclick="acknowledgeManagementInstruction('${item.id}', ${managementInstructions.indexOf(item)}); event.stopPropagation();"
+        >Acknowledge</button>`
+}
+
                 </div>
             `).join("")
             : esc(item.acknowledgement)
@@ -66845,6 +66870,42 @@ window.saveManagementInstruction = function(event){
         acknowledgement: "Pending",
         createdAt: new Date().toISOString()
     };
+    
+window.acknowledgeManagementInstruction = function(instructionId, recipientIndex){
+
+    const instruction = managementInstructions.find(
+        item => String(item.id) === String(instructionId)
+    );
+
+    if(!instruction || !Array.isArray(instruction.recipients)){
+        alert("Instruction or recipient not found.");
+        return;
+    }
+
+    const recipient = instruction.recipients[recipientIndex];
+
+    if(!recipient){
+        alert("Recipient not found.");
+        return;
+    }
+
+    if(recipient.acknowledgement === "Acknowledged"){
+        alert("This recipient has already acknowledged receipt.");
+        return;
+    }
+
+    const confirmed = confirm(
+        "Confirm receipt for " + recipient.name + "?"
+    );
+
+    if(!confirmed) return;
+
+    recipient.acknowledgement = "Acknowledged";
+
+    persistManagement();
+    renderManagementInstructions();
+};
+
 
     managementInstructions.push(instruction);
 
