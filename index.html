@@ -66547,7 +66547,9 @@ window.openManagementInstructionForm = function(){
                     onclick="closeManagementInstructionForm()">×</button>
             </div>
 
-            <form onsubmit="saveManagementInstruction(event)">
+            
+<form onsubmit="saveManagementInstruction(event)" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
+
                
 <div class="modal-body" style="overflow-y:auto;flex:1;min-height:0">
 
@@ -66643,7 +66645,9 @@ window.openManagementInstructionForm = function(){
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                
+<div class="modal-footer" style="flex-shrink:0;display:flex;justify-content:flex-end;gap:12px;background:#FFFFFF;border-top:1px solid #E2E8F0;padding:16px 22px;position:relative;z-index:2">
+
                     <button type="button" class="btn btn-secondary"
                         onclick="closeManagementInstructionForm()">Cancel</button>
                     <button type="submit" class="btn btn-primary">
