@@ -66708,6 +66708,7 @@ window.updateManagementInstructionType = function(){
 
         
 
+
 window.saveManagementInstruction = function(event){
 
     event.preventDefault();
@@ -66740,29 +66741,31 @@ window.saveManagementInstruction = function(event){
         return;
     }
 
-    const createdAt = new Date().toISOString();
+    const recipientDetails = recipients.map(to => ({
+        name: to,
+        type: getManagementInstructionType(from, to),
+        acknowledgement: "Pending",
+        status: "Pending"
+    }));
 
-    recipients.forEach(to => {
+    const instruction = {
+        id: Date.now(),
+        from: from,
+        to: recipients.join(", "),
+        recipients: recipientDetails,
+        type: [...new Set(
+            recipientDetails.map(r => r.type)
+        )].join(" / "),
+        title: title,
+        description: description,
+        priority: priority,
+        dueDate: dueDate,
+        status: "Pending",
+        acknowledgement: "Pending",
+        createdAt: new Date().toISOString()
+    };
 
-        const type = getManagementInstructionType(from, to);
-
-        if(!type) return;
-
-        managementInstructions.push({
-            id: Date.now() + Math.random(),
-            from: from,
-            to: to,
-            type: type,
-            title: title,
-            description: description,
-            priority: priority,
-            dueDate: dueDate,
-            status: "Pending",
-            acknowledgement: "Pending",
-            createdAt: createdAt
-        });
-
-    });
+    managementInstructions.push(instruction);
 
     persistManagement();
 
