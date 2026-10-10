@@ -66644,7 +66644,7 @@ ${
                     type="button"
                     class="btn btn-secondary"
                     style="padding:6px 9px;font-size:11px"
-                    onclick="editManagementInstruction('${item.id}')"
+                    onclick="openManagementInstructionForm('${item.id}')"
                 >Edit</button>
 
                 <button
@@ -66724,8 +66724,8 @@ ${
 }
 
         
-window.openManagementInstructionForm = function(){
-
+window.openManagementInstructionForm = function(instructionId = null){
+window.managementInstructionEditId = instructionId;
     const modal = document.createElement("div");
     modal.id = "managementInstructionModal";
     modal.className = "modal-overlay";
@@ -66853,6 +66853,43 @@ window.openManagementInstructionForm = function(){
     `;
 
     document.body.appendChild(modal);
+    if (instructionId !== null) {
+    const instruction = managementInstructions.find(
+        item => String(item.id) === String(instructionId)
+    );
+
+    if (!instruction) {
+        alert("Request / Instruction not found.");
+        closeManagementInstructionForm();
+        return;
+    }
+
+    document.querySelector("#managementInstructionModal h2").textContent =
+        "Edit Request / Instruction";
+
+    const titleInput = document.getElementById("instructionTitle");
+    const descriptionInput = document.getElementById("instructionDescription");
+    const priorityInput = document.getElementById("instructionPriority");
+    const dueDateInput = document.getElementById("instructionDueDate");
+
+    if (titleInput) titleInput.value = instruction.title || "";
+    if (descriptionInput) descriptionInput.value = instruction.description || "";
+    if (priorityInput) priorityInput.value = instruction.priority || "";
+    if (dueDateInput) dueDateInput.value = instruction.dueDate || "";
+
+    document.querySelectorAll(
+        'input[name="instructionRecipient"]'
+    ).forEach(input => {
+        input.checked = Array.isArray(instruction.recipients)
+            ? instruction.recipients.some(r => r.name === input.value)
+            : String(instruction.to || "")
+                .split(", ")
+                .includes(input.value);
+    });
+
+    const senderInput = document.getElementById("instructionFrom");
+    if (senderInput) senderInput.value = instruction.from || "";
+}
 
     modal.addEventListener("click", function(e){
         if(e.target === modal) closeManagementInstructionForm();
@@ -66863,6 +66900,7 @@ window.openManagementInstructionForm = function(){
 
 window.closeManagementInstructionForm = function(){
     document.getElementById("managementInstructionModal")?.remove();
+    window.managementInstructionEditId = null;
 };
 
 
@@ -66935,34 +66973,75 @@ window.saveManagementInstruction = function(event){
         return;
     }
 
-    const recipientDetails = recipients.map(to => ({
+    const editingInstructionId = window.managementInstructionEditId ?? null;
+
+const existingInstruction = editingInstructionId !== null
+    ? managementInstructions.find(
+        item => String(item.id) === String(editingInstructionId)
+    )
+    : null;
+
+const recipientDetails = recipients.map(to => {
+    const existingRecipient = existingInstruction &&
+        Array.isArray(existingInstruction.recipients)
+        ? existingInstruction.recipients.find(r => r.name === to)
+        : null;
+
+    return {
         name: to,
         type: getManagementInstructionType(from, to),
-        acknowledgement: "Pending",
-        status: "Pending"
-    }));
-
-    const instruction = {
-        id: Date.now(),
-        from: from,
-        to: recipients.join(", "),
-        recipients: recipientDetails,
-        type: [...new Set(
-            recipientDetails.map(r => r.type)
-        )].join(" / "),
-        title: title,
-        description: description,
-        priority: priority,
-        dueDate: dueDate,
-        status: "Pending",
-        acknowledgement: "Pending",
-        createdAt: new Date().toISOString()
+        acknowledgement: existingRecipient?.acknowledgement || "Pending",
+        status: existingRecipient?.status || "Pending",
+        ...(existingRecipient?.completedBy ? { completedBy: existingRecipient.completedBy } : {}),
+        ...(existingRecipient?.completedAt ? { completedAt: existingRecipient.completedAt } : {}),
+        ...(existingRecipient?.completionType ? { completionType: existingRecipient.completionType } : {}),
+        ...(existingRecipient?.completionReason ? { completionReason: existingRecipient.completionReason } : {})
     };
-   
+});
+
+   const instruction = {
+    id: existingInstruction ? existingInstruction.id : Date.now(),
+    from: from,
+    to: recipients.join(", "),
+    recipients: recipientDetails,
+    type: [...new Set(
+        recipientDetails.map(r => r.type)
+    )].join(" / "),
+    title: title,
+    description: description,
+    priority: priority,
+    dueDate: dueDate,
+    status: existingInstruction
+        ? (
+            recipientDetails.every(r => r.status === "Completed")
+                ? "Completed"
+                : "Pending"
+        )
+        : "Pending",
+    acknowledgement: existingInstruction
+        ? existingInstruction.acknowledgement
+        : "Pending",
+    createdAt: existingInstruction
+        ? existingInstruction.createdAt
+        : new Date().toISOString()
+};
+
+if (existingInstruction) {
+    const instructionIndex = managementInstructions.findIndex(
+        item => String(item.id) === String(existingInstruction.id)
+    );
+
+    if (instructionIndex === -1) {
+        alert("Request / Instruction not found.");
+        return;
+    }
+
+    managementInstructions[instructionIndex] = instruction;
+} else {
     managementInstructions.push(instruction);
-
+}
     persistManagement();
-
+window.managementInstructionEditId = null;
     closeManagementInstructionForm();
     renderManagementInstructions();
 
