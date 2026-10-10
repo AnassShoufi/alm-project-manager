@@ -66519,16 +66519,20 @@ const completed = managementInstructions.reduce((count, item) => {
     ${
         Array.isArray(item.recipients)
             ? item.recipients.map((r, recipientIndex) => `
-                <div style="
-                    display:flex;
-                    align-items:center;
-                    margin-bottom:5px;
-                    padding:5px 8px;
-                    border-radius:6px;
-                    background:#F8FAFC;
-                    border:1px solid #E2E8F0;
-                    white-space:nowrap;
-                ">
+               
+<div style="
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+    margin-bottom:6px;
+    padding:8px;
+    border-radius:7px;
+    background:#F8FAFC;
+    border:1px solid #E2E8F0;
+    white-space:normal;
+">
+
                     <span style="
                         color:${r.status === "Completed" ? "#15803D" : "#D97706"};
                         font-weight:700;
@@ -66542,7 +66546,7 @@ ${
             <button
                 type="button"
                 class="btn btn-primary"
-                style="display:block;margin-top:6px;padding:6px 8px;font-size:11px;white-space:nowrap;max-width:100%"
+                style="display:block;margin:0;padding:6px 8px;font-size:11px;white-space:nowrap;max-width:100%"
                 onclick="completeManagementInstruction('${item.id}', ${recipientIndex})"
             >Mark as Completed</button>
         `
