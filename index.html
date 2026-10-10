@@ -66498,8 +66498,21 @@ function renderManagementInstructions(){
     ${
         Array.isArray(item.recipients)
             ? item.recipients.map(r => `
-                <div style="margin-bottom:6px">
-                    ${esc(r.status)}
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    margin-bottom:5px;
+                    padding:5px 8px;
+                    border-radius:6px;
+                    background:#F8FAFC;
+                    border:1px solid #E2E8F0;
+                    white-space:nowrap;
+                ">
+                    <span style="
+                        color:${r.status === "Completed" ? "#15803D" : "#D97706"};
+                        font-weight:700;
+                        font-size:12px;
+                    ">${esc(r.status)}</span>
                 </div>
             `).join("")
             : esc(item.status)
