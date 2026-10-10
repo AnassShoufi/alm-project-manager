@@ -66403,9 +66403,18 @@ function getManagementInstructionType(from, to){
         return "Request";
     }
 
-    if(from === wael && (to === karim || to === anass)){
-        return "Instruction";
-    }
+   
+if(
+    from === wael &&
+    (
+        to === karim ||
+        to === anass ||
+        to === "Shadi Diab (Admin)"
+    )
+){
+    return "Instruction";
+}
+
 
     if(from === karim && to === anass){
         return "Instruction";
