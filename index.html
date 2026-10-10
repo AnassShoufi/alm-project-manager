@@ -66522,7 +66522,7 @@ function renderManagementInstructions(){
 <td>
     ${
         Array.isArray(item.recipients)
-            ? item.recipients.map(r => `
+           ? item.recipients.map((r, recipientIndex) => `
                 <div style="
                     display:flex;
                     align-items:center;
@@ -66558,7 +66558,7 @@ ${
                 font-size:11px;
                 white-space:nowrap;
             "
-            onclick="acknowledgeManagementInstruction('${item.id}', ${managementInstructions.indexOf(item)}); event.stopPropagation();"
+           onclick="acknowledgeManagementInstruction('${item.id}', ${recipientIndex});"
         >Acknowledge</button>`
 }
 
