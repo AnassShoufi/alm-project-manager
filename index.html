@@ -67194,6 +67194,62 @@ window.viewManagementInstruction = function(instructionId){
     document.body.appendChild(modal);
 };
 
+window.deleteManagementInstruction = function(instructionId){
+
+    const instruction = managementInstructions.find(
+        item => String(item.id) === String(instructionId)
+    );
+
+    if(!instruction){
+        alert("Request / Instruction not found.");
+        return;
+    }
+
+    const recipients = Array.isArray(instruction.recipients)
+        ? instruction.recipients
+        : [];
+
+    const hasAcknowledged = recipients.some(
+        r => r.acknowledgement === "Acknowledged"
+    );
+
+    const hasCompleted = recipients.some(
+        r => r.status === "Completed"
+    );
+
+    if(hasAcknowledged || hasCompleted){
+        alert(
+            "This request / instruction cannot be deleted because at least one recipient has acknowledged or completed it. This protects the management audit trail."
+        );
+        return;
+    }
+
+    const confirmed = confirm(
+        "Are you sure you want to delete this request / instruction?\n\n" +
+        "ID: " + instruction.id + "\n" +
+        "Title: " + (instruction.title || "Untitled") +
+        "\n\nThis action cannot be undone."
+    );
+
+    if(!confirmed) return;
+
+    const instructionIndex = managementInstructions.findIndex(
+        item => String(item.id) === String(instructionId)
+    );
+
+    if(instructionIndex === -1){
+        alert("Request / Instruction not found.");
+        return;
+    }
+
+    managementInstructions.splice(instructionIndex, 1);
+
+    persistManagement();
+    renderManagementInstructions();
+
+    alert("Request / Instruction deleted successfully.");
+};
+
 window.acknowledgeManagementInstruction = function(instructionId, recipientIndex){
 
     const instruction = managementInstructions.find(
