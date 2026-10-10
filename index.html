@@ -66646,17 +66646,41 @@ window.closeManagementInstructionForm = function(){
     document.getElementById("managementInstructionModal")?.remove();
 };
 
+
 window.updateManagementInstructionType = function(){
+
     const from = document.getElementById("instructionFrom")?.value;
-    const to = document.getElementById("instructionTo")?.value;
     const typeInput = document.getElementById("instructionType");
 
     if(!typeInput) return;
 
-    const type = getManagementInstructionType(from, to);
+    const recipients = Array.from(
+        document.querySelectorAll(
+            'input[name="instructionRecipient"]:checked'
+        )
+    ).map(input => input.value);
 
-    typeInput.value = type || "Select a different recipient";
+    if(!from || recipients.length === 0){
+        typeInput.value = "Select recipient(s)";
+        return;
+    }
+
+    if(recipients.includes(from)){
+        typeInput.value = "Unselect the sender";
+        return;
+    }
+
+    const types = [
+        ...new Set(
+            recipients.map(to =>
+                getManagementInstructionType(from, to)
+            )
+        )
+    ];
+
+    typeInput.value = types.join(" / ");
 };
+
         
 window.saveManagementInstruction = function(event){
 
