@@ -66631,7 +66631,30 @@ ${
             : esc(item.acknowledgement)
     }
 </td>
+        <td style="padding:12px;min-width:210px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    style="padding:6px 9px;font-size:11px"
+                    onclick="viewManagementInstruction('${item.id}')"
+                >View</button>
 
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    style="padding:6px 9px;font-size:11px"
+                    onclick="editManagementInstruction('${item.id}')"
+                >Edit</button>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    style="padding:6px 9px;font-size:11px;color:#DC2626"
+                    onclick="deleteManagementInstruction('${item.id}')"
+                >Delete</button>
+            </div>
+        </td>
 
             </tr>
         `).join("")
@@ -66690,6 +66713,7 @@ ${
                             <th style="padding:12px">Due Date</th>
                             <th style="padding:12px">Status</th>
                             <th style="padding:12px">Acknowledgement</th>
+                            <th style="padding:12px">Actions</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
@@ -66945,6 +66969,152 @@ window.saveManagementInstruction = function(event){
     alert("Request / Instruction saved successfully.");
 };
  
+window.viewManagementInstruction = function(instructionId){
+
+    const instruction = managementInstructions.find(
+        item => String(item.id) === String(instructionId)
+    );
+
+    if(!instruction){
+        alert("Request / Instruction not found.");
+        return;
+    }
+
+    const recipients = Array.isArray(instruction.recipients)
+        ? instruction.recipients
+        : [];
+
+    const details = `
+        <div style="display:grid;gap:12px">
+
+            <div>
+                <strong>ID:</strong>
+                ${escapeHTML(String(instruction.id ?? ""))}
+            </div>
+
+            <div>
+                <strong>Type:</strong>
+                ${escapeHTML(instruction.type || "")}
+            </div>
+
+            <div>
+                <strong>Title:</strong>
+                ${escapeHTML(instruction.title || "")}
+            </div>
+
+            <div>
+                <strong>From:</strong>
+                ${escapeHTML(instruction.from || "")}
+            </div>
+
+            <div>
+                <strong>Recipients:</strong>
+                ${escapeHTML(instruction.to || "")}
+            </div>
+
+            <div>
+                <strong>Description:</strong>
+                <div style="white-space:pre-wrap;margin-top:5px">
+                    ${escapeHTML(instruction.description || "N/A")}
+                </div>
+            </div>
+
+            <div>
+                <strong>Priority:</strong>
+                ${escapeHTML(instruction.priority || "")}
+            </div>
+
+            <div>
+                <strong>Due Date:</strong>
+                ${escapeHTML(instruction.dueDate || "N/A")}
+            </div>
+
+            <div>
+                <strong>Created At:</strong>
+                ${escapeHTML(
+                    instruction.createdAt
+                        ? new Date(instruction.createdAt).toLocaleString()
+                        : "N/A"
+                )}
+            </div>
+
+            <hr>
+
+            <h3 style="margin:0">Recipient Details</h3>
+
+            ${
+                recipients.length
+                    ? recipients.map(r => `
+                        <div style="
+                            padding:12px;
+                            border:1px solid #E2E8F0;
+                            border-radius:8px;
+                            display:grid;
+                            gap:7px;
+                        ">
+                            <div><strong>Name:</strong> ${escapeHTML(r.name || "")}</div>
+                            <div><strong>Recipient Type:</strong> ${escapeHTML(r.type || "N/A")}</div>
+                            <div><strong>Acknowledgement:</strong> ${escapeHTML(r.acknowledgement || "Pending")}</div>
+                            <div><strong>Status:</strong> ${escapeHTML(r.status || "Pending")}</div>
+
+                            ${
+                                r.status === "Completed"
+                                    ? `
+                                        <div><strong>Completed By:</strong> ${escapeHTML(r.completedBy || r.name || "N/A")}</div>
+                                        <div><strong>Completion Date:</strong> ${escapeHTML(
+                                            r.completedAt
+                                                ? new Date(r.completedAt).toLocaleString()
+                                                : "N/A"
+                                        )}</div>
+                                        <div><strong>Completion Type:</strong> ${escapeHTML(r.completionType || "N/A")}</div>
+                                        <div><strong>Completion Reason:</strong> <span style="white-space:pre-wrap">${escapeHTML(r.completionReason || "N/A")}</span></div>
+                                    `
+                                    : ""
+                            }
+                        </div>
+                    `).join("")
+                    : `<div>${escapeHTML(instruction.acknowledgement || "Pending")}</div>`
+            }
+
+        </div>
+    `;
+
+    const modal = document.createElement("div");
+    modal.id = "viewManagementInstructionModal";
+    modal.className = "modal-overlay";
+    modal.style.display = "flex";
+
+    modal.innerHTML = `
+        <div class="modal" style="
+            max-width:700px;
+            width:95%;
+            max-height:90vh;
+            overflow-y:auto;
+        ">
+            <div class="modal-header">
+                <h2>View Request / Instruction</h2>
+                <button type="button" class="close"
+                    onclick="document.getElementById('viewManagementInstructionModal')?.remove()">
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body">
+                ${details}
+            </div>
+
+            <div class="modal-footer" style="display:flex;justify-content:flex-end">
+                <button type="button" class="btn btn-secondary"
+                    onclick="document.getElementById('viewManagementInstructionModal')?.remove()">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+};
+
 window.acknowledgeManagementInstruction = function(instructionId, recipientIndex){
 
     const instruction = managementInstructions.find(
