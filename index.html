@@ -66533,7 +66533,23 @@ const completed = managementInstructions.reduce((count, item) => {
                         color:${r.status === "Completed" ? "#15803D" : "#D97706"};
                         font-weight:700;
                         font-size:12px;
-                    ">${esc(r.status)}</span>
+                   
+">${esc(r.status)}</span>
+${
+    r.status !== "Completed" &&
+    r.acknowledgement === "Acknowledged"
+        ? `
+            <button
+                type="button"
+                class="btn btn-primary"
+                style="margin-top:5px;padding:5px 8px;font-size:11px;white-space:nowrap"
+                onclick="completeManagementInstruction('${item.id}', ${recipientIndex})"
+            >Mark as Completed</button>
+        `
+        : ""
+}
+</div>
+
                 </div>
             `).join("")
             : esc(item.status)
@@ -66932,6 +66948,50 @@ window.acknowledgeManagementInstruction = function(instructionId, recipientIndex
     if(!confirmed) return;
 
     recipient.acknowledgement = "Acknowledged";
+
+    persistManagement();
+    renderManagementInstructions();
+};
+
+window.completeManagementInstruction = function(instructionId, recipientIndex){
+
+    const instruction = managementInstructions.find(
+        item => String(item.id) === String(instructionId)
+    );
+
+    if(!instruction || !Array.isArray(instruction.recipients)){
+        alert("Instruction or recipient not found.");
+        return;
+    }
+
+    const recipient = instruction.recipients[recipientIndex];
+
+    if(!recipient){
+        alert("Recipient not found.");
+        return;
+    }
+
+    if(recipient.acknowledgement !== "Acknowledged"){
+        alert("The recipient must acknowledge receipt before completing the task.");
+        return;
+    }
+
+    if(recipient.status === "Completed"){
+        alert("This task is already completed.");
+        return;
+    }
+
+    const confirmed = confirm(
+        "Mark the task assigned to " + recipient.name + " as completed?"
+    );
+
+    if(!confirmed) return;
+
+    recipient.status = "Completed";
+
+    instruction.status = instruction.recipients.every(
+        r => r.status === "Completed"
+    ) ? "Completed" : "Pending";
 
     persistManagement();
     renderManagementInstructions();
