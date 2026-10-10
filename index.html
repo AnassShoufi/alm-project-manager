@@ -66870,7 +66870,17 @@ window.saveManagementInstruction = function(event){
         acknowledgement: "Pending",
         createdAt: new Date().toISOString()
     };
-    
+   
+    managementInstructions.push(instruction);
+
+    persistManagement();
+
+    closeManagementInstructionForm();
+    renderManagementInstructions();
+
+    alert("Request / Instruction saved successfully.");
+};
+ 
 window.acknowledgeManagementInstruction = function(instructionId, recipientIndex){
 
     const instruction = managementInstructions.find(
