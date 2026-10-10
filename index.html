@@ -66540,6 +66540,29 @@ const completed = managementInstructions.reduce((count, item) => {
                    
 ">${esc(r.status)}</span>
 ${
+    r.status === "Completed" ? `
+        <div style="
+            font-size:11px;
+            color:#475569;
+            line-height:1.6;
+            max-width:260px;
+            white-space:normal;
+            overflow-wrap:anywhere;
+            border-top:1px solid #E2E8F0;
+            padding-top:6px;
+        ">
+            <div><strong>Completed By:</strong> ${esc(r.completedBy || r.name || "N/A")}</div>
+            <div><strong>Completion Date:</strong> ${
+                r.completedAt
+                    ? new Date(r.completedAt).toLocaleString()
+                    : "N/A"
+            }</div>
+            <div><strong>Type:</strong> ${esc(r.completionType || "N/A")}</div>
+            <div><strong>Reason:</strong> ${esc(r.completionReason || "N/A")}</div>
+        </div>
+    ` : ""
+}
+${
     r.status !== "Completed" &&
     r.acknowledgement === "Acknowledged"
         ? `
