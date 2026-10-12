@@ -9449,11 +9449,34 @@ let editingId = null;
 
 
 /* =========================
-   SAVE DATA
+   SAVE DATA - STORAGE ERROR HANDLING
 ========================= */
 
+function almReportStorageFailure(key, error){
+    console.error("ALM localStorage write failed for " + key + ":", error);
+    if(!window.__almStorageFailureAlertShown){
+        window.__almStorageFailureAlertShown = true;
+        alert("ALM could not save data to this browser's storage. Your latest change may not persist. Export a backup if possible, free browser storage space, and try again.");
+    }
+}
+
+function almSafeStorageSet(key, serializedValue){
+    try{
+        localStorage.setItem(key, serializedValue);
+        return true;
+    }catch(error){
+        almReportStorageFailure(key, error);
+        return false;
+    }
+}
+
 function persist(){
-    localStorage.setItem("alm_projects", JSON.stringify(projects));
+    try{
+        return almSafeStorageSet("alm_projects", JSON.stringify(projects));
+    }catch(error){
+        almReportStorageFailure("alm_projects (serialization)", error);
+        return false;
+    }
 }
 
 
@@ -12191,7 +12214,9 @@ const project = projects.find(
                 ">
             </iframe>
 
-        </body>
+        
+
+</body>
 
         </html>
 
@@ -25385,23 +25410,76 @@ previousWeeklyReportsArchive:
    DELETE PROJECT
 ========================= */
 
-function deleteProject(id){
+async function deleteProject(id){
 
-    const project = projects.find(p => p.id === id);
-
+    const project = projects.find(p => String(p.id) === String(id));
     if(!project) return;
 
     const confirmed = confirm(
-        `Are you sure you want to delete "${project.name}"?`
+        `Are you sure you want to delete "${project.name}" and its locally stored attachments?`
     );
-
     if(!confirmed) return;
 
-    projects = projects.filter(p => p.id !== id);
+    // Gather file references before removing the project metadata.
+    const attachmentRefs = [];
+    for(const doc of (project.documents || [])){
+        if(doc && doc.fileId) attachmentRefs.push({store:"documents", fileId:doc.fileId});
+    }
+    for(const drawing of (project.drawings || [])){
+        if(drawing && drawing.fileId) attachmentRefs.push({store:"drawings", fileId:drawing.fileId});
+    }
+    for(const report of (project.reports || [])){
+        if(report && report.fileId) attachmentRefs.push({store:"reports", fileId:report.fileId});
+    }
+    for(const variation of (project.variations || [])){
+        for(const stage of (variation.paymentStages || [])){
+            if(stage && stage.fileId) attachmentRefs.push({store:"variations", fileId:stage.fileId});
+        }
+    }
 
-    persist();
+    const previousProjects = projects;
+    projects = projects.filter(p => String(p.id) !== String(id));
+    window.projects = projects;
+
+    try{
+        persist();
+    }catch(error){
+        projects = previousProjects;
+        window.projects = projects;
+        console.error("Project deletion could not be saved:", error);
+        alert("The project could not be deleted because the project list could not be saved. No attachments were removed.\n\n" + (error.message || error));
+        return;
+    }
 
     showDashboard();
+
+    let cleanupFailures = 0;
+    for(const ref of attachmentRefs){
+        // Avoid deleting an ID if another remaining project still references it.
+        let stillReferenced = false;
+        for(const otherProject of projects){
+            if(ref.store === "documents" && (otherProject.documents || []).some(x => x && String(x.fileId) === String(ref.fileId))) stillReferenced = true;
+            if(ref.store === "drawings" && (otherProject.drawings || []).some(x => x && String(x.fileId) === String(ref.fileId))) stillReferenced = true;
+            if(ref.store === "reports" && (otherProject.reports || []).some(x => x && String(x.fileId) === String(ref.fileId))) stillReferenced = true;
+            if(ref.store === "variations" && (otherProject.variations || []).some(v => (v.paymentStages || []).some(x => x && String(x.fileId) === String(ref.fileId)))) stillReferenced = true;
+            if(stillReferenced) break;
+        }
+        if(stillReferenced) continue;
+
+        try{
+            if(ref.store === "documents") await deleteDocumentFile(ref.fileId);
+            else if(ref.store === "drawings") await deleteDrawingFile(ref.fileId);
+            else if(ref.store === "reports") await deleteReportFile(ref.fileId);
+            else if(ref.store === "variations") await deleteVariationPDF(ref.fileId, {throwOnError:true});
+        }catch(error){
+            cleanupFailures++;
+            console.error("Project attachment cleanup failed:", ref.store, ref.fileId, error);
+        }
+    }
+
+    if(cleanupFailures){
+        alert(`The project was deleted, but ${cleanupFailures} attachment(s) could not be removed from local storage. The project record is deleted; review the console for cleanup errors.`);
+    }
 }
 
 
@@ -25523,10 +25601,15 @@ function getDrawings(){
 
 function persistDrawings(drawings){
 
-    localStorage.setItem(
-        "alm_drawings",
-        JSON.stringify(drawings)
-    );
+    try{
+        return almSafeStorageSet(
+            "alm_drawings",
+            JSON.stringify(drawings)
+        );
+    }catch(error){
+        almReportStorageFailure("alm_drawings (serialization)", error);
+        return false;
+    }
 
 }
 
@@ -27640,205 +27723,86 @@ function(projectId){
    DELETE FOLDER
 ===================================================== */
 
-window.deleteDocumentsFolder =
-async function(
-    projectId,
-    folderId
-){
-
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
-        );
-
+window.deleteDocumentsFolder = async function(projectId, folderId){
+    const project = projects.find(p => String(p.id) === String(projectId));
     if(!project) return;
-
-
-    ensureDocumentsFolders(
-        project
-    );
-
+    ensureDocumentsFolders(project);
 
     if(String(folderId) === "root"){
-
-        alert(
-            "The main Documents folder cannot be deleted."
-        );
-
+        alert("The main Documents folder cannot be deleted.");
         return;
-
     }
 
+    const folder = project.documentsFolders.find(f => String(f.id) === String(folderId));
+    if(!folder){ alert("Folder not found."); return; }
 
-    const folder =
-        project.documentsFolders.find(
-            f =>
-                String(f.id) ===
-                String(folderId)
-        );
-
-
-    if(!folder){
-
-        alert(
-            "Folder not found."
-        );
-
-        return;
-
-    }
-
-
-    const confirmed =
-        confirm(
-            `Delete folder "${folder.name}"?\n\n` +
-            `All subfolders and documents inside it will also be deleted.`
-        );
-
-
+    const confirmed = confirm(
+        `Delete folder "${folder.name}"?\n\nAll subfolders, documents, and their local attachments inside it will be removed.`
+    );
     if(!confirmed) return;
 
-
-    const foldersToDelete =
-        new Set([
-            String(folderId)
-        ]);
-
-
+    const foldersToDelete = new Set([String(folderId)]);
     let changed = true;
-
-
     while(changed){
-
         changed = false;
-
-
-        project.documentsFolders.forEach(
-            function(child){
-
-                if(
-
-                    foldersToDelete.has(
-                        String(
-                            child.parentId
-                        )
-                    )
-
-                    &&
-
-                    !foldersToDelete.has(
-                        String(
-                            child.id
-                        )
-                    )
-
-                ){
-
-                    foldersToDelete.add(
-                        String(
-                            child.id
-                        )
-                    );
-
-                    changed = true;
-
-                }
-
+        for(const candidate of project.documentsFolders){
+            if(candidate.parentId !== null && candidate.parentId !== undefined &&
+               foldersToDelete.has(String(candidate.parentId)) &&
+               !foldersToDelete.has(String(candidate.id))){
+                foldersToDelete.add(String(candidate.id));
+                changed = true;
             }
-        );
-
+        }
     }
 
+    const documentsToDelete = (project.documents || []).filter(doc =>
+        foldersToDelete.has(String(doc.folderId ?? "__root__"))
+    );
+    const oldDocuments = project.documents || [];
+    const oldFolders = project.documentsFolders;
+    const oldCurrentFolder = window.documentsCurrentFolder[project.id];
+    const oldSearchTerm = window.documentsSearchTerm[project.id];
 
-    const documentsToDelete =
-        (project.documents || [])
-        .filter(
-            document =>
-                foldersToDelete.has(
-                    String(
-                        document.folderId
-                    )
-                )
-        );
+    project.documents = oldDocuments.filter(doc =>
+        !foldersToDelete.has(String(doc.folderId ?? "__root__"))
+    );
+    project.documentsFolders = oldFolders.filter(item =>
+        !foldersToDelete.has(String(item.id))
+    );
 
+    if(oldCurrentFolder !== null && oldCurrentFolder !== undefined && foldersToDelete.has(String(oldCurrentFolder))){
+        window.documentsCurrentFolder[project.id] = folder.parentId ?? null;
+    }
+    window.documentsSearchTerm[project.id] = "";
 
     try{
-
-        for(
-            const document
-            of documentsToDelete
-        ){
-
-            if(document.fileId){
-
-                await deleteDocumentFile(
-                    document.fileId
-                );
-
-            }
-
-        }
-
-
-        project.documents =
-            (project.documents || [])
-            .filter(
-                document =>
-                    !foldersToDelete.has(
-                        String(
-                            document.folderId
-                        )
-                    )
-            );
-
-
-        project.documentsFolders =
-            project.documentsFolders.filter(
-                folder =>
-                    !foldersToDelete.has(
-                        String(
-                            folder.id
-                        )
-                    )
-            );
-
-
-        window.documentsCurrentFolder[
-            project.id
-        ] =
-            folder.parentId ?? null;
-
-
-        window.documentsSearchTerm[
-            project.id
-        ] = "";
-
-
         persist();
-
-        renderDocumentsSection(
-            project
-        );
-
-    }
-    catch(error){
-
-        console.error(
-            "Document folder deletion error:",
-            error
-        );
-
-        alert(
-            "The folder could not be deleted.\n\n" +
-            error.message
-        );
-
+    }catch(error){
+        project.documents = oldDocuments;
+        project.documentsFolders = oldFolders;
+        window.documentsCurrentFolder[project.id] = oldCurrentFolder;
+        window.documentsSearchTerm[project.id] = oldSearchTerm;
+        console.error("Document folder deletion could not be saved:", error);
+        alert("The folder could not be deleted because the project data could not be saved. No attachments were removed.\n\n" + (error.message || error));
+        return;
     }
 
+    renderDocumentsSection(project);
+
+    let cleanupFailures = 0;
+    for(const doc of documentsToDelete){
+        if(!doc.fileId) continue;
+        const stillReferenced = projects.some(other =>
+            (other.documents || []).some(item => item && String(item.fileId) === String(doc.fileId))
+        );
+        if(stillReferenced) continue;
+        try{ await deleteDocumentFile(doc.fileId); }
+        catch(error){ cleanupFailures++; console.error("Document attachment cleanup failed:", doc.fileId, error); }
+    }
+    if(cleanupFailures){
+        alert(`The folder was deleted, but ${cleanupFailures} attachment(s) could not be removed from local storage. Review the console for cleanup errors.`);
+    }
 };
-
 
 /* =====================================================
    ADD DOCUMENT
@@ -28082,7 +28046,7 @@ async function(
         );
 
 
-    if(!document){
+    if(!doc){
 
         alert(
             "Document not found."
@@ -28119,14 +28083,11 @@ async function(
 
         try{
 
-            if(doc.fileId){
-
-                await deleteDocumentFile(
-                    doc.fileId
-                );
-
-            }
-
+            // Keep the previous attachment until the replacement is saved
+            // and the updated document metadata has been persisted.
+            const oldFileId = doc.fileId || null;
+            const oldFileName = doc.fileName;
+            const oldFileType = doc.fileType;
 
             const fileId =
                 "document-file-" +
@@ -28136,25 +28097,38 @@ async function(
                     .toString(36)
                     .substring(2,10);
 
-
             await saveDocumentFile(
                 fileId,
                 file
             );
 
+            doc.fileId = fileId;
+            doc.fileName = file.name;
+            doc.fileType = file.type || "Unknown";
 
-            doc.fileId =
-                fileId;
+            try{
+                persist();
+            }catch(persistError){
+                // Roll back the in-memory metadata if localStorage rejects the save.
+                doc.fileId = oldFileId;
+                doc.fileName = oldFileName;
+                doc.fileType = oldFileType;
+                try{
+                    await deleteDocumentFile(fileId);
+                }catch(cleanupError){
+                    console.error("Failed to clean up unsaved replacement document file:", cleanupError);
+                }
+                throw persistError;
+            }
 
-            doc.fileName =
-                file.name;
-
-            doc.fileType =
-                file.type ||
-                "Unknown";
-
-
-            persist();
+            if(oldFileId){
+                try{
+                    await deleteDocumentFile(oldFileId);
+                }catch(cleanupError){
+                    // The new file is already active; keep it and report the orphan for later cleanup.
+                    console.error("Replacement saved, but old document file cleanup failed:", cleanupError);
+                }
+            }
 
 
             alert(
@@ -28330,7 +28304,7 @@ async function(
         );
 
 
-    if(!document){
+    if(!doc){
 
         alert(
             "Document not found."
@@ -28532,99 +28506,45 @@ function(
    DELETE DOCUMENT
 ===================================================== */
 
-window.deleteDocument =
-async function(
-    projectId,
-    documentId
-){
-
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
-        );
-
+window.deleteDocument = async function(projectId, documentId){
+    const project = projects.find(p => String(p.id) === String(projectId));
     if(!project) return;
+    const documentIndex = (project.documents || []).findIndex(d => String(d.id) === String(documentId));
+    if(documentIndex === -1){ alert("Document not found."); return; }
 
-
-    const documentIndex =
-        (project.documents || [])
-        .findIndex(
-            d =>
-                String(d.id) ===
-                String(documentId)
-        );
-
-
-    if(documentIndex === -1){
-
-        alert(
-            "Document not found."
-        );
-
-        return;
-
-    }
-
-
-    const document =
-        project.documents[
-            documentIndex
-        ];
-
-
-    const confirmed =
-        confirm(
-            `Delete document "${document.title || document.fileName || "this document"}"?\n\nThe attached file will also be deleted.`
-        );
-
-
+    const doc = project.documents[documentIndex];
+    const confirmed = confirm(
+        `Delete document "${doc.title || doc.fileName || "this document"}"?\n\nThe attached file will also be deleted.`
+    );
     if(!confirmed) return;
 
-
+    const oldDocuments = project.documents;
+    project.documents = oldDocuments.filter(item => String(item.id) !== String(documentId));
     try{
-
-        if(document.fileId){
-
-            await deleteDocumentFile(
-                document.fileId
-            );
-
-        }
-
-
-        project.documents.splice(
-            documentIndex,
-            1
-        );
-
-
         persist();
-
-
-        renderDocumentsSection(
-            project
-        );
-
-    }
-    catch(error){
-
-        console.error(
-            "Document deletion error:",
-            error
-        );
-
-        alert(
-            "The document could not be deleted.\n\n" +
-            error.message
-        );
-
+    }catch(error){
+        project.documents = oldDocuments;
+        console.error("Document deletion could not be saved:", error);
+        alert("The document could not be deleted because the project data could not be saved. The attachment was kept.\n\n" + (error.message || error));
+        return;
     }
 
+    renderDocumentsSection(project);
+    if(doc.fileId){
+        const stillReferenced = projects.some(other =>
+            (other.documents || []).some(item => item && String(item.fileId) === String(doc.fileId))
+        );
+        if(!stillReferenced){
+            try{ await deleteDocumentFile(doc.fileId); }
+            catch(error){
+                console.error("Document attachment cleanup failed:", doc.fileId, error);
+                alert("The document record was deleted, but its attachment could not be removed from local storage. Review the console for details.");
+            }
+        }
+    }
 };
 
-   /* =====================================================
+/* =====================================================
    DRAWINGS MODULE - NEW
    STEP 1 - FOLDERS
 ===================================================== */
@@ -29149,36 +29069,49 @@ window.deleteDrawingsFolder = function(projectId, folderId){
     }
 
     const confirmed = confirm(
-        `Delete folder "${folder.name}"?`
+        `Delete folder "${folder.name}" and its subfolders? Drawings inside them will be moved to the parent folder.`
     );
 
     if(!confirmed) return;
 
-    const childFolderIds = project.drawingsFolders
-        .filter(
-            f =>
-                String(f.parentId) ===
-                String(folderId)
-        )
-        .map(f => String(f.id));
+    // Collect every descendant folder, not only the direct children.
+    const foldersToDelete = new Set([String(folderId)]);
+    let changed = true;
+    while(changed){
+        changed = false;
+        for(const candidate of project.drawingsFolders){
+            if(
+                candidate.parentId !== null &&
+                candidate.parentId !== undefined &&
+                foldersToDelete.has(String(candidate.parentId)) &&
+                !foldersToDelete.has(String(candidate.id))
+            ){
+                foldersToDelete.add(String(candidate.id));
+                changed = true;
+            }
+        }
+    }
 
-    project.drawingsFolders =
-        project.drawingsFolders.filter(
-            f =>
-                String(f.id) !== String(folderId) &&
-                !childFolderIds.includes(String(f.id))
-        );
+    const destinationFolderId = folder.parentId ?? null;
 
+    // Preserve drawings by moving them to the deleted folder's parent.
+    for(const drawing of (project.drawings || [])){
+        if(foldersToDelete.has(String(drawing.folderId ?? "__root__"))){
+            drawing.folderId = destinationFolderId;
+        }
+    }
+
+    project.drawingsFolders = project.drawingsFolders.filter(
+        candidate => !foldersToDelete.has(String(candidate.id))
+    );
+
+    const currentFolderId = window.drawingsCurrentFolder[project.id];
     if(
-        String(
-            window.drawingsCurrentFolder[project.id]
-        ) === String(folderId)
+        currentFolderId !== null &&
+        currentFolderId !== undefined &&
+        foldersToDelete.has(String(currentFolderId))
     ){
-
-        window.drawingsCurrentFolder[
-            project.id
-        ] = folder.parentId ?? null;
-
+        window.drawingsCurrentFolder[project.id] = destinationFolderId;
     }
 
     persist();
@@ -29644,72 +29577,44 @@ if(cleanDiscipline === null){
 
 };
     window.deleteDrawing = async function(projectId, drawingId){
-
-    const project = projects.find(
-        p => String(p.id) === String(projectId)
-    );
-
+    const project = projects.find(p => String(p.id) === String(projectId));
     if(!project) return;
 
-    const drawingIndex =
-        (project.drawings || []).findIndex(
-            d =>
-                String(d.id) ===
-                String(drawingId)
-        );
+    const drawing = (project.drawings || []).find(d => String(d.id) === String(drawingId));
+    if(!drawing){ alert("Drawing not found."); return; }
 
-    if(drawingIndex === -1){
+    const confirmed = confirm(
+        `Delete drawing "${drawing.drawingNo}"?\n\nThe drawing record will be removed; its local attachment will be cleaned up afterward.`
+    );
+    if(!confirmed) return;
 
-        alert("Drawing not found.");
-
+    const oldDrawings = project.drawings;
+    project.drawings = oldDrawings.filter(item => String(item.id) !== String(drawingId));
+    try{
+        persist();
+    }catch(error){
+        project.drawings = oldDrawings;
+        console.error("Drawing deletion could not be saved:", error);
+        alert("The drawing could not be deleted because the project data could not be saved. The attachment was kept.\n\n" + (error.message || error));
         return;
     }
 
-    const drawing =
-        project.drawings[drawingIndex];
-
-    const confirmed = confirm(
-        `Delete drawing "${drawing.drawingNo}"?\n\nThis will also delete the attached file.`
-    );
-
-    if(!confirmed) return;
-
-    try{
-
-        if(drawing.fileId){
-
-            await deleteDrawingFile(
-                drawing.fileId
-            );
-
+    renderDrawingsSection(project);
+    if(drawing.fileId){
+        const stillReferenced = projects.some(other =>
+            (other.drawings || []).some(item => item && String(item.fileId) === String(drawing.fileId))
+        );
+        if(!stillReferenced){
+            try{ await deleteDrawingFile(drawing.fileId); }
+            catch(error){
+                console.error("Drawing attachment cleanup failed:", drawing.fileId, error);
+                alert("The drawing record was deleted, but its attachment could not be removed from local storage. Review the console for details.");
+            }
         }
-
-        project.drawings.splice(
-            drawingIndex,
-            1
-        );
-
-        persist();
-
-        renderDrawingsSection(project);
-
     }
-    catch(error){
-
-        console.error(
-            "Drawing deletion error:",
-            error
-        );
-
-        alert(
-            "The drawing could not be deleted.\n\n" +
-            error.message
-        );
-
-    }
-
 };
-    /* =========================
+
+/* =========================
    RENDER DRAWING LIST
 ========================= */
 
@@ -30612,6 +30517,11 @@ window.uploadDrawingFile = async function(
 
     try{
 
+        // Keep the previous attachment until the new file and metadata are safely saved.
+        const oldFileId = drawing.fileId || null;
+        const oldFileName = drawing.fileName;
+        const oldFileType = drawing.fileType;
+
         const fileId =
             "drawing-file-" +
             Date.now() +
@@ -30620,25 +30530,37 @@ window.uploadDrawingFile = async function(
                 .toString(36)
                 .substring(2,10);
 
-
         await saveDrawingFile(
             fileId,
             file
         );
 
+        drawing.fileId = fileId;
+        drawing.fileName = file.name;
+        drawing.fileType = file.type || "application/octet-stream";
 
-        drawing.fileId =
-            fileId;
+        try{
+            persist();
+        }catch(persistError){
+            drawing.fileId = oldFileId;
+            drawing.fileName = oldFileName;
+            drawing.fileType = oldFileType;
+            try{
+                await deleteDrawingFile(fileId);
+            }catch(cleanupError){
+                console.error("Failed to clean up unsaved replacement drawing file:", cleanupError);
+            }
+            throw persistError;
+        }
 
-        drawing.fileName =
-            file.name;
-
-        drawing.fileType =
-            file.type ||
-            "application/octet-stream";
-
-
-        persist();
+        if(oldFileId){
+            try{
+                await deleteDrawingFile(oldFileId);
+            }catch(cleanupError){
+                // The replacement is active; failed cleanup only leaves an orphaned old file.
+                console.error("Replacement saved, but old drawing file cleanup failed:", cleanupError);
+            }
+        }
 
 alert(
     "Drawing file uploaded successfully:\n\n" +
@@ -39285,21 +39207,53 @@ window.deleteBOQFolder = function(projectId, folderId){
     if(!folder) return;
 
     const confirmed = confirm(
-        'Are you sure you want to delete "' +
-        folder.name +
-        '"?'
+        'Delete folder "' + folder.name +
+        '" and its subfolders? BOQ files inside them will be moved to the parent folder.'
     );
 
     if(!confirmed) return;
 
-    project.boqFolders =
-        project.boqFolders.filter(function(f){
-            return String(f.id) !== String(folderId);
-        });
+    // Collect all descendants recursively to avoid dangling parentId references.
+    const foldersToDelete = new Set([String(folderId)]);
+    let changed = true;
+    while(changed){
+        changed = false;
+        for(const candidate of project.boqFolders){
+            if(
+                candidate.parentId !== null &&
+                candidate.parentId !== undefined &&
+                foldersToDelete.has(String(candidate.parentId)) &&
+                !foldersToDelete.has(String(candidate.id))
+            ){
+                foldersToDelete.add(String(candidate.id));
+                changed = true;
+            }
+        }
+    }
+
+    const destinationFolderId = folder.parentId || "root";
+
+    // Preserve BOQ records and embedded file data by reassigning their folder.
+    for(const boq of (project.boqs || [])){
+        if(foldersToDelete.has(String(boq.folderId || "root"))){
+            boq.folderId = destinationFolderId;
+        }
+    }
+
+    project.boqFolders = project.boqFolders.filter(function(candidate){
+        return !foldersToDelete.has(String(candidate.id));
+    });
+
+    const currentFolderId = window.boqCurrentFolder[projectId];
+    if(
+        currentFolderId !== null &&
+        currentFolderId !== undefined &&
+        foldersToDelete.has(String(currentFolderId))
+    ){
+        window.boqCurrentFolder[projectId] = destinationFolderId;
+    }
 
     persist();
-
-    window.boqCurrentFolder[projectId] = "root";
 
     showProjectSection("boq", projectId);
 };
@@ -40817,222 +40771,82 @@ function(
    DELETE REPORTS FOLDER
 ===================================================== */
 
-window.deleteReportsFolder =
-async function(
-    projectId,
-    folderId
-){
-
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
-        );
-
-
-    if(!project){
-
-        return;
-
-    }
-
-
+window.deleteReportsFolder = async function(projectId, folderId){
+    const project = projects.find(p => String(p.id) === String(projectId));
+    if(!project) return;
     ensureReportsFolders(project);
-
     ensureReports(project);
 
-
     if(String(folderId) === "root"){
-
-        alert(
-            "The root Reports folder cannot be deleted."
-        );
-
+        alert("The root Reports folder cannot be deleted.");
         return;
-
     }
 
+    const folder = project.reportsFolders.find(item => String(item.id) === String(folderId));
+    if(!folder) return;
 
-    const folder =
-        project.reportsFolders.find(
-            item =>
-                String(item.id) ===
-                String(folderId)
-        );
-
-
-    if(!folder){
-
-        return;
-
-    }
-
-
-    const confirmed =
-        confirm(
-            `Delete folder "${folder.name}" and all its subfolders and reports?`
-        );
-
-
-    if(!confirmed){
-
-        return;
-
-    }
-
-
-    /* =========================
-       FIND ALL DESCENDANTS
-    ========================= */
-
-    const folderIds =
-        new Set([
-            String(folderId)
-        ]);
-
-
-    let changed = true;
-
-
-    while(changed){
-
-        changed = false;
-
-
-        project.reportsFolders.forEach(
-            child => {
-
-                if(
-                    child.parentId !== null
-                    &&
-                    folderIds.has(
-                        String(child.parentId)
-                    )
-                    &&
-                    !folderIds.has(
-                        String(child.id)
-                    )
-                ){
-
-                    folderIds.add(
-                        String(child.id)
-                    );
-
-                    changed = true;
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* =========================
-       DELETE ASSOCIATED FILES
-    ========================= */
-
-    const reportsToDelete =
-        project.reports.filter(
-            report =>
-                folderIds.has(
-                    String(
-                        report.folderId
-                    )
-                )
-        );
-
-
-    for(
-        const report
-        of reportsToDelete
-    ){
-
-        if(report.fileId){
-
-            try{
-
-                await deleteReportFile(
-                    report.fileId
-                );
-
-            }catch(error){
-
-                console.error(
-                    "Failed to delete report file:",
-                    error
-                );
-
-            }
-
-        }
-
-    }
-
-
-    /* =========================
-       DELETE REPORT RECORDS
-    ========================= */
-
-    project.reports =
-        project.reports.filter(
-            report =>
-                !folderIds.has(
-                    String(
-                        report.folderId
-                    )
-                )
-        );
-
-
-    /* =========================
-       DELETE FOLDERS
-    ========================= */
-
-    project.reportsFolders =
-        project.reportsFolders.filter(
-            item =>
-                !folderIds.has(
-                    String(item.id)
-                )
-        );
-
-
-    /* =========================
-       RETURN TO PARENT
-    ========================= */
-
-    if(
-        folderIds.has(
-            String(
-                window.reportsCurrentFolder[
-                    projectId
-                ]
-            )
-        )
-    ){
-
-        window.reportsCurrentFolder[
-            projectId
-        ] =
-
-            folder.parentId === null
-            ? null
-            : folder.parentId;
-
-    }
-
-
-    persist();
-
-
-    renderReportsSection(
-        project
+    const confirmed = confirm(
+        `Delete folder "${folder.name}" and all its subfolders and reports?`
     );
+    if(!confirmed) return;
 
+    const folderIds = new Set([String(folderId)]);
+    let changed = true;
+    while(changed){
+        changed = false;
+        for(const child of project.reportsFolders){
+            if(child.parentId !== null && child.parentId !== undefined &&
+               folderIds.has(String(child.parentId)) &&
+               !folderIds.has(String(child.id))){
+                folderIds.add(String(child.id));
+                changed = true;
+            }
+        }
+    }
+
+    const reportsToDelete = project.reports.filter(report =>
+        folderIds.has(String(report.folderId ?? "__root__"))
+    );
+    const oldReports = project.reports;
+    const oldFolders = project.reportsFolders;
+    const oldCurrentFolder = window.reportsCurrentFolder[projectId];
+
+    project.reports = oldReports.filter(report =>
+        !folderIds.has(String(report.folderId ?? "__root__"))
+    );
+    project.reportsFolders = oldFolders.filter(item => !folderIds.has(String(item.id)));
+
+    if(oldCurrentFolder !== null && oldCurrentFolder !== undefined && folderIds.has(String(oldCurrentFolder))){
+        window.reportsCurrentFolder[projectId] = folder.parentId ?? null;
+    }
+
+    try{
+        persist();
+    }catch(error){
+        project.reports = oldReports;
+        project.reportsFolders = oldFolders;
+        window.reportsCurrentFolder[projectId] = oldCurrentFolder;
+        console.error("Reports folder deletion could not be saved:", error);
+        alert("The folder could not be deleted because the project data could not be saved. No attachments were removed.\n\n" + (error.message || error));
+        return;
+    }
+
+    renderReportsSection(project);
+
+    let cleanupFailures = 0;
+    for(const report of reportsToDelete){
+        if(!report.fileId) continue;
+        const stillReferenced = projects.some(other =>
+            (other.reports || []).some(item => item && String(item.fileId) === String(report.fileId))
+        );
+        if(stillReferenced) continue;
+        try{ await deleteReportFile(report.fileId); }
+        catch(error){ cleanupFailures++; console.error("Report attachment cleanup failed:", report.fileId, error); }
+    }
+    if(cleanupFailures){
+        alert(`The folder was deleted, but ${cleanupFailures} attachment(s) could not be removed from local storage. Review the console for cleanup errors.`);
+    }
 };
-
 
 /* =====================================================
    ADD REPORT
@@ -41350,33 +41164,42 @@ function(
 
             try{
 
+                // Save the replacement first and keep the old file until metadata is persisted.
+                const oldFileId = report.fileId || null;
+                const oldFileName = report.fileName;
+                const oldFileType = report.fileType;
+
                 await saveReportFile(
                     newFileId,
                     file
                 );
 
+                report.fileId = newFileId;
+                report.fileName = file.name;
+                report.fileType = file.type || "Unknown";
 
-                if(report.fileId){
-
-                    await deleteReportFile(
-                        report.fileId
-                    );
-
+                try{
+                    persist();
+                }catch(persistError){
+                    report.fileId = oldFileId;
+                    report.fileName = oldFileName;
+                    report.fileType = oldFileType;
+                    try{
+                        await deleteReportFile(newFileId);
+                    }catch(cleanupError){
+                        console.error("Failed to clean up unsaved replacement report file:", cleanupError);
+                    }
+                    throw persistError;
                 }
 
-
-                report.fileId =
-                    newFileId;
-
-                report.fileName =
-                    file.name;
-
-                report.fileType =
-                    file.type ||
-                    "Unknown";
-
-
-                persist();
+                if(oldFileId){
+                    try{
+                        await deleteReportFile(oldFileId);
+                    }catch(cleanupError){
+                        // The replacement is active; a failed cleanup only leaves an orphaned old file.
+                        console.error("Replacement saved, but old report file cleanup failed:", cleanupError);
+                    }
+                }
 
 
                 renderReportsSection(
@@ -41749,89 +41572,46 @@ function(
    DELETE REPORT
 ===================================================== */
 
-window.deleteReport =
-async function(
-    projectId,
-    index
-){
-
-    const project =
-        projects.find(
-            p =>
-                String(p.id) ===
-                String(projectId)
-        );
-
-
-    if(!project){
-
-        return;
-
-    }
-
-
+window.deleteReport = async function(projectId, index){
+    const project = projects.find(p => String(p.id) === String(projectId));
+    if(!project) return;
     ensureReports(project);
 
+    const report = project.reports[index];
+    if(!report) return;
 
-    const report =
-        project.reports[index];
+    const confirmed = confirm(
+        `Are you sure you want to delete "${report.title || "this report"}"?`
+    );
+    if(!confirmed) return;
 
-
-    if(!report){
-
-        return;
-
-    }
-
-
-    const confirmed =
-        confirm(
-            `Are you sure you want to delete "${report.title || "this report"}"?`
-        );
-
-
-    if(!confirmed){
-
-        return;
-
-    }
-
-
+    const oldReports = project.reports;
+    project.reports = oldReports.filter((item, i) => i !== index);
     try{
-
-        if(report.fileId){
-
-            await deleteReportFile(
-                report.fileId
-            );
-
-        }
-
+        persist();
     }catch(error){
-
-        console.error(
-            "Failed to delete report file:",
-            error
-        );
-
+        project.reports = oldReports;
+        console.error("Report deletion could not be saved:", error);
+        alert("The report could not be deleted because the project data could not be saved. The attachment was kept.\n\n" + (error.message || error));
+        return;
     }
 
-
-    project.reports.splice(
-        index,
-        1
-    );
-
-
-    persist();
-
-
-    renderReportsSection(
-        project
-    );
-
+    renderReportsSection(project);
+    if(report.fileId){
+        const stillReferenced = projects.some(other =>
+            (other.reports || []).some(item => item && String(item.fileId) === String(report.fileId))
+        );
+        if(!stillReferenced){
+            try{ await deleteReportFile(report.fileId); }
+            catch(error){
+                console.error("Report attachment cleanup failed:", report.fileId, error);
+                alert("The report record was deleted, but its attachment could not be removed from local storage. Review the console for details.");
+            }
+        }
+    }
 };
-    /* =====================================================
+
+/* =====================================================
    PROJECT TO-DO LIST MODULE
 ===================================================== */
 
@@ -50306,69 +50086,42 @@ if(stageStatusEl){
    DELETE PAYMENT STAGE
 ===================================================== */
 
-window.deleteVariationPaymentStage =
-async function(
-    projectId,
-    variationIndex,
-    stageIndex
-){
+window.deleteVariationPaymentStage = async function(projectId, variationIndex, stageIndex){
+    const project = getVariationsProject(projectId);
+    if(!project) return;
 
-    const project =
-        getVariationsProject(
-            projectId
-        );
+    const variation = project.variations[variationIndex];
+    if(!variation) return;
+    const stage = (variation.paymentStages || [])[stageIndex];
+    if(!stage) return;
 
-    if(!project){
+    if(!confirm(`Delete Payment Stage ${stageIndex + 1}?`)) return;
+
+    const oldStages = variation.paymentStages;
+    variation.paymentStages = oldStages.filter((item, i) => i !== stageIndex);
+    try{
+        persist();
+    }catch(error){
+        variation.paymentStages = oldStages;
+        console.error("Payment stage deletion could not be saved:", error);
+        alert("The payment stage could not be deleted because the project data could not be saved. Its PDF was kept.\n\n" + (error.message || error));
         return;
     }
 
-    const variation =
-        project.variations[
-            variationIndex
-        ];
-
-    if(!variation){
-        return;
-    }
-
-    const stage =
-        variation.paymentStages[
-            stageIndex
-        ];
-
-    if(!stage){
-        return;
-    }
-
-    if(
-        !confirm(
-            `Delete Payment Stage ${stageIndex + 1}?`
-        )
-    ){
-        return;
-    }
-
+    renderVariationsSection(project);
     if(stage.fileId){
-
-        await deleteVariationPDF(
-            stage.fileId
+        const stillReferenced = projects.some(other =>
+            (other.variations || []).some(v => (v.paymentStages || []).some(item => item && String(item.fileId) === String(stage.fileId)))
         );
-
+        if(!stillReferenced){
+            try{ await deleteVariationPDF(stage.fileId, {throwOnError:true}); }
+            catch(error){
+                console.error("Payment stage PDF cleanup failed:", stage.fileId, error);
+                alert("The payment stage was deleted, but its PDF could not be removed from local storage. Review the console for details.");
+            }
+        }
     }
-
-    variation.paymentStages.splice(
-        stageIndex,
-        1
-    );
-
-    persist();
-
-    renderVariationsSection(
-        project
-    );
-
 };
-
 
 /* =====================================================
    VARIATION PDF DATABASE
@@ -50568,7 +50321,8 @@ async function getVariationPDF(
 ===================================================== */
 
 async function deleteVariationPDF(
-    fileId
+    fileId,
+    options
 ){
 
     if(!fileId){
@@ -50624,6 +50378,10 @@ async function deleteVariationPDF(
             "PDF delete error:",
             error
         );
+
+        if(options && options.throwOnError){
+            throw error;
+        }
 
     }
 
@@ -50810,33 +50568,41 @@ async function(
 
     try{
 
-        if(stage.fileId){
+        // Preserve the existing PDF until the new file and its metadata are saved.
+        const oldFileId = stage.fileId || null;
+        const oldFileName = stage.fileName;
+        const oldFileType = stage.fileType;
 
-            await deleteVariationPDF(
-                stage.fileId
-            );
-
-        }
-
-        const fileId =
-            createVariationFileId();
+        const fileId = createVariationFileId();
 
         await saveVariationPDF(
             fileId,
             file
         );
 
-        stage.fileId =
-            fileId;
+        stage.fileId = fileId;
+        stage.fileName = file.name;
+        stage.fileType = file.type || "application/pdf";
 
-        stage.fileName =
-            file.name;
+        try{
+            persist();
+        }catch(persistError){
+            stage.fileId = oldFileId;
+            stage.fileName = oldFileName;
+            stage.fileType = oldFileType;
+            try{
+                await deleteVariationPDF(fileId);
+            }catch(cleanupError){
+                console.error("Failed to clean up unsaved replacement variation PDF:", cleanupError);
+            }
+            throw persistError;
+        }
 
-        stage.fileType =
-            file.type ||
-            "application/pdf";
-
-        persist();
+        if(oldFileId){
+            // This helper currently logs and swallows IndexedDB delete failures.
+            // That can leave an orphan, but it will not break the new active attachment.
+            await deleteVariationPDF(oldFileId);
+        }
 
         renderVariationsSection(
             project
@@ -54699,65 +54465,41 @@ async function(projectId){
    DELETE VARIATION
 ===================================================== */
 
-window.deleteVariation =
-async function(
-    projectId,
-    index
-){
+window.deleteVariation = async function(projectId, index){
+    const project = getVariationsProject(projectId);
+    if(!project) return;
 
-    const project =
-        getVariationsProject(
-            projectId
+    const variation = (project.variations || [])[index];
+    if(!variation) return;
+    if(!confirm("Delete this variation and all its payment stages?")) return;
+
+    const stages = variation.paymentStages || [];
+    const oldVariations = project.variations;
+    project.variations = oldVariations.filter((item, i) => i !== index);
+    try{
+        persist();
+    }catch(error){
+        project.variations = oldVariations;
+        console.error("Variation deletion could not be saved:", error);
+        alert("The variation could not be deleted because the project data could not be saved. Its PDFs were kept.\n\n" + (error.message || error));
+        return;
+    }
+
+    renderVariationsSection(project);
+
+    let cleanupFailures = 0;
+    for(const stage of stages){
+        if(!stage || !stage.fileId) continue;
+        const stillReferenced = projects.some(other =>
+            (other.variations || []).some(v => (v.paymentStages || []).some(item => item && String(item.fileId) === String(stage.fileId)))
         );
-
-    if(!project){
-        return;
+        if(stillReferenced) continue;
+        try{ await deleteVariationPDF(stage.fileId, {throwOnError:true}); }
+        catch(error){ cleanupFailures++; console.error("Variation PDF cleanup failed:", stage.fileId, error); }
     }
-
-    const variation =
-        project.variations[index];
-
-    if(!variation){
-        return;
+    if(cleanupFailures){
+        alert(`The variation was deleted, but ${cleanupFailures} PDF attachment(s) could not be removed from local storage. Review the console for cleanup errors.`);
     }
-
-    if(
-        !confirm(
-            "Delete this variation and all its payment stages?"
-        )
-    ){
-        return;
-    }
-
-    for(
-        const stage
-        of (
-            variation.paymentStages ||
-            []
-        )
-    ){
-
-        if(stage.fileId){
-
-            await deleteVariationPDF(
-                stage.fileId
-            );
-
-        }
-
-    }
-
-    project.variations.splice(
-        index,
-        1
-    );
-
-    persist();
-
-    renderVariationsSection(
-        project
-    );
-
 };
 
 /* =====================================================
@@ -63492,10 +63234,15 @@ function ensureTenderInfo(tender){
 
 function persistTenders(){
 
-    localStorage.setItem(
-        "alm_tenders",
-        JSON.stringify(tenders)
-    );
+    try{
+        return almSafeStorageSet(
+            "alm_tenders",
+            JSON.stringify(tenders)
+        );
+    }catch(error){
+        almReportStorageFailure("alm_tenders (serialization)", error);
+        return false;
+    }
 
 }
 
@@ -65436,113 +65183,42 @@ window.downloadTenderDocument = async function(
    DELETE TENDER DOCUMENT
 ===================================================== */
 
-window.deleteTenderDocument = async function(
-    tenderId,
-    documentId
-){
+window.deleteTenderDocument = async function(tenderId, documentId){
+    const tender = tenders.find(t => String(t.id) === String(tenderId));
+    if(!tender) return;
 
-    const tender =
-        tenders.find(function(t){
+    const doc = (tender.documents || []).find(d => String(d.id) === String(documentId));
+    if(!doc) return;
 
-            return String(t.id) ===
-                   String(tenderId);
+    if(!confirm("Delete this document and its local attachment?")) return;
 
-        });
-
-
-    if(!tender){
-        return;
-    }
-
-
-    const doc =
-        tender.documents.find(function(d){
-
-            return String(d.id) ===
-                   String(documentId);
-
-        });
-
-
-    if(!doc){
-        return;
-    }
-
-
-    const confirmed =
-        confirm(
-            "Are you sure you want to delete this document?"
-        );
-
-
-    if(!confirmed){
-        return;
-    }
-
-
+    const oldDocuments = tender.documents || [];
+    tender.documents = oldDocuments.filter(item => String(item.id) !== String(documentId));
     try{
-
-        /* -----------------------------------------
-           DELETE ACTUAL FILE
-        ----------------------------------------- */
-
-        await deleteTenderFile(
-            doc.fileId
-        );
-
-
-        /* -----------------------------------------
-           DELETE METADATA
-        ----------------------------------------- */
-
-        tender.documents =
-            tender.documents.filter(
-                function(item){
-
-                    return String(item.id) !==
-                           String(documentId);
-
-                }
-            );
-
-
         persistTenders();
+    }catch(error){
+        tender.documents = oldDocuments;
+        console.error("Tender document deletion could not be saved:", error);
+        alert("The document could not be deleted because the tender data could not be saved. The attachment was kept.\n\n" + (error.message || error));
+        return;
+    }
 
+    const folder = (tender.folders || []).find(f => String(f.id) === String(currentTenderFolderId));
+    if(folder) renderTenderFolder(tender, folder);
+    else showTenders();
 
-        const folder =
-            tender.folders.find(
-                function(f){
-
-                    return String(f.id) ===
-                           String(currentTenderFolderId);
-
-                }
-            );
-
-
-        if(folder){
-
-            renderTenderFolder(
-                tender,
-                folder
-            );
-
+    if(doc.fileId){
+        const stillReferenced = tenders.some(other =>
+            (other.documents || []).some(item => item && String(item.fileId) === String(doc.fileId))
+        );
+        if(!stillReferenced){
+            try{ await deleteTenderFile(doc.fileId); }
+            catch(error){
+                console.error("Tender document attachment cleanup failed:", doc.fileId, error);
+                alert("The document record was deleted, but its attachment could not be removed from local storage. Review the console for details.");
+            }
         }
-
     }
-    catch(error){
-
-        console.error(
-            "Tender document delete error:",
-            error
-        );
-
-        alert(
-            "The document could not be deleted."
-        );
-
-    }
-
 };
 /* =========================
    EDIT TENDER INFORMATION
@@ -66014,42 +65690,56 @@ window.renameTender = function(tenderId){
    DELETE TENDER
 ========================= */
 
-window.deleteTender = function(tenderId){
+window.deleteTender = async function(tenderId){
 
-    const tender =
-        tenders.find(function(t){
-
-            return String(t.id) ===
-                   String(tenderId);
-
-        });
-
-
+    const tender = tenders.find(function(t){
+        return String(t.id) === String(tenderId);
+    });
     if(!tender) return;
 
-
-    const confirmed =
-        confirm(
-            `Delete tender "${tender.name}"?`
-        );
-
-
+    const confirmed = confirm(
+        `Delete tender "${tender.name}" and its locally stored attachments?`
+    );
     if(!confirmed) return;
 
+    const previousTenders = tenders;
+    const fileIds = (tender.documents || [])
+        .map(doc => doc && doc.fileId)
+        .filter(Boolean);
 
-    tenders =
-        tenders.filter(function(t){
+    tenders = tenders.filter(function(t){
+        return String(t.id) !== String(tenderId);
+    });
 
-            return String(t.id) !==
-                   String(tenderId);
-
-        });
-
-
-    persistTenders();
+    try{
+        persistTenders();
+    }catch(error){
+        tenders = previousTenders;
+        console.error("Tender deletion could not be saved:", error);
+        alert("The tender could not be deleted because the tender list could not be saved. No attachments were removed.\n\n" + (error.message || error));
+        return;
+    }
 
     showTenders();
 
+    let cleanupFailures = 0;
+    for(const fileId of fileIds){
+        const stillReferenced = tenders.some(other =>
+            (other.documents || []).some(doc => doc && String(doc.fileId) === String(fileId))
+        );
+        if(stillReferenced) continue;
+
+        try{
+            await deleteTenderFile(fileId);
+        }catch(error){
+            cleanupFailures++;
+            console.error("Tender attachment cleanup failed:", fileId, error);
+        }
+    }
+
+    if(cleanupFailures){
+        alert(`The tender was deleted, but ${cleanupFailures} attachment(s) could not be removed from local storage. Review the console for cleanup errors.`);
+    }
 };
 
 
@@ -66157,12 +65847,20 @@ let managementInstructions = JSON.parse(
 let currentManagementTab = "tasks";
 
 function persistManagement(){
-    localStorage.setItem("alm_management_tasks", JSON.stringify(managementTasks));
-    localStorage.setItem("alm_management_meetings", JSON.stringify(managementMeetings));
-    localStorage.setItem(
-    "alm_management_instructions",
-    JSON.stringify(managementInstructions)
-);
+    try{
+        const values = [
+            ["alm_management_tasks", JSON.stringify(managementTasks)],
+            ["alm_management_meetings", JSON.stringify(managementMeetings)],
+            ["alm_management_instructions", JSON.stringify(managementInstructions)]
+        ];
+        for(const entry of values){
+            if(!almSafeStorageSet(entry[0], entry[1])) return false;
+        }
+        return true;
+    }catch(error){
+        almReportStorageFailure("management data (serialization)", error);
+        return false;
+    }
 }
 
 /* =====================================================
@@ -69357,5 +69055,379 @@ startManagementMeetingReminderWatcher();
 })();
 
 </script>
+<!-- =====================================================
+     ALM DATA BACKUP / RESTORE (PHASE 5)
+     Exports ALM-prefixed localStorage keys and ALM IndexedDB files.
+===================================================== -->
+<style id="almDataSafetyStyles">
+#almDataSafetyPanel{position:fixed;right:16px;bottom:16px;z-index:99990;font-family:Arial,sans-serif;color:#172033}
+#almDataSafetyToggle{border:0;border-radius:999px;background:#17365d;color:#fff;padding:11px 15px;font-weight:700;box-shadow:0 4px 16px #0002;cursor:pointer}
+#almDataSafetyCard{display:none;width:min(360px,calc(100vw - 32px));margin-top:8px;padding:16px;background:#fff;border:1px solid #d8dee8;border-radius:12px;box-shadow:0 8px 30px #0002}
+#almDataSafetyCard h3{margin:0 0 8px;font-size:16px}
+#almDataSafetyCard p{font-size:12px;line-height:1.5;color:#526078;margin:0 0 12px}
+#almDataSafetyCard button{width:100%;margin:4px 0;padding:10px;border:1px solid #cbd5e1;border-radius:7px;background:#f8fafc;color:#172033;font-weight:700;cursor:pointer}
+#almDataSafetyCard button.primary{background:#17365d;color:white;border-color:#17365d}
+#almDataSafetyStatus{font-size:12px;line-height:1.45;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){#almDataSafetyPanel{right:8px;bottom:8px}#almDataSafetyToggle{padding:10px 12px}}
+</style>
+<div id="almDataSafetyPanel">
+  <button id="almDataSafetyToggle" type="button" aria-expanded="false">Data Backup</button>
+  <div id="almDataSafetyCard" role="dialog" aria-label="ALM data backup and restore">
+    <h3>ALM Data Backup &amp; Restore</h3>
+    <p>Phase 5 validates the backup structure and embedded file payloads before allowing restore. ALM databases absent from the selected backup are preserved. Keep the original app and backup file safe.</p>
+    <button id="almCreateBackupBtn" class="primary" type="button">Export Full Backup</button>
+    <button id="almRestoreBackupBtn" type="button">Restore From Backup File</button>
+    <input id="almRestoreBackupInput" type="file" accept="application/json,.json" style="display:none">
+    <div id="almDataSafetyStatus" aria-live="polite"></div>
+  </div>
+</div>
+<script id="almDataSafetyScript">
+(function(){
+  'use strict';
+  const KNOWN_DB_NAMES = [
+    'ALM_Documents_Files',
+    'ALM_Drawings_Files',
+    'ALM_Reports_Files',
+    'ALM_Variation_Files',
+    'ALM_Tenders_Files'
+  ];
+  const toggle = document.getElementById('almDataSafetyToggle');
+  const card = document.getElementById('almDataSafetyCard');
+  const status = document.getElementById('almDataSafetyStatus');
+  const exportBtn = document.getElementById('almCreateBackupBtn');
+  const restoreBtn = document.getElementById('almRestoreBackupBtn');
+  const fileInput = document.getElementById('almRestoreBackupInput');
+  let busy = false;
+
+  function setStatus(message, isError){
+    status.textContent = message;
+    status.style.color = isError ? '#b42318' : '#176b3a';
+  }
+  function setBusy(value){
+    busy = value;
+    exportBtn.disabled = value;
+    restoreBtn.disabled = value;
+    exportBtn.textContent = value ? 'Please wait…' : 'Export Full Backup';
+  }
+  toggle.addEventListener('click', function(){
+    const opening = card.style.display !== 'block';
+    card.style.display = opening ? 'block' : 'none';
+    toggle.setAttribute('aria-expanded', String(opening));
+  });
+
+  function arrayBufferToBase64(buffer){
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunkSize = 0x8000;
+    for(let i=0;i<bytes.length;i+=chunkSize){
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunkSize));
+    }
+    return btoa(binary);
+  }
+  function base64ToArrayBuffer(base64){
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  }
+  async function packValue(value, seen){
+    if(value === null || typeof value !== 'object') return value;
+    if(value instanceof Blob){
+      return {
+        __almBackupType: value instanceof File ? 'File' : 'Blob',
+        mimeType: value.type || '',
+        fileName: value instanceof File ? value.name : null,
+        lastModified: value instanceof File ? value.lastModified : null,
+        dataBase64: arrayBufferToBase64(await value.arrayBuffer())
+      };
+    }
+    if(value instanceof ArrayBuffer){
+      return {__almBackupType:'ArrayBuffer', dataBase64:arrayBufferToBase64(value)};
+    }
+    if(ArrayBuffer.isView(value)){
+      return {__almBackupType:'TypedArray', constructorName:value.constructor.name, dataBase64:arrayBufferToBase64(value.buffer.slice(value.byteOffset, value.byteOffset+value.byteLength))};
+    }
+    if(value instanceof Date) return {__almBackupType:'Date', value:value.toISOString()};
+    if(seen.has(value)) throw new Error('Circular data was found; backup stopped to avoid an incomplete file.');
+    seen.add(value);
+    let result;
+    if(Array.isArray(value)){
+      result = [];
+      for(const item of value) result.push(await packValue(item, seen));
+    }else{
+      result = {};
+      for(const key of Object.keys(value)) result[key] = await packValue(value[key], seen);
+    }
+    seen.delete(value);
+    return result;
+  }
+  async function unpackValue(value){
+    if(value === null || typeof value !== 'object') return value;
+    if(value.__almBackupType === 'Blob' || value.__almBackupType === 'File'){
+      const blob = new Blob([base64ToArrayBuffer(value.dataBase64)], {type:value.mimeType || ''});
+      if(value.__almBackupType === 'File' && typeof File !== 'undefined'){
+        return new File([blob], value.fileName || 'restored-file', {type:value.mimeType || '', lastModified:value.lastModified || Date.now()});
+      }
+      return blob;
+    }
+    if(value.__almBackupType === 'ArrayBuffer') return base64ToArrayBuffer(value.dataBase64);
+    if(value.__almBackupType === 'Date') return new Date(value.value);
+    if(value.__almBackupType === 'TypedArray'){
+      const buffer = base64ToArrayBuffer(value.dataBase64);
+      const constructors = {Int8Array,Uint8Array,Uint8ClampedArray,Int16Array,Uint16Array,Int32Array,Uint32Array,Float32Array,Float64Array,BigInt64Array,BigUint64Array};
+      const Ctor = constructors[value.constructorName];
+      return Ctor ? new Ctor(buffer) : new Uint8Array(buffer);
+    }
+    if(Array.isArray(value)){
+      const arr = [];
+      for(const item of value) arr.push(await unpackValue(item));
+      return arr;
+    }
+    const obj = {};
+    for(const key of Object.keys(value)) obj[key] = await unpackValue(value[key]);
+    return obj;
+  }
+  function requestToPromise(request){
+    return new Promise(function(resolve,reject){
+      request.onsuccess = function(){resolve(request.result);};
+      request.onerror = function(){reject(request.error || new Error('IndexedDB request failed.'));};
+    });
+  }
+  async function getExistingAlmDatabaseNames(){
+    if(!indexedDB || typeof indexedDB.databases !== 'function'){
+      throw new Error('This browser cannot list existing IndexedDB databases. Please use a recent version of Chrome or Edge to create a full backup.');
+    }
+    const entries = await indexedDB.databases();
+    const existing = new Set(entries.map(function(entry){return entry.name;}).filter(Boolean));
+    return KNOWN_DB_NAMES.filter(function(name){return existing.has(name);});
+  }
+  async function readDatabase(name){
+    const db = await requestToPromise(indexedDB.open(name));
+    try{
+      const stores = [];
+      for(const storeName of Array.from(db.objectStoreNames)){
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        // Queue both requests before awaiting either one; IndexedDB transactions
+        // may become inactive once the event loop yields.
+        const valuesRequest = store.getAll();
+        const keysRequest = store.keyPath === null ? store.getAllKeys() : null;
+        const valuesPromise = requestToPromise(valuesRequest);
+        const keysPromise = keysRequest ? requestToPromise(keysRequest) : Promise.resolve(null);
+        const values = await valuesPromise;
+        const keys = await keysPromise;
+        const records = [];
+        for(let i=0;i<values.length;i++){
+          records.push({key: keys ? await packValue(keys[i], new WeakSet()) : null, value: await packValue(values[i], new WeakSet())});
+        }
+        stores.push({name:storeName, keyPath:store.keyPath, autoIncrement:store.autoIncrement, records:records});
+      }
+      return {name:name, version:db.version, stores:stores};
+    }finally{db.close();}
+  }
+  async function createBackupObject(){
+    const localStorageData = {};
+    for(let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if(key && key.startsWith('alm_')) localStorageData[key] = localStorage.getItem(key);
+    }
+    const databaseNames = await getExistingAlmDatabaseNames();
+    const databases = [];
+    for(const name of databaseNames) databases.push(await readDatabase(name));
+    return {
+      format:'ALM_ERP_FULL_BACKUP',
+      formatVersion:1,
+      createdAt:new Date().toISOString(),
+      appFile:'ALM ERP',
+      localStorage:localStorageData,
+      indexedDB:databases,
+      note:'Contains ALM-prefixed localStorage entries and the ALM file databases found in this browser profile.'
+    };
+  }
+  function downloadObject(object, suffix){
+    const json = JSON.stringify(object);
+    const blob = new Blob([json], {type:'application/json;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().replace(/[:.]/g,'-');
+    a.href = url;
+    a.download = 'ALM_ERP_' + suffix + '_' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);}, 30000);
+    return {bytes:blob.size, jsonBytes:new Blob([json]).size};
+  }
+  exportBtn.addEventListener('click', async function(){
+    if(busy) return;
+    setBusy(true); setStatus('Collecting ALM data and attachments…', false);
+    try{
+      const backup = await createBackupObject();
+      const result = downloadObject(backup, 'Full_Backup');
+      setStatus('Backup export started. Size: ' + (result.bytes/1024/1024).toFixed(2) + ' MB. Keep this file securely and verify that it downloaded.', false);
+    }catch(error){
+      console.error('ALM backup failed:', error);
+      setStatus('Backup failed: ' + (error.message || error), true);
+      alert('ALM backup failed. No backup was confirmed.\n\n' + (error.message || error));
+    }finally{setBusy(false);}
+  });
+
+  function inspectPackedValues(value, stats, path){
+    if(value === null || typeof value !== 'object') return;
+    if(value.__almBackupType === 'Blob' || value.__almBackupType === 'File'){
+      if(typeof value.dataBase64 !== 'string' || !value.dataBase64.length) throw new Error('Missing embedded file data at ' + path + '. Restore cancelled.');
+      if(!value.mimeType && value.__almBackupType === 'Blob') stats.blobsWithoutMime++;
+      // Validate base64 syntax and decoded size before touching storage.
+      let decoded;
+      try{ decoded = atob(value.dataBase64); }catch(e){ throw new Error('Invalid base64 file payload at ' + path + '. Restore cancelled.'); }
+      if(decoded.length === 0) throw new Error('Empty file payload at ' + path + '. Restore cancelled.');
+      stats.files++;
+      stats.fileBytes += decoded.length;
+      stats.fileNames.push(value.fileName || path);
+      return;
+    }
+    if(value.__almBackupType === 'ArrayBuffer' || value.__almBackupType === 'TypedArray'){
+      if(typeof value.dataBase64 !== 'string') throw new Error('Missing binary payload at ' + path + '. Restore cancelled.');
+      try{ stats.binaryBytes += atob(value.dataBase64).length; }catch(e){ throw new Error('Invalid binary payload at ' + path + '. Restore cancelled.'); }
+      return;
+    }
+    if(Array.isArray(value)){
+      value.forEach((item,index)=>inspectPackedValues(item,stats,path+'['+index+']'));
+      return;
+    }
+    for(const key of Object.keys(value)) inspectPackedValues(value[key],stats,path+'.'+key);
+  }
+  function validateBackup(data){
+    if(!data || data.format !== 'ALM_ERP_FULL_BACKUP' || data.formatVersion !== 1) throw new Error('This is not a supported ALM full-backup file.');
+    if(!data.localStorage || typeof data.localStorage !== 'object' || !Array.isArray(data.indexedDB)) throw new Error('The backup file is incomplete or invalid.');
+    for(const key of Object.keys(data.localStorage)) if(!key.startsWith('alm_')) throw new Error('The backup contains an unexpected localStorage key. Restore cancelled.');
+    const names = new Set();
+    const stats = {files:0,fileBytes:0,binaryBytes:0,blobsWithoutMime:0,fileNames:[]};
+    let recordCount = 0;
+    for(const db of data.indexedDB){
+      if(!KNOWN_DB_NAMES.includes(db.name) || !Array.isArray(db.stores)) throw new Error('The backup contains an unsupported database. Restore cancelled.');
+      if(names.has(db.name)) throw new Error('The backup contains duplicate database entries for ' + db.name + '. Restore cancelled.');
+      names.add(db.name);
+      for(const store of db.stores){
+        if(typeof store.name !== 'string' || !Array.isArray(store.records)) throw new Error('The backup contains an invalid database store. Restore cancelled.');
+        recordCount += store.records.length;
+        for(let i=0;i<store.records.length;i++) inspectPackedValues(store.records[i].value,stats,db.name+'/'+store.name+'/record '+i);
+      }
+    }
+    return {databaseCount:names.size,recordCount:recordCount,fileCount:stats.files,fileBytes:stats.fileBytes,binaryBytes:stats.binaryBytes,fileNames:stats.fileNames,localStorageCount:Object.keys(data.localStorage).length};
+  }
+  async function openDbForRestore(dbInfo){
+    const targetVersion = Math.max(1, Number(dbInfo.version) || 1);
+    const req = indexedDB.open(dbInfo.name, targetVersion);
+    req.onupgradeneeded = function(event){
+      const db = event.target.result;
+      for(const storeInfo of dbInfo.stores){
+        if(db.objectStoreNames.contains(storeInfo.name)) continue;
+        const options = {};
+        if(storeInfo.keyPath !== null && storeInfo.keyPath !== undefined) options.keyPath = storeInfo.keyPath;
+        if(storeInfo.autoIncrement) options.autoIncrement = true;
+        db.createObjectStore(storeInfo.name, options);
+      }
+    };
+    const db = await requestToPromise(req);
+    const missing = dbInfo.stores.filter(function(store){return !db.objectStoreNames.contains(store.name);});
+    if(missing.length){db.close();throw new Error('Database schema mismatch for ' + dbInfo.name + '. Missing store: ' + missing.map(function(x){return x.name;}).join(', ') + '. Restore cancelled for safety.');}
+    return db;
+  }
+  async function restoreDatabase(dbInfo){
+    const db = await openDbForRestore(dbInfo);
+    try{
+      for(const storeInfo of dbInfo.stores){
+        const store = db.transaction(storeInfo.name, 'readonly').objectStore(storeInfo.name);
+        const currentKeyPath = store.keyPath;
+        if(JSON.stringify(currentKeyPath) !== JSON.stringify(storeInfo.keyPath)) throw new Error('Key schema mismatch for ' + dbInfo.name + '/' + storeInfo.name + '.');
+        const unpacked = [];
+        for(const record of storeInfo.records){
+          unpacked.push({key: record.key === null ? null : await unpackValue(record.key), value: await unpackValue(record.value)});
+        }
+        await new Promise(function(resolve,reject){
+          const tx = db.transaction(storeInfo.name, 'readwrite');
+          const target = tx.objectStore(storeInfo.name);
+          target.clear();
+          for(const record of unpacked){
+            if(target.keyPath === null) target.put(record.value, record.key);
+            else target.put(record.value);
+          }
+          tx.oncomplete = resolve;
+          tx.onerror = function(){reject(tx.error || new Error('Could not restore ' + dbInfo.name + '/' + storeInfo.name));};
+          tx.onabort = function(){reject(tx.error || new Error('Restore transaction aborted for ' + dbInfo.name + '/' + storeInfo.name));};
+        });
+      }
+    }finally{db.close();}
+  }
+  async function applyRestore(data){
+    validateBackup(data);
+    // SAFETY: never delete an existing ALM IndexedDB merely because it is absent
+    // from the selected backup. Older/incomplete backups may omit a database.
+    // Restore only databases explicitly present in the backup; omitted databases
+    // are preserved unchanged.
+    for(const dbInfo of data.indexedDB) await restoreDatabase(dbInfo);
+    // Apply localStorage last so the primary project state is not replaced before file DBs are restored.
+    const keysToRemove = [];
+    for(let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if(key && key.startsWith('alm_')) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(function(key){localStorage.removeItem(key);});
+    for(const key of Object.keys(data.localStorage)) localStorage.setItem(key, data.localStorage[key]);
+  }
+  restoreBtn.addEventListener('click', function(){if(!busy) fileInput.click();});
+  fileInput.addEventListener('change', async function(){
+    const file = fileInput.files && fileInput.files[0];
+    if(!file || busy) return;
+    let safetyBackup = null;
+    let restoreStarted = false;
+    setBusy(true); setStatus('Reading backup file…', false);
+    try{
+      const parsed = JSON.parse(await file.text());
+      const audit = validateBackup(parsed);
+      if(audit.databaseCount === 0) throw new Error('The backup contains no file databases. Restore cancelled.');
+      if(audit.fileCount === 0) throw new Error('No embedded File/Blob payloads were found in this backup. Restore cancelled.');
+      const auditSummary = 'Backup preflight passed.\n\n' +
+        'localStorage keys: ' + audit.localStorageCount + '\n' +
+        'File databases: ' + audit.databaseCount + '\n' +
+        'Database records: ' + audit.recordCount + '\n' +
+        'Embedded files: ' + audit.fileCount + '\n' +
+        'Embedded file bytes: ' + (audit.fileBytes/1024/1024).toFixed(2) + ' MB\n\n' +
+        'Files: ' + audit.fileNames.join(', ');
+      setStatus(auditSummary, false);
+      const confirmText = auditSummary + '\n\nThis will replace ALM localStorage data and the file databases included in the selected backup. Existing ALM databases omitted from the backup will be preserved. A current-state backup will be downloaded first. Continue only if this backup is the one you intend to restore.';
+      if(!confirm(confirmText)){setStatus('Restore cancelled. No data was changed.', false);return;}
+      setStatus('Creating a safety backup before restore…', false);
+      safetyBackup = await createBackupObject();
+      downloadObject(safetyBackup, 'Pre_Restore_Safety_Backup');
+      setStatus('Restoring file databases and ALM records… Do not close this tab.', false);
+      restoreStarted = true;
+      await applyRestore(parsed);
+      setStatus('Restore completed. Reloading the application…', false);
+      alert('ALM backup restored. The application will now reload. If anything looks wrong, use the downloaded Pre_Restore_Safety_Backup file.');
+      window.location.reload();
+    }catch(error){
+      console.error('ALM restore failed:', error);
+      if(restoreStarted && safetyBackup){
+        setStatus('Restore failed. Attempting to roll back to the pre-restore state…', true);
+        try{
+          await applyRestore(safetyBackup);
+          setStatus('The selected restore failed, but the pre-restore state was restored. Reload the application and verify your data.', true);
+          alert('Restore failed. The application attempted to restore the state from immediately before the operation. Please reload and verify the data before continuing. Keep the downloaded Pre_Restore_Safety_Backup file.\n\nOriginal error: ' + (error.message || error));
+        }catch(rollbackError){
+          console.error('ALM restore rollback failed:', rollbackError);
+          setStatus('Restore and automatic rollback both failed. Stop using this tab and recover using the downloaded Pre_Restore_Safety_Backup file.', true);
+          alert('CRITICAL: Restore and automatic rollback both failed. Do not continue using this application state. Keep the downloaded Pre_Restore_Safety_Backup file and recover in a separate browser profile or test copy.\n\nRestore error: ' + (error.message || error) + '\nRollback error: ' + (rollbackError.message || rollbackError));
+        }
+      }else{
+        setStatus('Restore did not start or could not be prepared: ' + (error.message || error), true);
+        alert('ALM restore could not be completed. No restore operation was started, or the pre-restore safety backup could not be prepared.\n\n' + (error.message || error));
+      }
+    }finally{setBusy(false);fileInput.value='';}
+  });
+})();
+</script>
+
 </body>
 </html>
